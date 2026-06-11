@@ -50,12 +50,17 @@ class CountdownNotifier extends StateNotifier<CountdownState> {
     final today = timesState.todayTimes;
     final tomorrow = timesState.tomorrowTimes;
 
-    if (today.isEmpty || tomorrow.isEmpty) return;
+    // Safety check: ensure all required keys exist before proceeding
+    const requiredKeys = ['subuh', 'dzuhur', 'ashar', 'magrib', 'isya'];
+    final hasAllToday = requiredKeys.every((k) => today.containsKey(k));
+    final hasTomorrowSubuh = tomorrow.containsKey('subuh');
+
+    if (!hasAllToday || !hasTomorrowSubuh) return;
 
     final now = DateTime.now();
 
     // Extract prayer times
-    final subuh = today['subuh']!;
+    final subuh = today['subuh']!; // Safe now due to check above
     final dzuhur = today['dzuhur']!;
     final ashar = today['ashar']!;
     final magrib = today['magrib']!;

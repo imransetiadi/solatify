@@ -46,24 +46,30 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   SettingsNotifier() : super(_initialState());
 
   static SettingsState _initialState() {
-    final themeStr = HiveService.getSetting('theme', defaultValue: 'light');
-    final lang = HiveService.getSetting('language', defaultValue: 'id');
-    final method = HiveService.getSetting(
+    final themeStr = HiveService.getSetting('theme', defaultValue: 'light')?.toString() ?? 'light';
+    final lang = HiveService.getSetting('language', defaultValue: 'id')?.toString() ?? 'id';
+    final method = (HiveService.getSetting(
       'calculation_method',
       defaultValue: 'Kemenag',
-    ); // Default Kemenag/Singapore method
-    final notif = HiveService.getSetting(
+    ) ?? 'Kemenag').toString();
+    
+    final rawNotif = HiveService.getSetting(
       'notification_enabled',
       defaultValue: true,
     );
+    final notif = rawNotif is bool ? rawNotif : true;
+
     final adhan = HiveService.getSetting(
       'adhan_sound',
       defaultValue: 'default',
-    );
-    final onboarding = HiveService.getSetting(
+    )?.toString() ?? 'default';
+
+    final rawOnboarding = HiveService.getSetting(
       'onboarding_completed',
       defaultValue: false,
     );
+    final onboarding = rawOnboarding is bool ? rawOnboarding : false;
+
     final offsets = HiveService.getPrayerOffsets();
 
     ThemeMode themeMode;
