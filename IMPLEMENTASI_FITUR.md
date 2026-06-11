@@ -317,7 +317,3 @@ Fitur baru hanya menggunakan dependencies yang sudah ada:
 4. **User Data**
    - Favorite doas/asmaul husna
    - Custom reminders
-
----
-
-*Dokumentasi Teknis - Solatify v1.0.0*

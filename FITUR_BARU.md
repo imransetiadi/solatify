@@ -222,7 +222,3 @@
 Solatify sekarang lebih lengkap dengan konten Islami, tips harian, dan customization jadwal sholat.
 
 **Semoga bermanfaat! 💚**
-
----
-
-*Solatify v1.0.0 - Made with ♥ for Muslim Companions*
