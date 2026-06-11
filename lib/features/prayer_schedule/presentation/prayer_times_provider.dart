@@ -134,8 +134,15 @@ class PrayerTimesNotifier extends StateNotifier<PrayerTimesState> {
 
   void _scheduleNotifications() {
     final settings = _ref.read(settingsProvider);
+    // Schedule today's notifications
     NotificationService.schedulePrayerNotifications(
       prayerTimes: state.todayTimes,
+      adhanSound: settings.adhanSound,
+      enabled: settings.notificationEnabled,
+    );
+    // Also schedule tomorrow's notifications
+    NotificationService.schedulePrayerNotifications(
+      prayerTimes: state.tomorrowTimes,
       adhanSound: settings.adhanSound,
       enabled: settings.notificationEnabled,
     );

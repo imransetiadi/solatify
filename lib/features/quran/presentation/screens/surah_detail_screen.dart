@@ -76,7 +76,28 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
         title: surahAsync.when(
           loading: () => const Text('Memuat...'),
           error: (_, _) => const Text('Al-Qur\'an'),
-          data: (surah) => Text(surah.name),
+          data: (surah) {
+            final isPlayingThisSurah = audioState.playingSurah == surah.number;
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  surah.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                if (isPlayingThisSurah)
+                  Text(
+                    audioState.isPlaying ? '🔊 Memutar semua ayat...' : '⏸ Dijeda',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 11, color: textSecondary),
+                  ),
+              ],
+            );
+          },
         ),
         actions: [
           surahAsync.when(
@@ -90,7 +111,7 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
                 color: Color(0xFF241A12), // Black
                 size: 28,
               ),
-              tooltip: 'Putar Murottal Surah',
+              tooltip: 'Putar Semua Ayat (${surah.numberOfVerses} Ayat)',
               onPressed: () {
                 if (audioState.playingSurah == surah.number &&
                     audioState.isPlaying) {
@@ -207,12 +228,12 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
               },
             ),
 
-            // Floating Audio player at bottom
+            // Floating Audio player at bottom (respects safe area)
             if (audioState.playingSurah != null)
               Positioned(
-                left: 16,
-                right: 16,
-                bottom: 16,
+                left: ResponsiveLayout.pagePadding(context).left,
+                right: ResponsiveLayout.pagePadding(context).right,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 16,
                 child: _buildAudioPlayerPanel(audioState),
               ),
           ],
