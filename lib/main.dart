@@ -11,13 +11,21 @@ import 'features/reminder/data/services/notification_service.dart';
 import 'features/settings/presentation/settings_provider.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await initializeDateFormatting('id_ID', null);
-  await HiveService.init();
-  await NotificationService.init();
-
-  // Basic setup completed, run the App wrapped in a ProviderScope
-  runApp(const ProviderScope(child: SolatifyApp()));
+  try {
+    WidgetsFlutterBinding.ensureInitialized();
+    // Start loading dependencies in parallel
+    await Future.wait([
+      initializeDateFormatting('id_ID', null),
+      HiveService.init(),
+      NotificationService.init(),
+    ]);
+    
+    runApp(const ProviderScope(child: SolatifyApp()));
+  } catch (e) {
+    debugPrint('Critical startup error: $e');
+    // Fallback run to avoid black screen
+    runApp(const ProviderScope(child: SolatifyApp()));
+  }
 }
 
 class SolatifyApp extends ConsumerWidget {
