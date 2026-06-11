@@ -204,6 +204,38 @@ flutter build ios --simulator
 flutter run -d <SIMULATOR_ID>
 ```
 
+## Google Maps dan Places API
+
+Fitur `Masjid Terdekat` memakai GPS perangkat dan Google Places Nearby Search dengan filter `type=mosque`. Data yang tampil bukan dummy: hasil dipilih dari tempat yang memiliki tipe `mosque` dan status `OPERATIONAL` dari Google Places.
+
+API yang perlu diaktifkan di Google Cloud Console:
+
+- Maps SDK for Android.
+- Maps SDK for iOS.
+- Places API.
+
+Jalankan aplikasi dengan API key untuk query Places:
+
+```bash
+flutter run --dart-define=GOOGLE_MAPS_API_KEY=API_KEY_ANDA
+```
+
+Android akan memakai nilai `GOOGLE_MAPS_API_KEY` dari `--dart-define` untuk Maps SDK dan Places API.
+
+Untuk iOS, buat file lokal dari template berikut sebelum build:
+
+```bash
+cp ios/Flutter/MapsKey.xcconfig.example ios/Flutter/MapsKey.xcconfig
+```
+
+Lalu isi `ios/Flutter/MapsKey.xcconfig`:
+
+```xcconfig
+GOOGLE_MAPS_API_KEY=API_KEY_ANDA
+```
+
+File `ios/Flutter/MapsKey.xcconfig` sudah di-ignore oleh git. Jangan commit API key asli ke repository. Gunakan API restriction di Google Cloud sesuai bundle ID/package name aplikasi.
+
 ## Catatan iOS
 
 - App sudah diuji pada physical iPhone untuk skenario open, force-close dari app switcher, lalu open ulang.
