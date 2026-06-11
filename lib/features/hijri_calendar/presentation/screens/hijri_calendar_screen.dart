@@ -12,6 +12,7 @@ class HijriCalendarScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final redAccent = theme.colorScheme.tertiary;
     final primaryColor = isDark ? const Color(0xFFC78A4C) : const Color(0xFF0E4D31);
     final textColor = isDark ? const Color(0xFFF3FBF6) : const Color(0xFF241A12);
     final textColorMuted = isDark ? const Color(0xFFC8B8A8) : const Color(0xFF6E5B4B);
@@ -31,21 +32,30 @@ class HijriCalendarScreen extends ConsumerWidget {
       body: IslamicBackground(
         child: ResponsiveCenter(
           child: Padding(
-          padding: ResponsiveLayout.pagePadding(context),
+          padding: ResponsiveLayout.pagePadding(context).copyWith(
+            top: kToolbarHeight + MediaQuery.paddingOf(context).top + 8,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Hari Raya & Event Islam 2026',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: primaryColor,
-                ),
+              Row(
+                children: [
+                  Icon(Icons.event, size: 20, color: redAccent),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Hari Raya & Event Islam 2026',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: primaryColor,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
               Expanded(
                 child: ListView.builder(
+                  padding: const EdgeInsets.only(bottom: 96),
                   itemCount: events.length,
                   itemBuilder: (context, index) {
                     final event = events[index];
@@ -54,7 +64,10 @@ class HijriCalendarScreen extends ConsumerWidget {
                     return Card(
                       margin: const EdgeInsets.symmetric(vertical: 8),
                       color: cardBg,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(color: redAccent.withValues(alpha: 0.30), width: 1),
+                      ),
                       child: Padding(
                         padding: const EdgeInsets.all(16),
                         child: Column(
@@ -78,7 +91,7 @@ class HijriCalendarScreen extends ConsumerWidget {
                             const SizedBox(height: 8),
                             Row(
                               children: [
-                                Icon(Icons.calendar_today, size: 14, color: textColorMuted),
+                                Icon(Icons.calendar_today, size: 14, color: redAccent),
                                 const SizedBox(width: 4),
                                 Text(
                                   dateStr,

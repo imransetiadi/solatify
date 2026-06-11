@@ -46,13 +46,14 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   SettingsNotifier() : super(_initialState());
 
   static SettingsState _initialState() {
-    final themeStr =
-        HiveService.getSetting('theme', defaultValue: 'light')?.toString() ??
-        'light';
-    final rawLang =
-        HiveService.getSetting('language', defaultValue: 'id')?.toString() ??
-        'id';
-    final lang = rawLang == 'en' ? 'en' : 'id';
+    try {
+      final themeStr =
+          HiveService.getSetting('theme', defaultValue: 'light')?.toString() ??
+          'light';
+      final rawLang =
+          HiveService.getSetting('language', defaultValue: 'id')?.toString() ??
+          'id';
+      final lang = rawLang == 'en' ? 'en' : 'id';
     final method =
         (HiveService.getSetting(
                   'calculation_method',
@@ -103,6 +104,17 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       onboardingCompleted: onboarding,
       prayerOffsets: offsets,
     );
+    } catch (e) {
+      return SettingsState(
+        themeMode: ThemeMode.system,
+        language: 'id',
+        calculationMethod: 'Kemenag',
+        notificationEnabled: true,
+        adhanSound: 'default',
+        onboardingCompleted: false,
+        prayerOffsets: {'subuh': 0, 'dzuhur': 0, 'ashar': 0, 'magrib': 0, 'isya': 0},
+      );
+    }
   }
 
   Future<void> updateTheme(ThemeMode mode) async {

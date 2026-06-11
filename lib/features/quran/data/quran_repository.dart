@@ -13,10 +13,10 @@ class QuranRepository {
   /// Fetch the list of 114 Surahs.
   /// Tries loading from Hive cache first; falls back to API.
   Future<List<Surah>> getSurahList() async {
-    final box = HiveService.getBox(HiveService.quranIndexBoxName);
+    final box = HiveService.tryGetBox(HiveService.quranIndexBoxName);
 
     // If cache has entries, load from cache
-    if (box.isNotEmpty) {
+    if (box != null && box.isNotEmpty) {
       try {
         final List<Surah> surahs = [];
         for (var key in box.keys) {
@@ -64,7 +64,10 @@ class QuranRepository {
           surahs.add(surah);
 
           // Save to Hive index box
-          await box.put(surah.number.toString(), jsonEncode(surah.toJson()));
+          final cacheBox = HiveService.tryGetBox(HiveService.quranIndexBoxName);
+          if (cacheBox != null) {
+            await cacheBox.put(surah.number.toString(), jsonEncode(surah.toJson()));
+          }
         }
 
         return surahs;
@@ -83,11 +86,11 @@ class QuranRepository {
   /// Fetch the details (verses) of a specific Surah by number.
   /// Tries loading from local Hive cache first.
   Future<Surah> getSurahDetail(int number) async {
-    final box = HiveService.getBox(HiveService.quranDetailBoxName);
+    final box = HiveService.tryGetBox(HiveService.quranDetailBoxName);
     final key = number.toString();
 
     // Check local cache
-    if (box.containsKey(key)) {
+    if (box != null && box.containsKey(key)) {
       try {
         final data = box.get(key);
         if (data != null) {
@@ -123,7 +126,10 @@ class QuranRepository {
         final surah = Surah.fromJson(detailMap);
 
         // Cache detail map locally
-        await box.put(key, jsonEncode(surah.toJson()));
+        final cacheBox = HiveService.tryGetBox(HiveService.quranDetailBoxName);
+        if (cacheBox != null) {
+          await cacheBox.put(key, jsonEncode(surah.toJson()));
+        }
         return surah;
       } else {
         throw Exception(

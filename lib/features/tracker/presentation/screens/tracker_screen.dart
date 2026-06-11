@@ -105,9 +105,9 @@ class TrackerScreen extends ConsumerWidget {
                                 ? MainAxisAlignment.center
                                 : MainAxisAlignment.start,
                             children: [
-                              const Icon(
+                              Icon(
                                 Icons.local_fire_department,
-                                color: Color(0xFF241A12),
+                                color: textColor,
                                 size: 24,
                               ),
                               const SizedBox(width: 4),
@@ -266,7 +266,9 @@ class TrackerScreen extends ConsumerWidget {
                               _buildLegendItem(
                                 context,
                                 'Terlewat',
-                                const Color(0xFF241A12),
+                                isDark
+                                    ? Colors.white70
+                                    : const Color(0xFF241A12),
                               ),
                               _buildLegendItem(
                                 context,
@@ -315,7 +317,7 @@ class TrackerScreen extends ConsumerWidget {
                             context,
                             'Terlewat',
                             missed,
-                            const Color(0xFF241A12),
+                            textColor,
                           ),
                         ],
                       );
@@ -346,14 +348,14 @@ class TrackerScreen extends ConsumerWidget {
                             context,
                             'Terlewat',
                             missed,
-                            const Color(0xFF241A12),
+                            textColor,
                           ),
                         ),
                       ],
                     );
                   },
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 96),
               ],
             ),
           ),
@@ -400,7 +402,7 @@ class TrackerScreen extends ConsumerWidget {
               dotColor = const Color(0xFFC78A4C);
               break;
             case 'missed':
-              dotColor = const Color(0xFF241A12);
+              dotColor = isDark ? Colors.white70 : const Color(0xFF241A12);
               break;
             case 'unmarked':
             default:

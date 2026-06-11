@@ -301,9 +301,11 @@ class MainLayoutScreen extends StatelessWidget {
                 labelType: isDesktopWidth
                     ? NavigationRailLabelType.none
                     : NavigationRailLabelType.all,
-                minWidth: 88,
-                minExtendedWidth: 184,
-                groupAlignment: -0.82,
+                minWidth: 80,
+                minExtendedWidth: 200,
+                // Center the items so they are distributed proportionally
+                // along the rail instead of clustering at the top.
+                groupAlignment: 0.0,
                 destinations: _destinations.map((destination) {
                   return NavigationRailDestination(
                     icon: Icon(destination.icon),
@@ -324,6 +326,20 @@ class MainLayoutScreen extends StatelessWidget {
       );
     }
 
+    // Proportional sizing for the bottom navigation: scale icons and bar
+    // height relative to the device width, clamped so it stays balanced on
+    // both small and large phones.
+    final width = MediaQuery.sizeOf(context).width;
+    final scale = (width / 390).clamp(0.88, 1.12);
+    final iconSize = 23.0 * scale;
+    final selectedIconSize = 25.0 * scale;
+    final barHeight = (64.0 * scale).clamp(58.0, 74.0);
+    // Show every label when there is room; collapse to selected-only on
+    // narrow devices so the 5 items stay evenly proportioned.
+    final labelBehavior = width < 360
+        ? NavigationDestinationLabelBehavior.onlyShowSelected
+        : NavigationDestinationLabelBehavior.alwaysShow;
+
     return Scaffold(
       body: child,
       bottomNavigationBar: Container(
@@ -339,8 +355,8 @@ class MainLayoutScreen extends StatelessWidget {
         child: NavigationBar(
           selectedIndex: _calculateMobileSelectedIndex(context),
           onDestinationSelected: (index) => _onMobileItemTapped(index, context),
-          height: 68 + MediaQuery.paddingOf(context).bottom,
-          labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
+          height: barHeight,
+          labelBehavior: labelBehavior,
           backgroundColor: theme.colorScheme.surface,
           indicatorColor: theme.colorScheme.tertiary.withValues(alpha: 0.14),
           destinations: _mobileDestinations.map((destination) {
@@ -348,12 +364,12 @@ class MainLayoutScreen extends StatelessWidget {
               icon: Icon(
                 destination.icon,
                 color: isDark ? Colors.white60 : Colors.black45,
-                size: 22,
+                size: iconSize,
               ),
               selectedIcon: Icon(
                 destination.activeIcon,
                 color: theme.colorScheme.tertiary,
-                size: 24,
+                size: selectedIconSize,
               ),
               label: _labelForDestination(l, destination),
             );

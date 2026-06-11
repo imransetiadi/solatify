@@ -239,6 +239,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     final location = ref.watch(locationProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       body: IslamicBackground(
@@ -268,7 +269,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                           Text(
                             'SOLATIFY',
                             style: TextStyle(
-                              color: Color(0xFF241A12),
+                              color: isDark
+                                  ? Colors.white
+                                  : const Color(0xFF241A12),
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 3.0,
@@ -348,10 +351,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                           _currentPage == 3
                               ? TextButton(
                                   onPressed: _finishOnboarding,
-                                  child: const Text(
+                                  child: Text(
                                     'MULAI',
                                     style: TextStyle(
-                                      color: Color(0xFF241A12), // Black
+                                      color: isDark
+                                          ? Colors.white
+                                          : const Color(0xFF241A12), // Black
                                       fontWeight: FontWeight.bold,
                                       letterSpacing: 1.2,
                                     ),
@@ -391,6 +396,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   Widget _buildWelcomeSlide() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return _OnboardingSlideFrame(
       child: Center(
         child: GlassContainer(
@@ -402,17 +408,17 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
+              Icon(
                 Icons.spatial_audio_off_outlined,
                 size: 80,
-                color: Color(0xFF241A12),
+                color: isDark ? Colors.white : const Color(0xFF241A12),
               ),
               const SizedBox(height: 32),
-              const Text(
+              Text(
                 'Selamat Datang',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Color(0xFF241A12),
+                  color: isDark ? Colors.white : const Color(0xFF241A12),
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
                 ),
@@ -435,6 +441,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   Widget _buildLocationSlide(LocationState location) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return _OnboardingSlideFrame(
       child: Center(
         child: GlassContainer(
@@ -452,10 +459,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 color: Color(0xFF0E4D31),
               ),
               const SizedBox(height: 24),
-              const Text(
+              Text(
                 'Atur Lokasi Anda',
                 style: TextStyle(
-                  color: Color(0xFF241A12),
+                  color: isDark ? Colors.white : const Color(0xFF241A12),
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                 ),
@@ -519,6 +526,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   Widget _buildNotificationSlide() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return _OnboardingSlideFrame(
       child: Center(
         child: GlassContainer(
@@ -530,16 +538,16 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
+              Icon(
                 Icons.notifications_active_outlined,
                 size: 72,
-                color: Color(0xFF241A12),
+                color: isDark ? Colors.white : const Color(0xFF241A12),
               ),
               const SizedBox(height: 24),
-              const Text(
+              Text(
                 'Aktifkan Pengingat',
                 style: TextStyle(
-                  color: Color(0xFF241A12),
+                  color: isDark ? Colors.white : const Color(0xFF241A12),
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                 ),
@@ -588,6 +596,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   Widget _buildSummarySlide(LocationState location) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return _OnboardingSlideFrame(
       child: Center(
         child: GlassContainer(
@@ -605,10 +614,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 color: Color(0xFF0E4D31),
               ),
               const SizedBox(height: 24),
-              const Text(
+              Text(
                 'Solatify Siap Digunakan!',
                 style: TextStyle(
-                  color: Color(0xFF241A12),
+                  color: isDark ? Colors.white : const Color(0xFF241A12),
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                 ),

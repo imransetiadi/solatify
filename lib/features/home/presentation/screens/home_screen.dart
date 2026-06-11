@@ -104,6 +104,7 @@ class HomeScreen extends ConsumerWidget {
     final prayerList = ref.watch(prayerListProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primary = Theme.of(context).colorScheme.secondary;
+    final redLine = Theme.of(context).colorScheme.tertiary;
     final textColor = isDark ? const Color(0xFFF3FBF6) : const Color(0xFF241A12);
     final mutedColor = isDark ? const Color(0xFFC8B8A8) : const Color(0xFF6E5B4B);
     final todayStr = DateFormat('EEEE, d MMMM yyyy', 'id_ID').format(DateTime.now());
@@ -158,7 +159,7 @@ class HomeScreen extends ConsumerWidget {
                     child: GlassContainer(
                       blur: 20,
                       opacity: isDark ? 0.06 : 0.03,
-                      borderColor: primary.withValues(alpha: 0.22),
+                      borderColor: redLine.withValues(alpha: 0.30),
                       borderRadius: 24,
                       padding: EdgeInsets.all(MediaQuery.sizeOf(context).width < 360 ? 18 : 24),
                       child: Column(
@@ -223,14 +224,14 @@ class HomeScreen extends ConsumerWidget {
                                   blur: 15,
                                   opacity: isActive ? 0.08 : 0.03,
                                   borderColor: isActive || isNext
-                                      ? primary.withValues(alpha: isActive ? 0.8 : 0.35)
-                                      : (isDark ? Colors.white.withValues(alpha: 0.08) : primary.withValues(alpha: 0.12)),
+                                      ? redLine.withValues(alpha: isActive ? 0.8 : 0.45)
+                                      : redLine.withValues(alpha: isDark ? 0.30 : 0.22),
                                   padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
                                   child: Row(
                                     children: [
                                       Icon(
                                         isActive ? Icons.circle : (isNext ? Icons.circle_outlined : Icons.circle_outlined),
-                                        color: isActive || isNext ? primary : mutedColor.withValues(alpha: 0.35),
+                                        color: isActive || isNext ? redLine : mutedColor.withValues(alpha: 0.35),
                                         size: 10,
                                       ),
                                       const SizedBox(width: 12),
@@ -243,7 +244,7 @@ class HomeScreen extends ConsumerWidget {
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                               style: TextStyle(
-                                                color: isActive ? primary : textColor,
+                                                color: isActive ? redLine : textColor,
                                                 fontSize: 16,
                                                 fontWeight: isActive ? FontWeight.bold : FontWeight.w600,
                                               ),

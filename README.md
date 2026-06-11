@@ -89,7 +89,7 @@ Solatify memakai desain bernuansa Islami modern dengan fokus pada keterbacaan da
 - Hive dan SharedPreferences untuk penyimpanan lokal.
 - `adhan` untuk kalkulasi waktu salat.
 - Geolocator dan Geocoding untuk lokasi.
-- Flutter Compass untuk arah kiblat.
+- `flutter_compass_v2` untuk arah kiblat.
 - OpenStreetMap Overpass API untuk data masjid terdekat.
 - Flutter Local Notifications untuk pengingat.
 - Workmanager untuk dukungan background task.
@@ -226,7 +226,7 @@ Saat pengguna membuka tombol peta atau rute, aplikasi membuka OpenStreetMap di b
 Plugin yang dapat memunculkan warning di Flutter versi terbaru:
 
 - `workmanager_apple`
-- `flutter_compass`
+- `flutter_compass_v2`
 
 ## Testing dan Quality Check
 
@@ -250,6 +250,19 @@ Area yang sudah memiliki test mencakup:
 - Perubahan kota manual.
 - Data dan model Quran.
 - Render awal aplikasi.
+- Pemulihan dari data Hive korup/partial (crash recovery).
+- Parsing key bookmark Quran yang aman terhadap data rusak.
+
+## Reliability dan Performance
+
+Beberapa penguatan stabilitas dan performa yang sudah diterapkan:
+
+- **Global error handling**: `main()` berjalan di dalam `runZonedGuarded` dengan `FlutterError.onError` dan `PlatformDispatcher.onError`, plus error view yang ramah pengguna sehingga error widget tunggal tidak menampilkan crash screen.
+- **Hive tahan banting**: box yang korup setelah force-close otomatis dipulihkan (delete dan recreate), dan seluruh provider membaca Hive secara aman (mengembalikan default ketika box belum siap).
+- **Dark mode terbaca**: warna teks dan ikon menyesuaikan tema, tidak ada lagi teks gelap di atas latar gelap.
+- **Aksen merah konsisten**: aksen merah diterapkan menyeluruh lewat theme dan tiap fitur.
+- **Layout proporsional**: navigasi dan padding menyesuaikan ukuran layar, konten tidak tertutup AppBar maupun bottom navigation.
+- **Masjid terdekat lebih cepat**: query Overpass ke beberapa endpoint dijalankan paralel (race) dengan timeout pendek, sehingga tidak menunggu rantai timeout yang panjang.
 
 ## Permission yang Digunakan
 

@@ -29,22 +29,42 @@ class TrackerNotifier extends StateNotifier<TrackerState> {
   TrackerNotifier() : super(_initialState());
 
   static TrackerState _initialState() {
-    final todayStr = _getFormatDate(DateTime.now());
-    final todayStatus = <String, String>{};
+    try {
+      final todayStr = _getFormatDate(DateTime.now());
+      final todayStatus = <String, String>{};
 
-    for (var key in ['subuh', 'dzuhur', 'ashar', 'magrib', 'isya']) {
-      final entry = HiveService.getTrackerEntry('${todayStr}_$key');
-      todayStatus[key] = entry?['status'] as String? ?? 'unmarked';
+      for (var key in ['subuh', 'dzuhur', 'ashar', 'magrib', 'isya']) {
+        final entry = HiveService.getTrackerEntry('${todayStr}_$key');
+        todayStatus[key] = entry?['status'] as String? ?? 'unmarked';
+      }
+
+      final streak = _calculateStreakOffline();
+      final stats = _calculateWeeklyStatsOffline();
+
+      return TrackerState(
+        todayStatus: todayStatus,
+        currentStreak: streak,
+        weeklyStats: stats,
+      );
+    } catch (e) {
+      // Safe defaults if Hive isn't ready or data is corrupt.
+      return TrackerState(
+        todayStatus: {
+          'subuh': 'unmarked',
+          'dzuhur': 'unmarked',
+          'ashar': 'unmarked',
+          'magrib': 'unmarked',
+          'isya': 'unmarked',
+        },
+        currentStreak: 0,
+        weeklyStats: {
+          'completed': 0,
+          'delayed': 0,
+          'missed': 0,
+          'unmarked': 0,
+        },
+      );
     }
-
-    final streak = _calculateStreakOffline();
-    final stats = _calculateWeeklyStatsOffline();
-
-    return TrackerState(
-      todayStatus: todayStatus,
-      currentStreak: streak,
-      weeklyStats: stats,
-    );
   }
 
   static String _getFormatDate(DateTime date) {
@@ -56,8 +76,10 @@ class TrackerNotifier extends StateNotifier<TrackerState> {
     final dbKey = '${todayStr}_$prayerKey';
 
     if (status == 'unmarked') {
-      final box = HiveService.getBox(HiveService.trackerBoxName);
-      await box.delete(dbKey);
+      final box = HiveService.tryGetBox(HiveService.trackerBoxName);
+      if (box != null) {
+        await box.delete(dbKey);
+      }
     } else {
       await HiveService.saveTrackerEntry(dbKey, status);
     }

@@ -53,6 +53,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   @override
   Widget build(BuildContext context) {
     final primaryColor = Theme.of(context).colorScheme.secondary;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final titleColor = isDark ? Colors.white : const Color(0xFF241A12);
+    final subtitleColor = isDark
+        ? Colors.white.withValues(alpha: 0.75)
+        : const Color(0xFF756455);
 
     return Scaffold(
       body: IslamicBackground(
@@ -89,12 +94,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                       ),
                     ),
                     const SizedBox(height: 24),
-                    const FittedBox(
+                    FittedBox(
                       fit: BoxFit.scaleDown,
                       child: Text(
                         'SOLATIFY',
                         style: TextStyle(
-                          color: Color(0xFF241A12),
+                          color: titleColor,
                           fontSize: 36,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 4.0,
@@ -103,11 +108,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                       ),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
+                    Text(
                       'Pendamping Ibadah Anda',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: Color(0xFF756455),
+                        color: subtitleColor,
                         fontSize: 16,
                         letterSpacing: 1.0,
                         fontFamily: 'Outfit',

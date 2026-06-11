@@ -614,7 +614,7 @@ class SettingsScreen extends ConsumerWidget {
                               ? 'Reset Onboarding (Dev)'
                               : 'Reset Onboarding (Dev)',
                           style: TextStyle(
-                            color: Color(0xFF241A12),
+                            color: textColor,
                             fontSize: 11,
                           ),
                         ),
@@ -622,7 +622,7 @@ class SettingsScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 96),
               ],
             ),
           ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/widgets/responsive_layout.dart';
 import '../../../settings/presentation/settings_provider.dart';
 
 class GetStartedScreen extends ConsumerStatefulWidget {
@@ -73,96 +74,102 @@ class _GetStartedScreenState extends ConsumerState<GetStartedScreen> {
     return Scaffold(
       backgroundColor: bgColor,
       body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: PageView.builder(
-                controller: _pageController,
-                onPageChanged: (index) {
-                  setState(() => _currentPage = index);
-                },
-                itemCount: pages.length,
-                itemBuilder: (context, index) {
-                  return GetStartedPageView(page: pages[index]);
-                },
+        child: ResponsiveCenter(
+          child: Column(
+            children: [
+              Expanded(
+                child: PageView.builder(
+                  controller: _pageController,
+                  onPageChanged: (index) {
+                    setState(() => _currentPage = index);
+                  },
+                  itemCount: pages.length,
+                  itemBuilder: (context, index) {
+                    return GetStartedPageView(page: pages[index]);
+                  },
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(
-                      pages.length,
-                      (index) => Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
-                        width: _currentPage == index ? 24 : 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: _currentPage == index
-                              ? pages[index].color
-                              : pages[index].color.withValues(alpha: 0.3),
-                          borderRadius: BorderRadius.circular(4),
+              Padding(
+                padding: ResponsiveLayout.pagePadding(
+                  context,
+                ).copyWith(top: 8, bottom: 16),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(
+                        pages.length,
+                        (index) => Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          width: _currentPage == index ? 24 : 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: _currentPage == index
+                                ? pages[index].color
+                                : pages[index].color.withValues(alpha: 0.3),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _currentPage > 0
-                            ? ElevatedButton(
-                                onPressed: () {
-                                  _pageController.previousPage(
-                                    duration: const Duration(milliseconds: 300),
-                                    curve: Curves.easeInOut,
-                                  );
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.grey[300],
-                                ),
-                                child: Text(
-                                  'Kembali',
-                                  style: TextStyle(color: Colors.black87),
-                                ),
-                              )
-                            : const SizedBox.shrink(),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            if (_currentPage < pages.length - 1) {
-                              _pageController.nextPage(
-                                duration: const Duration(milliseconds: 300),
-                                curve: Curves.easeInOut,
-                              );
-                            } else {
-                              ref
-                                  .read(settingsProvider.notifier)
-                                  .completeOnboarding();
-                              context.go('/home');
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: pages[_currentPage].color,
-                          ),
-                          child: Text(
-                            _currentPage == pages.length - 1
-                                ? 'Mulai Sekarang'
-                                : 'Lanjut',
-                            style: const TextStyle(color: Colors.white),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _currentPage > 0
+                              ? ElevatedButton(
+                                  onPressed: () {
+                                    _pageController.previousPage(
+                                      duration: const Duration(
+                                        milliseconds: 300,
+                                      ),
+                                      curve: Curves.easeInOut,
+                                    );
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.grey[300],
+                                  ),
+                                  child: Text(
+                                    'Kembali',
+                                    style: TextStyle(color: Colors.black87),
+                                  ),
+                                )
+                              : const SizedBox.shrink(),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () {
+                              if (_currentPage < pages.length - 1) {
+                                _pageController.nextPage(
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeInOut,
+                                );
+                              } else {
+                                ref
+                                    .read(settingsProvider.notifier)
+                                    .completeOnboarding();
+                                context.go('/home');
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: pages[_currentPage].color,
+                            ),
+                            child: Text(
+                              _currentPage == pages.length - 1
+                                  ? 'Mulai Sekarang'
+                                  : 'Lanjut',
+                              style: const TextStyle(color: Colors.white),
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

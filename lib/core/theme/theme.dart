@@ -61,7 +61,10 @@ class AppTheme {
         elevation: 2,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(18),
-          side: const BorderSide(color: Color(0xFF49372A), width: 1),
+          side: BorderSide(
+            color: redAccentDark.withValues(alpha: 0.45),
+            width: 1,
+          ),
         ),
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
@@ -224,7 +227,10 @@ class AppTheme {
         elevation: 2,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(18),
-          side: const BorderSide(color: lightBorder, width: 1),
+          side: BorderSide(
+            color: redAccent.withValues(alpha: 0.35),
+            width: 1,
+          ),
         ),
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(

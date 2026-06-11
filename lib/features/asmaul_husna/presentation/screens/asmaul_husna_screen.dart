@@ -52,6 +52,7 @@ class _AsmaulHusnaScreenState extends ConsumerState<AsmaulHusnaScreen> {
 
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final redAccent = theme.colorScheme.tertiary;
     final primaryColor = isDark ? const Color(0xFFC78A4C) : const Color(0xFF0E4D31);
     final textColor = isDark ? const Color(0xFFF3FBF6) : const Color(0xFF241A12);
     final textColorMuted = isDark ? const Color(0xFFC8B8A8) : const Color(0xFF6E5B4B);
@@ -70,7 +71,9 @@ class _AsmaulHusnaScreenState extends ConsumerState<AsmaulHusnaScreen> {
       body: IslamicBackground(
         child: ResponsiveCenter(
           child: Padding(
-          padding: ResponsiveLayout.pagePadding(context),
+          padding: ResponsiveLayout.pagePadding(context).copyWith(
+            top: kToolbarHeight + MediaQuery.paddingOf(context).top + 8,
+          ),
           child: Column(
             children: [
               TextField(
@@ -95,6 +98,7 @@ class _AsmaulHusnaScreenState extends ConsumerState<AsmaulHusnaScreen> {
               const SizedBox(height: 16),
               Expanded(
                 child: ListView.builder(
+                  padding: const EdgeInsets.only(bottom: 96),
                   itemCount: _filteredAsmaulHusna.length,
                   itemBuilder: (context, index) {
                     final name = _filteredAsmaulHusna[index];
@@ -104,8 +108,11 @@ class _AsmaulHusnaScreenState extends ConsumerState<AsmaulHusnaScreen> {
                       elevation: 2,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(color: redAccent.withValues(alpha: 0.30), width: 1),
                       ),
                       child: ExpansionTile(
+                        iconColor: redAccent,
+                        collapsedIconColor: redAccent,
                         tilePadding: const EdgeInsets.symmetric(
                           vertical: 8,
                           horizontal: 16,

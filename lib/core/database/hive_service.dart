@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 class HiveService {
@@ -10,35 +11,93 @@ class HiveService {
   static const String quranBookmarksBoxName = 'quran_bookmarks';
 
   static bool _initialized = false;
+  static bool _hiveInitialized = false;
 
   static bool get isInitialized => _initialized;
 
-  static Future<void> init() async {
-    await Hive.initFlutter();
-    await _openBox(settingsBoxName);
-    await _openBox(trackerBoxName);
-    await _openBox(locationBoxName);
-    await _openBox(scheduleBoxName);
-    await _openBox(quranIndexBoxName);
-    await _openBox(quranDetailBoxName);
-    await _openBox(quranBookmarksBoxName);
-    _initialized = true;
-  }
+  static final List<String> _allBoxNames = [
+    settingsBoxName,
+    trackerBoxName,
+    locationBoxName,
+    scheduleBoxName,
+    quranIndexBoxName,
+    quranDetailBoxName,
+    quranBookmarksBoxName,
+  ];
 
-  static Future<void> _openBox(String name) async {
-    if (!Hive.isBoxOpen(name)) {
-      await Hive.openBox(name);
+  static Future<void> ensureBoxesOpen() async {
+    try {
+      // Ensure Hive itself is initialized first
+      if (!_hiveInitialized) {
+        await Hive.initFlutter();
+        _hiveInitialized = true;
+      }
+
+      for (final name in _allBoxNames) {
+        await _openBoxSafe(name);
+      }
+      _initialized = true;
+    } catch (e) {
+      debugPrint('Error ensuring boxes are open: $e');
     }
   }
 
-  // Generic helpers
-  static Box getBox(String name) => Hive.box(name);
+  static Future<void> init() async {
+    if (!_hiveInitialized) {
+      await Hive.initFlutter();
+      _hiveInitialized = true;
+    }
 
-  static Box? _tryGetBox(String name) {
-    if (!Hive.isBoxOpen(name)) return null;
+    for (final name in _allBoxNames) {
+      await _openBoxSafe(name);
+    }
+    _initialized = true;
+  }
 
+  /// Opens a box safely. If the box is corrupted (common after force-close),
+  /// deletes and recreates it.
+  static Future<void> _openBoxSafe(String name) async {
+    if (Hive.isBoxOpen(name)) return;
+
+    try {
+      await Hive.openBox(name);
+    } catch (e) {
+      debugPrint('Error opening box "$name": $e. Attempting recovery...');
+      try {
+        // Delete corrupted box and recreate
+        await Hive.deleteBoxFromDisk(name);
+        await Hive.openBox(name);
+        debugPrint('Box "$name" recovered successfully.');
+      } catch (e2) {
+        debugPrint('Failed to recover box "$name": $e2');
+      }
+    }
+  }
+
+  // Generic helpers — now safe against uninitialized state
+  static Box getBox(String name) {
+    if (!Hive.isBoxOpen(name)) {
+      // Return a fallback: try to get it, but if it fails, we handle gracefully
+      throw HiveError(
+        'Box "$name" is not open. Call HiveService.ensureBoxesOpen() first.',
+      );
+    }
     return Hive.box(name);
   }
+
+  /// Safe version of getBox that returns null if the box is not open.
+  static Box? tryGetBox(String name) {
+    if (!Hive.isBoxOpen(name)) return null;
+    try {
+      return Hive.box(name);
+    } catch (e) {
+      debugPrint('Error accessing box "$name": $e');
+      return null;
+    }
+  }
+
+  // Keep internal reference for backward compat
+  static Box? _tryGetBox(String name) => tryGetBox(name);
 
   // Settings helpers
   static Future<void> saveSetting(String key, dynamic value) async {
@@ -135,9 +194,27 @@ class HiveService {
 
   static Map<String, int> getPrayerOffsets() {
     final data = getSetting('prayer_offsets', defaultValue: {});
+    
+    final result = {
+      'subuh': 0,
+      'dzuhur': 0,
+      'ashar': 0,
+      'magrib': 0,
+      'isya': 0,
+    };
+
     if (data is Map) {
-      return Map<String, int>.from(data);
+      for (final key in result.keys) {
+        if (data.containsKey(key)) {
+          final val = data[key];
+          if (val is int) {
+            result[key] = val;
+          } else if (val is num) {
+            result[key] = val.toInt();
+          }
+        }
+      }
     }
-    return {'subuh': 0, 'dzuhur': 0, 'ashar': 0, 'magrib': 0, 'isya': 0};
+    return result;
   }
 }

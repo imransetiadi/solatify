@@ -49,6 +49,7 @@ class IslamicContentScreen extends ConsumerWidget {
     final textColor = isDark ? const Color(0xFFF3FBF6) : const Color(0xFF241A12);
     final mutedColor = isDark ? const Color(0xFFC8B8A8) : const Color(0xFF6E5B4B);
     final primaryColor = isDark ? const Color(0xFFC78A4C) : const Color(0xFF0E4D31);
+    final redAccent = theme.colorScheme.tertiary;
     final surfaceColor = isDark ? const Color(0xFF241A14) : Colors.white;
     final backgroundColor = isDark ? const Color(0xFF082E1D) : const Color(0xFFF3FBF6);
     final randomTip = ref.watch(randomTipProvider);
@@ -85,7 +86,7 @@ class IslamicContentScreen extends ConsumerWidget {
                 _SectionTitle(
                   icon: Icons.auto_awesome,
                   title: 'Tip Harian',
-                  color: primaryColor,
+                  color: redAccent,
                 ),
                 const SizedBox(height: 12),
                 _DailyTipCard(
@@ -95,14 +96,14 @@ class IslamicContentScreen extends ConsumerWidget {
                   surfaceColor: surfaceColor,
                   textColor: textColor,
                   mutedColor: mutedColor,
-                  primaryColor: primaryColor,
+                  primaryColor: redAccent,
                   onTap: () => context.go('/islamic-content/tips'),
                 ),
                 const SizedBox(height: 24),
                 _SectionTitle(
                   icon: Icons.grid_view_rounded,
                   title: 'Menu Konten',
-                  color: primaryColor,
+                  color: redAccent,
                 ),
                 const SizedBox(height: 12),
                 LayoutBuilder(
@@ -127,7 +128,7 @@ class IslamicContentScreen extends ConsumerWidget {
                           surfaceColor: surfaceColor,
                           textColor: textColor,
                           mutedColor: mutedColor,
-                          primaryColor: primaryColor,
+                          primaryColor: redAccent,
                         );
                       },
                     );
@@ -244,7 +245,10 @@ class _ContentMenuCard extends StatelessWidget {
     return Material(
       color: surfaceColor,
       elevation: 1,
-      borderRadius: BorderRadius.circular(18),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+        side: BorderSide(color: primaryColor.withValues(alpha: 0.30), width: 1),
+      ),
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
         onTap: () => context.go(item.path),

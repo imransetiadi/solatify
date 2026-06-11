@@ -71,7 +71,9 @@ class _DuasScreenState extends ConsumerState<DuasScreen> {
       body: IslamicBackground(
         child: ResponsiveCenter(
           child: Padding(
-            padding: ResponsiveLayout.pagePadding(context),
+            padding: ResponsiveLayout.pagePadding(context).copyWith(
+              top: kToolbarHeight + MediaQuery.paddingOf(context).top + 8,
+            ),
             child: Column(
               children: [
                 TextField(
@@ -146,10 +148,14 @@ class _DuaCardState extends State<_DuaCard> {
 
   @override
   Widget build(BuildContext context) {
+    final redAccent = Theme.of(context).colorScheme.tertiary;
     return Material(
       color: widget.surfaceColor,
       elevation: 1,
-      borderRadius: BorderRadius.circular(18),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+        side: BorderSide(color: redAccent.withValues(alpha: 0.30), width: 1),
+      ),
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
         onTap: () => setState(() => _isExpanded = !_isExpanded),
@@ -172,7 +178,7 @@ class _DuaCardState extends State<_DuaCard> {
                   ),
                   Icon(
                     _isExpanded ? Icons.expand_less : Icons.expand_more,
-                    color: widget.primaryColor,
+                    color: redAccent,
                   ),
                 ],
               ),

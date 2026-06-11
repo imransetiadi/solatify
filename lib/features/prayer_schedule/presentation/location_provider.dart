@@ -43,18 +43,22 @@ class LocationNotifier extends StateNotifier<LocationState> {
   LocationNotifier() : super(_initialState());
 
   static LocationState _initialState() {
-    final cached = HiveService.getCachedLocation();
-    if (cached != null) {
-      try {
-        return LocationState(
-          latitude: (cached['latitude'] as num).toDouble(),
-          longitude: (cached['longitude'] as num).toDouble(),
-          city: cached['city']?.toString() ?? 'Jakarta',
-          country: cached['country']?.toString() ?? 'Indonesia',
-        );
-      } catch (e) {
-        debugPrint('Error loading cached location: $e');
+    try {
+      final cached = HiveService.getCachedLocation();
+      if (cached != null && cached.isNotEmpty) {
+        try {
+          return LocationState(
+            latitude: (cached['latitude'] as num?)?.toDouble() ?? -6.2088,
+            longitude: (cached['longitude'] as num?)?.toDouble() ?? 106.8456,
+            city: cached['city']?.toString() ?? 'Jakarta',
+            country: cached['country']?.toString() ?? 'Indonesia',
+          );
+        } catch (e) {
+          debugPrint('Error parsing cached location: $e');
+        }
       }
+    } catch (e) {
+      debugPrint('Error accessing cached location: $e');
     }
     // Default to Jakarta
     return LocationState(

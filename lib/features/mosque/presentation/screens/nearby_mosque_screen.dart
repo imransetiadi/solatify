@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 
@@ -39,7 +40,8 @@ class NearbyMosqueScreen extends ConsumerStatefulWidget {
 
 class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen> {
   static const _searchRadiusMeters = 5000;
-  static const _fallbackRadiusMeters = [5000, 3000, 1500];
+  static const _fallbackRadiusMeters = [5000, 2500];
+  static const _requestTimeout = Duration(seconds: 12);
   static const _overpassEndpoints = [
     'https://overpass-api.de/api/interpreter',
     'https://overpass.kumi.systems/api/interpreter',
@@ -66,7 +68,8 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen> {
 
     try {
       final position = await LocationService.getCurrentPosition().timeout(
-        const Duration(seconds: 15),
+        const Duration(seconds: 12),
+        onTimeout: () => null,
       );
 
       final location = ref.read(locationProvider);
@@ -121,22 +124,50 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen> {
   }) async {
     Object? lastError;
 
+    // For each radius, query all Overpass endpoints CONCURRENTLY and take the
+    // first one that responds successfully. This avoids waiting through a long
+    // chain of sequential timeouts when public servers are slow/unreachable.
     for (final radius in _fallbackRadiusMeters) {
-      for (final endpoint in _overpassEndpoints) {
-        try {
-          return await _fetchMosquesFromEndpoint(
-            endpoint: endpoint,
-            radiusMeters: radius,
-            latitude: latitude,
-            longitude: longitude,
-          );
-        } catch (error) {
-          lastError = error;
-        }
+      final futures = _overpassEndpoints
+          .map(
+            (endpoint) => _fetchMosquesFromEndpoint(
+              endpoint: endpoint,
+              radiusMeters: radius,
+              latitude: latitude,
+              longitude: longitude,
+            ),
+          )
+          .toList();
+      try {
+        return await _firstSuccess(futures);
+      } catch (error) {
+        lastError = error;
       }
     }
 
     throw lastError ?? 'Semua endpoint Overpass gagal merespons.';
+  }
+
+  /// Returns the value of the first future that completes successfully.
+  /// If all futures fail, completes with the last error.
+  Future<T> _firstSuccess<T>(List<Future<T>> futures) {
+    final completer = Completer<T>();
+    var remaining = futures.length;
+    Object? lastError;
+
+    for (final future in futures) {
+      future.then((value) {
+        if (!completer.isCompleted) completer.complete(value);
+      }).catchError((Object error) {
+        lastError = error;
+        remaining--;
+        if (remaining == 0 && !completer.isCompleted) {
+          completer.completeError(lastError ?? 'Semua permintaan gagal.');
+        }
+      });
+    }
+
+    return completer.future;
   }
 
   Future<List<MosqueItem>> _fetchMosquesFromEndpoint({
@@ -147,7 +178,7 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen> {
   }) async {
     final query =
         '''
-[out:json][timeout:25];
+[out:json][timeout:10];
 (
   nwr["amenity"="place_of_worship"]["religion"="muslim"](around:$radiusMeters,$latitude,$longitude);
   nwr["building"="mosque"](around:$radiusMeters,$latitude,$longitude);
@@ -164,7 +195,7 @@ out center tags;
           },
           body: {'data': query},
         )
-        .timeout(const Duration(seconds: 30));
+        .timeout(_requestTimeout);
 
     if (response.statusCode != 200) {
       final bodyPreview = response.body.replaceAll(RegExp(r'\s+'), ' ').trim();

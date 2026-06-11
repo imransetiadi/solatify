@@ -40,7 +40,9 @@ class GlassContainer extends StatelessWidget {
 
     final defaultBorder =
         borderColor ??
-        (isDark ? const Color(0xFF49372A) : const Color(0xFFCFE7D5));
+        (isDark
+            ? const Color(0xFFE85D4F).withValues(alpha: 0.42)
+            : const Color(0xFFC0392B).withValues(alpha: 0.32));
 
     return Container(
       width: width,

@@ -27,6 +27,7 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
   Color get _textColor => Theme.of(context).brightness == Brightness.dark
       ? Colors.white
       : const Color(0xFF241A12);
+  Color get _redAccent => Theme.of(context).colorScheme.tertiary;
   Color get _textMuted => Theme.of(context).brightness == Brightness.dark
       ? Colors.white70
       : const Color(0xFF6E5B4B);
@@ -108,7 +109,7 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
                 audioState.playingSurah == surah.number && audioState.isPlaying
                     ? Icons.pause_circle_filled
                     : Icons.play_circle_fill,
-                color: Color(0xFF241A12), // Black
+                color: _redAccent,
                 size: 28,
               ),
               tooltip: 'Putar Semua Ayat (${surah.numberOfVerses} Ayat)',
@@ -132,8 +133,8 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
         child: Stack(
           children: [
             surahAsync.when(
-              loading: () => const Center(
-                child: CircularProgressIndicator(color: Color(0xFF0E4D31)),
+              loading: () => Center(
+                child: CircularProgressIndicator(color: _redAccent),
               ),
               error: (err, stack) => Center(
                 child: Padding(
@@ -141,9 +142,9 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.error_outline,
-                        color: Color(0xFF241A12),
+                        color: _redAccent,
                         size: 64,
                       ),
                       const SizedBox(height: 16),
@@ -252,6 +253,7 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
       child: GlassContainer(
         blur: 15,
         opacity: Theme.of(context).brightness == Brightness.dark ? 0.05 : 0.03,
+        borderColor: _redAccent.withValues(alpha: 0.32),
         padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
         child: Column(
           children: [
@@ -267,14 +269,18 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
             const SizedBox(height: 4),
             Text(
               surah.translation,
-              style: const TextStyle(
-                color: Color(0xFF241A12),
+              style: TextStyle(
+                color: _textColor,
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),
             ),
             const SizedBox(height: 12),
-            Container(width: 80, height: 1, color: _dividerColor),
+            Container(
+              width: 80,
+              height: 2,
+              color: _redAccent.withValues(alpha: 0.7),
+            ),
             const SizedBox(height: 12),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -364,12 +370,12 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
                   decoration: BoxDecoration(
                     color: isLastRead
                         ? const Color(0xFF0E4D31)
-                        : const Color(0xFF241A12).withValues(alpha: 0.1),
+                        : _redAccent.withValues(alpha: 0.12),
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: isLastRead
                           ? const Color(0xFF0E4D31)
-                          : const Color(0xFF241A12).withValues(alpha: 0.4),
+                          : _redAccent.withValues(alpha: 0.45),
                       width: 1,
                     ),
                   ),
@@ -377,9 +383,7 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
                     child: Text(
                       verse.number.toString(),
                       style: TextStyle(
-                        color: isLastRead
-                            ? Colors.black
-                            : const Color(0xFF241A12),
+                        color: isLastRead ? Colors.white : _textColor,
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
                       ),
@@ -400,7 +404,7 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
                     child: const Text(
                       'TERAKHIR BACA',
                       style: TextStyle(
-                        color: Colors.black,
+                        color: Colors.white,
                         fontSize: 8,
                         fontWeight: FontWeight.bold,
                       ),
@@ -415,7 +419,7 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
                         ? Icons.pause_circle_outline
                         : Icons.play_arrow_outlined,
                     color: isCurrentlyPlaying
-                        ? const Color(0xFF241A12)
+                        ? _redAccent
                         : _textSecondary,
                     size: 20,
                   ),
@@ -465,7 +469,7 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
                 IconButton(
                   icon: Icon(
                     isBookmarked ? Icons.star : Icons.star_border,
-                    color: Color(0xFF241A12),
+                    color: isBookmarked ? _redAccent : _textSecondary,
                     size: 20,
                   ),
                   tooltip: 'Simpan Ayat',
@@ -499,8 +503,8 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
             Text(
               verse.latin,
               textAlign: TextAlign.left,
-              style: const TextStyle(
-                color: Color(0xFF241A12), // Black accent for transliteration
+              style: TextStyle(
+                color: _textSecondary,
                 fontSize: 14,
                 fontStyle: FontStyle.italic,
                 height: 1.4,
@@ -542,7 +546,7 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
         children: [
           Row(
             children: [
-              const Icon(Icons.music_note, color: Color(0xFF241A12), size: 22),
+              Icon(Icons.music_note, color: _redAccent, size: 22),
               const SizedBox(width: 8),
               Expanded(
                 child: Column(
@@ -570,7 +574,7 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
                     valueColor: AlwaysStoppedAnimation<Color>(
-                      Color(0xFF241A12),
+                      Color(0xFFC0392B),
                     ),
                   ),
                 )
@@ -578,7 +582,7 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
                 IconButton(
                   icon: Icon(
                     isPlaying ? Icons.pause : Icons.play_arrow,
-                    color: Colors.white,
+                    color: _redAccent,
                     size: 22,
                   ),
                   onPressed: () {
@@ -590,9 +594,9 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
                   },
                 ),
                 IconButton(
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.stop,
-                    color: Color(0xFF241A12),
+                    color: _textColor,
                     size: 22,
                   ),
                   onPressed: () {

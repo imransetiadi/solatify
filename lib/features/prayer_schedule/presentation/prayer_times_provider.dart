@@ -27,125 +27,164 @@ class PrayerTimesNotifier extends StateNotifier<PrayerTimesState> {
 
     // Listen to changes in location and settings to recalculate
     _ref.listen(locationProvider, (previous, next) {
-      _recalculate();
+      try {
+        _recalculate();
+      } catch (e) {
+        // Silently ignore recalculation errors on location change
+      }
     });
     _ref.listen(settingsProvider, (previous, next) {
       if (previous?.calculationMethod != next.calculationMethod ||
           previous?.notificationEnabled != next.notificationEnabled ||
           previous?.adhanSound != next.adhanSound ||
           previous?.prayerOffsets != next.prayerOffsets) {
-        _recalculate();
+        try {
+          _recalculate();
+        } catch (e) {
+          // Silently ignore recalculation errors on settings change
+        }
       }
     });
   }
 
+  static const List<String> _prayerKeys = [
+    'subuh',
+    'dzuhur',
+    'ashar',
+    'magrib',
+    'isya',
+  ];
+
+  /// Returns true only if [times] contains all five prayer keys.
+  static bool _isComplete(Map<String, DateTime> times) {
+    return _prayerKeys.every((k) => times.containsKey(k));
+  }
+
   static PrayerTimesState _calculateInitialState(Ref ref) {
-    final location = ref.read(locationProvider);
-    final settings = ref.read(settingsProvider);
+    // Fully guarded: any failure falls back to a safe empty state so the app
+    // never crashes on cold start (e.g. after a force-close).
+    try {
+      final location = ref.read(locationProvider);
+      final settings = ref.read(settingsProvider);
 
-    // Check if we have cached schedule for today
-    final dateKey = _getDateKey(DateTime.now());
-    final cached = HiveService.getCachedPrayerSchedule(dateKey);
+      // Check if we have cached schedule for today
+      final dateKey = _getDateKey(DateTime.now());
+      final cached = HiveService.getCachedPrayerSchedule(dateKey);
 
-    if (cached != null) {
-      try {
-        final Map<String, DateTime> today = {};
-        cached.forEach((key, value) {
-          if (value is String) {
-            today[key] = DateTime.parse(value);
+      if (cached != null) {
+        try {
+          final Map<String, DateTime> today = {};
+          cached.forEach((key, value) {
+            if (value is String) {
+              final parsed = DateTime.tryParse(value);
+              if (parsed != null) today[key] = parsed;
+            }
+          });
+
+          // Only trust the cache if it actually contains every prayer time.
+          if (_isComplete(today)) {
+            final tomorrow = PrayerCalculationService.calculatePrayerTimes(
+              latitude: location.latitude,
+              longitude: location.longitude,
+              date: DateTime.now().add(const Duration(days: 1)),
+              method: settings.calculationMethod,
+              offsets: settings.prayerOffsets,
+            );
+
+            return PrayerTimesState(
+              todayTimes: today,
+              tomorrowTimes: tomorrow,
+              isOfflineCached: true,
+            );
           }
-        });
-
-        // Calculate tomorrow's times (often not cached, so calculate)
-        final tomorrow = PrayerCalculationService.calculatePrayerTimes(
-          latitude: location.latitude,
-          longitude: location.longitude,
-          date: DateTime.now().add(const Duration(days: 1)),
-          method: settings.calculationMethod,
-          offsets: settings.prayerOffsets,
-        );
-
-        return PrayerTimesState(
-          todayTimes: today,
-          tomorrowTimes: tomorrow,
-          isOfflineCached: true,
-        );
-      } catch (_) {
-        // Fallback to recalculate if cache parsing fails
+        } catch (_) {
+          // Fallback to recalculate if cache parsing fails
+        }
       }
+
+      // Recalculate fresh
+      final today = PrayerCalculationService.calculatePrayerTimes(
+        latitude: location.latitude,
+        longitude: location.longitude,
+        date: DateTime.now(),
+        method: settings.calculationMethod,
+        offsets: settings.prayerOffsets,
+      );
+
+      final tomorrow = PrayerCalculationService.calculatePrayerTimes(
+        latitude: location.latitude,
+        longitude: location.longitude,
+        date: DateTime.now().add(const Duration(days: 1)),
+        method: settings.calculationMethod,
+        offsets: settings.prayerOffsets,
+      );
+
+      // Save today's calculation to cache asynchronously
+      _cacheSchedule(dateKey, today);
+
+      return PrayerTimesState(
+        todayTimes: today,
+        tomorrowTimes: tomorrow,
+        isOfflineCached: false,
+      );
+    } catch (e) {
+      // Last-resort safe state — UI handles empty maps gracefully.
+      return PrayerTimesState(todayTimes: {}, tomorrowTimes: {});
     }
-
-    // Recalculate fresh
-    final today = PrayerCalculationService.calculatePrayerTimes(
-      latitude: location.latitude,
-      longitude: location.longitude,
-      date: DateTime.now(),
-      method: settings.calculationMethod,
-      offsets: settings.prayerOffsets,
-    );
-
-    final tomorrow = PrayerCalculationService.calculatePrayerTimes(
-      latitude: location.latitude,
-      longitude: location.longitude,
-      date: DateTime.now().add(const Duration(days: 1)),
-      method: settings.calculationMethod,
-      offsets: settings.prayerOffsets,
-    );
-
-    // Save today's calculation to cache asynchronously
-    _cacheSchedule(dateKey, today);
-
-    return PrayerTimesState(
-      todayTimes: today,
-      tomorrowTimes: tomorrow,
-      isOfflineCached: false,
-    );
   }
 
   void _recalculate() {
-    final location = _ref.read(locationProvider);
-    final settings = _ref.read(settingsProvider);
+    try {
+      final location = _ref.read(locationProvider);
+      final settings = _ref.read(settingsProvider);
 
-    final today = PrayerCalculationService.calculatePrayerTimes(
-      latitude: location.latitude,
-      longitude: location.longitude,
-      date: DateTime.now(),
-      method: settings.calculationMethod,
-      offsets: settings.prayerOffsets,
-    );
+      final today = PrayerCalculationService.calculatePrayerTimes(
+        latitude: location.latitude,
+        longitude: location.longitude,
+        date: DateTime.now(),
+        method: settings.calculationMethod,
+        offsets: settings.prayerOffsets,
+      );
 
-    final tomorrow = PrayerCalculationService.calculatePrayerTimes(
-      latitude: location.latitude,
-      longitude: location.longitude,
-      date: DateTime.now().add(const Duration(days: 1)),
-      method: settings.calculationMethod,
-      offsets: settings.prayerOffsets,
-    );
+      final tomorrow = PrayerCalculationService.calculatePrayerTimes(
+        latitude: location.latitude,
+        longitude: location.longitude,
+        date: DateTime.now().add(const Duration(days: 1)),
+        method: settings.calculationMethod,
+        offsets: settings.prayerOffsets,
+      );
 
-    final dateKey = _getDateKey(DateTime.now());
-    _cacheSchedule(dateKey, today);
+      final dateKey = _getDateKey(DateTime.now());
+      _cacheSchedule(dateKey, today);
 
-    state = PrayerTimesState(
-      todayTimes: today,
-      tomorrowTimes: tomorrow,
-      isOfflineCached: false,
-    );
+      state = PrayerTimesState(
+        todayTimes: today,
+        tomorrowTimes: tomorrow,
+        isOfflineCached: false,
+      );
 
-    _scheduleNotifications();
+      _scheduleNotifications();
+    } catch (e) {
+      // Keep previous state if recalculation fails
+    }
   }
 
   void _scheduleNotifications() {
-    final settings = _ref.read(settingsProvider);
+    try {
+      final settings = _ref.read(settingsProvider);
 
-    NotificationService.schedulePrayerNotifications(
-      prayerTimes: {
-        ...state.todayTimes,
-        for (final entry in state.tomorrowTimes.entries)
-          'besok_${entry.key}': entry.value,
-      },
-      adhanSound: settings.adhanSound,
-      enabled: settings.notificationEnabled,
-    );
+      NotificationService.schedulePrayerNotifications(
+        prayerTimes: {
+          ...state.todayTimes,
+          for (final entry in state.tomorrowTimes.entries)
+            'besok_${entry.key}': entry.value,
+        },
+        adhanSound: settings.adhanSound,
+        enabled: settings.notificationEnabled,
+      );
+    } catch (e) {
+      // Notifications are best-effort; never block app startup.
+    }
   }
 
   static String _getDateKey(DateTime date) {
@@ -181,11 +220,21 @@ final prayerListProvider = Provider<List<PrayerItem>>((ref) {
 
   if (times.isEmpty) return [];
 
+  const config = [
+    ['Subuh', 'subuh'],
+    ['Dzuhur', 'dzuhur'],
+    ['Ashar', 'ashar'],
+    ['Magrib', 'magrib'],
+    ['Isya', 'isya'],
+  ];
+
+  // If any required time is missing (e.g. partial cache after a force-close),
+  // return empty rather than force-unwrapping and crashing.
+  final hasAll = config.every((c) => times[c[1]] != null);
+  if (!hasAll) return [];
+
   return [
-    PrayerItem(name: 'Subuh', time: times['subuh']!, key: 'subuh'),
-    PrayerItem(name: 'Dzuhur', time: times['dzuhur']!, key: 'dzuhur'),
-    PrayerItem(name: 'Ashar', time: times['ashar']!, key: 'ashar'),
-    PrayerItem(name: 'Magrib', time: times['magrib']!, key: 'magrib'),
-    PrayerItem(name: 'Isya', time: times['isya']!, key: 'isya'),
+    for (final c in config)
+      PrayerItem(name: c[0], time: times[c[1]]!, key: c[1]),
   ];
 });

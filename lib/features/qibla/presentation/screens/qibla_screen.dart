@@ -1,7 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_compass/flutter_compass.dart';
+import 'package:flutter_compass_v2/flutter_compass_v2.dart';
 import 'package:adhan/adhan.dart';
 import '../../../../core/widgets/glass_container.dart';
 import '../../../../core/widgets/responsive_layout.dart';
@@ -55,7 +55,9 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
 
             return SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
-              padding: ResponsiveLayout.pagePadding(context),
+              padding: ResponsiveLayout.pagePadding(context).copyWith(
+                bottom: 96,
+              ),
               child: ResponsiveCenter(
                 child: Column(
                   children: [
@@ -100,8 +102,8 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
                           ),
                           Text(
                             'Kiblat: ${qiblaAngle.toStringAsFixed(1)}°',
-                            style: const TextStyle(
-                              color: Color(0xFF241A12),
+                            style: TextStyle(
+                              color: textColor,
                               fontWeight: FontWeight.bold,
                               fontSize: 13,
                             ),
@@ -228,10 +230,12 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
                               Container(
                                 width: 18,
                                 height: 18,
-                                decoration: const BoxDecoration(
+                                decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: Color(0xFF241A12), // Black
-                                  boxShadow: [
+                                  color: isDark
+                                      ? Colors.white
+                                      : const Color(0xFF241A12),
+                                  boxShadow: const [
                                     BoxShadow(
                                       color: Colors.black26,
                                       blurRadius: 4,
@@ -464,7 +468,7 @@ class _CompassDialPainter extends CustomPainter {
         text: label,
         style: TextStyle(
           color: label == 'U'
-              ? const Color(0xFF241A12)
+              ? (isDark ? Colors.white : const Color(0xFF241A12))
               : (isDark
                     ? Colors.white70
                     : const Color(0xFF6E5B4B)), // Black for North
@@ -496,19 +500,25 @@ class QiblaNeedlePaint extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(size: Size.square(size), painter: _QiblaNeedlePainter());
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return CustomPaint(
+      size: Size.square(size),
+      painter: _QiblaNeedlePainter(isDark: isDark),
+    );
   }
 }
 
 class _QiblaNeedlePainter extends CustomPainter {
+  final bool isDark;
+  _QiblaNeedlePainter({required this.isDark});
+
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
 
     final needlePaint = Paint()
-      ..color =
-          const Color(0xFF241A12) // Black
+      ..color = isDark ? Colors.white : const Color(0xFF241A12)
       ..style = PaintingStyle.fill;
 
     // Draw arrow path (pointing straight up on the canvas)
@@ -541,5 +551,6 @@ class _QiblaNeedlePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _QiblaNeedlePainter oldDelegate) =>
+      oldDelegate.isDark != isDark;
 }

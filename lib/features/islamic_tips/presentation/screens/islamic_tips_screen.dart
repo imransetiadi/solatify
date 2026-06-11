@@ -10,6 +10,7 @@ class IslamicTipsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final redAccent = theme.colorScheme.tertiary;
     final primaryColor = isDark ? const Color(0xFFC78A4C) : const Color(0xFF0E4D31);
     final textColor = isDark ? const Color(0xFFF3FBF6) : const Color(0xFF241A12);
     final cardBg = isDark ? const Color(0xFF241A14) : Colors.white;
@@ -29,6 +30,7 @@ class IslamicTipsScreen extends ConsumerWidget {
         child: Padding(
           padding: ResponsiveLayout.pagePadding(context),
           child: ListView.builder(
+            padding: const EdgeInsets.only(bottom: 96),
             itemCount: tips.length,
             itemBuilder: (context, index) {
               final tip = tips[index];
@@ -36,8 +38,14 @@ class IslamicTipsScreen extends ConsumerWidget {
                 margin: const EdgeInsets.symmetric(vertical: 8),
                 color: cardBg,
                 elevation: 2,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: redAccent.withValues(alpha: 0.30), width: 1),
+                ),
                 child: ExpansionTile(
+                  iconColor: redAccent,
+                  collapsedIconColor: redAccent,
+                  leading: Icon(Icons.lightbulb_outline, color: redAccent),
                   tilePadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                   title: Text(
                     tip.title,

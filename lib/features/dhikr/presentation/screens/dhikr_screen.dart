@@ -55,19 +55,23 @@ class _DhikrListView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final dhikrList = ref.watch(isMorning ? morningDhikrProvider : eveningDhikrProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final redAccent = Theme.of(context).colorScheme.tertiary;
     final textColor = isDark ? const Color(0xFFF3FBF6) : const Color(0xFF241A12);
     final cardBg = isDark ? const Color(0xFF241A14) : Colors.white;
 
     return ResponsiveCenter(
       child: ListView.builder(
-        padding: ResponsiveLayout.pagePadding(context),
+        padding: ResponsiveLayout.pagePadding(context).copyWith(bottom: 96),
         itemCount: dhikrList.length,
         itemBuilder: (context, index) {
           final dhikr = dhikrList[index];
           return Card(
             color: cardBg,
             margin: const EdgeInsets.only(bottom: 16),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: redAccent.withValues(alpha: 0.30), width: 1),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -86,12 +90,12 @@ class _DhikrListView extends ConsumerWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
-                            color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                            color: redAccent.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
                             'Dibaca ${dhikr.count}x',
-                            style: TextStyle(color: Theme.of(context).primaryColor, fontSize: 12, fontWeight: FontWeight.bold),
+                            style: TextStyle(color: redAccent, fontSize: 12, fontWeight: FontWeight.bold),
                           ),
                         ),
                     ],

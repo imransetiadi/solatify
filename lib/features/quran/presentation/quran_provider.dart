@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 import '../data/quran_repository.dart';
@@ -77,34 +78,42 @@ class QuranBookmarksNotifier extends StateNotifier<QuranBookmarksState> {
   QuranBookmarksNotifier() : super(_loadInitialState());
 
   static QuranBookmarksState _loadInitialState() {
-    final box = HiveService.getBox(HiveService.quranBookmarksBoxName);
+    try {
+      final box = HiveService.tryGetBox(HiveService.quranBookmarksBoxName);
+      if (box == null) {
+        return QuranBookmarksState(bookmarkedKeys: {});
+      }
 
-    // Load last read
-    final lastReadMap = box.get('last_read');
-    int? lastSurah;
-    int? lastVerse;
-    String? lastSurahName;
-    if (lastReadMap != null && lastReadMap is Map) {
-      lastSurah = lastReadMap['surah'] as int?;
-      lastVerse = lastReadMap['verse'] as int?;
-      lastSurahName = lastReadMap['surahName'] as String?;
+      // Load last read
+      final lastReadMap = box.get('last_read');
+      int? lastSurah;
+      int? lastVerse;
+      String? lastSurahName;
+      if (lastReadMap != null && lastReadMap is Map) {
+        lastSurah = lastReadMap['surah'] as int?;
+        lastVerse = lastReadMap['verse'] as int?;
+        lastSurahName = lastReadMap['surahName'] as String?;
+      }
+
+      // Load bookmarks
+      final rawList = box.get('list', defaultValue: <dynamic>[]);
+      final Set<String> bookmarkedKeys = {};
+      if (rawList is List) {
+        bookmarkedKeys.addAll(rawList.map((e) => e.toString()));
+      } else if (rawList is Map) {
+        bookmarkedKeys.addAll(rawList.keys.map((e) => e.toString()));
+      }
+
+      return QuranBookmarksState(
+        lastReadSurah: lastSurah,
+        lastReadVerse: lastVerse,
+        lastReadSurahName: lastSurahName,
+        bookmarkedKeys: bookmarkedKeys,
+      );
+    } catch (e) {
+      // If Hive box is corrupted or not open, return empty state
+      return QuranBookmarksState(bookmarkedKeys: {});
     }
-
-    // Load bookmarks
-    final rawList = box.get('list', defaultValue: <dynamic>[]);
-    final Set<String> bookmarkedKeys = {};
-    if (rawList is List) {
-      bookmarkedKeys.addAll(rawList.map((e) => e.toString()));
-    } else if (rawList is Map) {
-      bookmarkedKeys.addAll(rawList.keys.map((e) => e.toString()));
-    }
-
-    return QuranBookmarksState(
-      lastReadSurah: lastSurah,
-      lastReadVerse: lastVerse,
-      lastReadSurahName: lastSurahName,
-      bookmarkedKeys: bookmarkedKeys,
-    );
   }
 
   Future<void> setLastRead(
@@ -112,7 +121,9 @@ class QuranBookmarksNotifier extends StateNotifier<QuranBookmarksState> {
     int verseNumber,
     String surahName,
   ) async {
-    final box = HiveService.getBox(HiveService.quranBookmarksBoxName);
+    final box = HiveService.tryGetBox(HiveService.quranBookmarksBoxName);
+    if (box == null) return;
+
     final data = {
       'surah': surahNumber,
       'verse': verseNumber,
@@ -128,7 +139,9 @@ class QuranBookmarksNotifier extends StateNotifier<QuranBookmarksState> {
   }
 
   Future<void> toggleBookmark(int surahNumber, int verseNumber) async {
-    final box = HiveService.getBox(HiveService.quranBookmarksBoxName);
+    final box = HiveService.tryGetBox(HiveService.quranBookmarksBoxName);
+    if (box == null) return;
+
     final key = '$surahNumber:$verseNumber';
     final updatedKeys = Set<String>.from(state.bookmarkedKeys);
 
@@ -144,6 +157,24 @@ class QuranBookmarksNotifier extends StateNotifier<QuranBookmarksState> {
 
   bool isBookmarked(int surahNumber, int verseNumber) {
     return state.bookmarkedKeys.contains('$surahNumber:$verseNumber');
+  }
+
+  /// Parses raw "surah:verse" bookmark keys into sorted [surah, verse] pairs,
+  /// safely skipping malformed/legacy keys (prevents crashes on int.parse).
+  static List<List<int>> parseSortedBookmarkKeys(Iterable<String> keys) {
+    final parsed = <List<int>>[];
+    for (final key in keys) {
+      final parts = key.split(':');
+      if (parts.length != 2) continue;
+      final s = int.tryParse(parts[0].trim());
+      final v = int.tryParse(parts[1].trim());
+      if (s == null || v == null) continue;
+      parsed.add([s, v]);
+    }
+    parsed.sort(
+      (a, b) => a[0] != b[0] ? a[0].compareTo(b[0]) : a[1].compareTo(b[1]),
+    );
+    return parsed;
   }
 }
 
@@ -195,9 +226,14 @@ class QuranAudioNotifier extends StateNotifier<QuranAudioState> {
   int _playlistIndex = 0;
   int? _surahNumber;
 
+  StreamSubscription<PlayerState>? _playerStateSub;
+  StreamSubscription<Duration>? _positionSub;
+  StreamSubscription<Duration?>? _durationSub;
+
   QuranAudioNotifier() : super(QuranAudioState()) {
     // Listen to player state changes
-    _audioPlayer.playerStateStream.listen((playerState) {
+    _playerStateSub = _audioPlayer.playerStateStream.listen((playerState) {
+      if (!mounted) return;
       final isPlaying = playerState.playing;
       final processingState = playerState.processingState;
 
@@ -214,12 +250,14 @@ class QuranAudioNotifier extends StateNotifier<QuranAudioState> {
     });
 
     // Listen to position stream for progress updates
-    _audioPlayer.positionStream.listen((position) {
+    _positionSub = _audioPlayer.positionStream.listen((position) {
+      if (!mounted) return;
       state = state.copyWith(progress: position);
     });
 
     // Listen to duration stream
-    _audioPlayer.durationStream.listen((duration) {
+    _durationSub = _audioPlayer.durationStream.listen((duration) {
+      if (!mounted) return;
       if (duration != null) {
         state = state.copyWith(totalDuration: duration);
       }
@@ -318,6 +356,9 @@ class QuranAudioNotifier extends StateNotifier<QuranAudioState> {
 
   @override
   void dispose() {
+    _playerStateSub?.cancel();
+    _positionSub?.cancel();
+    _durationSub?.cancel();
     _audioPlayer.dispose();
     super.dispose();
   }

@@ -322,7 +322,7 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
                         const SizedBox(width: 8),
                         TextButton.icon(
                           style: TextButton.styleFrom(
-                            foregroundColor: const Color(0xFF241A12),
+                            foregroundColor: textColor,
                             textStyle: const TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.bold,
@@ -461,7 +461,7 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
                 child: Padding(
                   padding: ResponsiveLayout.pagePadding(
                     context,
-                  ).copyWith(top: 8, bottom: 24),
+                  ).copyWith(top: 8, bottom: 96),
                   child: GlassContainer(
                     blur: 20,
                     opacity: isDark ? 0.04 : 0.02,
@@ -535,10 +535,10 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
           ),
           Text(
             formattedTime,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF241A12), // Black accent
+              color: textColor,
               letterSpacing: 0.5,
             ),
           ),

@@ -66,9 +66,9 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                         // Header title
                         Row(
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.menu_book,
-                              color: Color(0xFF241A12),
+                              color: _textColor,
                               size: 28,
                             ),
                             const SizedBox(width: 10),
@@ -192,10 +192,10 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                       ),
                       child: TabBar(
                         controller: _tabController,
-                        indicatorColor: const Color(
-                          0xFF241A12,
-                        ), // Black indicator
-                        labelColor: const Color(0xFF241A12),
+                        indicatorColor: Theme.of(
+                          context,
+                        ).colorScheme.tertiary,
+                        labelColor: _textColor,
                         unselectedLabelColor: _textSecondary,
                         labelStyle: const TextStyle(
                           fontWeight: FontWeight.bold,
@@ -242,9 +242,9 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.bookmark_added,
-                color: Color(0xFF241A12),
+                color: _textColor,
                 size: 36,
               ),
               const SizedBox(width: 16),
@@ -300,9 +300,9 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
+              Icon(
                 Icons.wifi_off_outlined,
-                color: Color(0xFF241A12),
+                color: _textColor,
                 size: 64,
               ),
               const SizedBox(height: 16),
@@ -411,15 +411,11 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
           );
         }
 
-        // Sort bookmarks dynamically
-        bookmarkedKeys.sort((a, b) {
-          final partsA = a.split(':');
-          final partsB = b.split(':');
-          final sA = int.parse(partsA[0]);
-          final sB = int.parse(partsB[0]);
-          if (sA != sB) return sA.compareTo(sB);
-          return int.parse(partsA[1]).compareTo(int.parse(partsB[1]));
-        });
+        // Parse + filter valid bookmark keys (skip malformed/legacy keys to
+        // avoid a crash on int.parse). Centralized + unit-tested helper.
+        final parsedBookmarks = QuranBookmarksNotifier.parseSortedBookmarkKeys(
+          bookmarkedKeys,
+        );
 
         return ListView.builder(
           physics: const BouncingScrollPhysics(),
@@ -427,14 +423,12 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
             ResponsiveLayout.pagePadding(context).horizontal / 2,
             12,
             ResponsiveLayout.pagePadding(context).horizontal / 2,
-            80,
+            96,
           ),
-          itemCount: bookmarkedKeys.length,
+          itemCount: parsedBookmarks.length,
           itemBuilder: (context, index) {
-            final key = bookmarkedKeys[index];
-            final parts = key.split(':');
-            final surahNum = int.parse(parts[0]);
-            final verseNum = int.parse(parts[1]);
+            final surahNum = parsedBookmarks[index][0];
+            final verseNum = parsedBookmarks[index][1];
 
             final surah = allSurahs.firstWhere(
               (s) => s.number == surahNum,
@@ -468,8 +462,8 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                       child: Center(
                         child: Text(
                           surah.number.toString(),
-                          style: const TextStyle(
-                            color: Color(0xFF241A12),
+                          style: TextStyle(
+                            color: _textColor,
                             fontWeight: FontWeight.bold,
                             fontSize: 13,
                           ),
@@ -504,9 +498,9 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                     Row(
                       children: [
                         IconButton(
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.bookmark_remove,
-                            color: Color(0xFF241A12),
+                            color: _textColor,
                             size: 20,
                           ),
                           onPressed: () {

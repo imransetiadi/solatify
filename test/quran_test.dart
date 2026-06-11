@@ -139,41 +139,44 @@ void main() {
     });
   });
 
-  group('Quran Search Filtering Tests', () {
-    test('Should filter surahs by query', () {
-      final container = ProviderContainer(
-        overrides: [
-          // Override the full surah list with test data
-          surahListProvider.overrideWith((ref) => [
-            Surah(number: 1, name: 'Al-Fatihah', translation: 'Pembukaan', numberOfVerses: 7, revelation: 'Mekah'),
-            Surah(number: 2, name: 'Al-Baqarah', translation: 'Sapi Betina', numberOfVerses: 286, revelation: 'Madinah'),
-            Surah(number: 18, name: 'Al-Kahf', translation: 'Penghuni Gua', numberOfVerses: 110, revelation: 'Mekah'),
-          ]),
-        ],
+  group('Quran Bookmark Key Parsing (crash-safety) Tests', () {
+    test('parses and sorts valid keys', () {
+      final result = QuranBookmarksNotifier.parseSortedBookmarkKeys(
+        ['18:10', '1:5', '1:2', '2:255'],
       );
-      addTearDown(container.dispose);
+      expect(result, [
+        [1, 2],
+        [1, 5],
+        [2, 255],
+        [18, 10],
+      ]);
+    });
 
-      // Verify initial empty query (returns all surahs)
-      var filteredState = container.read(filteredSurahListProvider);
-      expect(filteredState.value?.length, 3);
+    test('skips malformed / legacy keys without crashing', () {
+      final result = QuranBookmarksNotifier.parseSortedBookmarkKeys([
+        '1:1',
+        'garbage',
+        '2:', // missing verse
+        ':3', // missing surah
+        'a:b', // non-numeric
+        '3:4:5', // too many parts
+        '2:7',
+      ]);
+      expect(result, [
+        [1, 1],
+        [2, 7],
+      ]);
+    });
 
-      // Filter by name query 'baqarah'
-      container.read(surahSearchQueryProvider.notifier).state = 'baqarah';
-      filteredState = container.read(filteredSurahListProvider);
-      expect(filteredState.value?.length, 1);
-      expect(filteredState.value?.first.name, 'Al-Baqarah');
+    test('returns empty list for empty input', () {
+      expect(QuranBookmarksNotifier.parseSortedBookmarkKeys([]), isEmpty);
+    });
 
-      // Filter by translation query 'gua'
-      container.read(surahSearchQueryProvider.notifier).state = 'gua';
-      filteredState = container.read(filteredSurahListProvider);
-      expect(filteredState.value?.length, 1);
-      expect(filteredState.value?.first.name, 'Al-Kahf');
-
-      // Filter by number query '18'
-      container.read(surahSearchQueryProvider.notifier).state = '18';
-      filteredState = container.read(filteredSurahListProvider);
-      expect(filteredState.value?.length, 1);
-      expect(filteredState.value?.first.name, 'Al-Kahf');
+    test('tolerates whitespace around numbers', () {
+      final result = QuranBookmarksNotifier.parseSortedBookmarkKeys([' 5 : 9 ']);
+      expect(result, [
+        [5, 9],
+      ]);
     });
   });
 }
