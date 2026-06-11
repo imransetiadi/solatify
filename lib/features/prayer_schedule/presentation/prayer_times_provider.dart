@@ -51,7 +51,9 @@ class PrayerTimesNotifier extends StateNotifier<PrayerTimesState> {
       try {
         final Map<String, DateTime> today = {};
         cached.forEach((key, value) {
-          today[key] = DateTime.parse(value as String);
+          if (value is String) {
+            today[key] = DateTime.parse(value);
+          }
         });
 
         // Calculate tomorrow's times (often not cached, so calculate)

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/database/hive_service.dart';
 import '../../../core/utils/location_service.dart';
@@ -44,12 +45,16 @@ class LocationNotifier extends StateNotifier<LocationState> {
   static LocationState _initialState() {
     final cached = HiveService.getCachedLocation();
     if (cached != null) {
-      return LocationState(
-        latitude: cached['latitude'] as double,
-        longitude: cached['longitude'] as double,
-        city: cached['city'] as String,
-        country: cached['country'] as String,
-      );
+      try {
+        return LocationState(
+          latitude: (cached['latitude'] as num).toDouble(),
+          longitude: (cached['longitude'] as num).toDouble(),
+          city: cached['city']?.toString() ?? 'Jakarta',
+          country: cached['country']?.toString() ?? 'Indonesia',
+        );
+      } catch (e) {
+        debugPrint('Error loading cached location: $e');
+      }
     }
     // Default to Jakarta
     return LocationState(
@@ -63,7 +68,12 @@ class LocationNotifier extends StateNotifier<LocationState> {
   Future<bool> updateLocationWithGPS() async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
-      final pos = await LocationService.getCurrentPosition();
+      // Add timeout to prevent freeze on cold start / bad GPS signal
+      final pos = await LocationService.getCurrentPosition().timeout(
+        const Duration(seconds: 15),
+        onTimeout: () => throw 'GPS Timeout: Lokasi gagal dideteksi dalam 15 detik.',
+      );
+      
       if (pos != null) {
         final details = await LocationService.getCityCountry(
           pos.latitude,
