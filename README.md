@@ -141,6 +141,13 @@ lib/
 - Android Studio untuk build Android.
 - Physical device direkomendasikan untuk fitur lokasi, kompas, notifikasi, dan peta.
 
+## Kompatibilitas Platform
+
+- iOS minimum: `13.0`.
+- iPhone dan iPad didukung selama menjalankan iOS/iPadOS 13.0 atau lebih baru.
+- Fitur kompas kiblat membutuhkan perangkat fisik dengan sensor kompas.
+- Fitur lokasi, notifikasi, dan peta membutuhkan permission platform terkait.
+
 Cek environment lokal:
 
 ```bash
@@ -202,7 +209,7 @@ flutter run -d <SIMULATOR_ID>
 - App sudah diuji pada physical iPhone untuk skenario open, force-close dari app switcher, lalu open ulang.
 - Notification service dijalankan secara lazy agar startup iOS tetap stabil.
 - Bundle ID utama: `com.solatify.app.solatify`.
-- Deployment target iOS: `13.0`.
+- Deployment target iOS: `13.0`, sehingga versi iOS minimum yang disupport adalah iOS 13.0.
 - Beberapa plugin masih menampilkan warning Swift Package Manager atau lifecycle lama. Saat ini warning tersebut tidak menghentikan build.
 
 Plugin yang dapat memunculkan warning di Flutter versi terbaru:
