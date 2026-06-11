@@ -1,0 +1,73 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../../core/widgets/responsive_layout.dart';
+import '../providers/tips_provider.dart';
+
+class IslamicTipsScreen extends ConsumerWidget {
+  const IslamicTipsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = isDark ? const Color(0xFFC78A4C) : const Color(0xFF0E4D31);
+    final textColor = isDark ? const Color(0xFFF3FBF6) : const Color(0xFF241A12);
+    final cardBg = isDark ? const Color(0xFF241A14) : Colors.white;
+
+    final tips = ref.watch(tipsProvider);
+
+    return Scaffold(
+      backgroundColor: isDark ? const Color(0xFF082E1D) : const Color(0xFFF3FBF6),
+      appBar: AppBar(
+        backgroundColor: isDark ? const Color(0xFF082E1D) : const Color(0xFFF3FBF6),
+        foregroundColor: textColor,
+        elevation: 0,
+        title: Text('Tips Islami Harian', style: TextStyle(color: textColor, fontWeight: FontWeight.bold)),
+        centerTitle: true,
+      ),
+      body: ResponsiveCenter(
+        child: Padding(
+          padding: ResponsiveLayout.pagePadding(context),
+          child: ListView.builder(
+            itemCount: tips.length,
+            itemBuilder: (context, index) {
+              final tip = tips[index];
+              return Card(
+                margin: const EdgeInsets.symmetric(vertical: 8),
+                color: cardBg,
+                elevation: 2,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: ExpansionTile(
+                  tilePadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                  title: Text(
+                    tip.title,
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: primaryColor),
+                  ),
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            tip.content,
+                            style: TextStyle(fontSize: 15, color: textColor, height: 1.5),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Ref: ${tip.reference}',
+                            style: TextStyle(fontStyle: FontStyle.italic, color: textColor, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+}

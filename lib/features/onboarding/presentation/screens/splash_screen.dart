@@ -1,0 +1,135 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../core/widgets/responsive_layout.dart';
+import '../../../../core/widgets/islamic/islamic_decorations.dart';
+import '../../../settings/presentation/settings_provider.dart';
+
+class SplashScreen extends ConsumerStatefulWidget {
+  const SplashScreen({super.key});
+
+  @override
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends ConsumerState<SplashScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+
+    _fadeAnimation = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
+
+    _controller.forward();
+    _navigateToNext();
+  }
+
+  Future<void> _navigateToNext() async {
+    await Future.delayed(const Duration(milliseconds: 2500));
+    if (!mounted) return;
+
+    final settings = ref.read(settingsProvider);
+    if (settings.onboardingCompleted) {
+      context.go('/home');
+    } else {
+      context.go('/onboarding');
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final primaryColor = Theme.of(context).colorScheme.secondary;
+
+    return Scaffold(
+      body: IslamicBackground(
+        child: ResponsiveCenter(
+          child: Center(
+            child: FadeTransition(
+              opacity: _fadeAnimation,
+              child: Padding(
+                padding: ResponsiveLayout.pagePadding(context),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white,
+                        border: Border.all(
+                          color: primaryColor.withValues(alpha: 0.3),
+                          width: 1.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: primaryColor.withValues(alpha: 0.22),
+                            blurRadius: 28,
+                            spreadRadius: 1,
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.mosque_rounded,
+                        size: 72,
+                        color: Color(0xFF0E4D31),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    const FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        'SOLATIFY',
+                        style: TextStyle(
+                          color: Color(0xFF241A12),
+                          fontSize: 36,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 4.0,
+                          fontFamily: 'Outfit',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Pendamping Ibadah Anda',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Color(0xFF756455),
+                        fontSize: 16,
+                        letterSpacing: 1.0,
+                        fontFamily: 'Outfit',
+                      ),
+                    ),
+                    const SizedBox(height: 48),
+                    const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Color(0xFF0E4D31),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
