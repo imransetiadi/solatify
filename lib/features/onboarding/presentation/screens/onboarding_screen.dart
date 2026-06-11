@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../../../../core/utils/location_service.dart';
 import '../../../../core/widgets/glass_container.dart';
 import '../../../../core/widgets/islamic/islamic_decorations.dart';
 import '../../../../core/widgets/responsive_layout.dart';
+import '../../../reminder/data/services/notification_service.dart';
 import '../../../settings/presentation/settings_provider.dart';
 import '../../../prayer_schedule/presentation/location_provider.dart';
 
@@ -48,41 +48,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   Future<void> _requestNotificationPermission() async {
     try {
-      final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-      // Initialize with basic settings first to ensure API access
-      const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
-      const iosInit = DarwinInitializationSettings();
-      await flutterLocalNotificationsPlugin.initialize(
-        settings: const InitializationSettings(
-          android: androidInit,
-          iOS: iosInit,
-        ),
-      );
-
-      final androidPlugin = flutterLocalNotificationsPlugin
-          .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin
-          >();
-
-      final iosPlugin = flutterLocalNotificationsPlugin
-          .resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin
-          >();
-
-      bool granted = false;
-      if (androidPlugin != null) {
-        final res = await androidPlugin.requestNotificationsPermission();
-        granted = res ?? false;
-      } else if (iosPlugin != null) {
-        final res = await iosPlugin.requestPermissions(
-          alert: true,
-          badge: true,
-          sound: true,
-        );
-        granted = res ?? false;
-      } else {
-        granted = true; // Fallback for other platforms
-      }
+      final granted = await NotificationService.requestPermission();
 
       if (!mounted) return;
 
@@ -278,146 +244,148 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       body: IslamicBackground(
         child: Stack(
           children: [
-          SafeArea(
-            child: ResponsiveCenter(
-              maxWidth: 680,
-              child: Column(
-                children: [
-                  // Header Brand Logo
-                  Padding(
-                    padding: EdgeInsets.symmetric(
-                      vertical: MediaQuery.sizeOf(context).height < 680
-                          ? 14
-                          : 24,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SvgPicture.asset(
-                          'assets/images/masjid_nabawi.svg',
-                          width: 32,
-                          height: 32,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'SOLATIFY',
-                          style: TextStyle(
-                            color: Color(0xFF241A12),
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 3.0,
-                            fontFamily: 'Outfit',
+            SafeArea(
+              child: ResponsiveCenter(
+                maxWidth: 680,
+                child: Column(
+                  children: [
+                    // Header Brand Logo
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                        vertical: MediaQuery.sizeOf(context).height < 680
+                            ? 14
+                            : 24,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SvgPicture.asset(
+                            'assets/images/masjid_nabawi.svg',
+                            width: 32,
+                            height: 32,
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 8),
+                          Text(
+                            'SOLATIFY',
+                            style: TextStyle(
+                              color: Color(0xFF241A12),
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 3.0,
+                              fontFamily: 'Outfit',
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
 
-                  // Slide Pages
-                  Expanded(
-                    child: PageView(
-                      controller: _pageController,
-                      physics: const BouncingScrollPhysics(),
-                      onPageChanged: (page) {
-                        setState(() {
-                          _currentPage = page;
-                        });
-                      },
-                      children: [
-                        // Slide 1: Welcome
-                        _buildWelcomeSlide(),
-                        // Slide 2: Location
-                        _buildLocationSlide(location),
-                        // Slide 3: Notifications
-                        _buildNotificationSlide(),
-                        // Slide 4: Final Summary
-                        _buildSummarySlide(location),
-                      ],
+                    // Slide Pages
+                    Expanded(
+                      child: PageView(
+                        controller: _pageController,
+                        physics: const BouncingScrollPhysics(),
+                        onPageChanged: (page) {
+                          setState(() {
+                            _currentPage = page;
+                          });
+                        },
+                        children: [
+                          // Slide 1: Welcome
+                          _buildWelcomeSlide(),
+                          // Slide 2: Location
+                          _buildLocationSlide(location),
+                          // Slide 3: Notifications
+                          _buildNotificationSlide(),
+                          // Slide 4: Final Summary
+                          _buildSummarySlide(location),
+                        ],
+                      ),
                     ),
-                  ),
 
-                  // Footer Navigation Controls
-                  Padding(
-                    padding: ResponsiveLayout.pagePadding(context),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // Back Button
-                        Opacity(
-                          opacity: _currentPage > 0 ? 1.0 : 0.0,
-                          child: TextButton(
-                            onPressed: _currentPage > 0 ? _prevPage : null,
-                            child: const Text(
-                              'KEMBALI',
-                              style: TextStyle(
-                                color: Color(0xFF756455),
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1.2,
+                    // Footer Navigation Controls
+                    Padding(
+                      padding: ResponsiveLayout.pagePadding(context),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // Back Button
+                          Opacity(
+                            opacity: _currentPage > 0 ? 1.0 : 0.0,
+                            child: TextButton(
+                              onPressed: _currentPage > 0 ? _prevPage : null,
+                              child: const Text(
+                                'KEMBALI',
+                                style: TextStyle(
+                                  color: Color(0xFF756455),
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1.2,
+                                ),
                               ),
                             ),
                           ),
-                        ),
 
-                        // Indicators
-                        Row(
-                          children: List.generate(4, (index) {
-                            return AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              margin: const EdgeInsets.symmetric(horizontal: 4),
-                              width: _currentPage == index ? 24 : 8,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                color: _currentPage == index
-                                    ? const Color(0xFF0E4D31)
-                                    : const Color(0xFFCFE7D5),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                            );
-                          }),
-                        ),
-
-                        // Next Button (hidden or replaces by custom buttons depending on slide requirements)
-                        _currentPage == 3
-                            ? TextButton(
-                                onPressed: _finishOnboarding,
-                                child: const Text(
-                                  'MULAI',
-                                  style: TextStyle(
-                                    color: Color(0xFF241A12), // Black
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 1.2,
-                                  ),
+                          // Indicators
+                          Row(
+                            children: List.generate(4, (index) {
+                              return AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 4,
                                 ),
-                              )
-                            : TextButton(
-                                onPressed:
-                                    _currentPage == 1 || _currentPage == 2
-                                    ? null
-                                    : _nextPage,
-                                child: Opacity(
-                                  opacity:
-                                      _currentPage == 1 || _currentPage == 2
-                                      ? 0.0
-                                      : 1.0,
+                                width: _currentPage == index ? 24 : 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: _currentPage == index
+                                      ? const Color(0xFF0E4D31)
+                                      : const Color(0xFFCFE7D5),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              );
+                            }),
+                          ),
+
+                          // Next Button (hidden or replaces by custom buttons depending on slide requirements)
+                          _currentPage == 3
+                              ? TextButton(
+                                  onPressed: _finishOnboarding,
                                   child: const Text(
-                                    'LANJUT',
+                                    'MULAI',
                                     style: TextStyle(
-                                      color: Color(0xFF0E4D31),
+                                      color: Color(0xFF241A12), // Black
                                       fontWeight: FontWeight.bold,
                                       letterSpacing: 1.2,
                                     ),
                                   ),
+                                )
+                              : TextButton(
+                                  onPressed:
+                                      _currentPage == 1 || _currentPage == 2
+                                      ? null
+                                      : _nextPage,
+                                  child: Opacity(
+                                    opacity:
+                                        _currentPage == 1 || _currentPage == 2
+                                        ? 0.0
+                                        : 1.0,
+                                    child: const Text(
+                                      'LANJUT',
+                                      style: TextStyle(
+                                        color: Color(0xFF0E4D31),
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 1.2,
+                                      ),
+                                    ),
+                                  ),
                                 ),
-                              ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
           ],
-      ),
+        ),
       ),
     );
   }

@@ -7,7 +7,6 @@ import 'core/navigation/router.dart';
 import 'core/theme/theme.dart';
 
 import 'core/database/hive_service.dart';
-import 'features/reminder/data/services/notification_service.dart';
 import 'features/settings/presentation/settings_provider.dart';
 
 void main() async {
@@ -17,9 +16,8 @@ void main() async {
     await Future.wait([
       initializeDateFormatting('id_ID', null),
       HiveService.init(),
-      NotificationService.init(),
     ]);
-    
+
     runApp(const ProviderScope(child: SolatifyApp()));
   } catch (e) {
     debugPrint('Critical startup error: $e');

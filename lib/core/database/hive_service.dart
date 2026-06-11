@@ -9,39 +9,64 @@ class HiveService {
   static const String quranDetailBoxName = 'quran_surah_details';
   static const String quranBookmarksBoxName = 'quran_bookmarks';
 
+  static bool _initialized = false;
+
+  static bool get isInitialized => _initialized;
+
   static Future<void> init() async {
     await Hive.initFlutter();
-    await Hive.openBox(settingsBoxName);
-    await Hive.openBox(trackerBoxName);
-    await Hive.openBox(locationBoxName);
-    await Hive.openBox(scheduleBoxName);
-    await Hive.openBox(quranIndexBoxName);
-    await Hive.openBox(quranDetailBoxName);
-    await Hive.openBox(quranBookmarksBoxName);
+    await _openBox(settingsBoxName);
+    await _openBox(trackerBoxName);
+    await _openBox(locationBoxName);
+    await _openBox(scheduleBoxName);
+    await _openBox(quranIndexBoxName);
+    await _openBox(quranDetailBoxName);
+    await _openBox(quranBookmarksBoxName);
+    _initialized = true;
+  }
+
+  static Future<void> _openBox(String name) async {
+    if (!Hive.isBoxOpen(name)) {
+      await Hive.openBox(name);
+    }
   }
 
   // Generic helpers
   static Box getBox(String name) => Hive.box(name);
 
+  static Box? _tryGetBox(String name) {
+    if (!Hive.isBoxOpen(name)) return null;
+
+    return Hive.box(name);
+  }
+
   // Settings helpers
   static Future<void> saveSetting(String key, dynamic value) async {
-    final box = getBox(settingsBoxName);
+    final box = _tryGetBox(settingsBoxName);
+    if (box == null) return;
+
     await box.put(key, value);
   }
 
   static dynamic getSetting(String key, {dynamic defaultValue}) {
-    final box = getBox(settingsBoxName);
+    final box = _tryGetBox(settingsBoxName);
+    if (box == null) return defaultValue;
+
     return box.get(key, defaultValue: defaultValue);
   }
 
   // Location helpers
   static Future<void> cacheLocation(Map<String, dynamic> locationData) async {
-    final box = getBox(locationBoxName);
+    final box = _tryGetBox(locationBoxName);
+    if (box == null) return;
+
     await box.put('current', locationData);
   }
 
   static Map<String, dynamic>? getCachedLocation() {
-    final box = getBox(locationBoxName);
+    final box = _tryGetBox(locationBoxName);
+    if (box == null) return null;
+
     final data = box.get('current');
     if (data == null) return null;
     return Map<String, dynamic>.from(data);
@@ -49,7 +74,9 @@ class HiveService {
 
   // Tracker helpers
   static Future<void> saveTrackerEntry(String key, String status) async {
-    final box = getBox(trackerBoxName);
+    final box = _tryGetBox(trackerBoxName);
+    if (box == null) return;
+
     await box.put(key, {
       'status': status,
       'timestamp': DateTime.now().toIso8601String(),
@@ -57,14 +84,18 @@ class HiveService {
   }
 
   static Map<String, dynamic>? getTrackerEntry(String key) {
-    final box = getBox(trackerBoxName);
+    final box = _tryGetBox(trackerBoxName);
+    if (box == null) return null;
+
     final data = box.get(key);
     if (data == null) return null;
     return Map<String, dynamic>.from(data);
   }
 
   static List<Map<String, dynamic>> getAllTrackerEntries() {
-    final box = getBox(trackerBoxName);
+    final box = _tryGetBox(trackerBoxName);
+    if (box == null) return const [];
+
     final entries = <Map<String, dynamic>>[];
     for (var key in box.keys) {
       final value = box.get(key);
@@ -82,12 +113,16 @@ class HiveService {
     String dateKey,
     Map<String, dynamic> schedules,
   ) async {
-    final box = getBox(scheduleBoxName);
+    final box = _tryGetBox(scheduleBoxName);
+    if (box == null) return;
+
     await box.put(dateKey, schedules);
   }
 
   static Map<String, dynamic>? getCachedPrayerSchedule(String dateKey) {
-    final box = getBox(scheduleBoxName);
+    final box = _tryGetBox(scheduleBoxName);
+    if (box == null) return null;
+
     final data = box.get(dateKey);
     if (data == null) return null;
     return Map<String, dynamic>.from(data);
@@ -103,12 +138,6 @@ class HiveService {
     if (data is Map) {
       return Map<String, int>.from(data);
     }
-    return {
-      'subuh': 0,
-      'dzuhur': 0,
-      'ashar': 0,
-      'magrib': 0,
-      'isya': 0,
-    };
+    return {'subuh': 0, 'dzuhur': 0, 'ashar': 0, 'magrib': 0, 'isya': 0};
   }
 }
