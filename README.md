@@ -277,4 +277,4 @@ GitHub: [imransetiadi/solatify](https://github.com/imransetiadi/solatify)
 
 ## License
 
-Belum ada license file di repository ini.
+Proyek ini dilisensikan di bawah [MIT License](LICENSE). Bebas digunakan, dimodifikasi, dan didistribusikan dengan tetap menyertakan notice hak cipta.
