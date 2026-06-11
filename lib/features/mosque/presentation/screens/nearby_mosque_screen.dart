@@ -108,6 +108,17 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen> {
   @override
   Widget build(BuildContext context) {
     final location = ref.watch(locationProvider);
+    
+    // Show loading if location not ready
+    if (location.latitude == 0.0 && location.longitude == 0.0) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Masjid Terdekat')),
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+    
     final userPosition = LatLng(location.latitude, location.longitude);
     final mosques = _getNearbyMosques(location.latitude, location.longitude);
 

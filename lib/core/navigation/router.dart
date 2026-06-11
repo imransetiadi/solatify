@@ -171,6 +171,46 @@ class MainLayoutScreen extends StatelessWidget {
     ),
   ];
 
+  static const _mobileDestinations = [
+    _MainDestination(Icons.home_outlined, Icons.home, 'Beranda', '/home'),
+    _MainDestination(
+      Icons.calendar_month_outlined,
+      Icons.calendar_month,
+      'Jadwal',
+      '/schedule',
+    ),
+    _MainDestination(
+      Icons.menu_book_outlined,
+      Icons.menu_book,
+      'Qur\'an',
+      '/quran',
+    ),
+    _MainDestination(
+      Icons.auto_stories_outlined,
+      Icons.auto_stories,
+      'Konten',
+      '/islamic-content',
+    ),
+    _MainDestination(Icons.apps_outlined, Icons.apps, 'Lainnya', '/more'),
+  ];
+
+  static const _moreDestinations = [
+    _MainDestination(Icons.explore_outlined, Icons.explore, 'Kiblat', '/qibla'),
+    _MainDestination(
+      Icons.fact_check_outlined,
+      Icons.fact_check,
+      'Jurnal',
+      '/tracker',
+    ),
+    _MainDestination(Icons.map_outlined, Icons.map, 'Masjid', '/mosque'),
+    _MainDestination(
+      Icons.settings_outlined,
+      Icons.settings,
+      'Pengaturan',
+      '/settings',
+    ),
+  ];
+
   int _calculateSelectedIndex(BuildContext context) {
     final String location = GoRouterState.of(context).uri.toString();
     if (location.startsWith('/home')) return 0;
@@ -184,8 +224,54 @@ class MainLayoutScreen extends StatelessWidget {
     return 0;
   }
 
+  int _calculateMobileSelectedIndex(BuildContext context) {
+    final String location = GoRouterState.of(context).uri.toString();
+    if (location.startsWith('/home')) return 0;
+    if (location.startsWith('/schedule')) return 1;
+    if (location.startsWith('/quran')) return 2;
+    if (location.startsWith('/islamic-content')) return 3;
+    return 4;
+  }
+
   void _onItemTapped(int index, BuildContext context) {
     GoRouter.of(context).go(_destinations[index].path);
+  }
+
+  void _onMobileItemTapped(int index, BuildContext context) {
+    final destination = _mobileDestinations[index];
+    if (destination.path == '/more') {
+      _showMoreMenu(context);
+      return;
+    }
+    GoRouter.of(context).go(destination.path);
+  }
+
+  void _showMoreMenu(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      showDragHandle: true,
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: _moreDestinations.map((destination) {
+                return ListTile(
+                  leading: Icon(destination.icon),
+                  title: Text(destination.label),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    Navigator.pop(context);
+                    GoRouter.of(context).go(destination.path);
+                  },
+                );
+              }).toList(),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -245,16 +331,24 @@ class MainLayoutScreen extends StatelessWidget {
           ],
         ),
         child: NavigationBar(
-          selectedIndex: selectedIndex,
-          onDestinationSelected: (index) => _onItemTapped(index, context),
-          height: 72,
+          selectedIndex: _calculateMobileSelectedIndex(context),
+          onDestinationSelected: (index) => _onMobileItemTapped(index, context),
+          height: 68 + MediaQuery.paddingOf(context).bottom,
           labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
           backgroundColor: theme.colorScheme.surface,
           indicatorColor: theme.colorScheme.secondary.withValues(alpha: 0.14),
-          destinations: _destinations.map((destination) {
+          destinations: _mobileDestinations.map((destination) {
             return NavigationDestination(
-              icon: Icon(destination.icon, color: isDark ? Colors.white60 : Colors.black45),
-              selectedIcon: Icon(destination.activeIcon, color: theme.colorScheme.secondary),
+              icon: Icon(
+                destination.icon,
+                color: isDark ? Colors.white60 : Colors.black45,
+                size: 22,
+              ),
+              selectedIcon: Icon(
+                destination.activeIcon,
+                color: theme.colorScheme.secondary,
+                size: 24,
+              ),
               label: destination.label,
             );
           }).toList(),

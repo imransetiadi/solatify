@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../../../../core/utils/location_service.dart';
 import '../../../../core/widgets/glass_container.dart';
@@ -292,10 +293,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          Icons.mosque_rounded,
-                          color: Theme.of(context).colorScheme.secondary,
-                          size: 28,
+                        SvgPicture.asset(
+                          'assets/images/masjid_nabawi.svg',
+                          width: 32,
+                          height: 32,
                         ),
                         const SizedBox(width: 8),
                         Text(

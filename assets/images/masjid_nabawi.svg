@@ -1,0 +1,34 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background glow -->
+  <circle cx="50" cy="50" r="45" fill="#f3fbf6" />
+  
+  <!-- Minaret Left -->
+  <rect x="20" y="30" width="4" height="50" fill="#241a12" />
+  <polygon points="18,30 26,30 22,20" fill="#0e4d31" />
+  <circle cx="22" cy="18" r="2" fill="#c78a4c" />
+  <rect x="18" y="45" width="8" height="3" fill="#c78a4c" />
+  
+  <!-- Minaret Right -->
+  <rect x="76" y="30" width="4" height="50" fill="#241a12" />
+  <polygon points="74,30 82,30 78,20" fill="#0e4d31" />
+  <circle cx="78" cy="18" r="2" fill="#c78a4c" />
+  <rect x="74" y="45" width="8" height="3" fill="#c78a4c" />
+  
+  <!-- Main Building -->
+  <rect x="30" y="60" width="40" height="20" fill="#241a12" />
+  
+  <!-- The Green Dome (Kubah Hijau) -->
+  <path d="M 35 60 C 35 30, 65 30, 65 60 Z" fill="#0e4d31" />
+  <!-- Dome details -->
+  <path d="M 40 60 C 40 40, 60 40, 60 60 Z" fill="#136641" />
+  <!-- Dome tip -->
+  <rect x="49" y="30" width="2" height="10" fill="#c78a4c" />
+  <circle cx="50" cy="28" r="2.5" fill="#c78a4c" />
+  
+  <!-- Doors/Arches -->
+  <path d="M 35 80 L 35 70 A 5 5 0 0 1 45 70 L 45 80 Z" fill="#c78a4c" />
+  <path d="M 55 80 L 55 70 A 5 5 0 0 1 65 70 L 65 80 Z" fill="#c78a4c" />
+  
+  <!-- Ground -->
+  <rect x="15" y="80" width="70" height="5" fill="#c78a4c" />
+</svg>

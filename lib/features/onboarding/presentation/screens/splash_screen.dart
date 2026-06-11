@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/widgets/responsive_layout.dart';
 import '../../../../core/widgets/islamic/islamic_decorations.dart';
@@ -81,10 +82,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                           ),
                         ],
                       ),
-                      child: const Icon(
-                        Icons.mosque_rounded,
-                        size: 72,
-                        color: Color(0xFF0E4D31),
+                      child: SvgPicture.asset(
+                        'assets/images/masjid_nabawi.svg',
+                        width: 76,
+                        height: 76,
                       ),
                     ),
                     const SizedBox(height: 24),

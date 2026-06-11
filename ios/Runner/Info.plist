@@ -26,6 +26,10 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Solatify membutuhkan akses lokasi untuk notifikasi salat yang tepat waktu.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Solatify membutuhkan akses lokasi Anda untuk menghitung waktu salat yang akurat berdasarkan wilayah Anda.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/widgets/glass_container.dart';
@@ -128,7 +129,11 @@ class HomeScreen extends ConsumerWidget {
                             borderRadius: BorderRadius.circular(18),
                             border: Border.all(color: primary.withValues(alpha: 0.25)),
                           ),
-                          child: Icon(Icons.mosque_rounded, color: primary, size: 28),
+                          child: SvgPicture.asset(
+                            'assets/images/masjid_nabawi.svg',
+                            width: 28,
+                            height: 28,
+                          ),
                         ),
                         const SizedBox(width: 14),
                         Expanded(
