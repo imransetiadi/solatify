@@ -1,136 +1,245 @@
 # Solatify
 
-Solatify is a Flutter-based Islamic companion app focused on daily worship, prayer time awareness, Quran reading, and lightweight Islamic content. The app is built with an offline-first approach for core content, responsive layouts, and configurable settings for different user preferences.
+Solatify adalah aplikasi pendamping ibadah harian berbasis Flutter. Aplikasi ini dirancang untuk membantu pengguna memantau waktu salat, membaca Al-Qur'an, mencatat ibadah harian, mencari arah kiblat, menemukan masjid terdekat, dan mengakses konten Islami ringan dalam satu pengalaman yang rapi dan responsif.
 
-## Features
+Core experience aplikasi dibuat offline-first untuk data dan preferensi utama, dengan dukungan lokasi, notifikasi, peta, dan sensor perangkat untuk fitur yang membutuhkan kemampuan native.
 
-- Prayer schedule with location-based calculation.
-- Countdown to the next prayer on the home dashboard.
-- Prayer time offset settings for Subuh, Dzuhur, Ashar, Magrib, and Isya.
-- Qibla direction screen using device compass support.
-- Digital Quran with surah list and surah detail pages.
-- Daily prayer tracker for marking worship completion.
-- Nearby mosque screen with map integration.
-- Islamic content hub with Asmaul Husna, daily duas, Hijri calendar events, and Islamic tips.
-- Dhikr feature for daily remembrance.
-- Reminder and adhan notification settings.
-- Light, dark, and system theme support.
-- Responsive UI for mobile and tablet layouts.
+## Tampilan UI
+
+Solatify memakai desain bernuansa Islami modern dengan fokus pada keterbacaan dan penggunaan harian.
+
+- Visual utama memakai aksen hijau, warna hangat, efek glass container, dan dekorasi Islamic background.
+- Navigasi utama memakai bottom navigation di mobile dan layout responsif untuk layar yang lebih lebar.
+- Dashboard menampilkan salam, lokasi aktif, tanggal, countdown salat berikutnya, dan status salat hari ini.
+- Setiap layar dibuat sebagai workflow langsung, bukan landing page, sehingga pengguna bisa langsung mencatat, membaca, mencari, atau mengatur preferensi.
+- Aplikasi mendukung light theme, dark theme, dan system theme.
+- Text scale dibatasi agar layout tetap stabil ketika ukuran teks sistem berubah.
+
+## Fitur Utama
+
+### Jadwal Salat
+
+- Perhitungan waktu salat berdasarkan lokasi pengguna.
+- Dukungan lokasi otomatis via GPS dan pilihan kota manual.
+- Metode kalkulasi dapat diatur dari pengaturan.
+- Offset waktu salat untuk Subuh, Dzuhur, Ashar, Magrib, dan Isya.
+- Cache jadwal harian agar data tetap tersedia saat offline.
+
+### Dashboard Harian
+
+- Countdown menuju salat berikutnya.
+- Informasi waktu salat aktif.
+- Ringkasan jadwal salat hari ini.
+- Tombol cepat untuk mencatat status salat.
+
+### Jurnal Salat
+
+- Catat status salat harian.
+- Status yang tersedia: tepat waktu, terlambat/masbuq, terlewat, dan reset.
+- Riwayat disimpan lokal dengan Hive.
+
+### Pengingat dan Adzan
+
+- Pengingat waktu salat menggunakan `flutter_local_notifications`.
+- Pengaturan aktif/nonaktif notifikasi.
+- Dukungan pilihan suara adzan atau mode silent.
+- Service notifikasi dibuat lazy dan aman untuk cold start iOS.
+
+### Al-Qur'an
+
+- Daftar surah.
+- Halaman detail surah.
+- Bookmark ayat.
+- Last read verse.
+- Pencarian surah.
+- Cache data index dan detail surah.
+
+### Kiblat
+
+- Arah kiblat berbasis sensor kompas perangkat.
+- Cocok diuji di physical device karena simulator tidak memiliki sensor kompas nyata.
+
+### Masjid Terdekat
+
+- Integrasi Google Maps untuk tampilan peta.
+- Dirancang untuk eksplorasi lokasi masjid di sekitar pengguna.
+
+### Konten Islami
+
+- Asmaul Husna.
+- Doa harian.
+- Kalender Hijriah dan event Islami.
+- Tips Islami.
+- Dzikir harian.
+
+### Onboarding dan Pengaturan
+
+- Splash screen dan onboarding flow.
+- Pengaturan tema.
+- Pengaturan bahasa.
+- Pengaturan metode kalkulasi.
+- Pengaturan notifikasi dan suara adzan.
+- Pengaturan offset waktu salat.
 
 ## Tech Stack
 
-- Flutter and Dart
-- Riverpod for state management
-- GoRouter for navigation
-- Hive and SharedPreferences for local persistence
-- Adhan package for prayer time calculation
-- Geolocator and Geocoding for location support
-- Flutter Compass for qibla direction
-- Google Maps Flutter for mosque discovery
-- Flutter Local Notifications and Workmanager for reminders
-- HTTP for remote Quran data with local fallback behavior
+- Flutter dan Dart.
+- Riverpod untuk state management.
+- GoRouter untuk navigasi.
+- Hive dan SharedPreferences untuk penyimpanan lokal.
+- `adhan` untuk kalkulasi waktu salat.
+- Geolocator dan Geocoding untuk lokasi.
+- Flutter Compass untuk arah kiblat.
+- Google Maps Flutter untuk peta.
+- Flutter Local Notifications untuk pengingat.
+- Workmanager untuk dukungan background task.
+- HTTP untuk akses data remote saat diperlukan.
 
-## Project Structure
+## Struktur Proyek
 
 ```text
 lib/
 +-- core/
-|   +-- database/          # Local storage services
-|   +-- navigation/        # App router and navigation layout
-|   +-- theme/             # Theme configuration
-|   +-- utils/             # Location and utility services
-|   +-- widgets/           # Shared UI components
+|   +-- database/          # Hive service dan helper storage lokal
+|   +-- navigation/        # Router dan layout navigasi utama
+|   +-- theme/             # Theme light/dark aplikasi
+|   +-- utils/             # Location service dan utilitas umum
+|   +-- widgets/           # Widget reusable dan dekorasi UI
 +-- features/
-    +-- asmaul_husna/      # 99 names of Allah
-    +-- dhikr/             # Dhikr feature
-    +-- duas/              # Daily duas
-    +-- hijri_calendar/    # Islamic calendar events
-    +-- home/              # Dashboard and prayer countdown
-    +-- islamic_content/   # Islamic content hub
-    +-- islamic_tips/      # Daily Islamic tips
-    +-- mosque/            # Nearby mosque screen
-    +-- onboarding/        # Splash and onboarding flow
-    +-- prayer_schedule/   # Prayer calculation and schedule UI
-    +-- qibla/             # Qibla compass
-    +-- quran/             # Quran repository, models, and screens
+    +-- asmaul_husna/      # 99 nama Allah
+    +-- dhikr/             # Dzikir harian
+    +-- duas/              # Doa harian
+    +-- hijri_calendar/    # Kalender Hijriah
+    +-- home/              # Dashboard dan countdown salat
+    +-- islamic_content/   # Hub konten Islami
+    +-- islamic_tips/      # Tips Islami
+    +-- mosque/            # Masjid terdekat dan peta
+    +-- onboarding/        # Splash, get started, onboarding
+    +-- prayer_schedule/   # Jadwal dan kalkulasi waktu salat
+    +-- qibla/             # Kompas kiblat
+    +-- quran/             # Quran repository, model, dan UI
     +-- reminder/          # Notification service
-    +-- settings/          # User preferences
-    +-- tracker/           # Prayer tracker
+    +-- settings/          # Preferensi pengguna
+    +-- tracker/           # Jurnal salat
 ```
+
+## Main Screens
+
+- `Home`: salam, lokasi, tanggal, countdown salat, jadwal hari ini, dan catatan salat.
+- `Jadwal`: jadwal salat lengkap dan pengaturan lokasi.
+- `Qur'an`: daftar surah, pencarian, bookmark, dan halaman baca.
+- `Konten`: pintu masuk ke Asmaul Husna, doa, kalender Hijriah, dzikir, dan tips.
+- `Kiblat`: arah kiblat berbasis kompas.
+- `Jurnal`: riwayat dan status ibadah salat.
+- `Masjid`: peta dan lokasi masjid terdekat.
+- `Pengaturan`: tema, metode kalkulasi, notifikasi, adzan, dan offset waktu salat.
 
 ## Requirements
 
-- Flutter SDK compatible with Dart `^3.12.1`
-- Android Studio or Xcode for mobile builds
-- A physical device or emulator for location, compass, notification, and map features
+- Flutter SDK dengan Dart `^3.12.1`.
+- Xcode untuk build iOS.
+- Android Studio untuk build Android.
+- Physical device direkomendasikan untuk fitur lokasi, kompas, notifikasi, dan peta.
 
-Check your local setup with:
+Cek environment lokal:
 
 ```bash
 flutter doctor
 ```
 
-## Getting Started
+## Cara Menjalankan
 
-Clone the repository:
+Clone repository:
 
 ```bash
 git clone https://github.com/imransetiadi/solatify.git
 cd solatify
 ```
 
-Install dependencies:
+Install dependency:
 
 ```bash
 flutter pub get
 ```
 
-Run the app:
+Run ke device aktif:
 
 ```bash
 flutter run
 ```
 
-Run tests:
+Run ke device tertentu:
 
 ```bash
-flutter test
+flutter devices
+flutter run -d <DEVICE_ID>
 ```
 
-Analyze the project:
+## Build
+
+Android:
+
+```bash
+flutter build apk --release
+```
+
+iOS physical device:
+
+```bash
+flutter build ios --release
+flutter install --release -d <DEVICE_ID>
+```
+
+iOS simulator:
+
+```bash
+flutter build ios --simulator
+flutter run -d <SIMULATOR_ID>
+```
+
+## Catatan iOS
+
+- App sudah diuji pada physical iPhone untuk skenario open, force-close dari app switcher, lalu open ulang.
+- Notification service dijalankan secara lazy agar startup iOS tetap stabil.
+- Bundle ID utama: `com.solatify.app.solatify`.
+- Deployment target iOS: `13.0`.
+- Beberapa plugin masih menampilkan warning Swift Package Manager atau lifecycle lama. Saat ini warning tersebut tidak menghentikan build.
+
+Plugin yang dapat memunculkan warning di Flutter versi terbaru:
+
+- `workmanager_apple`
+- `google_maps_flutter_ios`
+- `flutter_compass`
+
+## Testing dan Quality Check
+
+Jalankan analyzer:
 
 ```bash
 flutter analyze
 ```
 
-## Platform Notes
-
-Some features require platform permissions and real device hardware:
-
-- Prayer schedule needs location permission for accurate calculation.
-- Qibla direction needs compass and sensor support.
-- Nearby mosque discovery uses maps and location services.
-- Prayer reminders need notification permission.
-- Background reminder behavior can differ between Android and iOS depending on platform restrictions.
-
-## Main Screens
-
-- Home: daily dashboard, next prayer countdown, and daily Islamic tip.
-- Jadwal: complete prayer schedule.
-- Quran: surah list and reading screen.
-- Konten: Asmaul Husna, daily duas, Hijri events, and Islamic tips.
-- Kiblat: compass-based qibla direction.
-- Jurnal: prayer completion tracker.
-- Masjid: nearby mosque discovery.
-- Pengaturan: calculation method, adhan, theme, language, and prayer offsets.
-
-## Testing
-
-The project includes focused Flutter tests for prayer calculation, prayer schedule behavior, Quran data, and widget behavior.
+Jalankan test:
 
 ```bash
 flutter test
 ```
+
+Area yang sudah memiliki test mencakup:
+
+- Kalkulasi waktu salat.
+- Arah kiblat.
+- Render screen jadwal salat.
+- Perubahan kota manual.
+- Data dan model Quran.
+- Render awal aplikasi.
+
+## Permission yang Digunakan
+
+- Location: menghitung waktu salat berdasarkan lokasi dan masjid terdekat.
+- Notification: pengingat waktu salat.
+- Compass/sensor: arah kiblat.
+- Maps/network: peta dan data remote yang diperlukan.
 
 ## Repository
 
@@ -138,4 +247,4 @@ GitHub: [imransetiadi/solatify](https://github.com/imransetiadi/solatify)
 
 ## License
 
-No license file has been added yet.
+Belum ada license file di repository ini.
