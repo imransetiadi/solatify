@@ -3,7 +3,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 
@@ -11,30 +10,24 @@ import '../../../../core/utils/location_service.dart';
 import '../../../../core/widgets/responsive_layout.dart';
 import '../../../prayer_schedule/presentation/location_provider.dart';
 
-const _googleMapsApiKey = String.fromEnvironment('GOOGLE_MAPS_API_KEY');
-
 class MosqueItem {
   const MosqueItem({
-    required this.placeId,
+    required this.id,
     required this.name,
     required this.address,
     required this.latitude,
     required this.longitude,
     required this.distanceInMeters,
-    required this.rating,
-    required this.userRatingsTotal,
-    required this.isOpenNow,
+    required this.sourceType,
   });
 
-  final String placeId;
+  final String id;
   final String name;
   final String address;
   final double latitude;
   final double longitude;
   final double distanceInMeters;
-  final double? rating;
-  final int? userRatingsTotal;
-  final bool? isOpenNow;
+  final String sourceType;
 }
 
 class NearbyMosqueScreen extends ConsumerStatefulWidget {
@@ -46,14 +39,13 @@ class NearbyMosqueScreen extends ConsumerStatefulWidget {
 
 class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen> {
   static const _searchRadiusMeters = 5000;
+  static const _overpassEndpoint = 'https://overpass-api.de/api/interpreter';
 
   List<MosqueItem> _mosques = const [];
   bool _isLoading = false;
   String? _errorMessage;
-  LatLng? _gpsPosition;
-  GoogleMapController? _mapController;
-
-  bool get _hasApiKey => _googleMapsApiKey.trim().isNotEmpty;
+  double? _gpsLatitude;
+  double? _gpsLongitude;
 
   @override
   void initState() {
@@ -61,22 +53,7 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadNearbyMosques());
   }
 
-  @override
-  void dispose() {
-    _mapController?.dispose();
-    super.dispose();
-  }
-
   Future<void> _loadNearbyMosques() async {
-    if (!_hasApiKey) {
-      setState(() {
-        _isLoading = false;
-        _errorMessage =
-            'Google Maps API key belum disetel. Jalankan app dengan --dart-define=GOOGLE_MAPS_API_KEY=API_KEY_ANDA.';
-      });
-      return;
-    }
-
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -108,7 +85,7 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen> {
             );
       }
 
-      final mosques = await _fetchMosquesFromGooglePlaces(
+      final mosques = await _fetchMosquesFromOverpass(
         latitude: latitude,
         longitude: longitude,
       );
@@ -116,15 +93,14 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen> {
       if (!mounted) return;
 
       setState(() {
-        _gpsPosition = LatLng(latitude, longitude);
+        _gpsLatitude = latitude;
+        _gpsLongitude = longitude;
         _mosques = mosques;
         _isLoading = false;
         _errorMessage = mosques.isEmpty
-            ? 'Tidak ada masjid operasional yang ditemukan dalam radius ${_searchRadiusMeters ~/ 1000} km.'
+            ? 'Tidak ada masjid yang ditemukan di OpenStreetMap dalam radius ${_searchRadiusMeters ~/ 1000} km.'
             : null;
       });
-
-      await _moveCameraToUser(latitude, longitude);
     } catch (error) {
       if (!mounted) return;
       setState(() {
@@ -134,80 +110,79 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen> {
     }
   }
 
-  Future<List<MosqueItem>> _fetchMosquesFromGooglePlaces({
+  Future<List<MosqueItem>> _fetchMosquesFromOverpass({
     required double latitude,
     required double longitude,
   }) async {
-    final uri =
-        Uri.https('maps.googleapis.com', '/maps/api/place/nearbysearch/json', {
-          'location': '$latitude,$longitude',
-          'radius': _searchRadiusMeters.toString(),
-          'type': 'mosque',
-          'keyword': 'masjid mosque',
-          'key': _googleMapsApiKey,
-        });
+    final query =
+        '''
+[out:json][timeout:25];
+(
+  node["amenity"="place_of_worship"]["religion"="muslim"](around:$_searchRadiusMeters,$latitude,$longitude);
+  way["amenity"="place_of_worship"]["religion"="muslim"](around:$_searchRadiusMeters,$latitude,$longitude);
+  relation["amenity"="place_of_worship"]["religion"="muslim"](around:$_searchRadiusMeters,$latitude,$longitude);
+  node["building"="mosque"](around:$_searchRadiusMeters,$latitude,$longitude);
+  way["building"="mosque"](around:$_searchRadiusMeters,$latitude,$longitude);
+  relation["building"="mosque"](around:$_searchRadiusMeters,$latitude,$longitude);
+);
+out center tags;
+''';
 
-    final response = await http.get(uri).timeout(const Duration(seconds: 20));
+    final response = await http
+        .post(Uri.parse(_overpassEndpoint), body: {'data': query})
+        .timeout(const Duration(seconds: 30));
+
     if (response.statusCode != 200) {
-      throw 'HTTP ${response.statusCode} dari Google Places.';
+      throw 'Overpass API HTTP ${response.statusCode}.';
     }
 
     final body = jsonDecode(response.body) as Map<String, dynamic>;
-    final status = body['status']?.toString() ?? 'UNKNOWN_ERROR';
+    final elements = body['elements'];
+    if (elements is! List) return const [];
 
-    if (status != 'OK' && status != 'ZERO_RESULTS') {
-      final message = body['error_message']?.toString();
-      throw message == null
-          ? 'Google Places status: $status.'
-          : '$status: $message';
+    final seen = <String>{};
+    final mosques = <MosqueItem>[];
+
+    for (final element in elements.whereType<Map<String, dynamic>>()) {
+      final mosque = _parseOverpassMosque(element, latitude, longitude);
+      if (mosque == null || !seen.add(mosque.id)) continue;
+      mosques.add(mosque);
     }
 
-    final rawResults = body['results'];
-    if (rawResults is! List) return const [];
-
-    final mosques =
-        rawResults
-            .whereType<Map<String, dynamic>>()
-            .where(_isOperationalMosque)
-            .map((json) => _parseMosque(json, latitude, longitude))
-            .whereType<MosqueItem>()
-            .toList()
-          ..sort((a, b) => a.distanceInMeters.compareTo(b.distanceInMeters));
-
+    mosques.sort((a, b) => a.distanceInMeters.compareTo(b.distanceInMeters));
     return mosques;
   }
 
-  bool _isOperationalMosque(Map<String, dynamic> json) {
-    final businessStatus = json['business_status']?.toString();
-    final types =
-        (json['types'] as List?)?.map((item) => item.toString()).toSet() ??
-        const <String>{};
-
-    return businessStatus == 'OPERATIONAL' && types.contains('mosque');
-  }
-
-  MosqueItem? _parseMosque(
-    Map<String, dynamic> json,
+  MosqueItem? _parseOverpassMosque(
+    Map<String, dynamic> element,
     double userLatitude,
     double userLongitude,
   ) {
-    final geometry = json['geometry'];
-    final location = geometry is Map ? geometry['location'] : null;
-    if (location is! Map) return null;
+    final type = element['type']?.toString() ?? 'osm';
+    final rawId = element['id']?.toString();
+    if (rawId == null) return null;
 
-    final latitude = (location['lat'] as num?)?.toDouble();
-    final longitude = (location['lng'] as num?)?.toDouble();
+    final center = element['center'];
+    final latitude =
+        (element['lat'] as num?)?.toDouble() ??
+        (center is Map ? (center['lat'] as num?)?.toDouble() : null);
+    final longitude =
+        (element['lon'] as num?)?.toDouble() ??
+        (center is Map ? (center['lon'] as num?)?.toDouble() : null);
     if (latitude == null || longitude == null) return null;
 
-    final openingHours = json['opening_hours'];
+    final tags = element['tags'] is Map
+        ? Map<String, dynamic>.from(element['tags'] as Map)
+        : const <String, dynamic>{};
+    final name =
+        _firstTag(tags, const ['name', 'name:id', 'official_name']) ??
+        'Masjid tanpa nama';
+    final address = _formatAddress(tags);
 
     return MosqueItem(
-      placeId: json['place_id']?.toString() ?? '$latitude,$longitude',
-      name: json['name']?.toString() ?? 'Masjid',
-      address:
-          json['vicinity']?.toString() ??
-          json['formatted_address']?.toString() ??
-          'Alamat tidak tersedia',
+      id: '$type/$rawId',
+      name: name,
+      address: address,
       latitude: latitude,
       longitude: longitude,
       distanceInMeters: _distanceInMeters(
@@ -216,10 +191,30 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen> {
         latitude,
         longitude,
       ),
-      rating: (json['rating'] as num?)?.toDouble(),
-      userRatingsTotal: (json['user_ratings_total'] as num?)?.toInt(),
-      isOpenNow: openingHours is Map ? openingHours['open_now'] as bool? : null,
+      sourceType: type,
     );
+  }
+
+  String? _firstTag(Map<String, dynamic> tags, List<String> keys) {
+    for (final key in keys) {
+      final value = tags[key]?.toString().trim();
+      if (value != null && value.isNotEmpty) return value;
+    }
+    return null;
+  }
+
+  String _formatAddress(Map<String, dynamic> tags) {
+    final fullAddress = _firstTag(tags, const ['addr:full']);
+    if (fullAddress != null) return fullAddress;
+
+    final parts = [
+      _firstTag(tags, const ['addr:street']),
+      _firstTag(tags, const ['addr:suburb', 'addr:village']),
+      _firstTag(tags, const ['addr:city', 'addr:district']),
+    ].whereType<String>().toList();
+
+    if (parts.isNotEmpty) return parts.join(', ');
+    return 'Alamat belum tersedia di OpenStreetMap';
   }
 
   double _distanceInMeters(double lat1, double lng1, double lat2, double lng2) {
@@ -237,47 +232,37 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen> {
 
   double _toRadians(double degree) => degree * math.pi / 180;
 
-  Set<Marker> _buildMarkers() {
-    final user = _gpsPosition;
-    return {
-      if (user != null)
-        Marker(
-          markerId: const MarkerId('current-location'),
-          position: user,
-          infoWindow: const InfoWindow(title: 'Lokasi Anda'),
-          icon: BitmapDescriptor.defaultMarkerWithHue(
-            BitmapDescriptor.hueAzure,
-          ),
-        ),
-      for (final mosque in _mosques)
-        Marker(
-          markerId: MarkerId(mosque.placeId),
-          position: LatLng(mosque.latitude, mosque.longitude),
-          infoWindow: InfoWindow(title: mosque.name, snippet: mosque.address),
-        ),
-    };
-  }
-
-  Future<void> _moveCameraToUser(double latitude, double longitude) async {
-    final controller = _mapController;
-    if (controller == null) return;
-
-    await controller.animateCamera(
-      CameraUpdate.newCameraPosition(
-        CameraPosition(target: LatLng(latitude, longitude), zoom: 14),
-      ),
-    );
-  }
-
-  Future<void> _openMaps(BuildContext context, MosqueItem mosque) async {
+  Future<void> _openOpenStreetMap(
+    BuildContext context,
+    MosqueItem mosque,
+  ) async {
     final url = Uri.parse(
-      'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(mosque.name)}&query_place_id=${mosque.placeId}',
+      'https://www.openstreetmap.org/?mlat=${mosque.latitude}&mlon=${mosque.longitude}#map=18/${mosque.latitude}/${mosque.longitude}',
     );
 
     final opened = await launchUrl(url, mode: LaunchMode.externalApplication);
     if (!opened && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Gagal membuka Google Maps.')),
+        const SnackBar(content: Text('Gagal membuka OpenStreetMap.')),
+      );
+    }
+  }
+
+  Future<void> _openRoute(BuildContext context, MosqueItem mosque) async {
+    final userLat = _gpsLatitude;
+    final userLng = _gpsLongitude;
+    final url = userLat == null || userLng == null
+        ? Uri.parse(
+            'https://www.openstreetmap.org/?mlat=${mosque.latitude}&mlon=${mosque.longitude}#map=18/${mosque.latitude}/${mosque.longitude}',
+          )
+        : Uri.parse(
+            'https://www.openstreetmap.org/directions?engine=fossgis_osrm_car&route=$userLat%2C$userLng%3B${mosque.latitude}%2C${mosque.longitude}',
+          );
+
+    final opened = await launchUrl(url, mode: LaunchMode.externalApplication);
+    if (!opened && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Gagal membuka rute OpenStreetMap.')),
       );
     }
   }
@@ -293,8 +278,6 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen> {
         ? const Color(0xFF082E1D)
         : const Color(0xFFF3FBF6);
     final cardColor = isDark ? const Color(0xFF123B29) : Colors.white;
-    final mapCenter =
-        _gpsPosition ?? LatLng(location.latitude, location.longitude);
 
     return Scaffold(
       backgroundColor: backgroundColor,
@@ -328,23 +311,20 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen> {
                   onRefresh: _loadNearbyMosques,
                 ),
                 const SizedBox(height: 16),
-                _MapPreview(
-                  hasApiKey: _hasApiKey,
-                  center: mapCenter,
-                  markers: _buildMarkers(),
+                _OsmInfoPanel(
                   cardColor: cardColor,
+                  textColor: textColor,
                   mutedColor: mutedColor,
                   primary: primary,
-                  onMapCreated: (controller) {
-                    _mapController = controller;
-                  },
+                  mosqueCount: _mosques.length,
+                  radiusKm: _searchRadiusMeters ~/ 1000,
                 ),
                 const SizedBox(height: 18),
                 Row(
                   children: [
                     Expanded(
                       child: Text(
-                        'Masjid Valid dari Google Maps',
+                        'Masjid dari OpenStreetMap',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -365,7 +345,7 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Radius ${_searchRadiusMeters ~/ 1000} km dari GPS aktif.',
+                  'Radius ${_searchRadiusMeters ~/ 1000} km dari GPS aktif. Data bersumber dari Overpass API.',
                   style: TextStyle(color: mutedColor, fontSize: 13),
                 ),
                 const SizedBox(height: 12),
@@ -385,7 +365,8 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen> {
                     textColor: textColor,
                     mutedColor: mutedColor,
                     cardColor: cardColor,
-                    onOpenMaps: () => _openMaps(context, mosque),
+                    onOpenMap: () => _openOpenStreetMap(context, mosque),
+                    onOpenRoute: () => _openRoute(context, mosque),
                   ),
               ],
             ),
@@ -475,63 +456,65 @@ class _LocationHeader extends StatelessWidget {
   }
 }
 
-class _MapPreview extends StatelessWidget {
-  const _MapPreview({
-    required this.hasApiKey,
-    required this.center,
-    required this.markers,
+class _OsmInfoPanel extends StatelessWidget {
+  const _OsmInfoPanel({
     required this.cardColor,
+    required this.textColor,
     required this.mutedColor,
     required this.primary,
-    required this.onMapCreated,
+    required this.mosqueCount,
+    required this.radiusKm,
   });
 
-  final bool hasApiKey;
-  final LatLng center;
-  final Set<Marker> markers;
   final Color cardColor;
+  final Color textColor;
   final Color mutedColor;
   final Color primary;
-  final ValueChanged<GoogleMapController> onMapCreated;
+  final int mosqueCount;
+  final int radiusKm;
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(18),
-      child: SizedBox(
-        height: 220,
-        child: hasApiKey
-            ? GoogleMap(
-                initialCameraPosition: CameraPosition(target: center, zoom: 14),
-                markers: markers,
-                myLocationButtonEnabled: false,
-                zoomControlsEnabled: false,
-                mapToolbarEnabled: false,
-                onMapCreated: onMapCreated,
-              )
-            : ColoredBox(
-                color: cardColor,
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.map_outlined, color: primary, size: 34),
-                        const SizedBox(height: 10),
-                        Text(
-                          'Google Maps API key belum tersedia.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: mutedColor,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
+    return Card(
+      elevation: 0,
+      color: cardColor,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Container(
+              width: 54,
+              height: 54,
+              decoration: BoxDecoration(
+                color: primary.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(Icons.map_outlined, color: primary, size: 28),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'OpenStreetMap + Overpass',
+                    style: TextStyle(
+                      color: textColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
                     ),
                   ),
-                ),
+                  const SizedBox(height: 5),
+                  Text(
+                    '$mosqueCount masjid ditemukan dalam radius $radiusKm km.',
+                    style: TextStyle(color: mutedColor, fontSize: 13),
+                  ),
+                ],
               ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -572,7 +555,7 @@ class _StatusCard extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'Pencarian belum tersedia',
+                    'Pencarian belum berhasil',
                     style: TextStyle(
                       color: textColor,
                       fontSize: 16,
@@ -604,7 +587,8 @@ class _MosqueCard extends StatelessWidget {
     required this.textColor,
     required this.mutedColor,
     required this.cardColor,
-    required this.onOpenMaps,
+    required this.onOpenMap,
+    required this.onOpenRoute,
   });
 
   final MosqueItem mosque;
@@ -612,7 +596,8 @@ class _MosqueCard extends StatelessWidget {
   final Color textColor;
   final Color mutedColor;
   final Color cardColor;
-  final VoidCallback onOpenMaps;
+  final VoidCallback onOpenMap;
+  final VoidCallback onOpenRoute;
 
   @override
   Widget build(BuildContext context) {
@@ -620,14 +605,6 @@ class _MosqueCard extends StatelessWidget {
     final distanceLabel = distanceKm < 1
         ? '${mosque.distanceInMeters.round()} m'
         : '${distanceKm.toStringAsFixed(1)} km';
-    final ratingLabel = mosque.rating == null
-        ? null
-        : '${mosque.rating!.toStringAsFixed(1)} (${mosque.userRatingsTotal ?? 0})';
-    final openLabel = mosque.isOpenNow == null
-        ? null
-        : mosque.isOpenNow!
-        ? 'Buka sekarang'
-        : 'Tutup';
 
     return Card(
       elevation: 0,
@@ -666,37 +643,31 @@ class _MosqueCard extends StatelessWidget {
               mosque.address,
               style: TextStyle(color: mutedColor, fontSize: 13),
             ),
-            if (ratingLabel != null || openLabel != null) ...[
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  if (ratingLabel != null)
-                    _InfoChip(
-                      icon: Icons.star,
-                      label: ratingLabel,
-                      color: primary,
-                    ),
-                  if (openLabel != null)
-                    _InfoChip(
-                      icon: mosque.isOpenNow!
-                          ? Icons.check_circle
-                          : Icons.cancel,
-                      label: openLabel,
-                      color: mosque.isOpenNow! ? primary : Colors.redAccent,
-                    ),
-                ],
-              ),
-            ],
+            const SizedBox(height: 10),
+            _InfoChip(
+              icon: Icons.public,
+              label: 'OSM ${mosque.sourceType}',
+              color: primary,
+            ),
             const SizedBox(height: 14),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: onOpenMaps,
-                icon: const Icon(Icons.navigation, size: 17),
-                label: const Text('Buka Rute di Google Maps'),
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: onOpenMap,
+                    icon: const Icon(Icons.map_outlined, size: 17),
+                    label: const Text('Lihat Peta'),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: onOpenRoute,
+                    icon: const Icon(Icons.navigation, size: 17),
+                    label: const Text('Rute'),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

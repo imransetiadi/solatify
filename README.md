@@ -61,7 +61,7 @@ Solatify memakai desain bernuansa Islami modern dengan fokus pada keterbacaan da
 
 ### Masjid Terdekat
 
-- Integrasi Google Maps untuk tampilan peta.
+- Pencarian masjid terdekat memakai OpenStreetMap dan Overpass API.
 - Dirancang untuk eksplorasi lokasi masjid di sekitar pengguna.
 
 ### Konten Islami
@@ -90,7 +90,7 @@ Solatify memakai desain bernuansa Islami modern dengan fokus pada keterbacaan da
 - `adhan` untuk kalkulasi waktu salat.
 - Geolocator dan Geocoding untuk lokasi.
 - Flutter Compass untuk arah kiblat.
-- Google Maps Flutter untuk peta.
+- OpenStreetMap Overpass API untuk data masjid terdekat.
 - Flutter Local Notifications untuk pengingat.
 - Workmanager untuk dukungan background task.
 - HTTP untuk akses data remote saat diperlukan.
@@ -204,37 +204,16 @@ flutter build ios --simulator
 flutter run -d <SIMULATOR_ID>
 ```
 
-## Google Maps dan Places API
+## OpenStreetMap dan Overpass API
 
-Fitur `Masjid Terdekat` memakai GPS perangkat dan Google Places Nearby Search dengan filter `type=mosque`. Data yang tampil bukan dummy: hasil dipilih dari tempat yang memiliki tipe `mosque` dan status `OPERATIONAL` dari Google Places.
+Fitur `Masjid Terdekat` memakai GPS perangkat dan OpenStreetMap Overpass API. Data yang tampil bukan dummy: hasil diambil dari objek OSM dengan tag masjid/tempat ibadah Muslim, seperti:
 
-API yang perlu diaktifkan di Google Cloud Console:
+- `amenity=place_of_worship` dan `religion=muslim`
+- `building=mosque`
 
-- Maps SDK for Android.
-- Maps SDK for iOS.
-- Places API.
+Fitur ini tidak membutuhkan Google Maps API key dan tidak membutuhkan billing Google Cloud. Kualitas data mengikuti kelengkapan kontribusi OpenStreetMap di lokasi pengguna.
 
-Jalankan aplikasi dengan API key untuk query Places:
-
-```bash
-flutter run --dart-define=GOOGLE_MAPS_API_KEY=API_KEY_ANDA
-```
-
-Android akan memakai nilai `GOOGLE_MAPS_API_KEY` dari `--dart-define` untuk Maps SDK dan Places API.
-
-Untuk iOS, buat file lokal dari template berikut sebelum build:
-
-```bash
-cp ios/Flutter/MapsKey.xcconfig.example ios/Flutter/MapsKey.xcconfig
-```
-
-Lalu isi `ios/Flutter/MapsKey.xcconfig`:
-
-```xcconfig
-GOOGLE_MAPS_API_KEY=API_KEY_ANDA
-```
-
-File `ios/Flutter/MapsKey.xcconfig` sudah di-ignore oleh git. Jangan commit API key asli ke repository. Gunakan API restriction di Google Cloud sesuai bundle ID/package name aplikasi.
+Saat pengguna membuka tombol peta atau rute, aplikasi membuka OpenStreetMap di browser/app eksternal berdasarkan koordinat masjid.
 
 ## Catatan iOS
 
@@ -247,7 +226,6 @@ File `ios/Flutter/MapsKey.xcconfig` sudah di-ignore oleh git. Jangan commit API 
 Plugin yang dapat memunculkan warning di Flutter versi terbaru:
 
 - `workmanager_apple`
-- `google_maps_flutter_ios`
 - `flutter_compass`
 
 ## Testing dan Quality Check
