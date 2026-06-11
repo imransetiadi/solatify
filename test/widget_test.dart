@@ -12,6 +12,7 @@ void main() {
     tempDir = Directory.systemTemp.createTempSync('solatify_test');
     Hive.init(tempDir.path);
     await initializeDateFormatting('id_ID', null);
+    await initializeDateFormatting('en_US', null);
     await Hive.openBox('settings');
     await Hive.openBox('prayer_tracker');
     await Hive.openBox('location_cache');
@@ -30,11 +31,8 @@ void main() {
 
   testWidgets('App splash screen render test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(
-      const ProviderScope(
-        child: SolatifyApp(),
-      ),
-    );
+    await tester.pumpWidget(const ProviderScope(child: SolatifyApp()));
+    await tester.pump();
 
     // Verify that the title 'SOLATIFY' is displayed
     expect(find.text('SOLATIFY'), findsOneWidget);

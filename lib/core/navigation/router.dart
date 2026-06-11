@@ -17,6 +17,7 @@ import '../../features/duas/presentation/screens/duas_screen.dart';
 import '../../features/hijri_calendar/presentation/screens/hijri_calendar_screen.dart';
 import '../../features/islamic_tips/presentation/screens/islamic_tips_screen.dart';
 import '../../features/dhikr/presentation/screens/dhikr_screen.dart';
+import '../localization/app_localizations.dart';
 import '../widgets/responsive_layout.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(
@@ -32,7 +33,10 @@ final goRouter = GoRouter(
   debugLogDiagnostics: false,
   routes: [
     GoRoute(path: '/splash', builder: (context, state) => const SplashScreen()),
-    GoRoute(path: '/get-started', builder: (context, state) => const GetStartedScreen()),
+    GoRoute(
+      path: '/get-started',
+      builder: (context, state) => const GetStartedScreen(),
+    ),
     GoRoute(
       path: '/onboarding',
       builder: (context, state) => const OnboardingScreen(),
@@ -247,6 +251,7 @@ class MainLayoutScreen extends StatelessWidget {
   }
 
   void _showMoreMenu(BuildContext context) {
+    final l = AppLocalizations.of(context);
     showModalBottomSheet(
       context: context,
       showDragHandle: true,
@@ -259,7 +264,7 @@ class MainLayoutScreen extends StatelessWidget {
               children: _moreDestinations.map((destination) {
                 return ListTile(
                   leading: Icon(destination.icon),
-                  title: Text(destination.label),
+                  title: Text(_labelForDestination(l, destination)),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
                     Navigator.pop(context);
@@ -276,6 +281,7 @@ class MainLayoutScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final selectedIndex = _calculateSelectedIndex(context);
@@ -302,7 +308,7 @@ class MainLayoutScreen extends StatelessWidget {
                   return NavigationRailDestination(
                     icon: Icon(destination.icon),
                     selectedIcon: Icon(destination.activeIcon),
-                    label: Text(destination.label),
+                    label: Text(_labelForDestination(l, destination)),
                   );
                 }).toList(),
               ),
@@ -349,12 +355,40 @@ class MainLayoutScreen extends StatelessWidget {
                 color: theme.colorScheme.secondary,
                 size: 24,
               ),
-              label: destination.label,
+              label: _labelForDestination(l, destination),
             );
           }).toList(),
         ),
       ),
     );
+  }
+
+  String _labelForDestination(
+    AppLocalizations l,
+    _MainDestination destination,
+  ) {
+    switch (destination.path) {
+      case '/home':
+        return l.navHome;
+      case '/schedule':
+        return l.navSchedule;
+      case '/quran':
+        return l.navQuran;
+      case '/islamic-content':
+        return l.navContent;
+      case '/qibla':
+        return l.navQibla;
+      case '/tracker':
+        return l.navJournal;
+      case '/mosque':
+        return l.navMosque;
+      case '/settings':
+        return l.navSettings;
+      case '/more':
+        return l.navMore;
+      default:
+        return destination.label;
+    }
   }
 }
 

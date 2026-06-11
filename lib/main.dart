@@ -1,8 +1,10 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'core/localization/app_localizations.dart';
 import 'core/navigation/router.dart';
 import 'core/theme/theme.dart';
 
@@ -15,6 +17,7 @@ void main() async {
     // Start loading dependencies in parallel
     await Future.wait([
       initializeDateFormatting('id_ID', null),
+      initializeDateFormatting('en_US', null),
       HiveService.init(),
     ]);
 
@@ -39,6 +42,14 @@ class SolatifyApp extends ConsumerWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: settings.themeMode,
+      locale: Locale(settings.language == 'en' ? 'en' : 'id'),
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       routerConfig: goRouter,
       scrollBehavior: const SolatifyScrollBehavior(),
       builder: (context, child) {

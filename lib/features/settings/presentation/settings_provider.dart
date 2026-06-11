@@ -46,23 +46,33 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   SettingsNotifier() : super(_initialState());
 
   static SettingsState _initialState() {
-    final themeStr = HiveService.getSetting('theme', defaultValue: 'light')?.toString() ?? 'light';
-    final lang = HiveService.getSetting('language', defaultValue: 'id')?.toString() ?? 'id';
-    final method = (HiveService.getSetting(
-      'calculation_method',
-      defaultValue: 'Kemenag',
-    ) ?? 'Kemenag').toString();
-    
+    final themeStr =
+        HiveService.getSetting('theme', defaultValue: 'light')?.toString() ??
+        'light';
+    final rawLang =
+        HiveService.getSetting('language', defaultValue: 'id')?.toString() ??
+        'id';
+    final lang = rawLang == 'en' ? 'en' : 'id';
+    final method =
+        (HiveService.getSetting(
+                  'calculation_method',
+                  defaultValue: 'Kemenag',
+                ) ??
+                'Kemenag')
+            .toString();
+
     final rawNotif = HiveService.getSetting(
       'notification_enabled',
       defaultValue: true,
     );
     final notif = rawNotif is bool ? rawNotif : true;
 
-    final adhan = HiveService.getSetting(
-      'adhan_sound',
-      defaultValue: 'default',
-    )?.toString() ?? 'default';
+    final adhan =
+        HiveService.getSetting(
+          'adhan_sound',
+          defaultValue: 'default',
+        )?.toString() ??
+        'default';
 
     final rawOnboarding = HiveService.getSetting(
       'onboarding_completed',
@@ -112,8 +122,9 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   }
 
   Future<void> updateLanguage(String lang) async {
-    await HiveService.saveSetting('language', lang);
-    state = state.copyWith(language: lang);
+    final normalizedLang = lang == 'en' ? 'en' : 'id';
+    await HiveService.saveSetting('language', normalizedLang);
+    state = state.copyWith(language: normalizedLang);
   }
 
   Future<void> updateCalculationMethod(String method) async {

@@ -1,36 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/glass_container.dart';
 import '../../../../core/database/hive_service.dart';
 import '../../../../core/widgets/responsive_layout.dart';
 import '../settings_provider.dart';
 
-enum PrayerOffsetType {
-  subuh,
-  dzuhur,
-  ashar,
-  magrib,
-  isya,
-}
+enum PrayerOffsetType { subuh, dzuhur, ashar, magrib, isya }
 
 extension PrayerOffsetTypeExtension on PrayerOffsetType {
   String get nameId {
     switch (this) {
-      case PrayerOffsetType.subuh: return 'Subuh';
-      case PrayerOffsetType.dzuhur: return 'Dzuhur';
-      case PrayerOffsetType.ashar: return 'Ashar';
-      case PrayerOffsetType.magrib: return 'Magrib';
-      case PrayerOffsetType.isya: return 'Isya';
+      case PrayerOffsetType.subuh:
+        return 'Subuh';
+      case PrayerOffsetType.dzuhur:
+        return 'Dzuhur';
+      case PrayerOffsetType.ashar:
+        return 'Ashar';
+      case PrayerOffsetType.magrib:
+        return 'Magrib';
+      case PrayerOffsetType.isya:
+        return 'Isya';
     }
   }
 
   String get key {
     switch (this) {
-      case PrayerOffsetType.subuh: return 'subuh';
-      case PrayerOffsetType.dzuhur: return 'dzuhur';
-      case PrayerOffsetType.ashar: return 'ashar';
-      case PrayerOffsetType.magrib: return 'magrib';
-      case PrayerOffsetType.isya: return 'isya';
+      case PrayerOffsetType.subuh:
+        return 'subuh';
+      case PrayerOffsetType.dzuhur:
+        return 'dzuhur';
+      case PrayerOffsetType.ashar:
+        return 'ashar';
+      case PrayerOffsetType.magrib:
+        return 'magrib';
+      case PrayerOffsetType.isya:
+        return 'isya';
     }
   }
 }
@@ -44,12 +49,15 @@ class SettingsScreen extends ConsumerWidget {
     PrayerOffsetType prayer,
     int currentOffset,
   ) {
+    final l = AppLocalizations.of(context);
     int selectedOffset = currentOffset;
     final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final dialogBg = isDarkTheme ? const Color(0xFF2A1B12) : Colors.white;
     final textColor = isDarkTheme ? Colors.white : const Color(0xFF241A12);
     final textMuted = isDarkTheme ? Colors.white70 : const Color(0xFF6E5B4B);
-    final primaryColor = isDarkTheme ? const Color(0xFFC78A4C) : const Color(0xFF0E4D31);
+    final primaryColor = isDarkTheme
+        ? const Color(0xFFC78A4C)
+        : const Color(0xFF0E4D31);
 
     showDialog(
       context: context,
@@ -59,22 +67,23 @@ class SettingsScreen extends ConsumerWidget {
             return AlertDialog(
               backgroundColor: dialogBg,
               title: Text(
-                'Atur Ofset Waktu ${prayer.nameId}',
+                l.setPrayerOffset(prayer.nameId),
                 style: TextStyle(color: textColor),
               ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    'Tambahkan atau kurangi menit dari waktu standar.',
-                    style: TextStyle(color: textMuted),
-                  ),
+                  Text(l.adjustOffsetHint, style: TextStyle(color: textMuted)),
                   const SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       IconButton(
-                        icon: Icon(Icons.remove_circle, size: 36, color: primaryColor),
+                        icon: Icon(
+                          Icons.remove_circle,
+                          size: 36,
+                          color: primaryColor,
+                        ),
                         onPressed: () {
                           stfSetState(() {
                             selectedOffset--;
@@ -83,12 +92,20 @@ class SettingsScreen extends ConsumerWidget {
                       ),
                       const SizedBox(width: 16),
                       Text(
-                        '${selectedOffset > 0 ? '+' : ''}$selectedOffset menit',
-                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: textColor),
+                        '${selectedOffset > 0 ? '+' : ''}$selectedOffset ${l.minutes}',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: textColor,
+                        ),
                       ),
                       const SizedBox(width: 16),
                       IconButton(
-                        icon: Icon(Icons.add_circle, size: 36, color: primaryColor),
+                        icon: Icon(
+                          Icons.add_circle,
+                          size: 36,
+                          color: primaryColor,
+                        ),
                         onPressed: () {
                           stfSetState(() {
                             selectedOffset++;
@@ -102,14 +119,16 @@ class SettingsScreen extends ConsumerWidget {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(dialogContext),
-                  child: Text('Batal', style: TextStyle(color: textMuted)),
+                  child: Text(l.cancel, style: TextStyle(color: textMuted)),
                 ),
                 TextButton(
                   onPressed: () {
-                    ref.read(settingsProvider.notifier).updatePrayerOffsets(prayer.key, selectedOffset);
+                    ref
+                        .read(settingsProvider.notifier)
+                        .updatePrayerOffsets(prayer.key, selectedOffset);
                     Navigator.pop(dialogContext);
                   },
-                  child: Text('Simpan', style: TextStyle(color: primaryColor)),
+                  child: Text(l.save, style: TextStyle(color: primaryColor)),
                 ),
               ],
             );
@@ -124,13 +143,14 @@ class SettingsScreen extends ConsumerWidget {
     WidgetRef ref,
     String currentMethod,
   ) {
+    final l = AppLocalizations.of(context);
     final methods = {
-      'Kemenag': 'Kemenag RI (Indonesia)',
-      'MuslimWorldLeague': 'Muslim World League (MWL)',
-      'Egypt': 'Egyptian General Authority',
-      'Karachi': 'Univ. of Islamic Sciences, Karachi',
-      'UmmAlQura': 'Umm Al-Qura University, Makkah',
-      'NorthAmerica': 'ISNA (North America)',
+      'Kemenag': l.calculationMethodLabel('Kemenag'),
+      'MuslimWorldLeague': l.calculationMethodLabel('MuslimWorldLeague'),
+      'Egypt': l.calculationMethodLabel('Egypt'),
+      'Karachi': l.calculationMethodLabel('Karachi'),
+      'UmmAlQura': l.calculationMethodLabel('UmmAlQura'),
+      'NorthAmerica': l.calculationMethodLabel('NorthAmerica'),
     };
 
     final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
@@ -143,7 +163,7 @@ class SettingsScreen extends ConsumerWidget {
       builder: (context) {
         return AlertDialog(
           backgroundColor: dialogBg,
-          title: Text('Metode Perhitungan', style: TextStyle(color: textColor)),
+          title: Text(l.calculationMethod, style: TextStyle(color: textColor)),
           content: SizedBox(
             width: double.maxFinite,
             child: RadioGroup<String>(
@@ -174,7 +194,7 @@ class SettingsScreen extends ConsumerWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text('Batal', style: TextStyle(color: textMuted)),
+              child: Text(l.cancel, style: TextStyle(color: textMuted)),
             ),
           ],
         );
@@ -187,11 +207,12 @@ class SettingsScreen extends ConsumerWidget {
     WidgetRef ref,
     String currentSound,
   ) {
+    final l = AppLocalizations.of(context);
     final sounds = {
-      'default': 'Bip Standar / Default',
-      'adhan_makkah': 'Adzan Makkah',
-      'adhan_madinah': 'Adzan Madinah',
-      'silent': 'Hening / Silent',
+      'default': l.defaultBeep,
+      'adhan_makkah': l.adhanMakkah,
+      'adhan_madinah': l.adhanMadinah,
+      'silent': l.silent,
     };
 
     final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
@@ -205,7 +226,7 @@ class SettingsScreen extends ConsumerWidget {
         return AlertDialog(
           backgroundColor: dialogBg,
           title: Text(
-            'Suara Pengingat Adzan',
+            l.adhanSoundDialogTitle,
             style: TextStyle(color: textColor),
           ),
           content: SizedBox(
@@ -236,7 +257,7 @@ class SettingsScreen extends ConsumerWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text('Batal', style: TextStyle(color: textMuted)),
+              child: Text(l.cancel, style: TextStyle(color: textMuted)),
             ),
           ],
         );
@@ -249,11 +270,8 @@ class SettingsScreen extends ConsumerWidget {
     WidgetRef ref,
     String currentLang,
   ) {
-    final langs = {
-      'id': 'Bahasa Indonesia',
-      'en': 'English',
-      'ar': 'العربية (Arabic)',
-    };
+    final l = AppLocalizations.of(context);
+    final langs = {'id': l.indonesiaLanguage, 'en': l.englishLanguage};
 
     final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final dialogBg = isDarkTheme ? const Color(0xFF2A1B12) : Colors.white;
@@ -265,7 +283,7 @@ class SettingsScreen extends ConsumerWidget {
       builder: (context) {
         return AlertDialog(
           backgroundColor: dialogBg,
-          title: Text('Pilih Bahasa', style: TextStyle(color: textColor)),
+          title: Text(l.chooseLanguage, style: TextStyle(color: textColor)),
           content: SizedBox(
             width: double.maxFinite,
             child: RadioGroup<String>(
@@ -294,7 +312,7 @@ class SettingsScreen extends ConsumerWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text('Batal', style: TextStyle(color: textMuted)),
+              child: Text(l.cancel, style: TextStyle(color: textMuted)),
             ),
           ],
         );
@@ -305,22 +323,21 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(settingsProvider);
+    final l = AppLocalizations.of(context);
 
-    final String displayMethod = _getCalculationMethodLabel(
+    final String displayMethod = l.calculationMethodLabel(
       settings.calculationMethod,
     );
-    final String displaySound = _getAdhanSoundLabel(settings.adhanSound);
-    final String displayLang = _getLanguageLabel(settings.language);
+    final String displaySound = l.adhanSoundLabel(settings.adhanSound);
+    final String displayLang = l.languageLabel(settings.language);
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : const Color(0xFF241A12);
     final textSecondary = isDark ? Colors.white60 : const Color(0xFF7A6A5D);
-    final textHint = isDark ? Colors.white38 : const Color(0xFF7A6A5D);
-    final textExtraMuted = isDark ? Colors.white24 : const Color(0xFFD7C6B4);
     final dividerColor = isDark ? Colors.white12 : Colors.black12;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Pengaturan')),
+      appBar: AppBar(title: Text(l.settingsTitle)),
       body: SafeArea(
         child: ResponsiveCenter(
           child: SingleChildScrollView(
@@ -330,7 +347,7 @@ class SettingsScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Section 1: Reminder & Audio
-                _buildSectionHeader(context, 'Notifikasi & Adzan'),
+                _buildSectionHeader(context, l.reminderAndAdhan),
                 const SizedBox(height: 12),
                 GlassContainer(
                   blur: 15,
@@ -345,11 +362,11 @@ class SettingsScreen extends ConsumerWidget {
                       SwitchListTile(
                         activeThumbColor: const Color(0xFF0E4D31),
                         title: Text(
-                          'Pengingat Salat',
+                          l.prayerReminder,
                           style: TextStyle(color: textColor, fontSize: 15),
                         ),
                         subtitle: Text(
-                          'Aktifkan pengingat notifikasi masuk waktu salat',
+                          l.prayerReminderSubtitle,
                           style: TextStyle(color: textSecondary, fontSize: 11),
                         ),
                         value: settings.notificationEnabled,
@@ -363,7 +380,7 @@ class SettingsScreen extends ConsumerWidget {
                       // Audio selection
                       ListTile(
                         title: Text(
-                          'Suara Adzan',
+                          l.adhanSound,
                           style: TextStyle(color: textColor, fontSize: 15),
                         ),
                         subtitle: Text(
@@ -389,7 +406,7 @@ class SettingsScreen extends ConsumerWidget {
                 const SizedBox(height: 24),
 
                 // Section 2: Calculation Settings
-                _buildSectionHeader(context, 'Kalkulasi Jadwal'),
+                _buildSectionHeader(context, l.calculationSchedule),
                 const SizedBox(height: 12),
                 GlassContainer(
                   blur: 15,
@@ -403,7 +420,7 @@ class SettingsScreen extends ConsumerWidget {
                       // Method selection
                       ListTile(
                         title: Text(
-                          'Metode Perhitungan',
+                          l.calculationMethod,
                           style: TextStyle(color: textColor, fontSize: 15),
                         ),
                         subtitle: Text(
@@ -429,7 +446,7 @@ class SettingsScreen extends ConsumerWidget {
                 const SizedBox(height: 24),
 
                 // Section 2b: Prayer Time Offsets
-                _buildSectionHeader(context, 'Ofset Waktu Salat'),
+                _buildSectionHeader(context, l.prayerTimeOffsets),
                 const SizedBox(height: 12),
                 GlassContainer(
                   blur: 15,
@@ -440,22 +457,57 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                   child: Column(
                     children: [
-                      _buildOffsetTile(context, ref, PrayerOffsetType.subuh, settings.prayerOffsets['subuh'] ?? 0, textColor, textSecondary),
+                      _buildOffsetTile(
+                        context,
+                        ref,
+                        PrayerOffsetType.subuh,
+                        settings.prayerOffsets['subuh'] ?? 0,
+                        textColor,
+                        textSecondary,
+                      ),
                       Divider(color: dividerColor, height: 16),
-                      _buildOffsetTile(context, ref, PrayerOffsetType.dzuhur, settings.prayerOffsets['dzuhur'] ?? 0, textColor, textSecondary),
+                      _buildOffsetTile(
+                        context,
+                        ref,
+                        PrayerOffsetType.dzuhur,
+                        settings.prayerOffsets['dzuhur'] ?? 0,
+                        textColor,
+                        textSecondary,
+                      ),
                       Divider(color: dividerColor, height: 16),
-                      _buildOffsetTile(context, ref, PrayerOffsetType.ashar, settings.prayerOffsets['ashar'] ?? 0, textColor, textSecondary),
+                      _buildOffsetTile(
+                        context,
+                        ref,
+                        PrayerOffsetType.ashar,
+                        settings.prayerOffsets['ashar'] ?? 0,
+                        textColor,
+                        textSecondary,
+                      ),
                       Divider(color: dividerColor, height: 16),
-                      _buildOffsetTile(context, ref, PrayerOffsetType.magrib, settings.prayerOffsets['magrib'] ?? 0, textColor, textSecondary),
+                      _buildOffsetTile(
+                        context,
+                        ref,
+                        PrayerOffsetType.magrib,
+                        settings.prayerOffsets['magrib'] ?? 0,
+                        textColor,
+                        textSecondary,
+                      ),
                       Divider(color: dividerColor, height: 16),
-                      _buildOffsetTile(context, ref, PrayerOffsetType.isya, settings.prayerOffsets['isya'] ?? 0, textColor, textSecondary),
+                      _buildOffsetTile(
+                        context,
+                        ref,
+                        PrayerOffsetType.isya,
+                        settings.prayerOffsets['isya'] ?? 0,
+                        textColor,
+                        textSecondary,
+                      ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 24),
 
                 // Section 3: Localization & UI
-                _buildSectionHeader(context, 'Tampilan & Bahasa'),
+                _buildSectionHeader(context, l.displayAndLanguage),
                 const SizedBox(height: 12),
                 GlassContainer(
                   blur: 15,
@@ -469,7 +521,7 @@ class SettingsScreen extends ConsumerWidget {
                       // Language
                       ListTile(
                         title: Text(
-                          'Bahasa',
+                          l.language,
                           style: TextStyle(color: textColor, fontSize: 15),
                         ),
                         subtitle: Text(
@@ -501,7 +553,7 @@ class SettingsScreen extends ConsumerWidget {
                           children: [
                             Flexible(
                               child: Text(
-                                'Tema Aplikasi',
+                                l.appTheme,
                                 style: TextStyle(
                                   color: textColor,
                                   fontSize: 15,
@@ -536,20 +588,10 @@ class SettingsScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 32),
 
-                // Section 4: App Information
+                // Section 4: Developer actions
                 Center(
                   child: Column(
                     children: [
-                      Text(
-                        'Solatify v1.0.0 (MVP)',
-                        style: TextStyle(color: textHint, fontSize: 12),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Made with ♥ for Muslim Companions',
-                        style: TextStyle(color: textExtraMuted, fontSize: 10),
-                      ),
-                      const SizedBox(height: 16),
                       TextButton(
                         onPressed: () {
                           // Reset onboarding (developer toggle)
@@ -558,15 +600,19 @@ class SettingsScreen extends ConsumerWidget {
                             false,
                           );
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
+                            SnackBar(
                               content: Text(
-                                'Onboarding telah direset. Jalankan ulang aplikasi.',
+                                l.isEnglish
+                                    ? 'Onboarding has been reset. Restart the app.'
+                                    : 'Onboarding telah direset. Jalankan ulang aplikasi.',
                               ),
                             ),
                           );
                         },
-                        child: const Text(
-                          'Reset Onboarding (Dev)',
+                        child: Text(
+                          l.isEnglish
+                              ? 'Reset Onboarding (Dev)'
+                              : 'Reset Onboarding (Dev)',
                           style: TextStyle(
                             color: Color(0xFF241A12),
                             fontSize: 11,
@@ -638,50 +684,6 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  String _getCalculationMethodLabel(String val) {
-    switch (val) {
-      case 'MuslimWorldLeague':
-        return 'Muslim World League (MWL)';
-      case 'Egypt':
-        return 'Egyptian General Authority';
-      case 'Karachi':
-        return 'Univ. of Islamic Sciences, Karachi';
-      case 'UmmAlQura':
-        return 'Umm Al-Qura University, Makkah';
-      case 'NorthAmerica':
-        return 'ISNA (North America)';
-      case 'Kemenag':
-      default:
-        return 'Kemenag RI (Indonesia)';
-    }
-  }
-
-  String _getAdhanSoundLabel(String val) {
-    switch (val) {
-      case 'adhan_makkah':
-        return 'Adzan Makkah';
-      case 'adhan_madinah':
-        return 'Adzan Madinah';
-      case 'silent':
-        return 'Hening / Silent';
-      case 'default':
-      default:
-        return 'Bip Standar / Default';
-    }
-  }
-
-  String _getLanguageLabel(String val) {
-    switch (val) {
-      case 'en':
-        return 'English';
-      case 'ar':
-        return 'العربية (Arabic)';
-      case 'id':
-      default:
-        return 'Bahasa Indonesia';
-    }
-  }
-
   Widget _buildOffsetTile(
     BuildContext context,
     WidgetRef ref,
@@ -690,19 +692,22 @@ class SettingsScreen extends ConsumerWidget {
     Color textColor,
     Color textSecondary,
   ) {
+    final l = AppLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primaryColor = isDark ? const Color(0xFFC78A4C) : const Color(0xFF0E4D31);
+    final primaryColor = isDark
+        ? const Color(0xFFC78A4C)
+        : const Color(0xFF0E4D31);
 
     return ListTile(
       title: Text(
-        '${prayer.nameId} Ofset',
+        l.isEnglish ? '${prayer.nameId} Offset' : '${prayer.nameId} Ofset',
         style: TextStyle(color: textColor, fontSize: 15),
       ),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            '${offset > 0 ? '+' : ''}$offset menit',
+            '${offset > 0 ? '+' : ''}$offset ${l.minutes}',
             style: TextStyle(
               color: primaryColor,
               fontSize: 13,
