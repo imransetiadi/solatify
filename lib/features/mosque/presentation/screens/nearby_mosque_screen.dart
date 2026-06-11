@@ -39,7 +39,12 @@ class NearbyMosqueScreen extends ConsumerStatefulWidget {
 
 class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen> {
   static const _searchRadiusMeters = 5000;
-  static const _overpassEndpoint = 'https://overpass-api.de/api/interpreter';
+  static const _fallbackRadiusMeters = [5000, 3000, 1500];
+  static const _overpassEndpoints = [
+    'https://overpass-api.de/api/interpreter',
+    'https://overpass.kumi.systems/api/interpreter',
+    'https://overpass.openstreetmap.ru/api/interpreter',
+  ];
 
   List<MosqueItem> _mosques = const [];
   bool _isLoading = false;
@@ -114,26 +119,59 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen> {
     required double latitude,
     required double longitude,
   }) async {
+    Object? lastError;
+
+    for (final radius in _fallbackRadiusMeters) {
+      for (final endpoint in _overpassEndpoints) {
+        try {
+          return await _fetchMosquesFromEndpoint(
+            endpoint: endpoint,
+            radiusMeters: radius,
+            latitude: latitude,
+            longitude: longitude,
+          );
+        } catch (error) {
+          lastError = error;
+        }
+      }
+    }
+
+    throw lastError ?? 'Semua endpoint Overpass gagal merespons.';
+  }
+
+  Future<List<MosqueItem>> _fetchMosquesFromEndpoint({
+    required String endpoint,
+    required int radiusMeters,
+    required double latitude,
+    required double longitude,
+  }) async {
     final query =
         '''
 [out:json][timeout:25];
 (
-  node["amenity"="place_of_worship"]["religion"="muslim"](around:$_searchRadiusMeters,$latitude,$longitude);
-  way["amenity"="place_of_worship"]["religion"="muslim"](around:$_searchRadiusMeters,$latitude,$longitude);
-  relation["amenity"="place_of_worship"]["religion"="muslim"](around:$_searchRadiusMeters,$latitude,$longitude);
-  node["building"="mosque"](around:$_searchRadiusMeters,$latitude,$longitude);
-  way["building"="mosque"](around:$_searchRadiusMeters,$latitude,$longitude);
-  relation["building"="mosque"](around:$_searchRadiusMeters,$latitude,$longitude);
+  nwr["amenity"="place_of_worship"]["religion"="muslim"](around:$radiusMeters,$latitude,$longitude);
+  nwr["building"="mosque"](around:$radiusMeters,$latitude,$longitude);
 );
 out center tags;
 ''';
 
     final response = await http
-        .post(Uri.parse(_overpassEndpoint), body: {'data': query})
+        .post(
+          Uri.parse(endpoint),
+          headers: const {
+            'Accept': 'application/json',
+            'User-Agent': 'Solatify/1.0 (OpenStreetMap mosque search)',
+          },
+          body: {'data': query},
+        )
         .timeout(const Duration(seconds: 30));
 
     if (response.statusCode != 200) {
-      throw 'Overpass API HTTP ${response.statusCode}.';
+      final bodyPreview = response.body.replaceAll(RegExp(r'\s+'), ' ').trim();
+      final message = bodyPreview.length > 140
+          ? '${bodyPreview.substring(0, 140)}...'
+          : bodyPreview;
+      throw 'Overpass API HTTP ${response.statusCode} (${Uri.parse(endpoint).host}, radius ${radiusMeters}m)${message.isEmpty ? '' : ': $message'}';
     }
 
     final body = jsonDecode(response.body) as Map<String, dynamic>;
