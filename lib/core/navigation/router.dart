@@ -342,7 +342,7 @@ class MainLayoutScreen extends StatelessWidget {
           height: 68 + MediaQuery.paddingOf(context).bottom,
           labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
           backgroundColor: theme.colorScheme.surface,
-          indicatorColor: theme.colorScheme.secondary.withValues(alpha: 0.14),
+          indicatorColor: theme.colorScheme.tertiary.withValues(alpha: 0.14),
           destinations: _mobileDestinations.map((destination) {
             return NavigationDestination(
               icon: Icon(
@@ -352,7 +352,7 @@ class MainLayoutScreen extends StatelessWidget {
               ),
               selectedIcon: Icon(
                 destination.activeIcon,
-                color: theme.colorScheme.secondary,
+                color: theme.colorScheme.tertiary,
                 size: 24,
               ),
               label: _labelForDestination(l, destination),

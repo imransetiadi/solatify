@@ -6,7 +6,8 @@ class AppTheme {
   static const Color darkSurface = Color(0xFF174D35);
   static const Color brown = Color(0xFF9A6A3A);
   static const Color brownDark = Color(0xFF21160F);
-  static const Color brownSoft = Color(0xFFD09A5E);
+  static const Color redAccent = Color(0xFFC0392B);
+  static const Color redAccentDark = Color(0xFFE85D4F);
   static const Color islamicGreen = Color(0xFF0E4D31);
   static const Color islamicGreenLight = Color(0xFF1B5E20);
   static const Color lightBg = Color(0xFFF3FBF6);
@@ -30,15 +31,18 @@ class AppTheme {
       colorScheme: const ColorScheme.dark(
         primary: brown,
         secondary: islamicGreen,
-        tertiary: brownSoft,
+        tertiary: redAccentDark,
         surface: darkCard,
         surfaceContainerHighest: darkSurface,
         outline: Color(0xFF49372A),
-        error: brownDark,
+        error: redAccentDark,
         onPrimary: Colors.white,
         onSecondary: Colors.white,
+        onTertiary: Colors.white,
         onSurface: textLight,
       ),
+      focusColor: redAccentDark,
+      highlightColor: redAccentDark.withValues(alpha: 0.08),
       fontFamily: 'Outfit',
       appBarTheme: const AppBarTheme(
         backgroundColor: darkBg,
@@ -62,7 +66,7 @@ class AppTheme {
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: darkCard,
-        selectedItemColor: brown,
+        selectedItemColor: redAccentDark,
         unselectedItemColor: Color(0xFFA99786),
         showUnselectedLabels: true,
         type: BottomNavigationBarType.fixed,
@@ -70,9 +74,9 @@ class AppTheme {
       ),
       navigationRailTheme: const NavigationRailThemeData(
         backgroundColor: darkBg,
-        selectedIconTheme: IconThemeData(color: islamicGreen),
+        selectedIconTheme: IconThemeData(color: redAccentDark),
         selectedLabelTextStyle: TextStyle(
-          color: islamicGreen,
+          color: redAccentDark,
           fontWeight: FontWeight.w700,
           fontSize: 12,
         ),
@@ -81,21 +85,37 @@ class AppTheme {
           color: Color(0xFFA99786),
           fontSize: 12,
         ),
-        indicatorColor: Color(0x260E4D31),
+        indicatorColor: Color(0x26E85D4F),
       ),
       tabBarTheme: const TabBarThemeData(
-        indicatorColor: islamicGreen,
-        labelColor: islamicGreen,
+        indicatorColor: redAccentDark,
+        labelColor: redAccentDark,
         unselectedLabelColor: Color(0xFFA99786),
+      ),
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
+        color: redAccentDark,
       ),
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith(
-          (states) => states.contains(WidgetState.selected) ? islamicGreen : textMuted,
+          (states) =>
+              states.contains(WidgetState.selected) ? redAccentDark : textMuted,
         ),
         trackColor: WidgetStateProperty.resolveWith(
           (states) => states.contains(WidgetState.selected)
-              ? islamicGreen.withValues(alpha: 0.24)
+              ? redAccentDark.withValues(alpha: 0.24)
               : darkSurface,
+        ),
+      ),
+      checkboxTheme: CheckboxThemeData(
+        fillColor: WidgetStateProperty.resolveWith(
+          (states) =>
+              states.contains(WidgetState.selected) ? redAccentDark : null,
+        ),
+      ),
+      radioTheme: RadioThemeData(
+        fillColor: WidgetStateProperty.resolveWith(
+          (states) =>
+              states.contains(WidgetState.selected) ? redAccentDark : null,
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -111,7 +131,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: brown, width: 1.5),
+          borderSide: const BorderSide(color: redAccentDark, width: 1.5),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -123,10 +143,11 @@ class AppTheme {
         ),
       ),
       textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(foregroundColor: brown),
+        style: TextButton.styleFrom(foregroundColor: redAccentDark),
       ),
       snackBarTheme: const SnackBarThemeData(
         backgroundColor: darkSurface,
+        actionTextColor: redAccentDark,
         contentTextStyle: TextStyle(color: textLight),
       ),
       dialogTheme: DialogThemeData(
@@ -173,15 +194,18 @@ class AppTheme {
       colorScheme: const ColorScheme.light(
         primary: brown,
         secondary: islamicGreen,
-        tertiary: brownSoft,
+        tertiary: redAccent,
         surface: lightCard,
         surfaceContainerHighest: lightSurface,
         outline: lightBorder,
-        error: brownDark,
+        error: redAccent,
         onPrimary: Colors.white,
         onSecondary: Colors.white,
+        onTertiary: Colors.white,
         onSurface: textDark,
       ),
+      focusColor: redAccent,
+      highlightColor: redAccent.withValues(alpha: 0.08),
       fontFamily: 'Outfit',
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
@@ -205,7 +229,7 @@ class AppTheme {
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: lightCard,
-        selectedItemColor: brown,
+        selectedItemColor: redAccent,
         unselectedItemColor: textMuted,
         showUnselectedLabels: true,
         type: BottomNavigationBarType.fixed,
@@ -213,29 +237,43 @@ class AppTheme {
       ),
       navigationRailTheme: const NavigationRailThemeData(
         backgroundColor: lightBg,
-        selectedIconTheme: IconThemeData(color: brown),
+        selectedIconTheme: IconThemeData(color: redAccent),
         selectedLabelTextStyle: TextStyle(
-          color: brown,
+          color: redAccent,
           fontWeight: FontWeight.w700,
           fontSize: 12,
         ),
         unselectedIconTheme: IconThemeData(color: textMuted),
         unselectedLabelTextStyle: TextStyle(color: textMuted, fontSize: 12),
-        indicatorColor: Color(0x338B5A2B),
+        indicatorColor: Color(0x26C0392B),
       ),
       tabBarTheme: const TabBarThemeData(
-        indicatorColor: brownDark,
-        labelColor: brownDark,
+        indicatorColor: redAccent,
+        labelColor: redAccent,
         unselectedLabelColor: textMuted,
+      ),
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
+        color: redAccent,
       ),
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith(
-          (states) => states.contains(WidgetState.selected) ? brown : textMuted,
+          (states) =>
+              states.contains(WidgetState.selected) ? redAccent : textMuted,
         ),
         trackColor: WidgetStateProperty.resolveWith(
           (states) => states.contains(WidgetState.selected)
-              ? brown.withValues(alpha: 0.28)
+              ? redAccent.withValues(alpha: 0.22)
               : lightBorder,
+        ),
+      ),
+      checkboxTheme: CheckboxThemeData(
+        fillColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected) ? redAccent : null,
+        ),
+      ),
+      radioTheme: RadioThemeData(
+        fillColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected) ? redAccent : null,
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -251,7 +289,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: brown, width: 1.5),
+          borderSide: const BorderSide(color: redAccent, width: 1.5),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -263,10 +301,11 @@ class AppTheme {
         ),
       ),
       textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(foregroundColor: brown),
+        style: TextButton.styleFrom(foregroundColor: redAccent),
       ),
       snackBarTheme: const SnackBarThemeData(
         backgroundColor: darkSurface,
+        actionTextColor: redAccentDark,
         contentTextStyle: TextStyle(color: textLight),
       ),
       dialogTheme: DialogThemeData(

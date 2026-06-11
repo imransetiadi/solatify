@@ -656,7 +656,9 @@ class SettingsScreen extends ConsumerWidget {
     ThemeMode currentMode,
   ) {
     final isSelected = mode == currentMode;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final accentColor = theme.colorScheme.tertiary;
     final unselectedBg = isDark
         ? Colors.white.withValues(alpha: 0.04)
         : Colors.black.withValues(alpha: 0.04);
@@ -672,10 +674,10 @@ class SettingsScreen extends ConsumerWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF0E4D31) : unselectedBg,
+          color: isSelected ? accentColor : unselectedBg,
           shape: BoxShape.circle,
           border: Border.all(
-            color: isSelected ? const Color(0xFF0E4D31) : unselectedBorder,
+            color: isSelected ? accentColor : unselectedBorder,
             width: 1.2,
           ),
         ),
