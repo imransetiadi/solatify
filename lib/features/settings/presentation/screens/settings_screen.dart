@@ -514,10 +514,20 @@ class SettingsScreen extends ConsumerWidget {
                             );
                             return;
                           }
-                          await NotificationService.scheduleTestAdhanNotification(
-                            adhanSound: settings.adhanSound,
-                            azanSoundEnabled: settings.azanSoundEnabled,
-                          );
+                          try {
+                            await NotificationService.scheduleTestAdhanNotification(
+                              adhanSound: settings.adhanSound,
+                              azanSoundEnabled: settings.azanSoundEnabled,
+                            );
+                          } catch (error) {
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Gagal menjadwalkan tes: $error'),
+                              ),
+                            );
+                            return;
+                          }
                           if (!context.mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(

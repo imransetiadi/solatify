@@ -4,6 +4,8 @@ import UserNotifications
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
+  private var notificationChannel: FlutterMethodChannel?
+
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
@@ -11,16 +13,17 @@ import UserNotifications
     GeneratedPluginRegistrant.register(with: self)
     UNUserNotificationCenter.current().delegate = self
     copyAdhanSoundsToLibrary()
-    setupNotificationChannel()
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
-  private func setupNotificationChannel() {
-    guard let controller = window?.rootViewController as? FlutterViewController else { return }
+  func setupNotificationChannel(controller: FlutterViewController) {
+    if notificationChannel != nil { return }
+
     let channel = FlutterMethodChannel(
       name: "solatify/notifications",
       binaryMessenger: controller.binaryMessenger
     )
+    notificationChannel = channel
 
     channel.setMethodCallHandler { [weak self] call, result in
       guard let self = self else { return }
