@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/glass_container.dart';
-import '../../../../core/database/hive_service.dart';
 import '../../../../core/widgets/responsive_layout.dart';
 import '../settings_provider.dart';
 
@@ -413,7 +412,9 @@ class SettingsScreen extends ConsumerWidget {
                         ),
                         value: settings.azanSoundEnabled,
                         onChanged: (val) {
-                          ref.read(settingsProvider.notifier).updateAzanSoundEnabled(val);
+                          ref
+                              .read(settingsProvider.notifier)
+                              .updateAzanSoundEnabled(val);
                         },
                       ),
                     ],
@@ -597,42 +598,6 @@ class SettingsScreen extends ConsumerWidget {
                               ],
                             ),
                           ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 32),
-
-                // Section 4: Developer actions
-                Center(
-                  child: Column(
-                    children: [
-                      TextButton(
-                        onPressed: () {
-                          // Reset onboarding (developer toggle)
-                          HiveService.saveSetting(
-                            'onboarding_completed',
-                            false,
-                          );
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                l.isEnglish
-                                    ? 'Onboarding has been reset. Restart the app.'
-                                    : 'Onboarding telah direset. Jalankan ulang aplikasi.',
-                              ),
-                            ),
-                          );
-                        },
-                        child: Text(
-                          l.isEnglish
-                              ? 'Reset Onboarding (Dev)'
-                              : 'Reset Onboarding (Dev)',
-                          style: TextStyle(
-                            color: textColor,
-                            fontSize: 11,
-                          ),
                         ),
                       ),
                     ],

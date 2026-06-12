@@ -16,7 +16,6 @@ class QiblaScreen extends ConsumerStatefulWidget {
 
 class _QiblaScreenState extends ConsumerState<QiblaScreen> {
   double _simulatedHeading = 0.0;
-  bool _useSimulation = false;
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +40,7 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
             // Check if compass is available or we need simulation
             final hasSensor =
                 snapshot.hasData && snapshot.data?.heading != null;
-            final heading = hasSensor && !_useSimulation
+            final heading = hasSensor
                 ? snapshot.data!.heading!
                 : _simulatedHeading;
 
@@ -55,9 +54,9 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
 
             return SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
-              padding: ResponsiveLayout.pagePadding(context).copyWith(
-                bottom: 96,
-              ),
+              padding: ResponsiveLayout.pagePadding(
+                context,
+              ).copyWith(bottom: 96),
               child: ResponsiveCenter(
                 child: Column(
                   children: [
@@ -266,31 +265,8 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
                     ),
                     const SizedBox(height: 36),
 
-                    // Simulation Panel for Simulator
-                    if (!hasSensor || _useSimulation)
-                      _buildSimulationPanel(heading, qiblaAngle),
-
-                    // Toggle simulator sensor manually if user wants to test
-                    if (hasSensor)
-                      Wrap(
-                        alignment: WrapAlignment.center,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        children: [
-                          Text(
-                            'Gunakan Simulator Heading',
-                            style: TextStyle(color: textHint, fontSize: 13),
-                          ),
-                          Switch(
-                            value: _useSimulation,
-                            onChanged: (val) {
-                              setState(() {
-                                _useSimulation = val;
-                              });
-                            },
-                            activeThumbColor: const Color(0xFF0E4D31),
-                          ),
-                        ],
-                      ),
+                    // Simulation panel is only shown when compass sensor is unavailable.
+                    if (!hasSensor) _buildSimulationPanel(heading, qiblaAngle),
                   ],
                 ),
               ),
@@ -380,7 +356,6 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
             onChanged: (val) {
               setState(() {
                 _simulatedHeading = val;
-                _useSimulation = true;
               });
             },
           ),
