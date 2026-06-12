@@ -5,9 +5,11 @@ class AzanAudioService {
   static final AudioPlayer _audioPlayer = AudioPlayer();
   static bool _isPlaying = false;
   static String? _loadedAsset;
+  static bool _completionListenerAttached = false;
 
   static Future<void> init({String adhanSound = 'adhan_makkah'}) async {
     try {
+      _ensureCompletionListener();
       await _loadAsset(_assetForSound(adhanSound));
     } catch (error) {
       debugPrint('Failed to initialize azan audio: $error');
@@ -21,6 +23,7 @@ class AzanAudioService {
     if (!enabled || _isPlaying) return;
 
     try {
+      _ensureCompletionListener();
       _isPlaying = true;
       await _loadAsset(_assetForSound(adhanSound));
       await _audioPlayer.seek(Duration.zero);
@@ -59,6 +62,17 @@ class AzanAudioService {
       initialPosition: Duration.zero,
     );
     _loadedAsset = assetPath;
+  }
+
+  static void _ensureCompletionListener() {
+    if (_completionListenerAttached) return;
+    _completionListenerAttached = true;
+    _audioPlayer.processingStateStream.listen((state) {
+      if (state == ProcessingState.completed) {
+        _isPlaying = false;
+        _audioPlayer.seek(Duration.zero);
+      }
+    });
   }
 
   static String _assetForSound(String adhanSound) {
