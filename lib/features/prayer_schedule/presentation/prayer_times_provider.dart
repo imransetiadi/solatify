@@ -4,10 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'location_provider.dart';
 import '../../settings/presentation/settings_provider.dart';
 import '../data/prayer_calculation_service.dart';
-import '../data/prayer_timezone_service.dart';
 import '../../../core/database/hive_service.dart';
-
-import '../../reminder/data/services/notification_service.dart';
 
 class PrayerTimesState {
   final Map<String, DateTime> todayTimes;
@@ -26,8 +23,6 @@ class PrayerTimesNotifier extends StateNotifier<PrayerTimesState> {
   Timer? _dateRefreshTimer;
 
   PrayerTimesNotifier(this._ref) : super(_calculateInitialState(_ref)) {
-    // Schedule initially
-    _scheduleNotifications();
     _scheduleDateRefresh();
 
     // Listen to changes in location and settings to recalculate
@@ -169,36 +164,9 @@ class PrayerTimesNotifier extends StateNotifier<PrayerTimesState> {
         isOfflineCached: false,
       );
 
-      _scheduleNotifications();
       _scheduleDateRefresh();
     } catch (e) {
       // Keep previous state if recalculation fails
-    }
-  }
-
-  void _scheduleNotifications() {
-    try {
-      final settings = _ref.read(settingsProvider);
-      final location = _ref.read(locationProvider);
-      final timezoneName = PrayerTimezoneService.inferTimezoneName(
-        latitude: location.latitude,
-        longitude: location.longitude,
-        country: location.country,
-      );
-
-      NotificationService.schedulePrayerNotifications(
-        prayerTimes: {
-          ...state.todayTimes,
-          for (final entry in state.tomorrowTimes.entries)
-            'besok_${entry.key}': entry.value,
-        },
-        adhanSound: settings.adhanSound,
-        notificationEnabled: settings.notificationEnabled,
-        azanSoundEnabled: settings.azanSoundEnabled,
-        timezoneName: timezoneName,
-      );
-    } catch (e) {
-      // Notifications are best-effort; never block app startup.
     }
   }
 

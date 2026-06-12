@@ -488,6 +488,46 @@ class SettingsScreen extends ConsumerWidget {
                               .updateAzanSoundEnabled(val);
                         },
                       ),
+                      Divider(color: dividerColor, height: 16),
+                      ListTile(
+                        leading: Icon(
+                          Icons.notifications_active_outlined,
+                          color: textSecondary,
+                        ),
+                        title: Text(
+                          'Tes Notifikasi Adzan',
+                          style: TextStyle(color: textColor, fontSize: 15),
+                        ),
+                        subtitle: Text(
+                          'Muncul 10 detik setelah ditekan, bisa dicoba saat layar terkunci',
+                          style: TextStyle(color: textSecondary, fontSize: 11),
+                        ),
+                        onTap: () async {
+                          final granted =
+                              await NotificationService.requestPermission();
+                          if (!context.mounted) return;
+                          if (!granted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Izin notifikasi belum aktif.'),
+                              ),
+                            );
+                            return;
+                          }
+                          await NotificationService.scheduleTestAdhanNotification(
+                            adhanSound: settings.adhanSound,
+                            azanSoundEnabled: settings.azanSoundEnabled,
+                          );
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Tes adzan dijadwalkan 10 detik lagi.',
+                              ),
+                            ),
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ),

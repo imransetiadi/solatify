@@ -10,6 +10,7 @@ class NotificationService {
       FlutterLocalNotificationsPlugin();
   static bool _initialized = false;
   static String _timezoneName = 'Asia/Jakarta';
+  static Future<void> _scheduleChain = Future.value();
 
   static Future<void> init() async {
     if (_initialized) return;
@@ -84,6 +85,25 @@ class NotificationService {
   }) async {
     if (kIsWeb || _isFlutterTest) return;
 
+    _scheduleChain = _scheduleChain.then(
+      (_) => _schedulePrayerNotificationsSafely(
+        prayerTimes: prayerTimes,
+        adhanSound: adhanSound,
+        notificationEnabled: notificationEnabled,
+        azanSoundEnabled: azanSoundEnabled,
+        timezoneName: timezoneName,
+      ),
+    );
+    return _scheduleChain;
+  }
+
+  static Future<void> _schedulePrayerNotificationsSafely({
+    required Map<String, DateTime> prayerTimes,
+    required String adhanSound,
+    required bool notificationEnabled,
+    required bool azanSoundEnabled,
+    required String timezoneName,
+  }) async {
     try {
       _timezoneName = timezoneName;
       _configureTimeZone(timezoneName);
@@ -124,6 +144,30 @@ class NotificationService {
         'Failed to schedule prayer notifications: $error\n$stackTrace',
       );
     }
+  }
+
+  static Future<void> scheduleTestAdhanNotification({
+    required String adhanSound,
+    required bool azanSoundEnabled,
+  }) async {
+    if (kIsWeb || _isFlutterTest) return;
+
+    await init();
+    await _notificationsPlugin.zonedSchedule(
+      id: 9001,
+      title: 'Tes Adzan Solatify',
+      body: 'Jika ini muncul dan berbunyi, notifikasi adzan aktif.',
+      scheduledDate: tz.TZDateTime.from(
+        DateTime.now().add(const Duration(seconds: 10)),
+        tz.local,
+      ),
+      notificationDetails: _buildNotificationDetails(
+        adhanSound: adhanSound,
+        azanSoundEnabled: azanSoundEnabled,
+      ),
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      payload: azanSoundEnabled ? 'play_azan' : '',
+    );
   }
 
   static void _handleNotificationTapped(
