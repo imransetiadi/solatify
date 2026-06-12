@@ -1,34 +1,45 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background glow -->
-  <circle cx="50" cy="50" r="45" fill="#f3fbf6" />
+  <!-- Background circle (perfect symmetry) -->
+  <circle cx="50" cy="50" r="48" fill="#f3fbf6" stroke="#0e4d31" stroke-width="0.5"/>
   
-  <!-- Minaret Left -->
-  <rect x="20" y="30" width="4" height="50" fill="#241a12" />
-  <polygon points="18,30 26,30 22,20" fill="#0e4d31" />
-  <circle cx="22" cy="18" r="2" fill="#c78a4c" />
-  <rect x="18" y="45" width="8" height="3" fill="#c78a4c" />
+  <!-- Left Minaret (perfectly positioned) -->
+  <rect x="18" y="32" width="4" height="48" fill="#241a12" rx="1"/>
+  <polygon points="16,32 22,32 19,22" fill="#0e4d31"/>
+  <circle cx="19" cy="20" r="2" fill="#c78a4c"/>
+  <rect x="16" y="47" width="8" height="2.5" fill="#c78a4c" rx="1"/>
   
-  <!-- Minaret Right -->
-  <rect x="76" y="30" width="4" height="50" fill="#241a12" />
-  <polygon points="74,30 82,30 78,20" fill="#0e4d31" />
-  <circle cx="78" cy="18" r="2" fill="#c78a4c" />
-  <rect x="74" y="45" width="8" height="3" fill="#c78a4c" />
+  <!-- Right Minaret (mirror of left - perfectly simetric) -->
+  <rect x="78" y="32" width="4" height="48" fill="#241a12" rx="1"/>
+  <polygon points="78,32 84,32 81,22" fill="#0e4d31"/>
+  <circle cx="81" cy="20" r="2" fill="#c78a4c"/>
+  <rect x="76" y="47" width="8" height="2.5" fill="#c78a4c" rx="1"/>
   
-  <!-- Main Building -->
-  <rect x="30" y="60" width="40" height="20" fill="#241a12" />
+  <!-- Main Building Base (centered) -->
+  <rect x="32" y="62" width="36" height="18" fill="#241a12" rx="2"/>
   
-  <!-- The Green Dome (Kubah Hijau) -->
-  <path d="M 35 60 C 35 30, 65 30, 65 60 Z" fill="#0e4d31" />
-  <!-- Dome details -->
-  <path d="M 40 60 C 40 40, 60 40, 60 60 Z" fill="#136641" />
-  <!-- Dome tip -->
-  <rect x="49" y="30" width="2" height="10" fill="#c78a4c" />
-  <circle cx="50" cy="28" r="2.5" fill="#c78a4c" />
+  <!-- Green Dome (perfectly centered & simetric) -->
+  <ellipse cx="50" cy="55" rx="20" ry="18" fill="#0e4d31"/>
+  <ellipse cx="50" cy="57" rx="18" ry="15" fill="#136641"/>
   
-  <!-- Doors/Arches -->
-  <path d="M 35 80 L 35 70 A 5 5 0 0 1 45 70 L 45 80 Z" fill="#c78a4c" />
-  <path d="M 55 80 L 55 70 A 5 5 0 0 1 65 70 L 65 80 Z" fill="#c78a4c" />
+  <!-- Dome highlight (center reflection) -->
+  <ellipse cx="50" cy="48" rx="8" ry="6" fill="#1a7d4f" opacity="0.6"/>
   
-  <!-- Ground -->
-  <rect x="15" y="80" width="70" height="5" fill="#c78a4c" />
+  <!-- Dome tip/finial (perfectly centered) -->
+  <rect x="49" y="35" width="2" height="12" fill="#c78a4c" rx="1"/>
+  <circle cx="50" cy="33" r="2.5" fill="#c78a4c"/>
+  <polygon points="48,33 52,33 50,30" fill="#c78a4c"/>
+  
+  <!-- Left Door (simetric position) -->
+  <rect x="38" y="70" width="8" height="10" fill="#c78a4c" rx="1"/>
+  <path d="M 39 70 Q 42 75 45 70" stroke="#241a12" stroke-width="0.5" fill="none"/>
+  
+  <!-- Right Door (mirror of left) -->
+  <rect x="54" y="70" width="8" height="10" fill="#c78a4c" rx="1"/>
+  <path d="M 55 70 Q 58 75 61 70" stroke="#241a12" stroke-width="0.5" fill="none"/>
+  
+  <!-- Ground/Base (centered) -->
+  <rect x="20" y="80" width="60" height="6" fill="#c78a4c" rx="1"/>
+  
+  <!-- Shadow for depth (centered) -->
+  <ellipse cx="50" cy="86" rx="30" ry="2" fill="#241a12" opacity="0.2"/>
 </svg>

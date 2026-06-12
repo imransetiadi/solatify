@@ -5,7 +5,6 @@ import 'package:hive/hive.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:solatify/core/database/hive_service.dart';
 import 'package:solatify/features/prayer_schedule/presentation/prayer_times_provider.dart';
-import 'package:solatify/features/tracker/presentation/tracker_provider.dart';
 import 'package:solatify/features/quran/presentation/quran_provider.dart';
 import 'package:solatify/features/settings/presentation/settings_provider.dart';
 
@@ -76,19 +75,6 @@ void main() {
   });
 
   test('Tracker provider survives corrupt entries', () {
-    final box = Hive.box(HiveService.trackerBoxName);
-    final today = dateKey(DateTime.now());
-    box.put('${today}_subuh', 'corrupt-string-instead-of-map');
-
-    final container = ProviderContainer();
-    addTearDown(container.dispose);
-
-    expect(() => container.read(trackerProvider), returnsNormally);
-    final state = container.read(trackerProvider);
-    expect(state.todayStatus.length, 5);
-  });
-
-  test('Quran bookmarks provider survives unexpected stored shapes', () {
     final box = Hive.box(HiveService.quranBookmarksBoxName);
     box.put('last_read', 'unexpected-string');
     box.put('list', 'unexpected-string');

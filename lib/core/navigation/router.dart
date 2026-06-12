@@ -6,7 +6,6 @@ import '../../features/onboarding/presentation/screens/get_started_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/prayer_schedule/presentation/screens/prayer_schedule_screen.dart';
 import '../../features/qibla/presentation/screens/qibla_screen.dart';
-import '../../features/tracker/presentation/screens/tracker_screen.dart';
 import '../../features/mosque/presentation/screens/nearby_mosque_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../../features/quran/presentation/screens/quran_home_screen.dart';
@@ -115,11 +114,6 @@ final goRouter = GoRouter(
               const NoTransitionPage(child: QiblaScreen()),
         ),
         GoRoute(
-          path: '/tracker',
-          pageBuilder: (context, state) =>
-              const NoTransitionPage(child: TrackerScreen()),
-        ),
-        GoRoute(
           path: '/mosque',
           pageBuilder: (context, state) =>
               const NoTransitionPage(child: NearbyMosqueScreen()),
@@ -160,12 +154,6 @@ class MainLayoutScreen extends StatelessWidget {
       '/islamic-content',
     ),
     _MainDestination(Icons.explore_outlined, Icons.explore, 'Kiblat', '/qibla'),
-    _MainDestination(
-      Icons.fact_check_outlined,
-      Icons.fact_check,
-      'Jurnal',
-      '/tracker',
-    ),
     _MainDestination(Icons.map_outlined, Icons.map, 'Masjid', '/mosque'),
     _MainDestination(
       Icons.settings_outlined,
@@ -200,12 +188,6 @@ class MainLayoutScreen extends StatelessWidget {
 
   static const _moreDestinations = [
     _MainDestination(Icons.explore_outlined, Icons.explore, 'Kiblat', '/qibla'),
-    _MainDestination(
-      Icons.fact_check_outlined,
-      Icons.fact_check,
-      'Jurnal',
-      '/tracker',
-    ),
     _MainDestination(Icons.map_outlined, Icons.map, 'Masjid', '/mosque'),
     _MainDestination(
       Icons.settings_outlined,
@@ -222,9 +204,8 @@ class MainLayoutScreen extends StatelessWidget {
     if (location.startsWith('/quran')) return 2;
     if (location.startsWith('/islamic-content')) return 3;
     if (location.startsWith('/qibla')) return 4;
-    if (location.startsWith('/tracker')) return 5;
-    if (location.startsWith('/mosque')) return 6;
-    if (location.startsWith('/settings')) return 7;
+    if (location.startsWith('/mosque')) return 5;
+    if (location.startsWith('/settings')) return 6;
     return 0;
   }
 
@@ -394,8 +375,6 @@ class MainLayoutScreen extends StatelessWidget {
         return l.navContent;
       case '/qibla':
         return l.navQibla;
-      case '/tracker':
-        return l.navJournal;
       case '/mosque':
         return l.navMosque;
       case '/settings':

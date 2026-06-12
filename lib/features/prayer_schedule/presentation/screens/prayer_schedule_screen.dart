@@ -521,7 +521,7 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
         children: [
           Row(
             children: [
-              Icon(icon, color: Color(0xFF0E4D31), size: 20),
+              Icon(icon, color: Color(0xFF9A6A3A), size: 20),
               const SizedBox(width: 16),
               Text(
                 name,

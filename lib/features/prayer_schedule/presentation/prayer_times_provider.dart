@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'location_provider.dart';
 import '../../settings/presentation/settings_provider.dart';
 import '../data/prayer_calculation_service.dart';
+import '../data/prayer_timezone_service.dart';
 import '../../../core/database/hive_service.dart';
 
 import '../../reminder/data/services/notification_service.dart';
@@ -20,10 +23,12 @@ class PrayerTimesState {
 
 class PrayerTimesNotifier extends StateNotifier<PrayerTimesState> {
   final Ref _ref;
+  Timer? _dateRefreshTimer;
 
   PrayerTimesNotifier(this._ref) : super(_calculateInitialState(_ref)) {
     // Schedule initially
     _scheduleNotifications();
+    _scheduleDateRefresh();
 
     // Listen to changes in location and settings to recalculate
     _ref.listen(locationProvider, (previous, next) {
@@ -37,6 +42,7 @@ class PrayerTimesNotifier extends StateNotifier<PrayerTimesState> {
       if (previous?.calculationMethod != next.calculationMethod ||
           previous?.notificationEnabled != next.notificationEnabled ||
           previous?.adhanSound != next.adhanSound ||
+          previous?.azanSoundEnabled != next.azanSoundEnabled ||
           previous?.prayerOffsets != next.prayerOffsets) {
         try {
           _recalculate();
@@ -164,6 +170,7 @@ class PrayerTimesNotifier extends StateNotifier<PrayerTimesState> {
       );
 
       _scheduleNotifications();
+      _scheduleDateRefresh();
     } catch (e) {
       // Keep previous state if recalculation fails
     }
@@ -172,6 +179,12 @@ class PrayerTimesNotifier extends StateNotifier<PrayerTimesState> {
   void _scheduleNotifications() {
     try {
       final settings = _ref.read(settingsProvider);
+      final location = _ref.read(locationProvider);
+      final timezoneName = PrayerTimezoneService.inferTimezoneName(
+        latitude: location.latitude,
+        longitude: location.longitude,
+        country: location.country,
+      );
 
       NotificationService.schedulePrayerNotifications(
         prayerTimes: {
@@ -180,11 +193,26 @@ class PrayerTimesNotifier extends StateNotifier<PrayerTimesState> {
             'besok_${entry.key}': entry.value,
         },
         adhanSound: settings.adhanSound,
-        enabled: settings.notificationEnabled,
+        notificationEnabled: settings.notificationEnabled,
+        azanSoundEnabled: settings.azanSoundEnabled,
+        timezoneName: timezoneName,
       );
     } catch (e) {
       // Notifications are best-effort; never block app startup.
     }
+  }
+
+  void _scheduleDateRefresh() {
+    _dateRefreshTimer?.cancel();
+    final now = DateTime.now();
+    final nextRefresh = DateTime(now.year, now.month, now.day + 1, 0, 1);
+    _dateRefreshTimer = Timer(nextRefresh.difference(now), _recalculate);
+  }
+
+  @override
+  void dispose() {
+    _dateRefreshTimer?.cancel();
+    super.dispose();
   }
 
   static String _getDateKey(DateTime date) {

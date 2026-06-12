@@ -8,6 +8,7 @@ class SettingsState {
   final String calculationMethod;
   final bool notificationEnabled;
   final String adhanSound;
+  final bool azanSoundEnabled;
   final bool onboardingCompleted;
   final Map<String, int> prayerOffsets;
 
@@ -17,6 +18,7 @@ class SettingsState {
     required this.calculationMethod,
     required this.notificationEnabled,
     required this.adhanSound,
+    required this.azanSoundEnabled,
     required this.onboardingCompleted,
     required this.prayerOffsets,
   });
@@ -27,6 +29,7 @@ class SettingsState {
     String? calculationMethod,
     bool? notificationEnabled,
     String? adhanSound,
+    bool? azanSoundEnabled,
     bool? onboardingCompleted,
     Map<String, int>? prayerOffsets,
   }) {
@@ -36,6 +39,7 @@ class SettingsState {
       calculationMethod: calculationMethod ?? this.calculationMethod,
       notificationEnabled: notificationEnabled ?? this.notificationEnabled,
       adhanSound: adhanSound ?? this.adhanSound,
+      azanSoundEnabled: azanSoundEnabled ?? this.azanSoundEnabled,
       onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
       prayerOffsets: prayerOffsets ?? this.prayerOffsets,
     );
@@ -54,56 +58,63 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
           HiveService.getSetting('language', defaultValue: 'id')?.toString() ??
           'id';
       final lang = rawLang == 'en' ? 'en' : 'id';
-    final method =
-        (HiveService.getSetting(
-                  'calculation_method',
-                  defaultValue: 'Kemenag',
-                ) ??
-                'Kemenag')
-            .toString();
+      final method =
+          (HiveService.getSetting(
+                    'calculation_method',
+                    defaultValue: 'Kemenag',
+                  ) ??
+                  'Kemenag')
+              .toString();
 
-    final rawNotif = HiveService.getSetting(
-      'notification_enabled',
-      defaultValue: true,
-    );
-    final notif = rawNotif is bool ? rawNotif : true;
+      final rawNotif = HiveService.getSetting(
+        'notification_enabled',
+        defaultValue: true,
+      );
+      final notif = rawNotif is bool ? rawNotif : true;
 
-    final adhan =
-        HiveService.getSetting(
-          'adhan_sound',
-          defaultValue: 'default',
-        )?.toString() ??
-        'default';
+      final adhan =
+          HiveService.getSetting(
+            'adhan_sound',
+            defaultValue: 'default',
+          )?.toString() ??
+          'default';
 
-    final rawOnboarding = HiveService.getSetting(
-      'onboarding_completed',
-      defaultValue: false,
-    );
-    final onboarding = rawOnboarding is bool ? rawOnboarding : false;
+      final rawAzanEnabled = HiveService.getSetting(
+        'azan_sound_enabled',
+        defaultValue: true,
+      );
+      final azanEnabled = rawAzanEnabled is bool ? rawAzanEnabled : true;
 
-    final offsets = HiveService.getPrayerOffsets();
+      final rawOnboarding = HiveService.getSetting(
+        'onboarding_completed',
+        defaultValue: false,
+      );
+      final onboarding = rawOnboarding is bool ? rawOnboarding : false;
 
-    ThemeMode themeMode;
-    switch (themeStr) {
-      case 'light':
-        themeMode = ThemeMode.light;
-        break;
-      case 'dark':
-        themeMode = ThemeMode.dark;
-        break;
-      default:
-        themeMode = ThemeMode.system;
-    }
+      final offsets = HiveService.getPrayerOffsets();
 
-    return SettingsState(
-      themeMode: themeMode,
-      language: lang,
-      calculationMethod: method,
-      notificationEnabled: notif,
-      adhanSound: adhan,
-      onboardingCompleted: onboarding,
-      prayerOffsets: offsets,
-    );
+      ThemeMode themeMode;
+      switch (themeStr) {
+        case 'light':
+          themeMode = ThemeMode.light;
+          break;
+        case 'dark':
+          themeMode = ThemeMode.dark;
+          break;
+        default:
+          themeMode = ThemeMode.system;
+      }
+
+      return SettingsState(
+        themeMode: themeMode,
+        language: lang,
+        calculationMethod: method,
+        notificationEnabled: notif,
+        adhanSound: adhan,
+        azanSoundEnabled: azanEnabled,
+        onboardingCompleted: onboarding,
+        prayerOffsets: offsets,
+      );
     } catch (e) {
       return SettingsState(
         themeMode: ThemeMode.system,
@@ -111,6 +122,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
         calculationMethod: 'Kemenag',
         notificationEnabled: true,
         adhanSound: 'default',
+        azanSoundEnabled: true,
         onboardingCompleted: false,
         prayerOffsets: {'subuh': 0, 'dzuhur': 0, 'ashar': 0, 'magrib': 0, 'isya': 0},
       );
@@ -152,6 +164,11 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   Future<void> updateAdhanSound(String adhan) async {
     await HiveService.saveSetting('adhan_sound', adhan);
     state = state.copyWith(adhanSound: adhan);
+  }
+
+  Future<void> updateAzanSoundEnabled(bool enabled) async {
+    await HiveService.saveSetting('azan_sound_enabled', enabled);
+    state = state.copyWith(azanSoundEnabled: enabled);
   }
 
   Future<void> completeOnboarding() async {

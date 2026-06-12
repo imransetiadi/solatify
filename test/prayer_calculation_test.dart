@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:adhan/adhan.dart';
 import 'package:solatify/features/prayer_schedule/data/prayer_calculation_service.dart';
+import 'package:solatify/features/prayer_schedule/data/prayer_timezone_service.dart';
 
 void main() {
   group('Prayer Calculation Tests', () {
@@ -28,6 +29,33 @@ void main() {
       expect(times['dzuhur']!.isBefore(times['ashar']!), true);
       expect(times['ashar']!.isBefore(times['magrib']!), true);
       expect(times['magrib']!.isBefore(times['isya']!), true);
+    });
+
+    test('Infer Indonesian prayer notification timezones', () {
+      expect(
+        PrayerTimezoneService.inferTimezoneName(
+          latitude: -6.2088,
+          longitude: 106.8456,
+          country: 'DKI Jakarta, Indonesia',
+        ),
+        'Asia/Jakarta',
+      );
+      expect(
+        PrayerTimezoneService.inferTimezoneName(
+          latitude: -8.65,
+          longitude: 115.2167,
+          country: 'Bali, Indonesia',
+        ),
+        'Asia/Makassar',
+      );
+      expect(
+        PrayerTimezoneService.inferTimezoneName(
+          latitude: -2.5916,
+          longitude: 140.669,
+          country: 'Papua, Indonesia',
+        ),
+        'Asia/Jayapura',
+      );
     });
 
     test('Verify Qibla Bearing calculation from Jakarta', () {

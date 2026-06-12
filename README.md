@@ -1,6 +1,6 @@
 # Solatify
 
-Solatify adalah aplikasi pendamping ibadah harian berbasis Flutter. Aplikasi ini dirancang untuk membantu pengguna memantau waktu salat, membaca Al-Qur'an, mencatat ibadah harian, mencari arah kiblat, menemukan masjid terdekat, dan mengakses konten Islami ringan dalam satu pengalaman yang rapi dan responsif.
+Solatify adalah aplikasi pendamping ibadah harian berbasis Flutter. Aplikasi ini dirancang untuk membantu pengguna memantau waktu salat, membaca Al-Qur'an, mencari arah kiblat, menemukan masjid terdekat, dan mengakses konten Islami ringan dalam satu pengalaman yang rapi dan responsif.
 
 Core experience aplikasi dibuat offline-first untuk data dan preferensi utama, dengan dukungan lokasi, notifikasi, peta, dan sensor perangkat untuk fitur yang membutuhkan kemampuan native.
 
@@ -10,8 +10,8 @@ Solatify memakai desain bernuansa Islami modern dengan fokus pada keterbacaan da
 
 - Visual utama memakai aksen hijau, warna hangat, efek glass container, dan dekorasi Islamic background.
 - Navigasi utama memakai bottom navigation di mobile dan layout responsif untuk layar yang lebih lebar.
-- Dashboard menampilkan salam, lokasi aktif, tanggal, countdown salat berikutnya, dan status salat hari ini.
-- Setiap layar dibuat sebagai workflow langsung, bukan landing page, sehingga pengguna bisa langsung mencatat, membaca, mencari, atau mengatur preferensi.
+- Dashboard menampilkan salam, lokasi aktif, tanggal, countdown salat berikutnya, dan ringkasan jadwal salat hari ini.
+- Setiap layar dibuat sebagai workflow langsung, bukan landing page, sehingga pengguna bisa langsung membaca, mencari, memilih lokasi, atau mengatur preferensi.
 - Aplikasi mendukung light theme, dark theme, dan system theme.
 - Text scale dibatasi agar layout tetap stabil ketika ukuran teks sistem berubah.
 
@@ -20,29 +20,27 @@ Solatify memakai desain bernuansa Islami modern dengan fokus pada keterbacaan da
 ### Jadwal Salat
 
 - Perhitungan waktu salat berdasarkan lokasi pengguna.
-- Dukungan lokasi otomatis via GPS dan pilihan kota manual.
+- Dukungan lokasi otomatis via GPS dan pilihan kota manual dari Beranda, Onboarding, dan layar Jadwal.
+- Inferensi timezone lokasi untuk WIB/WITA/WIT agar jadwal dan notifikasi mengikuti kota aktif.
 - Metode kalkulasi dapat diatur dari pengaturan.
 - Offset waktu salat untuk Subuh, Dzuhur, Ashar, Magrib, dan Isya.
 - Cache jadwal harian agar data tetap tersedia saat offline.
+- Refresh otomatis jadwal pada pergantian hari ketika app tetap terbuka.
 
 ### Dashboard Harian
 
 - Countdown menuju salat berikutnya.
 - Informasi waktu salat aktif.
 - Ringkasan jadwal salat hari ini.
-- Tombol cepat untuk mencatat status salat.
-
-### Jurnal Salat
-
-- Catat status salat harian.
-- Status yang tersedia: tepat waktu, terlambat/masbuq, terlewat, dan reset.
-- Riwayat disimpan lokal dengan Hive.
+- Akses cepat untuk mengubah lokasi manual.
 
 ### Pengingat dan Adzan
 
 - Pengingat waktu salat menggunakan `flutter_local_notifications`.
 - Pengaturan aktif/nonaktif notifikasi.
+- Pengaturan aktif/nonaktif adzan otomatis saat masuk waktu salat.
 - Dukungan pilihan suara adzan atau mode silent.
+- Scheduling notifikasi memakai timezone lokasi aktif, bukan timezone statis.
 - Service notifikasi dibuat lazy dan aman untuk cold start iOS.
 
 ### Al-Qur'an
@@ -120,19 +118,17 @@ lib/
     +-- quran/             # Quran repository, model, dan UI
     +-- reminder/          # Notification service
     +-- settings/          # Preferensi pengguna
-    +-- tracker/           # Jurnal salat
 ```
 
 ## Main Screens
 
-- `Home`: salam, lokasi, tanggal, countdown salat, jadwal hari ini, dan catatan salat.
-- `Jadwal`: jadwal salat lengkap dan pengaturan lokasi.
+- `Home`: salam, lokasi, tombol ubah lokasi, tanggal, countdown salat, dan jadwal hari ini.
+- `Jadwal`: jadwal salat lengkap, pilihan tanggal, dan pengaturan lokasi manual.
 - `Qur'an`: daftar surah, pencarian, bookmark, dan halaman baca.
 - `Konten`: pintu masuk ke Asmaul Husna, doa, kalender Hijriah, dzikir, dan tips.
 - `Kiblat`: arah kiblat berbasis kompas.
-- `Jurnal`: riwayat dan status ibadah salat.
 - `Masjid`: peta dan lokasi masjid terdekat.
-- `Pengaturan`: tema, metode kalkulasi, notifikasi, adzan, dan offset waktu salat.
+- `Pengaturan`: tema, metode kalkulasi, notifikasi, adzan otomatis, dan offset waktu salat.
 
 ## Requirements
 
@@ -228,6 +224,22 @@ Plugin yang dapat memunculkan warning di Flutter versi terbaru:
 - `workmanager_apple`
 - `flutter_compass_v2`
 
+## Status QA Terbaru
+
+Validasi terakhir yang dijalankan:
+
+```bash
+flutter analyze --no-pub
+flutter test --no-pub
+flutter build ios --release --no-pub
+```
+
+Hasil terakhir:
+
+- Analyzer: `No issues found`.
+- Test suite: `All tests passed` (`20/20`).
+- iOS release build: sukses menghasilkan `Runner.app`.
+
 ## Testing dan Quality Check
 
 Jalankan analyzer:
@@ -248,6 +260,7 @@ Area yang sudah memiliki test mencakup:
 - Arah kiblat.
 - Render screen jadwal salat.
 - Perubahan kota manual.
+- Inferensi timezone notifikasi untuk WIB/WITA/WIT.
 - Data dan model Quran.
 - Render awal aplikasi.
 - Pemulihan dari data Hive korup/partial (crash recovery).
@@ -259,9 +272,9 @@ Beberapa penguatan stabilitas dan performa yang sudah diterapkan:
 
 - **Global error handling**: `main()` berjalan di dalam `runZonedGuarded` dengan `FlutterError.onError` dan `PlatformDispatcher.onError`, plus error view yang ramah pengguna sehingga error widget tunggal tidak menampilkan crash screen.
 - **Hive tahan banting**: box yang korup setelah force-close otomatis dipulihkan (delete dan recreate), dan seluruh provider membaca Hive secara aman (mengembalikan default ketika box belum siap).
-- **Dark mode terbaca**: warna teks dan ikon menyesuaikan tema, tidak ada lagi teks gelap di atas latar gelap.
+- **Dark mode terbaca**: warna teks, ikon, dan aksen menyesuaikan tema, tidak ada lagi teks gelap di atas latar gelap.
 - **Aksen merah konsisten**: aksen merah diterapkan menyeluruh lewat theme dan tiap fitur.
-- **Layout proporsional**: navigasi dan padding menyesuaikan ukuran layar, konten tidak tertutup AppBar maupun bottom navigation.
+- **Layout proporsional**: navigasi, logo beranda, padding, dan dialog lokasi menyesuaikan ukuran layar, konten tidak tertutup AppBar maupun bottom navigation.
 - **Masjid terdekat lebih cepat**: query Overpass ke beberapa endpoint dijalankan paralel (race) dengan timeout pendek, sehingga tidak menunggu rantai timeout yang panjang.
 
 ## Permission yang Digunakan

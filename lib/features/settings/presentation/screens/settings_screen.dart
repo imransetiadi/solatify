@@ -54,7 +54,7 @@ class SettingsScreen extends ConsumerWidget {
     final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final dialogBg = isDarkTheme ? const Color(0xFF2A1B12) : Colors.white;
     final textColor = isDarkTheme ? Colors.white : const Color(0xFF241A12);
-    final textMuted = isDarkTheme ? Colors.white70 : const Color(0xFF6E5B4B);
+    final textMuted = isDarkTheme ? Colors.white : const Color(0xFF6E5B4B);
     final primaryColor = isDarkTheme
         ? const Color(0xFFC78A4C)
         : const Color(0xFF0E4D31);
@@ -156,7 +156,7 @@ class SettingsScreen extends ConsumerWidget {
     final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final dialogBg = isDarkTheme ? const Color(0xFF2A1B12) : Colors.white;
     final textColor = isDarkTheme ? Colors.white : const Color(0xFF241A12);
-    final textMuted = isDarkTheme ? Colors.white70 : const Color(0xFF6E5B4B);
+    final textMuted = isDarkTheme ? Colors.white : const Color(0xFF6E5B4B);
 
     showDialog(
       context: context,
@@ -218,7 +218,7 @@ class SettingsScreen extends ConsumerWidget {
     final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final dialogBg = isDarkTheme ? const Color(0xFF2A1B12) : Colors.white;
     final textColor = isDarkTheme ? Colors.white : const Color(0xFF241A12);
-    final textMuted = isDarkTheme ? Colors.white70 : const Color(0xFF6E5B4B);
+    final textMuted = isDarkTheme ? Colors.white : const Color(0xFF6E5B4B);
 
     showDialog(
       context: context,
@@ -276,7 +276,7 @@ class SettingsScreen extends ConsumerWidget {
     final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final dialogBg = isDarkTheme ? const Color(0xFF2A1B12) : Colors.white;
     final textColor = isDarkTheme ? Colors.white : const Color(0xFF241A12);
-    final textMuted = isDarkTheme ? Colors.white70 : const Color(0xFF6E5B4B);
+    final textMuted = isDarkTheme ? Colors.white : const Color(0xFF6E5B4B);
 
     showDialog(
       context: context,
@@ -399,6 +399,22 @@ class SettingsScreen extends ConsumerWidget {
                           ref,
                           settings.adhanSound,
                         ),
+                      ),
+                      Divider(color: dividerColor, height: 16),
+                      SwitchListTile(
+                        activeThumbColor: const Color(0xFF0E4D31),
+                        title: Text(
+                          'Putar Azan Otomatis',
+                          style: TextStyle(color: textColor, fontSize: 15),
+                        ),
+                        subtitle: Text(
+                          'Putar suara azan saat masuk waktu salat',
+                          style: TextStyle(color: textSecondary, fontSize: 11),
+                        ),
+                        value: settings.azanSoundEnabled,
+                        onChanged: (val) {
+                          ref.read(settingsProvider.notifier).updateAzanSoundEnabled(val);
+                        },
                       ),
                     ],
                   ),

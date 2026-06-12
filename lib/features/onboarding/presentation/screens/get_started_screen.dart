@@ -52,12 +52,6 @@ class _GetStartedScreenState extends ConsumerState<GetStartedScreen> {
       icon: Icons.explore,
       color: const Color(0xFFC78A4C),
     ),
-    GetStartedPage(
-      title: 'Jurnal Ibadah',
-      description: 'Catat dan pantau konsistensi sholat Anda setiap hari',
-      icon: Icons.fact_check,
-      color: const Color(0xFF0E4D31),
-    ),
   ];
 
   @override

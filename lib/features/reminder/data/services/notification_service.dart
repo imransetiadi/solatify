@@ -2,16 +2,18 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_10y.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+import 'azan_audio_service.dart';
 
 class NotificationService {
   static final FlutterLocalNotificationsPlugin _notificationsPlugin =
       FlutterLocalNotificationsPlugin();
   static bool _initialized = false;
+  static String _timezoneName = 'Asia/Jakarta';
 
   static Future<void> init() async {
     if (_initialized) return;
 
-    _configureTimeZone();
+    _configureTimeZone(_timezoneName);
 
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -28,7 +30,10 @@ class NotificationService {
           iOS: initializationSettingsDarwin,
         );
 
-    await _notificationsPlugin.initialize(settings: initializationSettings);
+    await _notificationsPlugin.initialize(
+      settings: initializationSettings,
+      onDidReceiveNotificationResponse: _handleNotificationTapped,
+    );
     _initialized = true;
   }
 
@@ -72,15 +77,19 @@ class NotificationService {
   static Future<void> schedulePrayerNotifications({
     required Map<String, DateTime> prayerTimes,
     required String adhanSound,
-    required bool enabled,
+    required bool notificationEnabled,
+    required bool azanSoundEnabled,
+    String timezoneName = 'Asia/Jakarta',
   }) async {
     if (kIsWeb) return;
 
     try {
+      _timezoneName = timezoneName;
+      _configureTimeZone(timezoneName);
       await init();
       await _notificationsPlugin.cancelAll();
 
-      if (!enabled) return;
+      if (!notificationEnabled) return;
 
       final notificationDetails = _buildNotificationDetails(adhanSound);
       final now = DateTime.now();
@@ -98,22 +107,37 @@ class NotificationService {
           scheduledDate: tz.TZDateTime.from(prayerTime, tz.local),
           notificationDetails: notificationDetails,
           androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+          payload: azanSoundEnabled ? 'play_azan' : '',
         );
       }
     } catch (error, stackTrace) {
+      final message = '$error\n$stackTrace';
+      if (message.contains('LateInitializationError') &&
+          message.contains('FlutterLocalNotificationsPlatform')) {
+        return;
+      }
       debugPrint(
         'Failed to schedule prayer notifications: $error\n$stackTrace',
       );
     }
   }
 
-  static void _configureTimeZone() {
+  static void _handleNotificationTapped(
+    NotificationResponse notificationResponse,
+  ) {
+    if (notificationResponse.payload == 'play_azan') {
+      AzanAudioService.playAzan(enabled: true);
+    }
+  }
+
+  static void _configureTimeZone(String timezoneName) {
     tz.initializeTimeZones();
 
     try {
-      tz.setLocalLocation(tz.getLocation('Asia/Jakarta'));
+      tz.setLocalLocation(tz.getLocation(timezoneName));
     } catch (error) {
       debugPrint('Failed to configure notification timezone: $error');
+      tz.setLocalLocation(tz.getLocation('Asia/Jakarta'));
     }
   }
 
@@ -149,7 +173,6 @@ class NotificationService {
 
   static String _formatPrayerLabel(String key) {
     if (key.isEmpty) return key;
-
     return key[0].toUpperCase() + key.substring(1);
   }
 }

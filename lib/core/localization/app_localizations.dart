@@ -24,7 +24,6 @@ class AppLocalizations {
   String get navQuran => isEnglish ? 'Qur\'an' : 'Qur\'an';
   String get navContent => isEnglish ? 'Content' : 'Konten';
   String get navQibla => isEnglish ? 'Qibla' : 'Kiblat';
-  String get navJournal => isEnglish ? 'Journal' : 'Jurnal';
   String get navMosque => isEnglish ? 'Mosques' : 'Masjid';
   String get navSettings => isEnglish ? 'Settings' : 'Pengaturan';
   String get navMore => isEnglish ? 'More' : 'Lainnya';
