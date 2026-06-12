@@ -169,12 +169,20 @@ class NotificationService {
     if (kIsWeb || _isFlutterTest) return;
 
     if (Platform.isIOS) {
-      await _iosNotificationChannel
-          .invokeMethod('scheduleTestAdhanNotification', {
-            'soundName': _iosSoundFileName(adhanSound),
-            'playSound': azanSoundEnabled && adhanSound != 'silent',
-          });
-      return;
+      debugPrint('Scheduling native iOS test adhan: $adhanSound');
+      try {
+        await _iosNotificationChannel
+            .invokeMethod('scheduleTestAdhanNotification', {
+              'soundName': _iosSoundFileName(adhanSound),
+              'playSound': azanSoundEnabled && adhanSound != 'silent',
+            });
+        debugPrint('Native iOS test adhan scheduled');
+        return;
+      } catch (error, stackTrace) {
+        debugPrint(
+          'Native iOS test adhan failed, using plugin fallback: $error\n$stackTrace',
+        );
+      }
     }
 
     await init();
@@ -290,6 +298,9 @@ class NotificationService {
       'soundName': _iosSoundFileName(adhanSound),
       'notifications': notifications,
     });
+    debugPrint(
+      'Native iOS prayer notifications scheduled: ${notifications.length}',
+    );
   }
 
   static String? _iosSoundFileName(String adhanSound) {

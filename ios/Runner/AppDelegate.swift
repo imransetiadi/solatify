@@ -13,7 +13,22 @@ import UserNotifications
     GeneratedPluginRegistrant.register(with: self)
     UNUserNotificationCenter.current().delegate = self
     copyAdhanSoundsToLibrary()
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+      self?.setupNotificationChannelFromConnectedScenes()
+    }
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  private func setupNotificationChannelFromConnectedScenes() {
+    for scene in UIApplication.shared.connectedScenes {
+      guard
+        let windowScene = scene as? UIWindowScene,
+        let controller = windowScene.windows.first(where: { $0.rootViewController is FlutterViewController })?.rootViewController as? FlutterViewController
+      else { continue }
+      setupNotificationChannel(controller: controller)
+      return
+    }
+    NSLog("SolatifyNativeNotification: FlutterViewController not ready")
   }
 
   func setupNotificationChannel(controller: FlutterViewController) {
@@ -24,9 +39,11 @@ import UserNotifications
       binaryMessenger: controller.binaryMessenger
     )
     notificationChannel = channel
+    NSLog("SolatifyNativeNotification: channel registered")
 
     channel.setMethodCallHandler { [weak self] call, result in
       guard let self = self else { return }
+      NSLog("SolatifyNativeNotification: received method \(call.method)")
       switch call.method {
       case "schedulePrayerNotifications":
         self.schedulePrayerNotifications(call: call, result: result)
@@ -49,6 +66,7 @@ import UserNotifications
     let soundName = args["soundName"] as? String
     let notifications = args["notifications"] as? [[String: Any]] ?? []
     let center = UNUserNotificationCenter.current()
+    NSLog("SolatifyNativeNotification: schedulePrayerNotifications enabled=\(enabled) playSound=\(playSound) sound=\(soundName ?? "default") count=\(notifications.count)")
 
     center.getPendingNotificationRequests { requests in
       let ids = requests.map(\.identifier).filter { $0.hasPrefix("solatify_prayer_") }
@@ -91,6 +109,7 @@ import UserNotifications
             trigger: trigger
           )
           center.add(request)
+          NSLog("SolatifyNativeNotification: added prayer id=\(id) interval=\(interval) sound=\(soundName ?? "default")")
         }
 
         result(nil)
@@ -107,6 +126,7 @@ import UserNotifications
     let playSound = args["playSound"] as? Bool ?? true
     let soundName = args["soundName"] as? String
     let center = UNUserNotificationCenter.current()
+    NSLog("SolatifyNativeNotification: scheduleTest playSound=\(playSound) sound=\(soundName ?? "default")")
 
     requestNotificationAuthorization { granted in
       guard granted else {
@@ -131,8 +151,10 @@ import UserNotifications
       )
       center.add(request) { error in
         if let error = error {
+          NSLog("SolatifyNativeNotification: test schedule failed \(error.localizedDescription)")
           result(FlutterError(code: "schedule_failed", message: error.localizedDescription, details: nil))
         } else {
+          NSLog("SolatifyNativeNotification: test scheduled")
           result(nil)
         }
       }
@@ -162,8 +184,13 @@ import UserNotifications
         continue
       }
       let destination = soundsDirectory.appendingPathComponent(fileName)
-      try? FileManager.default.removeItem(at: destination)
-      try? FileManager.default.copyItem(at: source, to: destination)
+      do {
+        try? FileManager.default.removeItem(at: destination)
+        try FileManager.default.copyItem(at: source, to: destination)
+        NSLog("SolatifyNativeNotification: copied \(fileName) to Library/Sounds")
+      } catch {
+        NSLog("SolatifyNativeNotification: failed copy \(fileName): \(error.localizedDescription)")
+      }
     }
   }
 }
