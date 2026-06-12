@@ -131,7 +131,7 @@ class NotificationService {
           scheduledDate: tz.TZDateTime.from(prayerTime, tz.local),
           notificationDetails: notificationDetails,
           androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-          payload: azanSoundEnabled ? 'play_azan' : '',
+          payload: azanSoundEnabled ? 'play_azan:$adhanSound' : '',
         );
       }
     } catch (error, stackTrace) {
@@ -166,15 +166,19 @@ class NotificationService {
         azanSoundEnabled: azanSoundEnabled,
       ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      payload: azanSoundEnabled ? 'play_azan' : '',
+      payload: azanSoundEnabled ? 'play_azan:$adhanSound' : '',
     );
   }
 
   static void _handleNotificationTapped(
     NotificationResponse notificationResponse,
   ) {
-    if (notificationResponse.payload == 'play_azan') {
-      AzanAudioService.playAzan(enabled: true);
+    final payload = notificationResponse.payload ?? '';
+    if (payload.startsWith('play_azan')) {
+      final sound = payload.contains(':')
+          ? payload.split(':').last
+          : 'adhan_makkah';
+      AzanAudioService.playAzan(enabled: true, adhanSound: sound);
     }
   }
 
@@ -205,7 +209,7 @@ class NotificationService {
 
     return NotificationDetails(
       android: AndroidNotificationDetails(
-        'solatify_adhan_channel_v2_$channelSuffix',
+        'solatify_adhan_channel_v5_$channelSuffix',
         'Solatify Adzan Reminder',
         channelDescription: 'Diputar saat masuk waktu salat',
         importance: Importance.max,
