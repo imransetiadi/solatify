@@ -205,7 +205,7 @@ class HomeScreen extends ConsumerWidget {
                       context,
                     ).copyWith(top: 8, bottom: 8),
                     child: Text(
-                      'Jadwal & Catatan Hari Ini',
+                      'Jadwal Waktu Sholat',
                       style: TextStyle(
                         color: textColor,
                         fontSize: 18,
