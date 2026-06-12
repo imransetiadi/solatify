@@ -1,4 +1,7 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_10y.dart' as tz;
@@ -8,6 +11,9 @@ import 'azan_audio_service.dart';
 class NotificationService {
   static final FlutterLocalNotificationsPlugin _notificationsPlugin =
       FlutterLocalNotificationsPlugin();
+  static const MethodChannel _iosNotificationChannel = MethodChannel(
+    'solatify/notifications',
+  );
   static bool _initialized = false;
   static String _timezoneName = 'Asia/Jakarta';
   static Future<void> _scheduleChain = Future.value();
@@ -105,6 +111,16 @@ class NotificationService {
     required String timezoneName,
   }) async {
     try {
+      if (Platform.isIOS) {
+        await _schedulePrayerNotificationsNatively(
+          prayerTimes: prayerTimes,
+          adhanSound: adhanSound,
+          notificationEnabled: notificationEnabled,
+          azanSoundEnabled: azanSoundEnabled,
+        );
+        return;
+      }
+
       _timezoneName = timezoneName;
       _configureTimeZone(timezoneName);
       await init();
@@ -151,6 +167,15 @@ class NotificationService {
     required bool azanSoundEnabled,
   }) async {
     if (kIsWeb || _isFlutterTest) return;
+
+    if (Platform.isIOS) {
+      await _iosNotificationChannel
+          .invokeMethod('scheduleTestAdhanNotification', {
+            'soundName': _iosSoundFileName(adhanSound),
+            'playSound': azanSoundEnabled && adhanSound != 'silent',
+          });
+      return;
+    }
 
     await init();
     await _notificationsPlugin.zonedSchedule(
@@ -235,6 +260,41 @@ class NotificationService {
     if (adhanSound == 'silent' || adhanSound == 'default') return null;
     if (adhanSound == 'adhan_madinah') return 'adhan_madinah';
     return 'adhan_makkah';
+  }
+
+  static Future<void> _schedulePrayerNotificationsNatively({
+    required Map<String, DateTime> prayerTimes,
+    required String adhanSound,
+    required bool notificationEnabled,
+    required bool azanSoundEnabled,
+  }) async {
+    final now = DateTime.now();
+    var notificationId = 0;
+    final notifications = <Map<String, Object>>[];
+
+    for (final entry in prayerTimes.entries) {
+      final prayerTime = entry.value;
+      if (!prayerTime.isAfter(now)) continue;
+      final label = _formatPrayerLabel(entry.key);
+      notifications.add({
+        'id': notificationId++,
+        'title': 'Waktu Salat $label',
+        'body': 'Telah masuk waktu salat $label untuk wilayah Anda.',
+        'timestampMs': prayerTime.millisecondsSinceEpoch.toDouble(),
+      });
+    }
+
+    await _iosNotificationChannel.invokeMethod('schedulePrayerNotifications', {
+      'notificationEnabled': notificationEnabled,
+      'playSound': azanSoundEnabled && adhanSound != 'silent',
+      'soundName': _iosSoundFileName(adhanSound),
+      'notifications': notifications,
+    });
+  }
+
+  static String? _iosSoundFileName(String adhanSound) {
+    final nativeName = _nativeNotificationSoundName(adhanSound);
+    return nativeName == null ? null : '$nativeName.caf';
   }
 
   static bool get _isFlutterTest {
