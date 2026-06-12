@@ -209,7 +209,7 @@ class NotificationService {
 
     return NotificationDetails(
       android: AndroidNotificationDetails(
-        'solatify_adhan_channel_v5_$channelSuffix',
+        'solatify_adhan_channel_v6_$channelSuffix',
         'Solatify Adzan Reminder',
         channelDescription: 'Diputar saat masuk waktu salat',
         importance: Importance.max,
@@ -232,7 +232,7 @@ class NotificationService {
   }
 
   static String? _nativeNotificationSoundName(String adhanSound) {
-    if (adhanSound == 'silent') return null;
+    if (adhanSound == 'silent' || adhanSound == 'default') return null;
     if (adhanSound == 'adhan_madinah') return 'adhan_madinah';
     return 'adhan_makkah';
   }
