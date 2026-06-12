@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/glass_container.dart';
 import '../../../../core/widgets/responsive_layout.dart';
+import '../../../reminder/data/services/azan_audio_service.dart';
 import '../../../reminder/data/services/notification_service.dart';
 import '../settings_provider.dart';
 
@@ -460,6 +461,34 @@ class SettingsScreen extends ConsumerWidget {
                           ref,
                           settings.adhanSound,
                         ),
+                      ),
+                      Divider(color: dividerColor, height: 16),
+                      ListTile(
+                        leading: Icon(Icons.volume_up, color: textSecondary),
+                        title: Text(
+                          'Preview Suara Adzan',
+                          style: TextStyle(color: textColor, fontSize: 15),
+                        ),
+                        subtitle: Text(
+                          'Putar langsung untuk memastikan pilihan suara berbeda',
+                          style: TextStyle(color: textSecondary, fontSize: 11),
+                        ),
+                        onTap: () async {
+                          try {
+                            await AzanAudioService.stopAzan();
+                            await AzanAudioService.playAzan(
+                              enabled: true,
+                              adhanSound: settings.adhanSound,
+                            );
+                          } catch (error) {
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Gagal preview adzan: $error'),
+                              ),
+                            );
+                          }
+                        },
                       ),
                       Divider(color: dividerColor, height: 16),
                       SwitchListTile(

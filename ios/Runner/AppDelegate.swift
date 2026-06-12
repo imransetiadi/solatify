@@ -175,9 +175,18 @@ import UserNotifications
   }
 
   private func requestNotificationAuthorization(completion: @escaping (Bool) -> Void) {
-    UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, _ in
-      DispatchQueue.main.async {
-        completion(granted)
+    let center = UNUserNotificationCenter.current()
+    center.requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
+      if let error = error {
+        NSLog("SolatifyNativeNotification: permission error \(error.localizedDescription)")
+      }
+      center.getNotificationSettings { settings in
+        NSLog(
+          "SolatifyNativeNotification: permission granted=\(granted) auth=\(settings.authorizationStatus.rawValue) alert=\(settings.alertSetting.rawValue) sound=\(settings.soundSetting.rawValue)"
+        )
+        DispatchQueue.main.async {
+          completion(granted)
+        }
       }
     }
   }
@@ -197,6 +206,7 @@ import UserNotifications
   private func notificationSound(playSound: Bool, soundName: String?) -> UNNotificationSound? {
     guard playSound else { return nil }
     guard let soundName = soundName, !soundName.isEmpty else { return .default }
+    NSLog("SolatifyNativeNotification: using sound \(soundName)")
     return UNNotificationSound(named: UNNotificationSoundName(soundName))
   }
 
