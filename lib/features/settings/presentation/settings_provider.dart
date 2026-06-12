@@ -9,6 +9,7 @@ class SettingsState {
   final bool notificationEnabled;
   final String adhanSound;
   final bool azanSoundEnabled;
+  final bool fullAdhanAlarmEnabled;
   final bool onboardingCompleted;
   final Map<String, int> prayerOffsets;
 
@@ -19,6 +20,7 @@ class SettingsState {
     required this.notificationEnabled,
     required this.adhanSound,
     required this.azanSoundEnabled,
+    required this.fullAdhanAlarmEnabled,
     required this.onboardingCompleted,
     required this.prayerOffsets,
   });
@@ -30,6 +32,7 @@ class SettingsState {
     bool? notificationEnabled,
     String? adhanSound,
     bool? azanSoundEnabled,
+    bool? fullAdhanAlarmEnabled,
     bool? onboardingCompleted,
     Map<String, int>? prayerOffsets,
   }) {
@@ -40,6 +43,8 @@ class SettingsState {
       notificationEnabled: notificationEnabled ?? this.notificationEnabled,
       adhanSound: adhanSound ?? this.adhanSound,
       azanSoundEnabled: azanSoundEnabled ?? this.azanSoundEnabled,
+      fullAdhanAlarmEnabled:
+          fullAdhanAlarmEnabled ?? this.fullAdhanAlarmEnabled,
       onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
       prayerOffsets: prayerOffsets ?? this.prayerOffsets,
     );
@@ -86,6 +91,14 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       );
       final azanEnabled = rawAzanEnabled is bool ? rawAzanEnabled : true;
 
+      final rawFullAdhanAlarm = HiveService.getSetting(
+        'full_adhan_alarm_enabled',
+        defaultValue: true,
+      );
+      final fullAdhanAlarm = rawFullAdhanAlarm is bool
+          ? rawFullAdhanAlarm
+          : true;
+
       final rawOnboarding = HiveService.getSetting(
         'onboarding_completed',
         defaultValue: false,
@@ -113,6 +126,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
         notificationEnabled: notif,
         adhanSound: adhan,
         azanSoundEnabled: azanEnabled,
+        fullAdhanAlarmEnabled: fullAdhanAlarm,
         onboardingCompleted: onboarding,
         prayerOffsets: offsets,
       );
@@ -124,6 +138,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
         notificationEnabled: true,
         adhanSound: 'adhan_makkah',
         azanSoundEnabled: true,
+        fullAdhanAlarmEnabled: true,
         onboardingCompleted: false,
         prayerOffsets: {
           'subuh': 0,
@@ -176,6 +191,11 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   Future<void> updateAzanSoundEnabled(bool enabled) async {
     await HiveService.saveSetting('azan_sound_enabled', enabled);
     state = state.copyWith(azanSoundEnabled: enabled);
+  }
+
+  Future<void> updateFullAdhanAlarmEnabled(bool enabled) async {
+    await HiveService.saveSetting('full_adhan_alarm_enabled', enabled);
+    state = state.copyWith(fullAdhanAlarmEnabled: enabled);
   }
 
   Future<void> completeOnboarding() async {

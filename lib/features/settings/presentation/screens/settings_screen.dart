@@ -518,6 +518,24 @@ class SettingsScreen extends ConsumerWidget {
                         },
                       ),
                       Divider(color: dividerColor, height: 16),
+                      SwitchListTile(
+                        activeThumbColor: const Color(0xFF0E4D31),
+                        title: Text(
+                          'Alarm Adzan Full',
+                          style: TextStyle(color: textColor, fontSize: 15),
+                        ),
+                        subtitle: Text(
+                          'Memutar adzan full saat app aktif. Saat lock screen, iOS membatasi audio panjang.',
+                          style: TextStyle(color: textSecondary, fontSize: 11),
+                        ),
+                        value: settings.fullAdhanAlarmEnabled,
+                        onChanged: (val) {
+                          ref
+                              .read(settingsProvider.notifier)
+                              .updateFullAdhanAlarmEnabled(val);
+                        },
+                      ),
+                      Divider(color: dividerColor, height: 16),
                       ListTile(
                         leading: Icon(
                           Icons.notifications_active_outlined,

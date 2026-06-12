@@ -13,6 +13,7 @@ import 'core/theme/theme.dart';
 import 'core/database/hive_service.dart';
 import 'features/settings/presentation/settings_provider.dart';
 import 'features/reminder/data/services/notification_service.dart';
+import 'features/reminder/presentation/providers/foreground_adhan_alarm_provider.dart';
 import 'features/reminder/presentation/providers/notification_scheduler_provider.dart';
 
 void main() {
@@ -152,6 +153,7 @@ class _SolatifyAppState extends ConsumerState<SolatifyApp>
     _ensureNotificationPermission(settings.notificationEnabled);
     if (!_isFlutterTest) {
       ref.watch(notificationSchedulerProvider);
+      ref.watch(foregroundAdhanAlarmProvider);
     }
 
     return MaterialApp.router(

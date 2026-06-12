@@ -111,6 +111,7 @@ import UserNotifications
           content.title = title
           content.body = body
           content.sound = self.notificationSound(playSound: playSound, soundName: soundName)
+          content.userInfo = ["adhanSound": soundName ?? "adhan_makkah.aiff"]
           if #available(iOS 15.0, *) {
             content.interruptionLevel = .active
           }
@@ -152,6 +153,7 @@ import UserNotifications
       content.title = "Tes Adzan Solatify"
       content.body = "Jika ini muncul dan berbunyi, notifikasi adzan aktif."
       content.sound = self.notificationSound(playSound: playSound, soundName: soundName)
+      content.userInfo = ["adhanSound": soundName ?? "adhan_makkah.aiff"]
       if #available(iOS 15.0, *) {
         content.interruptionLevel = .active
       }
@@ -208,6 +210,29 @@ import UserNotifications
     guard let soundName = soundName, !soundName.isEmpty else { return .default }
     NSLog("SolatifyNativeNotification: using sound \(soundName)")
     return UNNotificationSound(named: UNNotificationSoundName(soundName))
+  }
+
+  override func userNotificationCenter(
+    _ center: UNUserNotificationCenter,
+    didReceive response: UNNotificationResponse,
+    withCompletionHandler completionHandler: @escaping () -> Void
+  ) {
+    let soundName = response.notification.request.content.userInfo["adhanSound"] as? String
+    if let soundName = soundName, soundName.contains("adhan_madinah") {
+      sendPlayAdhan(sound: "adhan_madinah")
+    } else if let soundName = soundName, soundName.contains("adhan_makkah") {
+      sendPlayAdhan(sound: "adhan_makkah")
+    } else if response.notification.request.identifier.hasPrefix("solatify_") {
+      sendPlayAdhan(sound: "adhan_makkah")
+    }
+    completionHandler()
+  }
+
+  private func sendPlayAdhan(sound: String) {
+    guard let channel = notificationChannel else {
+      return
+    }
+    channel.invokeMethod("playAdhan", arguments: ["sound": sound])
   }
 
   private func copyAdhanSoundsToLibrary() {

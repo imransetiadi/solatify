@@ -22,6 +22,15 @@ class NotificationService {
     if (_initialized) return;
 
     _configureTimeZone(_timezoneName);
+    _iosNotificationChannel.setMethodCallHandler((call) async {
+      if (call.method != 'playAdhan') return;
+      final args = call.arguments;
+      final sound = args is Map ? args['sound']?.toString() : null;
+      await AzanAudioService.playAzan(
+        enabled: true,
+        adhanSound: sound ?? 'adhan_makkah',
+      );
+    });
 
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
