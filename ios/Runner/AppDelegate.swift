@@ -216,8 +216,8 @@ import UserNotifications
     }
 
     try? FileManager.default.createDirectory(at: soundsDirectory, withIntermediateDirectories: true)
-    for fileName in ["adhan_makkah.caf", "adhan_madinah.caf"] {
-      guard let source = Bundle.main.url(forResource: fileName.replacingOccurrences(of: ".caf", with: ""), withExtension: "caf") else {
+    for fileName in ["adhan_makkah.aiff", "adhan_madinah.aiff"] {
+      guard let source = Bundle.main.url(forResource: fileName.replacingOccurrences(of: ".aiff", with: ""), withExtension: "aiff") else {
         continue
       }
       let destination = soundsDirectory.appendingPathComponent(fileName)

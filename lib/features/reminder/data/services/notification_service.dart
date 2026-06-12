@@ -305,7 +305,7 @@ class NotificationService {
 
   static String? _iosSoundFileName(String adhanSound) {
     final nativeName = _nativeNotificationSoundName(adhanSound);
-    return nativeName == null ? null : '$nativeName.caf';
+    return nativeName == null ? null : '$nativeName.aiff';
   }
 
   static bool get _isFlutterTest {
