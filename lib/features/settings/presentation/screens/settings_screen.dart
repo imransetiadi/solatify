@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/glass_container.dart';
 import '../../../../core/widgets/responsive_layout.dart';
+import '../../../reminder/data/services/notification_service.dart';
 import '../settings_provider.dart';
 
 enum PrayerOffsetType { subuh, dzuhur, ashar, magrib, isya }
@@ -413,10 +414,27 @@ class SettingsScreen extends ConsumerWidget {
                           style: TextStyle(color: textSecondary, fontSize: 11),
                         ),
                         value: settings.notificationEnabled,
-                        onChanged: (val) {
+                        onChanged: (val) async {
+                          var enabled = val;
+                          if (val) {
+                            enabled =
+                                await NotificationService.requestPermission();
+                            if (!context.mounted) return;
+                            if (!enabled) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    l.isEnglish
+                                        ? 'Notification permission is required for prayer reminders.'
+                                        : 'Izin notifikasi diperlukan agar pengingat waktu salat muncul.',
+                                  ),
+                                ),
+                              );
+                            }
+                          }
                           ref
                               .read(settingsProvider.notifier)
-                              .updateNotificationEnabled(val);
+                              .updateNotificationEnabled(enabled);
                         },
                       ),
                       Divider(color: dividerColor, height: 16),
@@ -455,7 +473,16 @@ class SettingsScreen extends ConsumerWidget {
                           style: TextStyle(color: textSecondary, fontSize: 11),
                         ),
                         value: settings.azanSoundEnabled,
-                        onChanged: (val) {
+                        onChanged: (val) async {
+                          if (val && !settings.notificationEnabled) {
+                            final granted =
+                                await NotificationService.requestPermission();
+                            if (!context.mounted) return;
+                            await ref
+                                .read(settingsProvider.notifier)
+                                .updateNotificationEnabled(granted);
+                            if (!granted) return;
+                          }
                           ref
                               .read(settingsProvider.notifier)
                               .updateAzanSoundEnabled(val);

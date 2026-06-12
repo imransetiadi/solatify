@@ -12,6 +12,7 @@ import 'core/theme/theme.dart';
 
 import 'core/database/hive_service.dart';
 import 'features/settings/presentation/settings_provider.dart';
+import 'features/reminder/data/services/notification_service.dart';
 import 'features/reminder/presentation/providers/notification_scheduler_provider.dart';
 
 void main() {
@@ -115,6 +116,8 @@ class SolatifyApp extends ConsumerStatefulWidget {
 
 class _SolatifyAppState extends ConsumerState<SolatifyApp>
     with WidgetsBindingObserver {
+  bool _notificationPermissionChecked = false;
+
   @override
   void initState() {
     super.initState();
@@ -146,6 +149,7 @@ class _SolatifyAppState extends ConsumerState<SolatifyApp>
   @override
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsProvider);
+    _ensureNotificationPermission(settings.notificationEnabled);
     if (!_isFlutterTest) {
       ref.watch(notificationSchedulerProvider);
     }
@@ -180,6 +184,22 @@ class _SolatifyAppState extends ConsumerState<SolatifyApp>
           child: child ?? const SizedBox.shrink(),
         );
       },
+    );
+  }
+
+  void _ensureNotificationPermission(bool notificationEnabled) {
+    if (!notificationEnabled ||
+        _notificationPermissionChecked ||
+        _isFlutterTest) {
+      return;
+    }
+    _notificationPermissionChecked = true;
+    unawaited(
+      NotificationService.requestPermission().then((granted) {
+        if (!granted && mounted) {
+          ref.read(settingsProvider.notifier).updateNotificationEnabled(false);
+        }
+      }),
     );
   }
 

@@ -174,8 +174,11 @@ class NotificationService {
       iOS: DarwinNotificationDetails(
         presentAlert: true,
         presentBadge: true,
+        presentBanner: true,
+        presentList: true,
         presentSound: playSound,
         sound: iosSound,
+        interruptionLevel: InterruptionLevel.active,
       ),
     );
   }

@@ -31,6 +31,50 @@ void main() {
       expect(times['magrib']!.isBefore(times['isya']!), true);
     });
 
+    test('Manual prayer offsets shift calculated times by minutes', () {
+      final date = DateTime(2026, 6, 8);
+      final baseTimes = PrayerCalculationService.calculatePrayerTimes(
+        latitude: -6.2088,
+        longitude: 106.8456,
+        date: date,
+        method: 'Kemenag',
+      );
+      final adjustedTimes = PrayerCalculationService.calculatePrayerTimes(
+        latitude: -6.2088,
+        longitude: 106.8456,
+        date: date,
+        method: 'Kemenag',
+        offsets: {
+          'subuh': -2,
+          'dzuhur': 3,
+          'ashar': 5,
+          'magrib': -1,
+          'isya': 4,
+        },
+      );
+
+      expect(
+        adjustedTimes['subuh'],
+        baseTimes['subuh']!.subtract(const Duration(minutes: 2)),
+      );
+      expect(
+        adjustedTimes['dzuhur'],
+        baseTimes['dzuhur']!.add(const Duration(minutes: 3)),
+      );
+      expect(
+        adjustedTimes['ashar'],
+        baseTimes['ashar']!.add(const Duration(minutes: 5)),
+      );
+      expect(
+        adjustedTimes['magrib'],
+        baseTimes['magrib']!.subtract(const Duration(minutes: 1)),
+      );
+      expect(
+        adjustedTimes['isya'],
+        baseTimes['isya']!.add(const Duration(minutes: 4)),
+      );
+    });
+
     test('Infer Indonesian prayer notification timezones', () {
       expect(
         PrayerTimezoneService.inferTimezoneName(
