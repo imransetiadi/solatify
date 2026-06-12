@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/glass_container.dart';
 import '../../../../core/widgets/responsive_layout.dart';
@@ -50,6 +51,7 @@ class SettingsScreen extends ConsumerWidget {
   ) {
     final l = AppLocalizations.of(context);
     int selectedOffset = currentOffset;
+    final controller = TextEditingController(text: currentOffset.toString());
     final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final dialogBg = isDarkTheme ? const Color(0xFF2A1B12) : Colors.white;
     final textColor = isDarkTheme ? Colors.white : const Color(0xFF241A12);
@@ -74,6 +76,43 @@ class SettingsScreen extends ConsumerWidget {
                 children: [
                   Text(l.adjustOffsetHint, style: TextStyle(color: textMuted)),
                   const SizedBox(height: 20),
+                  TextField(
+                    controller: controller,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      signed: true,
+                    ),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'[-0-9]')),
+                    ],
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                    ),
+                    decoration: InputDecoration(
+                      suffixText: l.minutes,
+                      suffixStyle: TextStyle(color: textMuted),
+                      helperText: l.isEnglish
+                          ? 'Use negative values to make it earlier.'
+                          : 'Gunakan nilai minus untuk memajukan waktu.',
+                      helperStyle: TextStyle(color: textMuted, fontSize: 11),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide(
+                          color: primaryColor.withValues(alpha: 0.35),
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide(color: primaryColor),
+                      ),
+                    ),
+                    onChanged: (value) {
+                      selectedOffset = int.tryParse(value) ?? 0;
+                    },
+                  ),
+                  const SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -86,6 +125,7 @@ class SettingsScreen extends ConsumerWidget {
                         onPressed: () {
                           stfSetState(() {
                             selectedOffset--;
+                            controller.text = selectedOffset.toString();
                           });
                         },
                       ),
@@ -108,6 +148,7 @@ class SettingsScreen extends ConsumerWidget {
                         onPressed: () {
                           stfSetState(() {
                             selectedOffset++;
+                            controller.text = selectedOffset.toString();
                           });
                         },
                       ),
@@ -122,6 +163,9 @@ class SettingsScreen extends ConsumerWidget {
                 ),
                 TextButton(
                   onPressed: () {
+                    selectedOffset = (int.tryParse(controller.text) ?? 0)
+                        .clamp(-120, 120)
+                        .toInt();
                     ref
                         .read(settingsProvider.notifier)
                         .updatePrayerOffsets(prayer.key, selectedOffset);

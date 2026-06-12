@@ -11,8 +11,10 @@ This update adds automatic prayer time notifications and azan (call to prayer) s
 
 ## Setup Instructions
 
-### Step 1: Add Azan Audio File
-The app expects an azan audio file at `assets/audio/azan.mp3`. 
+### Step 1: Azan Audio File
+The app includes an azan audio file at `assets/audio/azan.mp3` and native notification sounds for Android/iOS.
+
+Audio source: `Beautiful adhan.ogg` from Wikimedia Commons, public domain/CC0.
 
 **To add the azan audio:**
 1. Get an azan audio file in MP3 format (recommended duration: 30-60 seconds)

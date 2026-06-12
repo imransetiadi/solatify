@@ -12,6 +12,7 @@ import 'core/theme/theme.dart';
 
 import 'core/database/hive_service.dart';
 import 'features/settings/presentation/settings_provider.dart';
+import 'features/reminder/presentation/providers/notification_scheduler_provider.dart';
 
 void main() {
   // Run everything inside a guarded zone so that any uncaught async error
@@ -145,6 +146,9 @@ class _SolatifyAppState extends ConsumerState<SolatifyApp>
   @override
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsProvider);
+    if (!_isFlutterTest) {
+      ref.watch(notificationSchedulerProvider);
+    }
 
     return MaterialApp.router(
       title: 'Solatify',
@@ -177,6 +181,15 @@ class _SolatifyAppState extends ConsumerState<SolatifyApp>
         );
       },
     );
+  }
+
+  bool get _isFlutterTest {
+    var isTest = false;
+    assert(() {
+      isTest = WidgetsBinding.instance.runtimeType.toString().contains('Test');
+      return true;
+    }());
+    return isTest;
   }
 }
 

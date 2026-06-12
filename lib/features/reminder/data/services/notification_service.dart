@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_10y.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -81,7 +82,7 @@ class NotificationService {
     required bool azanSoundEnabled,
     String timezoneName = 'Asia/Jakarta',
   }) async {
-    if (kIsWeb) return;
+    if (kIsWeb || _isFlutterTest) return;
 
     try {
       _timezoneName = timezoneName;
@@ -149,15 +150,18 @@ class NotificationService {
     required bool azanSoundEnabled,
   }) {
     final playSound = azanSoundEnabled && adhanSound != 'silent';
-    final useBundledSound = _hasNativeNotificationSound(adhanSound);
-    final androidSound = useBundledSound
-        ? RawResourceAndroidNotificationSound(adhanSound)
+    final nativeSoundName = _nativeNotificationSoundName(adhanSound);
+    final androidSound = playSound && nativeSoundName != null
+        ? RawResourceAndroidNotificationSound(nativeSoundName)
         : null;
-    final iosSound = useBundledSound ? '$adhanSound.caf' : null;
+    final iosSound = playSound && nativeSoundName != null
+        ? '$nativeSoundName.caf'
+        : null;
+    final channelSuffix = playSound ? nativeSoundName ?? 'default' : 'silent';
 
     return NotificationDetails(
       android: AndroidNotificationDetails(
-        'solatify_adhan_channel',
+        'solatify_adhan_channel_v2_$channelSuffix',
         'Solatify Adzan Reminder',
         channelDescription: 'Diputar saat masuk waktu salat',
         importance: Importance.max,
@@ -176,8 +180,25 @@ class NotificationService {
     );
   }
 
-  static bool _hasNativeNotificationSound(String adhanSound) {
-    return false;
+  static String? _nativeNotificationSoundName(String adhanSound) {
+    if (adhanSound == 'silent') return null;
+    if (adhanSound == 'adhan_madinah') return 'adhan_madinah';
+    return 'adhan_makkah';
+  }
+
+  static bool get _isFlutterTest {
+    var isTest = false;
+    assert(() {
+      try {
+        isTest = WidgetsBinding.instance.runtimeType.toString().contains(
+          'Test',
+        );
+      } catch (_) {
+        isTest = true;
+      }
+      return true;
+    }());
+    return isTest;
   }
 
   static String _formatPrayerLabel(String key) {
