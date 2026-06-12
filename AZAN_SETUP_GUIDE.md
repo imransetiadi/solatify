@@ -11,18 +11,22 @@ This update adds automatic prayer time notifications and azan (call to prayer) s
 
 ## Setup Instructions
 
-### Step 1: Azan Audio File
-The app includes an azan audio file at `assets/audio/azan.mp3` and native notification sounds for Android/iOS.
+### Step 1: Azan Audio Files
+The app includes separate Makkah and Madinah azan variants for Flutter assets and native Android/iOS notification sounds.
 
-Audio source: `Beautiful adhan.ogg` from Wikimedia Commons, public domain/CC0.
+Audio sources:
+- `Beautiful adhan.ogg` from Wikimedia Commons for the Makkah variant.
+- `Azan.ogg` from Wikimedia Commons for the Madinah variant, licensed under CC-BY-SA-4.0.
 
 **To add the azan audio:**
-1. Get an azan audio file in MP3 format (recommended duration: 30-60 seconds)
-2. Place it at: `assets/audio/azan.mp3`
+1. Get an azan audio file in MP3 format.
+2. Place Flutter assets under `assets/audio/`.
+3. Place Android native notification sounds under `android/app/src/main/res/raw/`.
+4. Place iOS native notification sounds as `.caf` under `ios/Runner/` and include them in Xcode resources.
 
 **Popular azan sources:**
 - Use any high-quality azan recording from Islamic audio libraries
-- Ensure the file is in MP3 format
+- Ensure Android/Flutter files are MP3 and iOS notification files are CAF
 - File size should be reasonable (<5MB)
 
 ### Step 2: Settings Integration
