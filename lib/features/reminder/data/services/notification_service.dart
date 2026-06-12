@@ -91,7 +91,10 @@ class NotificationService {
 
       if (!notificationEnabled) return;
 
-      final notificationDetails = _buildNotificationDetails(adhanSound);
+      final notificationDetails = _buildNotificationDetails(
+        adhanSound: adhanSound,
+        azanSoundEnabled: azanSoundEnabled,
+      );
       final now = DateTime.now();
       var notificationId = 0;
 
@@ -141,14 +144,16 @@ class NotificationService {
     }
   }
 
-  static NotificationDetails _buildNotificationDetails(String adhanSound) {
-    final playSound = adhanSound != 'silent';
-    final androidSound = playSound && adhanSound != 'default'
+  static NotificationDetails _buildNotificationDetails({
+    required String adhanSound,
+    required bool azanSoundEnabled,
+  }) {
+    final playSound = azanSoundEnabled && adhanSound != 'silent';
+    final useBundledSound = _hasNativeNotificationSound(adhanSound);
+    final androidSound = useBundledSound
         ? RawResourceAndroidNotificationSound(adhanSound)
         : null;
-    final iosSound = playSound && adhanSound != 'default'
-        ? '$adhanSound.caf'
-        : null;
+    final iosSound = useBundledSound ? '$adhanSound.caf' : null;
 
     return NotificationDetails(
       android: AndroidNotificationDetails(
@@ -169,6 +174,10 @@ class NotificationService {
         sound: iosSound,
       ),
     );
+  }
+
+  static bool _hasNativeNotificationSound(String adhanSound) {
+    return false;
   }
 
   static String _formatPrayerLabel(String key) {
