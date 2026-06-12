@@ -13,6 +13,7 @@ import UserNotifications
     GeneratedPluginRegistrant.register(with: self)
     UNUserNotificationCenter.current().delegate = self
     copyAdhanSoundsToLibrary()
+    setupNotificationChannelFromRegistrar()
     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
       self?.setupNotificationChannelFromConnectedScenes()
     }
@@ -31,12 +32,24 @@ import UserNotifications
     NSLog("SolatifyNativeNotification: FlutterViewController not ready")
   }
 
+  private func setupNotificationChannelFromRegistrar() {
+    guard let registrar = registrar(forPlugin: "SolatifyNativeNotifications") else {
+      NSLog("SolatifyNativeNotification: registrar not ready")
+      return
+    }
+    setupNotificationChannel(messenger: registrar.messenger())
+  }
+
   func setupNotificationChannel(controller: FlutterViewController) {
+    setupNotificationChannel(messenger: controller.binaryMessenger)
+  }
+
+  private func setupNotificationChannel(messenger: FlutterBinaryMessenger) {
     if notificationChannel != nil { return }
 
     let channel = FlutterMethodChannel(
       name: "solatify/notifications",
-      binaryMessenger: controller.binaryMessenger
+      binaryMessenger: messenger
     )
     notificationChannel = channel
     NSLog("SolatifyNativeNotification: channel registered")
@@ -163,7 +176,21 @@ import UserNotifications
 
   private func requestNotificationAuthorization(completion: @escaping (Bool) -> Void) {
     UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, _ in
-      completion(granted)
+      DispatchQueue.main.async {
+        completion(granted)
+      }
+    }
+  }
+
+  override func userNotificationCenter(
+    _ center: UNUserNotificationCenter,
+    willPresent notification: UNNotification,
+    withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+  ) {
+    if #available(iOS 14.0, *) {
+      completionHandler([.banner, .list, .sound, .badge])
+    } else {
+      completionHandler([.alert, .sound, .badge])
     }
   }
 

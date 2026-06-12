@@ -72,12 +72,13 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       );
       final notif = rawNotif is bool ? rawNotif : true;
 
-      final adhan =
+      final rawAdhan =
           HiveService.getSetting(
             'adhan_sound',
-            defaultValue: 'default',
+            defaultValue: 'adhan_makkah',
           )?.toString() ??
-          'default';
+          'adhan_makkah';
+      final adhan = rawAdhan == 'default' ? 'adhan_makkah' : rawAdhan;
 
       final rawAzanEnabled = HiveService.getSetting(
         'azan_sound_enabled',
@@ -121,10 +122,16 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
         language: 'id',
         calculationMethod: 'Kemenag',
         notificationEnabled: true,
-        adhanSound: 'default',
+        adhanSound: 'adhan_makkah',
         azanSoundEnabled: true,
         onboardingCompleted: false,
-        prayerOffsets: {'subuh': 0, 'dzuhur': 0, 'ashar': 0, 'magrib': 0, 'isya': 0},
+        prayerOffsets: {
+          'subuh': 0,
+          'dzuhur': 0,
+          'ashar': 0,
+          'magrib': 0,
+          'isya': 0,
+        },
       );
     }
   }
