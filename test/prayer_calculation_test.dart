@@ -2,6 +2,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:adhan/adhan.dart';
 import 'package:solatify/features/prayer_schedule/data/prayer_calculation_service.dart';
 import 'package:solatify/features/prayer_schedule/data/prayer_timezone_service.dart';
+import 'package:solatify/features/prayer_schedule/data/prayer_time_utilities.dart';
+import 'package:timezone/data/latest_all.dart' as tzdata;
+import 'package:timezone/timezone.dart' as tz;
 
 void main() {
   group('Prayer Calculation Tests', () {
@@ -15,6 +18,7 @@ void main() {
         longitude: jakartaLng,
         date: date,
         method: 'Kemenag',
+        timezoneName: 'Asia/Jakarta',
       );
 
       // Verify we have all 5 prayers
@@ -38,12 +42,14 @@ void main() {
         longitude: 106.8456,
         date: date,
         method: 'Kemenag',
+        timezoneName: 'Asia/Jakarta',
       );
       final adjustedTimes = PrayerCalculationService.calculatePrayerTimes(
         latitude: -6.2088,
         longitude: 106.8456,
         date: date,
         method: 'Kemenag',
+        timezoneName: 'Asia/Jakarta',
         offsets: {
           'subuh': -2,
           'dzuhur': 3,
@@ -73,6 +79,38 @@ void main() {
         adjustedTimes['isya'],
         baseTimes['isya']!.add(const Duration(minutes: 4)),
       );
+    });
+
+    test('Active prayer at Jakarta morning is Subuh, not Isya', () {
+      tzdata.initializeTimeZones();
+      final jakarta = tz.getLocation('Asia/Jakarta');
+      final now = tz.TZDateTime(jakarta, 2026, 6, 14, 10, 39);
+      final times = PrayerCalculationService.calculatePrayerTimes(
+        latitude: -6.2088,
+        longitude: 106.8456,
+        date: now,
+        method: 'Kemenag',
+        timezoneName: 'Asia/Jakarta',
+      );
+
+      expect(PrayerTimeUtilities.getCurrentPrayerName(now, times), 'Subuh');
+      expect(PrayerTimeUtilities.getNextPrayerName(now, times), 'Dzuhur');
+    });
+
+    test('Active prayer uses selected city timezone, not device timezone', () {
+      tzdata.initializeTimeZones();
+      final makassar = tz.getLocation('Asia/Makassar');
+      final now = tz.TZDateTime(makassar, 2026, 6, 14, 10, 39);
+      final times = PrayerCalculationService.calculatePrayerTimes(
+        latitude: -5.1477,
+        longitude: 119.4327,
+        date: now,
+        method: 'Kemenag',
+        timezoneName: 'Asia/Makassar',
+      );
+
+      expect(PrayerTimeUtilities.getCurrentPrayerName(now, times), 'Subuh');
+      expect(PrayerTimeUtilities.getNextPrayerName(now, times), 'Dzuhur');
     });
 
     test('Infer Indonesian prayer notification timezones', () {

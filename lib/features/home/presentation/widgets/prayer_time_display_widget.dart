@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../improved_countdown_provider.dart';
+import '../providers/improved_countdown_provider.dart';
 
 class PrayerTimeDisplayWidget extends ConsumerWidget {
   const PrayerTimeDisplayWidget({super.key});
@@ -61,7 +61,7 @@ class PrayerTimeDisplayWidget extends ConsumerWidget {
             'Waktu ${countdown.nextPrayerName}',
             style: TextStyle(
               fontSize: 14,
-              color: isDark ? const Color(0xFFC8B8A8) : const Color(0xFF6E5B4B),
+              color: isDark ? const Color(0xFFC8B8A8) : const Color(0xFF5D4E47),
             ),
           ),
           const SizedBox(height: 8),
@@ -79,7 +79,7 @@ class PrayerTimeDisplayWidget extends ConsumerWidget {
             _formatNextPrayerTime(countdown.nextPrayerTime),
             style: TextStyle(
               fontSize: 12,
-              color: isDark ? const Color(0xFFC8B8A8) : const Color(0xFF6E5B4B),
+              color: isDark ? const Color(0xFFC8B8A8) : const Color(0xFF5D4E47),
             ),
           ),
         ],

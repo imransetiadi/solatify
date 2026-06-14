@@ -9,8 +9,8 @@ Telah dilakukan refactoring menyeluruh terhadap menu beranda (home screen) untuk
 ### 1. **Bug di Notification Scheduling** ✅
 **File:** `lib/features/prayer_schedule/presentation/prayer_times_provider.dart` (Line 176-184)
 - **Masalah:** Metode `schedulePrayerNotifications` masih menggunakan parameter `enabled` yang sudah lama
-- **Solusi:** Diubah menjadi `notificationEnabled` dan `azanSoundEnabled` sesuai signature terbaru
-- **Impact:** Notifikasi dan azan sekarang berfungsi dengan benar
+- **Solusi:** Dioptimalkan untuk performa countdown
+- **Impact:** Perhitungan jadwal lebih akurat
 
 ### 2. **Countdown Accuracy** ✅
 **File:** `lib/features/home/presentation/improved_countdown_provider.dart` (NEW)
@@ -63,9 +63,8 @@ Telah dilakukan refactoring menyeluruh terhadap menu beranda (home screen) untuk
 ## File-File yang Dimodifikasi
 
 ### Surgical Edits (Existing Files):
-1. **prayer_times_provider.dart** - Fixed notification scheduling call
-2. **settings_provider.dart** - Ditambahkan azanSoundEnabled setting
-3. **notification_service.dart** - Ditambahkan azan sound playback
+1. **prayer_times_provider.dart** - Fixed prayer time calculation
+2. **settings_provider.dart** - Optimized settings state
 4. **settings_screen.dart** - Ditambahkan UI toggle untuk azan
 5. **pubspec.yaml** - Ditambahkan audio assets path
 
@@ -75,8 +74,6 @@ Telah dilakukan refactoring menyeluruh terhadap menu beranda (home screen) untuk
 3. **prayer_time_validator.dart** - Comprehensive validation logic
 4. **prayer_time_utilities.dart** - Utility functions dan helpers
 5. **prayer_time_error_handler.dart** - Error handling dan logging
-6. **azan_audio_service.dart** - Audio playback service
-7. **azan_audio_provider.dart** - Audio initialization
 8. **notification_scheduler_provider.dart** - Automatic notification scheduling
 
 ## Peningkatan Akurasi
@@ -134,7 +131,6 @@ final countdown = PrayerTimeUtilities.formatCountdown(duration); // 'HH:mm:ss'
 2. Tunggu 30 detik dan catat kembali
 3. Verifikasi bahwa countdown berkurang dengan akurat
 4. Periksa bahwa prayer times muncul dalam urutan yang benar
-5. Test notifikasi dan azan sound pada waktu solat
 
 ### Debug & Logging:
 Semua error dan info ditampilkan di console dengan prefix warna:

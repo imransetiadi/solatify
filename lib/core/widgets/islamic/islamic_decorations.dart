@@ -179,7 +179,7 @@ class IslamicHeaderDecoration extends StatelessWidget {
             subtitle!,
             style: TextStyle(
               fontSize: 14,
-              color: isDark ? Colors.white70 : Colors.black54,
+              color: isDark ? const Color(0xFFC8B8A8) : Colors.black54,
               fontStyle: FontStyle.italic,
             ),
           ),

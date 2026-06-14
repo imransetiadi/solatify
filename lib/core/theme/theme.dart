@@ -16,7 +16,19 @@ class AppTheme {
   static const Color lightBorder = Color(0xFFCFE7D5);
   static const Color textLight = Color(0xFFF3FBF6);
   static const Color textDark = Color(0xFF241A12);
-  static const Color textMuted = Color(0xFF756455);
+  static const Color textMuted = Color(0xFF5D4E47);
+
+  
+  // Text color tokens untuk reusable di komponen
+  static const Color darkModeText = Colors.white;
+  static const Color darkModeTextSecondary = Color(0xFFB8A898);  // white87-like
+  static const Color darkModeTextTertiary = Color(0xFF999999);   // white70-like
+  static const Color darkModeTextHint = Color(0xFF666666);       // white54-like
+  
+  static const Color lightModeText = Color(0xFF241A12);
+  static const Color lightModeTextSecondary = Color(0xFF5D4E47); // Improved contrast
+  static const Color lightModeTextTertiary = Color(0xFF5D4E47);
+  static const Color lightModeTextHint = Color(0xFF9A8A7D);
 
   static RoundedRectangleBorder get _smallShape =>
       RoundedRectangleBorder(borderRadius: BorderRadius.circular(12));

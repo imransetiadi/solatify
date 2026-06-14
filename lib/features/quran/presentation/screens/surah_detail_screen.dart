@@ -29,11 +29,11 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
       : const Color(0xFF241A12);
   Color get _redAccent => Theme.of(context).colorScheme.tertiary;
   Color get _textMuted => Theme.of(context).brightness == Brightness.dark
-      ? Colors.white70
-      : const Color(0xFF6E5B4B);
+      ? const Color(0xFFC8B8A8)
+      : const Color(0xFF5D4E47);
   Color get _textSecondary => Theme.of(context).brightness == Brightness.dark
-      ? Colors.white60
-      : const Color(0xFF7A6A5D);
+      ? const Color(0xFFB8A898)
+      : const Color(0xFF5D4E47);
   Color get _dividerColor => Theme.of(context).brightness == Brightness.dark
       ? Colors.white.withValues(alpha: 0.04)
       : Colors.black.withValues(alpha: 0.06);
@@ -70,7 +70,7 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
     final audioState = ref.watch(quranAudioProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : const Color(0xFF241A12);
-    final textSecondary = isDark ? Colors.white70 : const Color(0xFF6E5B4B);
+    final textSecondary = isDark ? const Color(0xFFC8B8A8) : const Color(0xFF5D4E47);
 
     return Scaffold(
       appBar: AppBar(
@@ -531,7 +531,7 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
     final isLoading = state.isLoading;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : const Color(0xFF241A12);
-    final textMuted = isDark ? Colors.white54 : const Color(0xFF7A6A5D);
+    final textMuted = isDark ? const Color(0xFFAFA19A) : const Color(0xFF5D4E47);
 
     final progressPercent = state.totalDuration.inMilliseconds > 0
         ? state.progress.inMilliseconds / state.totalDuration.inMilliseconds

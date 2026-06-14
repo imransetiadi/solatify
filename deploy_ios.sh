@@ -29,6 +29,7 @@ flutter build ios --release
 echo "📲 Step 5: Deploying to iPhone 16 Pro..."
 echo "Select device ID from list above and run:"
 echo "flutter run --release -d <DEVICE_ID>"
+flutter run --release -d 00008140-000518E42EB8401C
 
 echo ""
 echo "✅ Build complete! Ready for deployment."

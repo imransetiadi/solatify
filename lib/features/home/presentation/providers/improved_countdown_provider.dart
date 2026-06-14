@@ -1,7 +1,11 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../prayer_schedule/presentation/prayer_times_provider.dart';
+import 'package:timezone/timezone.dart' as tz;
+import 'package:timezone/data/latest_all.dart' as tzdata;
+import '../../../prayer_schedule/presentation/prayer_times_provider.dart';
+import '../../../prayer_schedule/presentation/location_provider.dart';
+import '../../../prayer_schedule/data/prayer_timezone_service.dart';
 
 class CountdownState {
   final String activePrayerName;
@@ -67,7 +71,14 @@ class ImprovedCountdownNotifier extends StateNotifier<CountdownState> {
         return;
       }
 
-      final now = DateTime.now();
+      tzdata.initializeTimeZones();
+      final selectedLocation = _ref.read(locationProvider);
+      final timezoneName = PrayerTimezoneService.inferTimezoneName(
+        latitude: selectedLocation.latitude,
+        longitude: selectedLocation.longitude,
+        country: selectedLocation.country,
+      );
+      final now = tz.TZDateTime.now(tz.getLocation(timezoneName));
 
       // Extract and validate prayer times
       final prayers = <String, DateTime>{

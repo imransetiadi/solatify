@@ -29,16 +29,6 @@ class AppLocalizations {
   String get navMore => isEnglish ? 'More' : 'Lainnya';
 
   String get settingsTitle => isEnglish ? 'Settings' : 'Pengaturan';
-  String get reminderAndAdhan =>
-      isEnglish ? 'Notifications & Adhan' : 'Notifikasi & Adzan';
-  String get prayerReminder =>
-      isEnglish ? 'Prayer Reminder' : 'Pengingat Salat';
-  String get prayerReminderSubtitle => isEnglish
-      ? 'Enable notifications when prayer time begins'
-      : 'Aktifkan pengingat notifikasi masuk waktu salat';
-  String get adhanSound => isEnglish ? 'Adhan Sound' : 'Suara Adzan';
-  String get adhanSoundDialogTitle =>
-      isEnglish ? 'Adhan Reminder Sound' : 'Suara Pengingat Adzan';
   String get calculationSchedule =>
       isEnglish ? 'Schedule Calculation' : 'Kalkulasi Jadwal';
   String get calculationMethod =>
@@ -66,12 +56,6 @@ class AppLocalizations {
       ? 'Set $prayerName Time Offset'
       : 'Atur Ofset Waktu $prayerName';
 
-  String get defaultBeep =>
-      isEnglish ? 'Standard Beep / Default' : 'Bip Standar / Default';
-  String get adhanMakkah => isEnglish ? 'Makkah Adhan' : 'Adzan Makkah';
-  String get adhanMadinah => isEnglish ? 'Madinah Adhan' : 'Adzan Madinah';
-  String get silent => isEnglish ? 'Silent' : 'Hening / Silent';
-
   String get indonesiaLanguage => 'Bahasa Indonesia';
   String get englishLanguage => 'English';
 
@@ -95,19 +79,6 @@ class AppLocalizations {
         return isEnglish ? 'ISNA (North America)' : 'ISNA (Amerika Utara)';
       default:
         return value;
-    }
-  }
-
-  String adhanSoundLabel(String value) {
-    switch (value) {
-      case 'adhan_makkah':
-        return adhanMakkah;
-      case 'adhan_madinah':
-        return adhanMadinah;
-      case 'silent':
-        return silent;
-      default:
-        return defaultBeep;
     }
   }
 

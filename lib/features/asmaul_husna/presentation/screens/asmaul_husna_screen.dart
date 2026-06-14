@@ -55,7 +55,7 @@ class _AsmaulHusnaScreenState extends ConsumerState<AsmaulHusnaScreen> {
     final redAccent = theme.colorScheme.tertiary;
     final primaryColor = isDark ? const Color(0xFFC78A4C) : const Color(0xFF0E4D31);
     final textColor = isDark ? const Color(0xFFF3FBF6) : const Color(0xFF241A12);
-    final textColorMuted = isDark ? const Color(0xFFC8B8A8) : const Color(0xFF6E5B4B);
+    final textColorMuted = isDark ? const Color(0xFFC8B8A8) : const Color(0xFF5D4E47);
     final borderColor = isDark ? Colors.white.withValues(alpha: 0.2) : Colors.black12;
     final cardBg = isDark ? const Color(0xFF241A14) : Colors.white;
 

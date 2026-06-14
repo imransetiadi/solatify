@@ -57,7 +57,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     final titleColor = isDark ? Colors.white : const Color(0xFF241A12);
     final subtitleColor = isDark
         ? Colors.white.withValues(alpha: 0.75)
-        : const Color(0xFF756455);
+        : const Color(0xFF5D4E47);
 
     return Scaffold(
       body: IslamicBackground(

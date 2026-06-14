@@ -27,9 +27,9 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : const Color(0xFF241A12);
-    final textSecondary = isDark ? Colors.white60 : const Color(0xFF7A6A5D);
-    final textMuted = isDark ? Colors.white70 : const Color(0xFF6E5B4B);
-    final textHint = isDark ? Colors.white38 : const Color(0xFF7A6A5D);
+    final textSecondary = isDark ? const Color(0xFFB8A898) : const Color(0xFF5D4E47);
+    final textMuted = isDark ? const Color(0xFF999999) : const Color(0xFF5D4E47);
+    final textHint = isDark ? const Color(0xFF666666) : const Color(0xFF9A8A7D);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Arah Kiblat')),
@@ -280,8 +280,8 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
   Widget _buildSimulationPanel(double currentHeading, double qiblaAngle) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : const Color(0xFF241A12);
-    final textSecondary = isDark ? Colors.white60 : const Color(0xFF7A6A5D);
-    final textMuted = isDark ? Colors.white70 : const Color(0xFF6E5B4B);
+    final textSecondary = isDark ? const Color(0xFFB8A898) : const Color(0xFF5D4E47);
+    final textMuted = isDark ? const Color(0xFF999999) : const Color(0xFF5D4E47);
     final sliderInactive = isDark ? Colors.white12 : Colors.black12;
 
     return GlassContainer(
@@ -445,8 +445,8 @@ class _CompassDialPainter extends CustomPainter {
           color: label == 'U'
               ? (isDark ? Colors.white : const Color(0xFF241A12))
               : (isDark
-                    ? Colors.white70
-                    : const Color(0xFF6E5B4B)), // Black for North
+                    ? const Color(0xFFC8B8A8)
+                    : const Color(0xFF5D4E47)), // Black for North
           fontSize: 16,
           fontWeight: FontWeight.bold,
         ),

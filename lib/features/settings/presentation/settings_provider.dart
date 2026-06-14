@@ -6,10 +6,6 @@ class SettingsState {
   final ThemeMode themeMode;
   final String language;
   final String calculationMethod;
-  final bool notificationEnabled;
-  final String adhanSound;
-  final bool azanSoundEnabled;
-  final bool fullAdhanAlarmEnabled;
   final bool onboardingCompleted;
   final Map<String, int> prayerOffsets;
 
@@ -17,10 +13,6 @@ class SettingsState {
     required this.themeMode,
     required this.language,
     required this.calculationMethod,
-    required this.notificationEnabled,
-    required this.adhanSound,
-    required this.azanSoundEnabled,
-    required this.fullAdhanAlarmEnabled,
     required this.onboardingCompleted,
     required this.prayerOffsets,
   });
@@ -29,10 +21,6 @@ class SettingsState {
     ThemeMode? themeMode,
     String? language,
     String? calculationMethod,
-    bool? notificationEnabled,
-    String? adhanSound,
-    bool? azanSoundEnabled,
-    bool? fullAdhanAlarmEnabled,
     bool? onboardingCompleted,
     Map<String, int>? prayerOffsets,
   }) {
@@ -40,11 +28,6 @@ class SettingsState {
       themeMode: themeMode ?? this.themeMode,
       language: language ?? this.language,
       calculationMethod: calculationMethod ?? this.calculationMethod,
-      notificationEnabled: notificationEnabled ?? this.notificationEnabled,
-      adhanSound: adhanSound ?? this.adhanSound,
-      azanSoundEnabled: azanSoundEnabled ?? this.azanSoundEnabled,
-      fullAdhanAlarmEnabled:
-          fullAdhanAlarmEnabled ?? this.fullAdhanAlarmEnabled,
       onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
       prayerOffsets: prayerOffsets ?? this.prayerOffsets,
     );
@@ -71,34 +54,6 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
                   'Kemenag')
               .toString();
 
-      final rawNotif = HiveService.getSetting(
-        'notification_enabled',
-        defaultValue: true,
-      );
-      final notif = rawNotif is bool ? rawNotif : true;
-
-      final rawAdhan =
-          HiveService.getSetting(
-            'adhan_sound',
-            defaultValue: 'adhan_makkah',
-          )?.toString() ??
-          'adhan_makkah';
-      final adhan = rawAdhan == 'default' ? 'adhan_makkah' : rawAdhan;
-
-      final rawAzanEnabled = HiveService.getSetting(
-        'azan_sound_enabled',
-        defaultValue: true,
-      );
-      final azanEnabled = rawAzanEnabled is bool ? rawAzanEnabled : true;
-
-      final rawFullAdhanAlarm = HiveService.getSetting(
-        'full_adhan_alarm_enabled',
-        defaultValue: true,
-      );
-      final fullAdhanAlarm = rawFullAdhanAlarm is bool
-          ? rawFullAdhanAlarm
-          : true;
-
       final rawOnboarding = HiveService.getSetting(
         'onboarding_completed',
         defaultValue: false,
@@ -123,10 +78,6 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
         themeMode: themeMode,
         language: lang,
         calculationMethod: method,
-        notificationEnabled: notif,
-        adhanSound: adhan,
-        azanSoundEnabled: azanEnabled,
-        fullAdhanAlarmEnabled: fullAdhanAlarm,
         onboardingCompleted: onboarding,
         prayerOffsets: offsets,
       );
@@ -135,10 +86,6 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
         themeMode: ThemeMode.system,
         language: 'id',
         calculationMethod: 'Kemenag',
-        notificationEnabled: true,
-        adhanSound: 'adhan_makkah',
-        azanSoundEnabled: true,
-        fullAdhanAlarmEnabled: true,
         onboardingCompleted: false,
         prayerOffsets: {
           'subuh': 0,
@@ -176,26 +123,6 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   Future<void> updateCalculationMethod(String method) async {
     await HiveService.saveSetting('calculation_method', method);
     state = state.copyWith(calculationMethod: method);
-  }
-
-  Future<void> updateNotificationEnabled(bool enabled) async {
-    await HiveService.saveSetting('notification_enabled', enabled);
-    state = state.copyWith(notificationEnabled: enabled);
-  }
-
-  Future<void> updateAdhanSound(String adhan) async {
-    await HiveService.saveSetting('adhan_sound', adhan);
-    state = state.copyWith(adhanSound: adhan);
-  }
-
-  Future<void> updateAzanSoundEnabled(bool enabled) async {
-    await HiveService.saveSetting('azan_sound_enabled', enabled);
-    state = state.copyWith(azanSoundEnabled: enabled);
-  }
-
-  Future<void> updateFullAdhanAlarmEnabled(bool enabled) async {
-    await HiveService.saveSetting('full_adhan_alarm_enabled', enabled);
-    state = state.copyWith(fullAdhanAlarmEnabled: enabled);
   }
 
   Future<void> completeOnboarding() async {

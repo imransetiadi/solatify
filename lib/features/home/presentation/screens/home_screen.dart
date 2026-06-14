@@ -9,7 +9,7 @@ import '../../../../core/widgets/responsive_layout.dart';
 import '../../../prayer_schedule/presentation/location_provider.dart';
 import '../../../prayer_schedule/presentation/prayer_times_provider.dart';
 import '../../../prayer_schedule/presentation/widgets/manual_location_dialog.dart';
-import '../countdown_provider.dart';
+import '../providers/countdown_provider.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -27,7 +27,7 @@ class HomeScreen extends ConsumerWidget {
         : const Color(0xFF241A12);
     final mutedColor = isDark
         ? const Color(0xFFE0D4C4)
-        : const Color(0xFF6E5B4B);
+        : const Color(0xFF5D4E47);
     final todayStr = DateFormat(
       'EEEE, d MMMM yyyy',
       'id_ID',

@@ -344,7 +344,7 @@ class MainLayoutScreen extends StatelessWidget {
             return NavigationDestination(
               icon: Icon(
                 destination.icon,
-                color: isDark ? Colors.white60 : Colors.black45,
+                color: isDark ? const Color(0xFFB8A898) : Colors.black45,
                 size: iconSize,
               ),
               selectedIcon: Icon(

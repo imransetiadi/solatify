@@ -2,19 +2,13 @@
 
 ## Status: ✅ READY FOR DEPLOYMENT
 
-Semua perubahan, refactoring, dan improvement telah selesai dan siap untuk di-deploy ke iPhone 16 Pro Anda.
+Semua fitur inti telah selesai dan siap untuk di-deploy.
 
 ---
 
-## 📋 Ringkasan Perubahan
+## 📋 Fitur Inti
 
-### ✅ Notifikasi & Azan Features (Completed)
-- Automatic prayer time notifications
-- Azan auto-play functionality
-- Notification & Azan toggles di Settings
-- Full integration dengan prayer times
-
-### ✅ Refactoring Menu Beranda (Completed)
+### ✅ Jadwal Salat
 - Enhanced countdown accuracy (500ms update)
 - Prayer time validation & verification
 - Timezone handling & awareness
@@ -32,12 +26,12 @@ Semua perubahan, refactoring, dan improvement telah selesai dan siap untuk di-de
 cd /Users/imboyy/Documents/imboyy/aplikasi/Solatify
 ```
 
-**Step 2: Connect iPhone 16 Pro & run automated deploy**
+**Step 2: Connect perangkat & run automated deploy**
 ```bash
 ./deploy_ios.sh
 ```
 
-**Step 3: Follow script prompts, ganti `<DEVICE_ID>` dengan ID iPhone Anda**
+**Step 3: Follow script prompts, ganti `<DEVICE_ID>` dengan ID perangkat**
 ```bash
 flutter run --release -d <DEVICE_ID>
 ```
@@ -46,7 +40,7 @@ flutter run --release -d <DEVICE_ID>
 
 ## 📱 What's New di Solatify
 
-### Menu Beranda Improvements:
+### Menu Beranda:
 - ✅ Countdown lebih akurat (update setiap 500ms)
 - ✅ Prayer times validated & verified
 - ✅ Better error handling & logging
@@ -73,9 +67,6 @@ lib/features/home/presentation/widgets/prayer_time_display_widget.dart
 lib/features/prayer_schedule/data/prayer_time_validator.dart
 lib/features/prayer_schedule/data/prayer_time_utilities.dart
 lib/features/prayer_schedule/data/prayer_time_error_handler.dart
-lib/features/reminder/data/services/azan_audio_service.dart
-lib/features/reminder/presentation/providers/azan_audio_provider.dart
-lib/features/reminder/presentation/providers/notification_scheduler_provider.dart
 ```
 
 ### Modified Files:
@@ -83,7 +74,6 @@ lib/features/reminder/presentation/providers/notification_scheduler_provider.dar
 lib/features/prayer_schedule/presentation/prayer_times_provider.dart
 lib/features/settings/presentation/settings_provider.dart
 lib/features/settings/presentation/screens/settings_screen.dart
-lib/features/reminder/data/services/notification_service.dart
 pubspec.yaml
 ```
 
@@ -93,14 +83,10 @@ pubspec.yaml
 
 ### Required Setup:
 1. ✅ Xcode 15+ installed
-2. ✅ iPhone 16 Pro connected via USB
+2. ✅ Perangkat iOS connected via USB
 3. ✅ iPhone unlocked, "Trust" selected
 4. ✅ Flutter SDK in PATH
 5. ✅ CocoaPods installed
-
-### Azan Audio File:
-- Place MP3 file at: `assets/audio/azan.mp3`
-- If missing: notifications work tapi azan sound tidak aktif
 
 ---
 
@@ -110,84 +96,33 @@ pubspec.yaml
 1. Open app on iPhone
 2. Check home screen displays 5 prayer times
 3. Verify countdown is updating (check every 2 seconds)
-4. Go to Settings, verify toggles exist
-5. Enable notification & azan sound
+4. Go to Settings, verify language and calculation method
+5. Navigate through Quran, Qibla, Mosques screens
 
 ### Thorough Test (15 minutes):
 1. All dari Quick Test
 2. Navigate through all screens
 3. Change calculation method & check times update
-4. Test notification permissions
-5. Wait for next prayer time to verify notification/azan
+4. Change language & verify UI updates
+5. Search and bookmark Quran verses
 6. Check console output for any warnings
 
 ---
 
-## 🔧 Troubleshooting
+## 🔧 Status
 
-### Common Issues & Solutions:
-
-**Problem: Device not showing in `flutter devices`**
-```bash
-# Solution:
-1. Unplug iPhone
-2. Unlock & open Settings > Developer > Trust [Mac Name]
-3. Plug back in
-4. Restart Xcode
-5. Run: flutter devices
-```
-
-**Problem: Pods install fails**
-```bash
-cd ios
-pod install --repo-update
-cd ..
-```
-
-**Problem: Build fails with signing error**
-- Open Xcode: `open ios/Runner.xcworkspace`
-- Select iPhone 16 Pro as target device
-- Go to: Runner > Signing & Capabilities
-- Select your development team
-- Try build again
-
-**Problem: App crashes on startup**
-```bash
-# Run with verbose output to see errors:
-flutter run --release -d <DEVICE_ID> -v
-```
-
----
-
-## ✅ Deployment Checklist
-
-Before running deployment script:
-- [ ] iPhone 16 Pro is connected
-- [ ] iPhone is unlocked
-- [ ] Mac has Xcode 15+
-- [ ] Flutter SDK is installed
-- [ ] CocoaPods is available
-- [ ] You've read this guide
-
----
-
-## 📊 Version Information
-
-- **App Name:** Solatify
-- **Version:** 1.0.0
-- **Build Number:** 1
-- **Deployment Target:** iPhone 16 Pro (iOS)
-- **Release Type:** Production Ready
+- Production Ready
 
 ---
 
 ## 🎉 After Successful Deployment
 
-Your iPhone 16 Pro will have:
+Perangkat Anda akan memiliki:
 ✅ Accurate prayer time countdown (updates 500ms)
-✅ Automatic prayer notifications
-✅ Automatic azan sound playback
-✅ Fully functional settings
+✅ Fully functional Quran reading
+✅ Qibla direction finder
+✅ Nearby mosques locator
+✅ Complete settings management
 ✅ No critical errors or warnings
 
 ---

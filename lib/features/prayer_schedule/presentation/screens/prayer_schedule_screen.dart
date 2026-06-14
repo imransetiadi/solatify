@@ -7,6 +7,7 @@ import '../../../../core/utils/location_service.dart';
 import '../location_provider.dart';
 import '../../../settings/presentation/settings_provider.dart';
 import '../../data/prayer_calculation_service.dart';
+import '../../data/prayer_timezone_service.dart';
 
 class PrayerScheduleScreen extends ConsumerStatefulWidget {
   const PrayerScheduleScreen({super.key});
@@ -47,14 +48,14 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
                 ? Colors.white
                 : const Color(0xFF241A12);
             final dTextMuted = isDarkTheme
-                ? Colors.white70
-                : const Color(0xFF6E5B4B);
+                ? const Color(0xFFC8B8A8)
+                : const Color(0xFF5D4E47);
             final dTextSecondary = isDarkTheme
-                ? Colors.white60
-                : const Color(0xFF7A6A5D);
+                ? const Color(0xFFB8A898)
+                : const Color(0xFF5D4E47);
             final dTextHint = isDarkTheme
-                ? Colors.white54
-                : const Color(0xFF7A6A5D);
+                ? const Color(0xFFAFA19A)
+                : const Color(0xFF5D4E47);
             final dBorderColor = isDarkTheme
                 ? Colors.white.withValues(alpha: 0.2)
                 : Colors.black12;
@@ -196,11 +197,17 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
     final settings = ref.watch(settingsProvider);
 
     // Calculate prayer times for selected date
+    final timezoneName = PrayerTimezoneService.inferTimezoneName(
+      latitude: location.latitude,
+      longitude: location.longitude,
+      country: location.country,
+    );
     final computedTimes = PrayerCalculationService.calculatePrayerTimes(
       latitude: location.latitude,
       longitude: location.longitude,
       date: _selectedDate,
       method: settings.calculationMethod,
+      timezoneName: timezoneName,
     );
 
     final String displayDate = DateFormat(
@@ -218,8 +225,12 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : const Color(0xFF241A12);
-    final textMuted = isDark ? Colors.white70 : const Color(0xFF6E5B4B);
-    final textSecondary = isDark ? Colors.white60 : const Color(0xFF7A6A5D);
+    final textMuted = isDark
+        ? const Color(0xFFC8B8A8)
+        : const Color(0xFF5D4E47);
+    final textSecondary = isDark
+        ? const Color(0xFFB8A898)
+        : const Color(0xFF5D4E47);
     final dividerColor = isDark ? Colors.white12 : Colors.black12;
 
     return Scaffold(

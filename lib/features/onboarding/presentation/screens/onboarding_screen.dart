@@ -6,7 +6,6 @@ import '../../../../core/utils/location_service.dart';
 import '../../../../core/widgets/glass_container.dart';
 import '../../../../core/widgets/islamic/islamic_decorations.dart';
 import '../../../../core/widgets/responsive_layout.dart';
-import '../../../reminder/data/services/notification_service.dart';
 import '../../../settings/presentation/settings_provider.dart';
 import '../../../prayer_schedule/presentation/location_provider.dart';
 
@@ -20,8 +19,6 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
-  bool _notificationPermissionGranted = false;
-
   @override
   void dispose() {
     _pageController.dispose();
@@ -43,42 +40,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
-    }
-  }
-
-  Future<void> _requestNotificationPermission() async {
-    try {
-      final granted = await NotificationService.requestPermission();
-
-      if (!mounted) return;
-
-      setState(() {
-        _notificationPermissionGranted = granted;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            granted
-                ? 'Izin notifikasi diberikan!'
-                : 'Izin ditolak. Anda dapat mengaktifkannya nanti di Pengaturan.',
-          ),
-          backgroundColor: granted
-              ? const Color(0xFF0E4D31)
-              : const Color(0xFF241A12),
-        ),
-      );
-
-      // Delay slightly and go to next slide
-      await Future.delayed(const Duration(milliseconds: 1000));
-      if (!mounted) return;
-      _nextPage();
-    } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        _notificationPermissionGranted = false;
-      });
-      _nextPage();
     }
   }
 
@@ -119,10 +80,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       style: const TextStyle(color: Color(0xFF241A12)),
                       decoration: InputDecoration(
                         hintText: 'Cari Kota...',
-                        hintStyle: const TextStyle(color: Color(0xFF756455)),
+                        hintStyle: const TextStyle(color: Color(0xFF5D4E47)),
                         prefixIcon: const Icon(
                           Icons.search,
-                          color: Color(0xFF756455),
+                          color: Color(0xFF5D4E47),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderSide: const BorderSide(
@@ -156,7 +117,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                             ),
                             subtitle: Text(
                               city.country,
-                              style: const TextStyle(color: Color(0xFF756455)),
+                              style: const TextStyle(color: Color(0xFF5D4E47)),
                             ),
                             trailing: const Icon(
                               Icons.arrow_forward_ios,
@@ -190,7 +151,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   onPressed: () => Navigator.pop(context),
                   child: const Text(
                     'Batal',
-                    style: TextStyle(color: Color(0xFF756455)),
+                    style: TextStyle(color: Color(0xFF5D4E47)),
                   ),
                 ),
               ],
@@ -319,7 +280,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                               child: const Text(
                                 'KEMBALI',
                                 style: TextStyle(
-                                  color: Color(0xFF756455),
+                                  color: Color(0xFF5D4E47),
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: 1.2,
                                 ),
@@ -425,10 +386,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               ),
               const SizedBox(height: 16),
               const Text(
-                'Solatify membantu Anda menjaga konsistensi salat 5 waktu tepat waktu dengan notifikasi adzan otomatis yang berjalan offline.',
+                "Solatify membantu Anda mengelola jadwal salat, membaca Al-Qur'an, mencari kiblat, dan menemukan masjid terdekat.",
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Color(0xFF756455),
+                  color: Color(0xFF5D4E47),
                   fontSize: 16,
                   height: 1.5,
                 ),
@@ -472,7 +433,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 'Untuk menghitung jadwal salat dan menentukan arah kiblat yang akurat, izinkan akses lokasi Anda.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Color(0xFF756455),
+                  color: Color(0xFF5D4E47),
                   fontSize: 15,
                   height: 1.5,
                 ),
@@ -554,10 +515,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               ),
               const SizedBox(height: 12),
               const Text(
-                'Solatify akan mengirimkan pengingat tepat waktu masuk salat dan memutar adzan pilihan Anda.',
+                'Aktifkan pengaturan preferensi Anda sesuai kebutuhan.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Color(0xFF756455),
+                  color: Color(0xFF5D4E47),
                   fontSize: 15,
                   height: 1.5,
                 ),
@@ -573,7 +534,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),
-                onPressed: _requestNotificationPermission,
+                onPressed: _nextPage,
                 icon: const Icon(Icons.check_circle_outline),
                 label: const Text(
                   'Izinkan Notifikasi',
@@ -585,7 +546,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 onPressed: _nextPage,
                 child: const Text(
                   'Lewati dahulu',
-                  style: TextStyle(color: Color(0xFF756455)),
+                  style: TextStyle(color: Color(0xFF5D4E47)),
                 ),
               ),
             ],
@@ -643,17 +604,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     _buildSummaryRow(
                       'Koordinat:',
                       '${location.latitude.toStringAsFixed(4)}, ${location.longitude.toStringAsFixed(4)}',
-                      const Color(0xFF756455),
+                      Color(0xFF5D4E47),
                     ),
                     const Divider(color: Color(0xFFCFE7D5), height: 24),
                     _buildSummaryRow(
-                      'Pengingat Adzan:',
-                      _notificationPermissionGranted
-                          ? 'Aktif'
-                          : 'Nonaktif (Belum Diizinkan)',
-                      _notificationPermissionGranted
-                          ? const Color(0xFF0E4D31)
-                          : const Color(0xFFC78A4C),
+                      'Metode Kalkulasi:',
+                      'Kemenag RI',
+                      const Color(0xFF0E4D31),
                     ),
                   ],
                 ),
@@ -686,7 +643,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(color: Color(0xFF756455))),
+        Text(label, style: const TextStyle(color: Color(0xFF5D4E47))),
         const SizedBox(width: 12),
         Expanded(
           child: Text(

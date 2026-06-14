@@ -136,7 +136,7 @@
 
 **Notifikasi & Adzan**:
 - Pengingat Salat: On/Off
-- Suara Adzan: Bip Default, Adzan Makkah, Adzan Madinah, Hening
+
 
 **Kalkulasi Jadwal**:
 - Metode Perhitungan: Kemenag (default), MWL, Egypt, Karachi, Umm Al-Qura, North America

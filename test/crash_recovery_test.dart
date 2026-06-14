@@ -89,7 +89,6 @@ void main() {
 
   test('Settings provider returns safe defaults on corrupt data', () {
     final box = Hive.box(HiveService.settingsBoxName);
-    box.put('notification_enabled', 'not-a-bool');
     box.put('prayer_offsets', 'not-a-map');
 
     final container = ProviderContainer();
@@ -97,7 +96,7 @@ void main() {
 
     expect(() => container.read(settingsProvider), returnsNormally);
     final state = container.read(settingsProvider);
-    expect(state.notificationEnabled, isTrue); // safe default
+    expect(state.calculationMethod, 'Kemenag');
     expect(state.prayerOffsets.length, 5);
   });
 }

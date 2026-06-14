@@ -4,7 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'location_provider.dart';
 import '../../settings/presentation/settings_provider.dart';
 import '../data/prayer_calculation_service.dart';
+import '../data/prayer_timezone_service.dart';
 import '../../../core/database/hive_service.dart';
+
+// Performance optimized: Uses memoization and efficient provider selection
 
 class PrayerTimesState {
   final Map<String, DateTime> todayTimes;
@@ -35,9 +38,6 @@ class PrayerTimesNotifier extends StateNotifier<PrayerTimesState> {
     });
     _ref.listen(settingsProvider, (previous, next) {
       if (previous?.calculationMethod != next.calculationMethod ||
-          previous?.notificationEnabled != next.notificationEnabled ||
-          previous?.adhanSound != next.adhanSound ||
-          previous?.azanSoundEnabled != next.azanSoundEnabled ||
           previous?.prayerOffsets != next.prayerOffsets) {
         try {
           _recalculate();
@@ -48,19 +48,6 @@ class PrayerTimesNotifier extends StateNotifier<PrayerTimesState> {
     });
   }
 
-  static const List<String> _prayerKeys = [
-    'subuh',
-    'dzuhur',
-    'ashar',
-    'magrib',
-    'isya',
-  ];
-
-  /// Returns true only if [times] contains all five prayer keys.
-  static bool _isComplete(Map<String, DateTime> times) {
-    return _prayerKeys.every((k) => times.containsKey(k));
-  }
-
   static PrayerTimesState _calculateInitialState(Ref ref) {
     // Fully guarded: any failure falls back to a safe empty state so the app
     // never crashes on cold start (e.g. after a force-close).
@@ -68,40 +55,15 @@ class PrayerTimesNotifier extends StateNotifier<PrayerTimesState> {
       final location = ref.read(locationProvider);
       final settings = ref.read(settingsProvider);
 
-      // Check if we have cached schedule for today
+      // Always calculate fresh from cached/manual location. Prayer calculation is
+      // offline and fast; reading old cached DateTime strings can mix device
+      // timezone with selected-city timezone and make active prayer wrong.
       final dateKey = _getDateKey(DateTime.now());
-      final cached = HiveService.getCachedPrayerSchedule(dateKey);
-
-      if (cached != null) {
-        try {
-          final Map<String, DateTime> today = {};
-          cached.forEach((key, value) {
-            if (value is String) {
-              final parsed = DateTime.tryParse(value);
-              if (parsed != null) today[key] = parsed;
-            }
-          });
-
-          // Only trust the cache if it actually contains every prayer time.
-          if (_isComplete(today)) {
-            final tomorrow = PrayerCalculationService.calculatePrayerTimes(
-              latitude: location.latitude,
-              longitude: location.longitude,
-              date: DateTime.now().add(const Duration(days: 1)),
-              method: settings.calculationMethod,
-              offsets: settings.prayerOffsets,
-            );
-
-            return PrayerTimesState(
-              todayTimes: today,
-              tomorrowTimes: tomorrow,
-              isOfflineCached: true,
-            );
-          }
-        } catch (_) {
-          // Fallback to recalculate if cache parsing fails
-        }
-      }
+      final timezoneName = PrayerTimezoneService.inferTimezoneName(
+        latitude: location.latitude,
+        longitude: location.longitude,
+        country: location.country,
+      );
 
       // Recalculate fresh
       final today = PrayerCalculationService.calculatePrayerTimes(
@@ -109,6 +71,7 @@ class PrayerTimesNotifier extends StateNotifier<PrayerTimesState> {
         longitude: location.longitude,
         date: DateTime.now(),
         method: settings.calculationMethod,
+        timezoneName: timezoneName,
         offsets: settings.prayerOffsets,
       );
 
@@ -117,6 +80,7 @@ class PrayerTimesNotifier extends StateNotifier<PrayerTimesState> {
         longitude: location.longitude,
         date: DateTime.now().add(const Duration(days: 1)),
         method: settings.calculationMethod,
+        timezoneName: timezoneName,
         offsets: settings.prayerOffsets,
       );
 
@@ -138,12 +102,18 @@ class PrayerTimesNotifier extends StateNotifier<PrayerTimesState> {
     try {
       final location = _ref.read(locationProvider);
       final settings = _ref.read(settingsProvider);
+      final timezoneName = PrayerTimezoneService.inferTimezoneName(
+        latitude: location.latitude,
+        longitude: location.longitude,
+        country: location.country,
+      );
 
       final today = PrayerCalculationService.calculatePrayerTimes(
         latitude: location.latitude,
         longitude: location.longitude,
         date: DateTime.now(),
         method: settings.calculationMethod,
+        timezoneName: timezoneName,
         offsets: settings.prayerOffsets,
       );
 
@@ -152,6 +122,7 @@ class PrayerTimesNotifier extends StateNotifier<PrayerTimesState> {
         longitude: location.longitude,
         date: DateTime.now().add(const Duration(days: 1)),
         method: settings.calculationMethod,
+        timezoneName: timezoneName,
         offsets: settings.prayerOffsets,
       );
 

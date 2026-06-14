@@ -193,7 +193,7 @@ class GetStartedPageView extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? const Color(0xFFF3FBF6) : const Color(0xFF241A12);
-    final textMuted = isDark ? const Color(0xFFC8B8A8) : const Color(0xFF6E5B4B);
+    final textMuted = isDark ? const Color(0xFFC8B8A8) : const Color(0xFF5D4E47);
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,

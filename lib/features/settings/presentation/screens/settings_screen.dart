@@ -4,8 +4,6 @@ import 'package:flutter/services.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/glass_container.dart';
 import '../../../../core/widgets/responsive_layout.dart';
-import '../../../reminder/data/services/azan_audio_service.dart';
-import '../../../reminder/data/services/notification_service.dart';
 import '../settings_provider.dart';
 
 enum PrayerOffsetType { subuh, dzuhur, ashar, magrib, isya }
@@ -57,7 +55,7 @@ class SettingsScreen extends ConsumerWidget {
     final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final dialogBg = isDarkTheme ? const Color(0xFF2A1B12) : Colors.white;
     final textColor = isDarkTheme ? Colors.white : const Color(0xFF241A12);
-    final textMuted = isDarkTheme ? Colors.white : const Color(0xFF6E5B4B);
+    final textMuted = isDarkTheme ? Colors.white : const Color(0xFF5D4E47);
     final primaryColor = isDarkTheme
         ? const Color(0xFFC78A4C)
         : const Color(0xFF0E4D31);
@@ -201,7 +199,7 @@ class SettingsScreen extends ConsumerWidget {
     final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final dialogBg = isDarkTheme ? const Color(0xFF2A1B12) : Colors.white;
     final textColor = isDarkTheme ? Colors.white : const Color(0xFF241A12);
-    final textMuted = isDarkTheme ? Colors.white : const Color(0xFF6E5B4B);
+    final textMuted = isDarkTheme ? Colors.white : const Color(0xFF5D4E47);
 
     showDialog(
       context: context,
@@ -247,69 +245,6 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  void _showAdhanSoundDialog(
-    BuildContext context,
-    WidgetRef ref,
-    String currentSound,
-  ) {
-    final l = AppLocalizations.of(context);
-    final sounds = {
-      'default': l.defaultBeep,
-      'adhan_makkah': l.adhanMakkah,
-      'adhan_madinah': l.adhanMadinah,
-      'silent': l.silent,
-    };
-
-    final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
-    final dialogBg = isDarkTheme ? const Color(0xFF2A1B12) : Colors.white;
-    final textColor = isDarkTheme ? Colors.white : const Color(0xFF241A12);
-    final textMuted = isDarkTheme ? Colors.white : const Color(0xFF6E5B4B);
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: dialogBg,
-          title: Text(
-            l.adhanSoundDialogTitle,
-            style: TextStyle(color: textColor),
-          ),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: RadioGroup<String>(
-              groupValue: currentSound,
-              onChanged: (val) {
-                if (val != null) {
-                  ref.read(settingsProvider.notifier).updateAdhanSound(val);
-                  Navigator.pop(context);
-                }
-              },
-              child: ListView(
-                shrinkWrap: true,
-                children: sounds.entries.map((entry) {
-                  return RadioListTile<String>(
-                    activeColor: const Color(0xFF0E4D31),
-                    title: Text(
-                      entry.value,
-                      style: TextStyle(color: textColor),
-                    ),
-                    value: entry.key,
-                  );
-                }).toList(),
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(l.cancel, style: TextStyle(color: textMuted)),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   void _showLanguageDialog(
     BuildContext context,
     WidgetRef ref,
@@ -321,7 +256,7 @@ class SettingsScreen extends ConsumerWidget {
     final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final dialogBg = isDarkTheme ? const Color(0xFF2A1B12) : Colors.white;
     final textColor = isDarkTheme ? Colors.white : const Color(0xFF241A12);
-    final textMuted = isDarkTheme ? Colors.white : const Color(0xFF6E5B4B);
+    final textMuted = isDarkTheme ? Colors.white : const Color(0xFF5D4E47);
 
     showDialog(
       context: context,
@@ -373,12 +308,11 @@ class SettingsScreen extends ConsumerWidget {
     final String displayMethod = l.calculationMethodLabel(
       settings.calculationMethod,
     );
-    final String displaySound = l.adhanSoundLabel(settings.adhanSound);
     final String displayLang = l.languageLabel(settings.language);
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : const Color(0xFF241A12);
-    final textSecondary = isDark ? Colors.white60 : const Color(0xFF7A6A5D);
+    final textSecondary = isDark ? const Color(0xFFB8A898) : const Color(0xFF5D4E47);
     final dividerColor = isDark ? Colors.white12 : Colors.black12;
 
     return Scaffold(
@@ -391,205 +325,6 @@ class SettingsScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Section 1: Reminder & Audio
-                _buildSectionHeader(context, l.reminderAndAdhan),
-                const SizedBox(height: 12),
-                GlassContainer(
-                  blur: 15,
-                  opacity: isDark ? 0.03 : 0.015,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  child: Column(
-                    children: [
-                      // Global notifications switch
-                      SwitchListTile(
-                        activeThumbColor: const Color(0xFF0E4D31),
-                        title: Text(
-                          l.prayerReminder,
-                          style: TextStyle(color: textColor, fontSize: 15),
-                        ),
-                        subtitle: Text(
-                          l.prayerReminderSubtitle,
-                          style: TextStyle(color: textSecondary, fontSize: 11),
-                        ),
-                        value: settings.notificationEnabled,
-                        onChanged: (val) async {
-                          var enabled = val;
-                          if (val) {
-                            enabled =
-                                await NotificationService.requestPermission();
-                            if (!context.mounted) return;
-                            if (!enabled) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    l.isEnglish
-                                        ? 'Notification permission is required for prayer reminders.'
-                                        : 'Izin notifikasi diperlukan agar pengingat waktu salat muncul.',
-                                  ),
-                                ),
-                              );
-                            }
-                          }
-                          ref
-                              .read(settingsProvider.notifier)
-                              .updateNotificationEnabled(enabled);
-                        },
-                      ),
-                      Divider(color: dividerColor, height: 16),
-                      // Audio selection
-                      ListTile(
-                        title: Text(
-                          l.adhanSound,
-                          style: TextStyle(color: textColor, fontSize: 15),
-                        ),
-                        subtitle: Text(
-                          displaySound,
-                          style: const TextStyle(
-                            color: Color(0xFF0E4D31),
-                            fontSize: 12,
-                          ),
-                        ),
-                        trailing: Icon(
-                          Icons.chevron_right,
-                          color: textSecondary,
-                        ),
-                        onTap: () => _showAdhanSoundDialog(
-                          context,
-                          ref,
-                          settings.adhanSound,
-                        ),
-                      ),
-                      Divider(color: dividerColor, height: 16),
-                      ListTile(
-                        leading: Icon(Icons.volume_up, color: textSecondary),
-                        title: Text(
-                          'Preview Suara Adzan',
-                          style: TextStyle(color: textColor, fontSize: 15),
-                        ),
-                        subtitle: Text(
-                          'Putar langsung untuk memastikan pilihan suara berbeda',
-                          style: TextStyle(color: textSecondary, fontSize: 11),
-                        ),
-                        onTap: () async {
-                          try {
-                            await AzanAudioService.stopAzan();
-                            await AzanAudioService.playAzan(
-                              enabled: true,
-                              adhanSound: settings.adhanSound,
-                            );
-                          } catch (error) {
-                            if (!context.mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Gagal preview adzan: $error'),
-                              ),
-                            );
-                          }
-                        },
-                      ),
-                      Divider(color: dividerColor, height: 16),
-                      SwitchListTile(
-                        activeThumbColor: const Color(0xFF0E4D31),
-                        title: Text(
-                          'Putar Azan Otomatis',
-                          style: TextStyle(color: textColor, fontSize: 15),
-                        ),
-                        subtitle: Text(
-                          'Putar suara azan saat masuk waktu salat',
-                          style: TextStyle(color: textSecondary, fontSize: 11),
-                        ),
-                        value: settings.azanSoundEnabled,
-                        onChanged: (val) async {
-                          if (val && !settings.notificationEnabled) {
-                            final granted =
-                                await NotificationService.requestPermission();
-                            if (!context.mounted) return;
-                            await ref
-                                .read(settingsProvider.notifier)
-                                .updateNotificationEnabled(granted);
-                            if (!granted) return;
-                          }
-                          ref
-                              .read(settingsProvider.notifier)
-                              .updateAzanSoundEnabled(val);
-                        },
-                      ),
-                      Divider(color: dividerColor, height: 16),
-                      SwitchListTile(
-                        activeThumbColor: const Color(0xFF0E4D31),
-                        title: Text(
-                          'Alarm Adzan Full',
-                          style: TextStyle(color: textColor, fontSize: 15),
-                        ),
-                        subtitle: Text(
-                          'Memutar adzan full saat app aktif. Saat lock screen, iOS membatasi audio panjang.',
-                          style: TextStyle(color: textSecondary, fontSize: 11),
-                        ),
-                        value: settings.fullAdhanAlarmEnabled,
-                        onChanged: (val) {
-                          ref
-                              .read(settingsProvider.notifier)
-                              .updateFullAdhanAlarmEnabled(val);
-                        },
-                      ),
-                      Divider(color: dividerColor, height: 16),
-                      ListTile(
-                        leading: Icon(
-                          Icons.notifications_active_outlined,
-                          color: textSecondary,
-                        ),
-                        title: Text(
-                          'Tes Notifikasi Adzan',
-                          style: TextStyle(color: textColor, fontSize: 15),
-                        ),
-                        subtitle: Text(
-                          'Muncul 10 detik setelah ditekan, bisa dicoba saat layar terkunci',
-                          style: TextStyle(color: textSecondary, fontSize: 11),
-                        ),
-                        onTap: () async {
-                          final granted =
-                              await NotificationService.requestPermission();
-                          if (!context.mounted) return;
-                          if (!granted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Izin notifikasi belum aktif.'),
-                              ),
-                            );
-                            return;
-                          }
-                          try {
-                            await NotificationService.scheduleTestAdhanNotification(
-                              adhanSound: settings.adhanSound,
-                              azanSoundEnabled: settings.azanSoundEnabled,
-                            );
-                          } catch (error) {
-                            if (!context.mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Gagal menjadwalkan tes: $error'),
-                              ),
-                            );
-                            return;
-                          }
-                          if (!context.mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Tes adzan dijadwalkan 10 detik lagi.',
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-
                 // Section 2: Calculation Settings
                 _buildSectionHeader(context, l.calculationSchedule),
                 const SizedBox(height: 12),
@@ -782,7 +517,7 @@ class SettingsScreen extends ConsumerWidget {
 
   Widget _buildSectionHeader(BuildContext context, String title) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textSecondary = isDark ? Colors.white60 : const Color(0xFF7A6A5D);
+    final textSecondary = isDark ? const Color(0xFFB8A898) : const Color(0xFF5D4E47);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Text(
@@ -816,7 +551,7 @@ class SettingsScreen extends ConsumerWidget {
         : Colors.black.withValues(alpha: 0.08);
     final iconColor = isSelected
         ? Colors.black
-        : (isDark ? Colors.white70 : const Color(0xFF6E5B4B));
+        : (isDark ? const Color(0xFFC8B8A8) : const Color(0xFF5D4E47));
     return GestureDetector(
       onTap: () => ref.read(settingsProvider.notifier).updateTheme(mode),
       child: AnimatedContainer(

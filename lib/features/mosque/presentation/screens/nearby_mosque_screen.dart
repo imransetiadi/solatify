@@ -342,7 +342,7 @@ out center tags;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primary = Theme.of(context).colorScheme.secondary;
     final textColor = isDark ? Colors.white : const Color(0xFF241A12);
-    final mutedColor = isDark ? Colors.white60 : const Color(0xFF6E5B4B);
+    final mutedColor = isDark ? const Color(0xFFB8A898) : const Color(0xFF5D4E47);
     final backgroundColor = isDark
         ? const Color(0xFF082E1D)
         : const Color(0xFFF3FBF6);

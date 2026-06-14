@@ -20,9 +20,7 @@
 - [ ] ✅ Prayer time utilities created (prayer_time_utilities.dart)
 - [ ] ✅ Error handler & logging created (prayer_time_error_handler.dart)
 - [ ] ✅ Prayer display widget created (prayer_time_display_widget.dart)
-- [ ] ✅ Azan audio service created (azan_audio_service.dart)
 - [ ] ✅ Notification scheduler provider created
-- [ ] ✅ Settings provider updated with azanSoundEnabled
 - [ ] ✅ pubspec.yaml updated with audio assets path
 
 ## Pre-Deployment Steps (Run on Your Mac)
@@ -71,7 +69,6 @@ flutter run --release -d <YOUR_DEVICE_ID>
 - [ ] ✅ Countdown accuracy (check against system clock)
 - [ ] ✅ Settings screen opens and toggles work
 - [ ] ✅ Notification permissions can be granted
-- [ ] ✅ Azan sound toggle appears in settings
 - [ ] ✅ Prayer reminders toggle appears in settings
 
 ### Advanced Testing:
@@ -121,7 +118,6 @@ cd ..
 - Subsequent builds are faster
 - Release build is optimized for production
 - All refactoring improvements are included
-- Azan audio file requirement: Place MP3 at `assets/audio/azan.mp3`
 
 ## Version Info
 - **App Version:** 1.0.0+1

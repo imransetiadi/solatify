@@ -1,6 +1,10 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../prayer_schedule/presentation/prayer_times_provider.dart';
+import 'package:timezone/timezone.dart' as tz;
+import 'package:timezone/data/latest_all.dart' as tzdata;
+import '../../../prayer_schedule/presentation/prayer_times_provider.dart';
+import '../../../prayer_schedule/presentation/location_provider.dart';
+import '../../../prayer_schedule/data/prayer_timezone_service.dart';
 
 class CountdownState {
   final String activePrayerName;
@@ -57,15 +61,24 @@ class CountdownNotifier extends StateNotifier<CountdownState> {
 
     if (!hasAllToday || !hasTomorrowSubuh) return;
 
-    final now = DateTime.now();
+    tzdata.initializeTimeZones();
+    final selectedLocation = _ref.read(locationProvider);
+    final timezoneName = PrayerTimezoneService.inferTimezoneName(
+      latitude: selectedLocation.latitude,
+      longitude: selectedLocation.longitude,
+      country: selectedLocation.country,
+    );
+    final prayerLocation = tz.getLocation(timezoneName);
 
-    // Extract prayer times
-    final subuh = today['subuh']!; // Safe now due to check above
+    // Get current time in the selected city's timezone, not the device timezone.
+    final now = tz.TZDateTime.now(prayerLocation);
+
+    // Extract prayer times (already TZDateTime)
+    final subuh = today['subuh']!;
     final dzuhur = today['dzuhur']!;
     final ashar = today['ashar']!;
     final magrib = today['magrib']!;
     final isya = today['isya']!;
-
     final esokSubuh = tomorrow['subuh']!;
 
     String activeName = '';

@@ -22,11 +22,11 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
       ? Colors.white
       : const Color(0xFF241A12);
   Color get _textSecondary => Theme.of(context).brightness == Brightness.dark
-      ? Colors.white60
-      : const Color(0xFF7A6A5D);
+      ? const Color(0xFFB8A898)
+      : const Color(0xFF5D4E47);
   Color get _textHint => Theme.of(context).brightness == Brightness.dark
-      ? Colors.white38
-      : const Color(0xFF7A6A5D);
+      ? const Color(0xFF8E837D)
+      : const Color(0xFF5D4E47);
   Color get _cardBorderColor => Theme.of(context).brightness == Brightness.dark
       ? Colors.white.withValues(alpha: 0.08)
       : Colors.black.withValues(alpha: 0.08);

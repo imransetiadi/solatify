@@ -47,7 +47,7 @@ class IslamicContentScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final textColor = isDark ? const Color(0xFFF3FBF6) : const Color(0xFF241A12);
-    final mutedColor = isDark ? const Color(0xFFC8B8A8) : const Color(0xFF6E5B4B);
+    final mutedColor = isDark ? const Color(0xFFC8B8A8) : const Color(0xFF5D4E47);
     final primaryColor = isDark ? const Color(0xFFC78A4C) : const Color(0xFF0E4D31);
     final redAccent = theme.colorScheme.tertiary;
     final surfaceColor = isDark ? const Color(0xFF241A14) : Colors.white;
