@@ -1,140 +1,75 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:solatify/features/prayer_schedule/data/datasources/prayer_times_local_data_source.dart';
+import 'package:solatify/features/prayer_schedule/data/repositories/prayer_times_repository_impl.dart';
+import 'package:solatify/features/prayer_schedule/domain/entities/prayer_item_entity.dart';
+import 'package:solatify/features/prayer_schedule/domain/entities/prayer_times_state_entity.dart';
+import 'package:solatify/features/prayer_schedule/domain/repositories/prayer_times_repository.dart';
+import 'package:solatify/features/prayer_schedule/domain/usecases/calculate_prayer_times.dart';
+
+import '../../settings/presentation/providers/settings_provider.dart';
 import 'location_provider.dart';
-import '../../settings/presentation/settings_provider.dart';
-import '../data/prayer_calculation_service.dart';
-import '../data/prayer_timezone_service.dart';
-import '../../../core/database/hive_service.dart';
 
-// Performance optimized: Uses memoization and efficient provider selection
+// Data Source
+final prayerTimesLocalDataSourceProvider = Provider<PrayerTimesLocalDataSource>((ref) {
+  return const PrayerTimesLocalDataSourceImpl();
+});
 
-class PrayerTimesState {
-  final Map<String, DateTime> todayTimes;
-  final Map<String, DateTime> tomorrowTimes;
-  final bool isOfflineCached;
+// Repository
+final prayerTimesRepositoryProvider = Provider<PrayerTimesRepository>((ref) {
+  final localDataSource = ref.watch(prayerTimesLocalDataSourceProvider);
+  return PrayerTimesRepositoryImpl(localDataSource: localDataSource);
+});
 
-  PrayerTimesState({
-    required this.todayTimes,
-    required this.tomorrowTimes,
-    this.isOfflineCached = false,
-  });
-}
+// UseCase
+final calculatePrayerTimesUseCaseProvider = Provider<CalculatePrayerTimes>((ref) {
+  final repository = ref.watch(prayerTimesRepositoryProvider);
+  return CalculatePrayerTimes(repository);
+});
 
-class PrayerTimesNotifier extends StateNotifier<PrayerTimesState> {
+class PrayerTimesNotifier extends StateNotifier<PrayerTimesStateEntity> {
+  PrayerTimesNotifier(this._ref, this._calculatePrayerTimes)
+      : super(const PrayerTimesStateEntity(todayTimes: {}, tomorrowTimes: {})) {
+    _init();
+  }
+
   final Ref _ref;
+  final CalculatePrayerTimes _calculatePrayerTimes;
   Timer? _dateRefreshTimer;
 
-  PrayerTimesNotifier(this._ref) : super(_calculateInitialState(_ref)) {
-    _scheduleDateRefresh();
+  Future<void> _init() async {
+    await _recalculate();
+
+    // Safety check if the provider is still mounted before listening
+    if (!mounted) return;
 
     // Listen to changes in location and settings to recalculate
     _ref.listen(locationProvider, (previous, next) {
-      try {
-        _recalculate();
-      } catch (e) {
-        // Silently ignore recalculation errors on location change
-      }
+      if (mounted) _recalculate();
     });
     _ref.listen(settingsProvider, (previous, next) {
-      if (previous?.calculationMethod != next.calculationMethod ||
-          previous?.prayerOffsets != next.prayerOffsets) {
-        try {
-          _recalculate();
-        } catch (e) {
-          // Silently ignore recalculation errors on settings change
-        }
+      if (mounted && (previous?.calculationMethod != next.calculationMethod ||
+          previous?.prayerOffsets != next.prayerOffsets)) {
+        _recalculate();
       }
     });
   }
 
-  static PrayerTimesState _calculateInitialState(Ref ref) {
-    // Fully guarded: any failure falls back to a safe empty state so the app
-    // never crashes on cold start (e.g. after a force-close).
-    try {
-      final location = ref.read(locationProvider);
-      final settings = ref.read(settingsProvider);
-
-      // Always calculate fresh from cached/manual location. Prayer calculation is
-      // offline and fast; reading old cached DateTime strings can mix device
-      // timezone with selected-city timezone and make active prayer wrong.
-      final dateKey = _getDateKey(DateTime.now());
-      final timezoneName = PrayerTimezoneService.inferTimezoneName(
-        latitude: location.latitude,
-        longitude: location.longitude,
-        country: location.country,
-      );
-
-      // Recalculate fresh
-      final today = PrayerCalculationService.calculatePrayerTimes(
-        latitude: location.latitude,
-        longitude: location.longitude,
-        date: DateTime.now(),
-        method: settings.calculationMethod,
-        timezoneName: timezoneName,
-        offsets: settings.prayerOffsets,
-      );
-
-      final tomorrow = PrayerCalculationService.calculatePrayerTimes(
-        latitude: location.latitude,
-        longitude: location.longitude,
-        date: DateTime.now().add(const Duration(days: 1)),
-        method: settings.calculationMethod,
-        timezoneName: timezoneName,
-        offsets: settings.prayerOffsets,
-      );
-
-      // Save today's calculation to cache asynchronously
-      _cacheSchedule(dateKey, today);
-
-      return PrayerTimesState(
-        todayTimes: today,
-        tomorrowTimes: tomorrow,
-        isOfflineCached: false,
-      );
-    } catch (e) {
-      // Last-resort safe state — UI handles empty maps gracefully.
-      return PrayerTimesState(todayTimes: {}, tomorrowTimes: {});
-    }
-  }
-
-  void _recalculate() {
+  Future<void> _recalculate() async {
     try {
       final location = _ref.read(locationProvider);
       final settings = _ref.read(settingsProvider);
-      final timezoneName = PrayerTimezoneService.inferTimezoneName(
+
+      final newState = await _calculatePrayerTimes.execute(
         latitude: location.latitude,
         longitude: location.longitude,
         country: location.country,
-      );
-
-      final today = PrayerCalculationService.calculatePrayerTimes(
-        latitude: location.latitude,
-        longitude: location.longitude,
-        date: DateTime.now(),
         method: settings.calculationMethod,
-        timezoneName: timezoneName,
         offsets: settings.prayerOffsets,
       );
 
-      final tomorrow = PrayerCalculationService.calculatePrayerTimes(
-        latitude: location.latitude,
-        longitude: location.longitude,
-        date: DateTime.now().add(const Duration(days: 1)),
-        method: settings.calculationMethod,
-        timezoneName: timezoneName,
-        offsets: settings.prayerOffsets,
-      );
-
-      final dateKey = _getDateKey(DateTime.now());
-      _cacheSchedule(dateKey, today);
-
-      state = PrayerTimesState(
-        todayTimes: today,
-        tomorrowTimes: tomorrow,
-        isOfflineCached: false,
-      );
-
+      state = newState;
       _scheduleDateRefresh();
     } catch (e) {
       // Keep previous state if recalculation fails
@@ -153,35 +88,15 @@ class PrayerTimesNotifier extends StateNotifier<PrayerTimesState> {
     _dateRefreshTimer?.cancel();
     super.dispose();
   }
-
-  static String _getDateKey(DateTime date) {
-    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-  }
-
-  static void _cacheSchedule(String dateKey, Map<String, DateTime> times) {
-    final Map<String, String> cacheData = {};
-    times.forEach((key, value) {
-      cacheData[key] = value.toIso8601String();
-    });
-    HiveService.cachePrayerSchedules(dateKey, cacheData);
-  }
 }
 
 final prayerTimesProvider =
-    StateNotifierProvider<PrayerTimesNotifier, PrayerTimesState>((ref) {
-      return PrayerTimesNotifier(ref);
-    });
+    StateNotifierProvider<PrayerTimesNotifier, PrayerTimesStateEntity>((ref) {
+  final calculateUseCase = ref.watch(calculatePrayerTimesUseCaseProvider);
+  return PrayerTimesNotifier(ref, calculateUseCase);
+});
 
-// Helper model to represent a single prayer entry in list views
-class PrayerItem {
-  final String name;
-  final DateTime time;
-  final String key; // subuh, dzuhur, ashar, magrib, isya
-
-  PrayerItem({required this.name, required this.time, required this.key});
-}
-
-final prayerListProvider = Provider<List<PrayerItem>>((ref) {
+final prayerListProvider = Provider<List<PrayerItemEntity>>((ref) {
   final timesState = ref.watch(prayerTimesProvider);
   final times = timesState.todayTimes;
 
@@ -195,13 +110,11 @@ final prayerListProvider = Provider<List<PrayerItem>>((ref) {
     ['Isya', 'isya'],
   ];
 
-  // If any required time is missing (e.g. partial cache after a force-close),
-  // return empty rather than force-unwrapping and crashing.
   final hasAll = config.every((c) => times[c[1]] != null);
   if (!hasAll) return [];
 
   return [
     for (final c in config)
-      PrayerItem(name: c[0], time: times[c[1]]!, key: c[1]),
+      PrayerItemEntity(name: c[0], time: times[c[1]]!, key: c[1]),
   ];
 });

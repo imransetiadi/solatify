@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/widgets/responsive_layout.dart';
+
 import '../../../../core/widgets/islamic/islamic_decorations.dart';
+import '../../../../core/widgets/responsive_layout.dart';
 import '../providers/dhikr_provider.dart';
 
 class DhikrScreen extends ConsumerWidget {
@@ -10,16 +11,27 @@ class DhikrScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? const Color(0xFFF3FBF6) : const Color(0xFF241A12);
-    final primaryColor = isDark ? const Color(0xFFC78A4C) : const Color(0xFF0E4D31);
+    final textColor = isDark
+        ? const Color(0xFFF3FBF6)
+        : const Color(0xFF241A12);
+    final primaryColor = isDark
+        ? const Color(0xFFC78A4C)
+        : const Color(0xFF0E4D31);
 
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        backgroundColor: isDark ? const Color(0xFF082E1D) : const Color(0xFFF3FBF6),
+        backgroundColor: isDark
+            ? const Color(0xFF082E1D)
+            : const Color(0xFFF3FBF6),
         appBar: AppBar(
-          backgroundColor: isDark ? const Color(0xFF082E1D) : const Color(0xFFF3FBF6),
-          title: Text('Dzikir Pagi & Petang', style: TextStyle(color: textColor, fontWeight: FontWeight.bold)),
+          backgroundColor: isDark
+              ? const Color(0xFF082E1D)
+              : const Color(0xFFF3FBF6),
+          title: Text(
+            'Dzikir Pagi & Petang',
+            style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
+          ),
           centerTitle: true,
           bottom: TabBar(
             labelColor: primaryColor,
@@ -33,7 +45,12 @@ class DhikrScreen extends ConsumerWidget {
         ),
         body: Stack(
           children: [
-            Positioned.fill(child: IslamicGeometricPattern(opacity: 0.03, color: primaryColor)),
+            Positioned.fill(
+              child: IslamicGeometricPattern(
+                opacity: 0.03,
+                color: primaryColor,
+              ),
+            ),
             const TabBarView(
               children: [
                 _DhikrListView(isMorning: true),
@@ -48,15 +65,19 @@ class DhikrScreen extends ConsumerWidget {
 }
 
 class _DhikrListView extends ConsumerWidget {
-  final bool isMorning;
   const _DhikrListView({required this.isMorning});
+  final bool isMorning;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final dhikrList = ref.watch(isMorning ? morningDhikrProvider : eveningDhikrProvider);
+    final dhikrList = ref.watch(
+      isMorning ? morningDhikrProvider : eveningDhikrProvider,
+    );
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final redAccent = Theme.of(context).colorScheme.tertiary;
-    final textColor = isDark ? const Color(0xFFF3FBF6) : const Color(0xFF241A12);
+    final textColor = isDark
+        ? const Color(0xFFF3FBF6)
+        : const Color(0xFF241A12);
     final cardBg = isDark ? const Color(0xFF241A14) : Colors.white;
 
     return ResponsiveCenter(
@@ -70,7 +91,10 @@ class _DhikrListView extends ConsumerWidget {
             margin: const EdgeInsets.only(bottom: 16),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
-              side: BorderSide(color: redAccent.withValues(alpha: 0.30), width: 1),
+              side: BorderSide(
+                color: redAccent.withValues(alpha: 0.30),
+                width: 1,
+              ),
             ),
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -83,19 +107,30 @@ class _DhikrListView extends ConsumerWidget {
                       Expanded(
                         child: Text(
                           dhikr.title,
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: textColor),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: textColor,
+                          ),
                         ),
                       ),
                       if (dhikr.count > 1)
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: redAccent.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
                             'Dibaca ${dhikr.count}x',
-                            style: TextStyle(color: redAccent, fontSize: 12, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              color: redAccent,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                     ],
@@ -103,18 +138,30 @@ class _DhikrListView extends ConsumerWidget {
                   const SizedBox(height: 16),
                   Text(
                     dhikr.arabicText,
-                    style: const TextStyle(fontSize: 24, height: 1.8, fontFamily: 'Kufi'),
+                    style: const TextStyle(
+                      fontSize: 24,
+                      height: 1.8,
+                      fontFamily: 'Kufi',
+                    ),
                     textAlign: TextAlign.right,
                   ),
                   const SizedBox(height: 12),
                   Text(
                     dhikr.latinText,
-                    style: TextStyle(fontStyle: FontStyle.italic, color: textColor.withValues(alpha: 0.7), fontSize: 14),
+                    style: TextStyle(
+                      fontStyle: FontStyle.italic,
+                      color: textColor.withValues(alpha: 0.7),
+                      fontSize: 14,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   Text(
                     dhikr.meaning,
-                    style: TextStyle(color: textColor, fontSize: 14, height: 1.5),
+                    style: TextStyle(
+                      color: textColor,
+                      fontSize: 14,
+                      height: 1.5,
+                    ),
                   ),
                   if (dhikr.note.isNotEmpty) ...[
                     const SizedBox(height: 12),
@@ -123,11 +170,16 @@ class _DhikrListView extends ConsumerWidget {
                       decoration: BoxDecoration(
                         color: Colors.blue.withValues(alpha: 0.05),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.blue.withValues(alpha: 0.2)),
+                        border: Border.all(
+                          color: Colors.blue.withValues(alpha: 0.2),
+                        ),
                       ),
                       child: Text(
                         dhikr.note,
-                        style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.blueGrey,
+                        ),
                       ),
                     ),
                   ],

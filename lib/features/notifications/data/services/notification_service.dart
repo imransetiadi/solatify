@@ -1,21 +1,21 @@
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
 class NotificationService {
-  static final NotificationService _instance = NotificationService._internal();
-
-  final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
-
-  bool _initialized = false;
 
   NotificationService._internal();
 
   factory NotificationService() {
     return _instance;
   }
+  static final NotificationService _instance = NotificationService._internal();
+
+  final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+
+  bool _initialized = false;
 
   Future<void> init() async {
     if (_initialized) return;
@@ -88,21 +88,22 @@ class NotificationService {
   Future<void> requestAndroidPermissions() async {
     if (defaultTargetPlatform != TargetPlatform.android) return;
 
-    final androidImplementation =
-        _flutterLocalNotificationsPlugin
-            .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin
-            >();
+    final androidImplementation = _flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
 
     if (androidImplementation == null) return;
 
-    final notifGranted =
-        await androidImplementation.requestNotificationsPermission();
+    final notifGranted = await androidImplementation
+        .requestNotificationsPermission();
     debugPrint('Android POST_NOTIFICATIONS permission granted: $notifGranted');
 
-    final alarmGranted =
-        await androidImplementation.requestExactAlarmsPermission();
-    debugPrint('Android SCHEDULE_EXACT_ALARM permission granted: $alarmGranted');
+    final alarmGranted = await androidImplementation
+        .requestExactAlarmsPermission();
+    debugPrint(
+      'Android SCHEDULE_EXACT_ALARM permission granted: $alarmGranted',
+    );
   }
 
   /// Ensures init() has been called before any notification operation.

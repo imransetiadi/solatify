@@ -1,11 +1,7 @@
-import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
 
 class OfflineCity {
-  final String name;
-  final String country;
-  final double latitude;
-  final double longitude;
 
   const OfflineCity({
     required this.name,
@@ -13,6 +9,10 @@ class OfflineCity {
     required this.latitude,
     required this.longitude,
   });
+  final String name;
+  final String country;
+  final double latitude;
+  final double longitude;
 }
 
 class LocationService {

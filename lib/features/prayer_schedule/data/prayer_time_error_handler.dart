@@ -1,7 +1,11 @@
 import 'package:flutter/foundation.dart';
 
 class PrayerTimeErrorHandler {
-  static void logError(String message, {dynamic error, StackTrace? stackTrace}) {
+  static void logError(
+    String message, {
+    dynamic error,
+    StackTrace? stackTrace,
+  }) {
     if (kDebugMode) {
       print('🔴 Prayer Time Error: $message');
       if (error != null) print('   Error: $error');
@@ -28,9 +32,7 @@ class PrayerTimeErrorHandler {
   }
 
   /// Validates prayer times and provides detailed error messages
-  static ValidatonResult validatePrayerTimes(
-    Map<String, DateTime> prayers,
-  ) {
+  static ValidatonResult validatePrayerTimes(Map<String, DateTime> prayers) {
     try {
       // Check all prayers exist
       const required = ['subuh', 'dzuhur', 'ashar', 'magrib', 'isya'];
@@ -64,19 +66,16 @@ class PrayerTimeErrorHandler {
 
       return ValidatonResult(isValid: true);
     } catch (e) {
-      return ValidatonResult(
-        isValid: false,
-        error: 'Validation error: $e',
-      );
+      return ValidatonResult(isValid: false, error: 'Validation error: $e');
     }
   }
 }
 
 class ValidatonResult {
+  ValidatonResult({required this.isValid, this.error});
+
   final bool isValid;
   final String? error;
-
-  ValidatonResult({required this.isValid, this.error});
 
   @override
   String toString() => isValid ? 'Valid' : 'Invalid: $error';

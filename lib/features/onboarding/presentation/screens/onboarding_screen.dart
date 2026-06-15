@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_router/go_router.dart';
+import 'package:solatify/features/prayer_schedule/domain/entities/location_entity.dart';
+import 'package:solatify/features/settings/presentation/providers/settings_provider.dart';
+
 import '../../../../core/utils/location_service.dart';
 import '../../../../core/widgets/glass_container.dart';
 import '../../../../core/widgets/islamic/islamic_decorations.dart';
 import '../../../../core/widgets/responsive_layout.dart';
-import '../../../settings/presentation/settings_provider.dart';
 import '../../../prayer_schedule/presentation/location_provider.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
@@ -401,7 +403,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     );
   }
 
-  Widget _buildLocationSlide(LocationState location) {
+  Widget _buildLocationSlide(LocationEntity location) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return _OnboardingSlideFrame(
       child: Center(
@@ -556,7 +558,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     );
   }
 
-  Widget _buildSummarySlide(LocationState location) {
+  Widget _buildSummarySlide(LocationEntity location) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return _OnboardingSlideFrame(
       child: Center(
@@ -604,7 +606,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     _buildSummaryRow(
                       'Koordinat:',
                       '${location.latitude.toStringAsFixed(4)}, ${location.longitude.toStringAsFixed(4)}',
-                      Color(0xFF5D4E47),
+                      const Color(0xFF5D4E47),
                     ),
                     const Divider(color: Color(0xFFCFE7D5), height: 24),
                     _buildSummaryRow(

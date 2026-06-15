@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../../../core/widgets/glass_container.dart';
-import '../../../../core/widgets/responsive_layout.dart';
-import '../../../../core/utils/location_service.dart';
-import '../location_provider.dart';
-import '../../../settings/presentation/settings_provider.dart';
+import 'package:solatify/core/utils/location_service.dart';
+import 'package:solatify/core/widgets/glass_container.dart';
+import 'package:solatify/core/widgets/responsive_layout.dart';
+import 'package:solatify/features/settings/presentation/providers/settings_provider.dart';
+
 import '../../data/prayer_calculation_service.dart';
 import '../../data/prayer_timezone_service.dart';
+import '../location_provider.dart';
 
 class PrayerScheduleScreen extends ConsumerStatefulWidget {
   const PrayerScheduleScreen({super.key});
@@ -25,7 +26,7 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
   }
 
   void _showManualCityDialog() {
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (context) {
         String searchQuery = '';
@@ -532,7 +533,7 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
         children: [
           Row(
             children: [
-              Icon(icon, color: Color(0xFF9A6A3A), size: 20),
+              Icon(icon, color: const Color(0xFF9A6A3A), size: 20),
               const SizedBox(width: 16),
               Text(
                 name,

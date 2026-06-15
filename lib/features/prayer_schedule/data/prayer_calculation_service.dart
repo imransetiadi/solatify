@@ -1,6 +1,6 @@
 import 'package:adhan/adhan.dart';
-import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tzdata;
+import 'package:timezone/timezone.dart' as tz;
 
 /// Simple in-memory cache for prayer calculations to avoid recalculating
 class _PrayerCalcCache {

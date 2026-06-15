@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:solatify/features/settings/presentation/providers/settings_provider.dart';
+
 import '../../../../core/widgets/responsive_layout.dart';
-import '../../../settings/presentation/settings_provider.dart';
 
 class GetStartedScreen extends ConsumerStatefulWidget {
   const GetStartedScreen({super.key});
@@ -24,31 +25,36 @@ class _GetStartedScreenState extends ConsumerState<GetStartedScreen> {
     ),
     GetStartedPage(
       title: 'Jadwal Sholat Akurat',
-      description: 'Dapatkan jadwal sholat real-time dengan 6 metode kalkulasi berbeda sesuai lokasi Anda',
+      description:
+          'Dapatkan jadwal sholat real-time dengan 6 metode kalkulasi berbeda sesuai lokasi Anda',
       icon: Icons.schedule,
       color: const Color(0xFFC78A4C),
     ),
     GetStartedPage(
       title: 'Al-Qur\'an Digital',
-      description: 'Baca Al-Qur\'an 114 surah dengan terjemahan, bookmark, dan akses offline',
+      description:
+          'Baca Al-Qur\'an 114 surah dengan terjemahan, bookmark, dan akses offline',
       icon: Icons.menu_book,
       color: const Color(0xFF0E4D31),
     ),
     GetStartedPage(
       title: 'Asmaul Husna & Doa',
-      description: '99 Nama Allah dan 30+ doa harian untuk setiap waktu dan situasi',
+      description:
+          '99 Nama Allah dan 30+ doa harian untuk setiap waktu dan situasi',
       icon: Icons.favorite,
       color: const Color(0xFFC78A4C),
     ),
     GetStartedPage(
       title: 'Kalender Hijriah',
-      description: 'Pantau event Islam penting dan tanggal-tanggal bersejarah dalam Islam',
+      description:
+          'Pantau event Islam penting dan tanggal-tanggal bersejarah dalam Islam',
       icon: Icons.calendar_month,
       color: const Color(0xFF0E4D31),
     ),
     GetStartedPage(
       title: 'Arah Kiblat & Masjid',
-      description: 'Temukan arah kiblat akurat dengan kompas dan cari masjid terdekat',
+      description:
+          'Temukan arah kiblat akurat dengan kompas dan cari masjid terdekat',
       icon: Icons.explore,
       color: const Color(0xFFC78A4C),
     ),
@@ -123,7 +129,7 @@ class _GetStartedScreenState extends ConsumerState<GetStartedScreen> {
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.grey[300],
                                   ),
-                                  child: Text(
+                                  child: const Text(
                                     'Kembali',
                                     style: TextStyle(color: Colors.black87),
                                   ),
@@ -171,10 +177,6 @@ class _GetStartedScreenState extends ConsumerState<GetStartedScreen> {
 }
 
 class GetStartedPage {
-  final String title;
-  final String description;
-  final IconData icon;
-  final Color color;
 
   GetStartedPage({
     required this.title,
@@ -182,18 +184,26 @@ class GetStartedPage {
     required this.icon,
     required this.color,
   });
+  final String title;
+  final String description;
+  final IconData icon;
+  final Color color;
 }
 
 class GetStartedPageView extends StatelessWidget {
-  final GetStartedPage page;
 
   const GetStartedPageView({required this.page, super.key});
+  final GetStartedPage page;
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? const Color(0xFFF3FBF6) : const Color(0xFF241A12);
-    final textMuted = isDark ? const Color(0xFFC8B8A8) : const Color(0xFF5D4E47);
+    final textColor = isDark
+        ? const Color(0xFFF3FBF6)
+        : const Color(0xFF241A12);
+    final textMuted = isDark
+        ? const Color(0xFFC8B8A8)
+        : const Color(0xFF5D4E47);
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,

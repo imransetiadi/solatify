@@ -4,9 +4,9 @@ import '../../../core/database/hive_service.dart';
 import '../domain/models/quran_models.dart';
 
 class QuranRepository {
-  final http.Client _client;
 
   QuranRepository({http.Client? client}) : _client = client ?? http.Client();
+  final http.Client _client;
 
   static const String _baseUrl = 'https://quran-api-id.vercel.app';
 
@@ -66,7 +66,10 @@ class QuranRepository {
           // Save to Hive index box
           final cacheBox = HiveService.tryGetBox(HiveService.quranIndexBoxName);
           if (cacheBox != null) {
-            await cacheBox.put(surah.number.toString(), jsonEncode(surah.toJson()));
+            await cacheBox.put(
+              surah.number.toString(),
+              jsonEncode(surah.toJson()),
+            );
           }
         }
 

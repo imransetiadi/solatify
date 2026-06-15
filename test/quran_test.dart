@@ -1,6 +1,7 @@
 import 'dart:io';
-import 'package:flutter_test/flutter_test.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:solatify/features/quran/domain/models/quran_models.dart';
@@ -13,9 +14,9 @@ void main() {
     tempDir = Directory.systemTemp.createTempSync('quran_test_dir');
     Hive.init(tempDir.path);
     await initializeDateFormatting('id_ID', null);
-    await Hive.openBox('quran_bookmarks');
-    await Hive.openBox('quran_index');
-    await Hive.openBox('quran_surah_details');
+    await Hive.openBox<dynamic>('quran_bookmarks');
+    await Hive.openBox<dynamic>('quran_index');
+    await Hive.openBox<dynamic>('quran_surah_details');
   });
 
   tearDown(() async {
@@ -38,9 +39,9 @@ void main() {
             'number': 1,
             'arabic': 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
             'translation': 'Dengan menyebut nama Allah...',
-            'audioUrl': 'https://example.com/audio1.mp3'
-          }
-        ]
+            'audioUrl': 'https://example.com/audio1.mp3',
+          },
+        ],
       };
 
       final surah = Surah.fromJson(json);
@@ -49,7 +50,10 @@ void main() {
       expect(surah.name, 'Al-Fatihah');
       expect(surah.revelation, 'Mekah');
       expect(surah.verses?.length, 1);
-      expect(surah.verses?.first.arabic, 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ');
+      expect(
+        surah.verses?.first.arabic,
+        'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
+      );
     });
 
     test('Should parse Surah with Map verses correctly', () {
@@ -64,16 +68,19 @@ void main() {
             'number': 1,
             'arabic': 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
             'translation': 'Dengan menyebut nama Allah...',
-            'audioUrl': 'https://example.com/audio1.mp3'
-          }
-        }
+            'audioUrl': 'https://example.com/audio1.mp3',
+          },
+        },
       };
 
       final surah = Surah.fromJson(json);
 
       expect(surah.number, 1);
       expect(surah.verses?.length, 1);
-      expect(surah.verses?.first.arabic, 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ');
+      expect(
+        surah.verses?.first.arabic,
+        'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
+      );
     });
 
     test('Should serialize Surah back to JSON correctly', () {
@@ -90,7 +97,7 @@ void main() {
             latin: 'Alif Lam Mim',
             translation: 'Alif Lam Mim',
             audioUrl: 'https://audio.mp3',
-          )
+          ),
         ],
       );
 
@@ -108,17 +115,26 @@ void main() {
       addTearDown(container.dispose);
 
       final bookmarksNotifier = container.read(quranBookmarksProvider.notifier);
-      
+
       // Initially empty
-      expect(container.read(quranBookmarksProvider).bookmarkedKeys.contains('1:1'), false);
+      expect(
+        container.read(quranBookmarksProvider).bookmarkedKeys.contains('1:1'),
+        false,
+      );
 
       // Toggle bookmark for Al-Fatihah verse 1
       await bookmarksNotifier.toggleBookmark(1, 1);
-      expect(container.read(quranBookmarksProvider).bookmarkedKeys.contains('1:1'), true);
+      expect(
+        container.read(quranBookmarksProvider).bookmarkedKeys.contains('1:1'),
+        true,
+      );
 
       // Toggle bookmark again to remove it
       await bookmarksNotifier.toggleBookmark(1, 1);
-      expect(container.read(quranBookmarksProvider).bookmarkedKeys.contains('1:1'), false);
+      expect(
+        container.read(quranBookmarksProvider).bookmarkedKeys.contains('1:1'),
+        false,
+      );
     });
 
     test('Should update last read verse correctly', () async {
@@ -126,12 +142,12 @@ void main() {
       addTearDown(container.dispose);
 
       final bookmarksNotifier = container.read(quranBookmarksProvider.notifier);
-      
+
       expect(container.read(quranBookmarksProvider).lastReadSurah, null);
 
       // Set last read to Al-Kahf verse 10
       await bookmarksNotifier.setLastRead(18, 10, 'Al-Kahf');
-      
+
       final state = container.read(quranBookmarksProvider);
       expect(state.lastReadSurah, 18);
       expect(state.lastReadVerse, 10);
@@ -141,9 +157,12 @@ void main() {
 
   group('Quran Bookmark Key Parsing (crash-safety) Tests', () {
     test('parses and sorts valid keys', () {
-      final result = QuranBookmarksNotifier.parseSortedBookmarkKeys(
-        ['18:10', '1:5', '1:2', '2:255'],
-      );
+      final result = QuranBookmarksNotifier.parseSortedBookmarkKeys([
+        '18:10',
+        '1:5',
+        '1:2',
+        '2:255',
+      ]);
       expect(result, [
         [1, 2],
         [1, 5],
@@ -173,7 +192,9 @@ void main() {
     });
 
     test('tolerates whitespace around numbers', () {
-      final result = QuranBookmarksNotifier.parseSortedBookmarkKeys([' 5 : 9 ']);
+      final result = QuranBookmarksNotifier.parseSortedBookmarkKeys([
+        ' 5 : 9 ',
+      ]);
       expect(result, [
         [5, 9],
       ]);

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
-import '../../../../core/localization/app_localizations.dart';
-import '../../../../core/widgets/glass_container.dart';
-import '../../../../core/widgets/responsive_layout.dart';
-import '../settings_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:solatify/core/localization/app_localizations.dart';
+import 'package:solatify/core/widgets/glass_container.dart';
+import 'package:solatify/core/widgets/responsive_layout.dart';
+import 'package:solatify/features/settings/presentation/providers/settings_provider.dart';
 
 enum PrayerOffsetType { subuh, dzuhur, ashar, magrib, isya }
 
@@ -60,7 +60,7 @@ class SettingsScreen extends ConsumerWidget {
         ? const Color(0xFFC78A4C)
         : const Color(0xFF0E4D31);
 
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (dialogContext) {
         return StatefulBuilder(
@@ -201,7 +201,7 @@ class SettingsScreen extends ConsumerWidget {
     final textColor = isDarkTheme ? Colors.white : const Color(0xFF241A12);
     final textMuted = isDarkTheme ? Colors.white : const Color(0xFF5D4E47);
 
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (context) {
         return AlertDialog(
@@ -258,7 +258,7 @@ class SettingsScreen extends ConsumerWidget {
     final textColor = isDarkTheme ? Colors.white : const Color(0xFF241A12);
     final textMuted = isDarkTheme ? Colors.white : const Color(0xFF5D4E47);
 
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (context) {
         return AlertDialog(
@@ -312,7 +312,9 @@ class SettingsScreen extends ConsumerWidget {
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : const Color(0xFF241A12);
-    final textSecondary = isDark ? const Color(0xFFB8A898) : const Color(0xFF5D4E47);
+    final textSecondary = isDark
+        ? const Color(0xFFB8A898)
+        : const Color(0xFF5D4E47);
     final dividerColor = isDark ? Colors.white12 : Colors.black12;
 
     return Scaffold(
@@ -503,7 +505,6 @@ class SettingsScreen extends ConsumerWidget {
                           ],
                         ),
                       ),
-
                     ],
                   ),
                 ),
@@ -518,7 +519,9 @@ class SettingsScreen extends ConsumerWidget {
 
   Widget _buildSectionHeader(BuildContext context, String title) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textSecondary = isDark ? const Color(0xFFB8A898) : const Color(0xFF5D4E47);
+    final textSecondary = isDark
+        ? const Color(0xFFB8A898)
+        : const Color(0xFF5D4E47);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Text(

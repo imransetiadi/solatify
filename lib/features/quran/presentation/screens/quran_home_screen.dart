@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../domain/models/quran_models.dart';
-import '../quran_provider.dart';
+
 import '../../../../core/widgets/glass_container.dart';
 import '../../../../core/widgets/responsive_layout.dart';
+import '../../domain/models/quran_models.dart';
+import '../quran_provider.dart';
 
 class QuranHomeScreen extends ConsumerStatefulWidget {
   const QuranHomeScreen({super.key});
@@ -66,11 +67,7 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                         // Header title
                         Row(
                           children: [
-                            Icon(
-                              Icons.menu_book,
-                              color: _textColor,
-                              size: 28,
-                            ),
+                            Icon(Icons.menu_book, color: _textColor, size: 28),
                             const SizedBox(width: 10),
                             Expanded(
                               child: Text(
@@ -192,9 +189,7 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                       ),
                       child: TabBar(
                         controller: _tabController,
-                        indicatorColor: Theme.of(
-                          context,
-                        ).colorScheme.tertiary,
+                        indicatorColor: Theme.of(context).colorScheme.tertiary,
                         labelColor: _textColor,
                         unselectedLabelColor: _textSecondary,
                         labelStyle: const TextStyle(
@@ -242,11 +237,7 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              Icon(
-                Icons.bookmark_added,
-                color: _textColor,
-                size: 36,
-              ),
+              Icon(Icons.bookmark_added, color: _textColor, size: 36),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
@@ -300,11 +291,7 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.wifi_off_outlined,
-                color: _textColor,
-                size: 64,
-              ),
+              Icon(Icons.wifi_off_outlined, color: _textColor, size: 64),
               const SizedBox(height: 16),
               Text(
                 'Gagal Memuat Al-Qur\'an',
@@ -454,9 +441,9 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                       height: 40,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Color(0xFF241A12).withValues(alpha: 0.1),
+                        color: const Color(0xFF241A12).withValues(alpha: 0.1),
                         border: Border.all(
-                          color: Color(0xFF241A12).withValues(alpha: 0.3),
+                          color: const Color(0xFF241A12).withValues(alpha: 0.3),
                         ),
                       ),
                       child: Center(
@@ -604,7 +591,7 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                         Text(
                           surah.revelation.toUpperCase(),
                           style: TextStyle(
-                            color: _textSecondary, 
+                            color: _textSecondary,
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
                             letterSpacing: 0.6,
@@ -653,9 +640,9 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
 }
 
 class _SliverTabHeaderDelegate extends SliverPersistentHeaderDelegate {
-  final Widget child;
 
   _SliverTabHeaderDelegate({required this.child});
+  final Widget child;
 
   @override
   double get minExtent => 50.0;

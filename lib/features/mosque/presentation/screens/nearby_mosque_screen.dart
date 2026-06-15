@@ -156,15 +156,17 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen> {
     Object? lastError;
 
     for (final future in futures) {
-      future.then((value) {
-        if (!completer.isCompleted) completer.complete(value);
-      }).catchError((Object error) {
-        lastError = error;
-        remaining--;
-        if (remaining == 0 && !completer.isCompleted) {
-          completer.completeError(lastError ?? 'Semua permintaan gagal.');
-        }
-      });
+      future
+          .then((value) {
+            if (!completer.isCompleted) completer.complete(value);
+          })
+          .catchError((Object error) {
+            lastError = error;
+            remaining--;
+            if (remaining == 0 && !completer.isCompleted) {
+              completer.completeError(lastError ?? 'Semua permintaan gagal.');
+            }
+          });
     }
 
     return completer.future;
@@ -342,7 +344,9 @@ out center tags;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primary = Theme.of(context).colorScheme.secondary;
     final textColor = isDark ? Colors.white : const Color(0xFF241A12);
-    final mutedColor = isDark ? const Color(0xFFB8A898) : const Color(0xFF5D4E47);
+    final mutedColor = isDark
+        ? const Color(0xFFB8A898)
+        : const Color(0xFF5D4E47);
     final backgroundColor = isDark
         ? const Color(0xFF082E1D)
         : const Color(0xFFF3FBF6);

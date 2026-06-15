@@ -1,8 +1,8 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:adhan/adhan.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:solatify/features/prayer_schedule/data/prayer_calculation_service.dart';
-import 'package:solatify/features/prayer_schedule/data/prayer_timezone_service.dart';
 import 'package:solatify/features/prayer_schedule/data/prayer_time_utilities.dart';
+import 'package:solatify/features/prayer_schedule/data/prayer_timezone_service.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 

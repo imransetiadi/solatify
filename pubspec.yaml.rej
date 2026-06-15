@@ -1,0 +1,11 @@
+@@ -34,7 +34,10 @@
+   url_launcher: ^6.3.2
+   flutter_local_notifications: ^17.1.0
+   timezone: ^0.9.4
++  freezed_annotation: ^2.4.1
++  json_annotation: ^4.9.0
+ 
+ dev_dependencies:
+   flutter_test:
+   flutter_launcher_icons: ^0.13.1
++  build_runner: ^2.4.9

@@ -1,139 +1,81 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/database/hive_service.dart';
-import '../../../core/utils/location_service.dart';
+import 'package:solatify/core/utils/location_service.dart';
+import 'package:solatify/features/prayer_schedule/data/datasources/location_local_data_source.dart';
+import 'package:solatify/features/prayer_schedule/data/repositories/location_repository_impl.dart';
+import 'package:solatify/features/prayer_schedule/domain/entities/location_entity.dart';
+import 'package:solatify/features/prayer_schedule/domain/repositories/location_repository.dart';
+import 'package:solatify/features/prayer_schedule/domain/usecases/update_location.dart';
 
-class LocationState {
-  final double latitude;
-  final double longitude;
-  final String city;
-  final String country;
-  final bool isLoading;
-  final String? errorMessage;
+final locationLocalDataSourceProvider = Provider<LocationLocalDataSource>((ref) {
+  return const LocationLocalDataSourceImpl();
+});
 
-  LocationState({
-    required this.latitude,
-    required this.longitude,
-    required this.city,
-    required this.country,
-    this.isLoading = false,
-    this.errorMessage,
-  });
+final locationRepositoryProvider = Provider<LocationRepository>((ref) {
+  final localDataSource = ref.watch(locationLocalDataSourceProvider);
+  return LocationRepositoryImpl(localDataSource: localDataSource);
+});
 
-  LocationState copyWith({
-    double? latitude,
-    double? longitude,
-    String? city,
-    String? country,
-    bool? isLoading,
-    String? errorMessage,
-  }) {
-    return LocationState(
-      latitude: latitude ?? this.latitude,
-      longitude: longitude ?? this.longitude,
-      city: city ?? this.city,
-      country: country ?? this.country,
-      isLoading: isLoading ?? this.isLoading,
-      errorMessage: errorMessage,
-    );
+final updateLocationUseCaseProvider = Provider<UpdateLocation>((ref) {
+  final repository = ref.watch(locationRepositoryProvider);
+  return UpdateLocation(repository);
+});
+
+class LocationNotifier extends StateNotifier<LocationEntity> {
+  LocationNotifier(this._repository, this._updateLocation)
+      : super(const LocationEntity(
+          latitude: -6.2088,
+          longitude: 106.8456,
+          city: 'Jakarta',
+          country: 'Indonesia',
+          isLoading: true,
+        )) {
+    _init();
   }
-}
 
-class LocationNotifier extends StateNotifier<LocationState> {
-  LocationNotifier() : super(_initialState());
+  final LocationRepository _repository;
+  final UpdateLocation _updateLocation;
 
-  static LocationState _initialState() {
-    try {
-      final cached = HiveService.getCachedLocation();
-      if (cached != null && cached.isNotEmpty) {
-        try {
-          return LocationState(
-            latitude: (cached['latitude'] as num?)?.toDouble() ?? -6.2088,
-            longitude: (cached['longitude'] as num?)?.toDouble() ?? 106.8456,
-            city: cached['city']?.toString() ?? 'Jakarta',
-            country: cached['country']?.toString() ?? 'Indonesia',
-          );
-        } catch (e) {
-          debugPrint('Error parsing cached location: $e');
-        }
-      }
-    } catch (e) {
-      debugPrint('Error accessing cached location: $e');
-    }
-    // Default to Jakarta
-    return LocationState(
-      latitude: -6.2088,
-      longitude: 106.8456,
-      city: 'Jakarta',
-      country: 'Indonesia',
-    );
+  Future<void> _init() async {
+    final cached = await _repository.getCachedLocation();
+    state = cached;
   }
 
   Future<bool> updateLocationWithGPS() async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
-      // Add timeout to prevent freeze on cold start / bad GPS signal
-      final pos = await LocationService.getCurrentPosition().timeout(
-        const Duration(seconds: 15),
-        onTimeout: () => throw 'GPS Timeout: Lokasi gagal dideteksi dalam 15 detik.',
-      );
-      
-      if (pos != null) {
-        final details = await LocationService.getCityCountry(
-          pos.latitude,
-          pos.longitude,
-        );
-        final newState = LocationState(
-          latitude: pos.latitude,
-          longitude: pos.longitude,
-          city: details['city'] ?? 'Unknown City',
-          country: details['country'] ?? 'Unknown Country',
-          isLoading: false,
-        );
-        await _saveCache(newState);
-        state = newState;
-        return true;
-      } else {
-        state = state.copyWith(
-          isLoading: false,
-          errorMessage: 'Gagal mendeteksi lokasi. Pastikan izin GPS aktif.',
-        );
-        return false;
-      }
+      final newLocation = await _updateLocation.executeWithGPS();
+      state = newLocation.copyWith(isLoading: false);
+      return true;
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        errorMessage: 'Terjadi kesalahan saat mendeteksi lokasi: $e',
+        errorMessage: e.toString(),
       );
       return false;
     }
   }
 
   Future<void> setManualCity(OfflineCity city) async {
-    final newState = LocationState(
-      latitude: city.latitude,
-      longitude: city.longitude,
-      city: city.name,
-      country: city.country,
-      isLoading: false,
-    );
-    await _saveCache(newState);
-    state = newState;
-  }
-
-  Future<void> _saveCache(LocationState s) async {
-    await HiveService.cacheLocation({
-      'latitude': s.latitude,
-      'longitude': s.longitude,
-      'city': s.city,
-      'country': s.country,
-      'updated_at': DateTime.now().toIso8601String(),
-    });
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    try {
+      final newLocation = await _updateLocation.executeWithManual(
+        city.latitude,
+        city.longitude,
+        city.name,
+        city.country,
+      );
+      state = newLocation.copyWith(isLoading: false);
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: 'Gagal menyimpan lokasi manual.',
+      );
+    }
   }
 }
 
-final locationProvider = StateNotifierProvider<LocationNotifier, LocationState>(
-  (ref) {
-    return LocationNotifier();
-  },
-);
+final locationProvider = StateNotifierProvider<LocationNotifier, LocationEntity>((ref) {
+  final repository = ref.watch(locationRepositoryProvider);
+  final updateLocation = ref.watch(updateLocationUseCaseProvider);
+  return LocationNotifier(repository, updateLocation);
+});

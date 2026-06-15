@@ -16,7 +16,9 @@ Future<void> showManualLocationDialog({
         builder: (context, setDialogState) {
           final isDark = Theme.of(context).brightness == Brightness.dark;
           final textColor = isDark ? Colors.white : const Color(0xFF241A12);
-          final mutedColor = isDark ? const Color(0xFFC8B8A8) : const Color(0xFF5D4E47);
+          final mutedColor = isDark
+              ? const Color(0xFFC8B8A8)
+              : const Color(0xFF5D4E47);
           final borderColor = isDark
               ? Colors.white.withValues(alpha: 0.18)
               : Colors.black12;

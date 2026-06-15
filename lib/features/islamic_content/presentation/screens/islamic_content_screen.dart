@@ -46,12 +46,20 @@ class IslamicContentScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final textColor = isDark ? const Color(0xFFF3FBF6) : const Color(0xFF241A12);
-    final mutedColor = isDark ? const Color(0xFFC8B8A8) : const Color(0xFF5D4E47);
-    final primaryColor = isDark ? const Color(0xFFC78A4C) : const Color(0xFF0E4D31);
+    final textColor = isDark
+        ? const Color(0xFFF3FBF6)
+        : const Color(0xFF241A12);
+    final mutedColor = isDark
+        ? const Color(0xFFC8B8A8)
+        : const Color(0xFF5D4E47);
+    final primaryColor = isDark
+        ? const Color(0xFFC78A4C)
+        : const Color(0xFF0E4D31);
     final redAccent = theme.colorScheme.tertiary;
     final surfaceColor = isDark ? const Color(0xFF241A14) : Colors.white;
-    final backgroundColor = isDark ? const Color(0xFF082E1D) : const Color(0xFFF3FBF6);
+    final backgroundColor = isDark
+        ? const Color(0xFF082E1D)
+        : const Color(0xFFF3FBF6);
     final randomTip = ref.watch(randomTipProvider);
 
     return Scaffold(
@@ -76,7 +84,9 @@ class IslamicContentScreen extends ConsumerWidget {
           ),
           ResponsiveCenter(
             child: ListView(
-              padding: ResponsiveLayout.pagePadding(context).copyWith(bottom: 96),
+              padding: ResponsiveLayout.pagePadding(
+                context,
+              ).copyWith(bottom: 96),
               children: [
                 const IslamicHeaderDecoration(
                   title: 'Jelajahi Spiritual',
@@ -89,15 +99,19 @@ class IslamicContentScreen extends ConsumerWidget {
                   color: redAccent,
                 ),
                 const SizedBox(height: 12),
-                _DailyTipCard(
-                  title: randomTip.title,
-                  content: randomTip.content,
-                  reference: randomTip.reference,
-                  surfaceColor: surfaceColor,
-                  textColor: textColor,
-                  mutedColor: mutedColor,
-                  primaryColor: redAccent,
-                  onTap: () => context.go('/islamic-content/tips'),
+                randomTip.when(
+                  data: (tip) => _DailyTipCard(
+                    title: tip.title,
+                    content: tip.content,
+                    reference: tip.reference,
+                    surfaceColor: surfaceColor,
+                    textColor: textColor,
+                    mutedColor: mutedColor,
+                    primaryColor: redAccent,
+                    onTap: () => context.go('/islamic-content/tips'),
+                  ),
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (e, _) => Text('Gagal memuat tip: $e'),
                 ),
                 const SizedBox(height: 24),
                 _SectionTitle(
@@ -109,7 +123,9 @@ class IslamicContentScreen extends ConsumerWidget {
                 LayoutBuilder(
                   builder: (context, constraints) {
                     final crossAxisCount = constraints.maxWidth >= 720 ? 3 : 2;
-                    final cardHeight = constraints.maxWidth < 380 ? 170.0 : 156.0;
+                    final cardHeight = constraints.maxWidth < 380
+                        ? 170.0
+                        : 156.0;
 
                     return GridView.builder(
                       shrinkWrap: true,
@@ -144,7 +160,11 @@ class IslamicContentScreen extends ConsumerWidget {
 }
 
 class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({required this.icon, required this.title, required this.color});
+  const _SectionTitle({
+    required this.icon,
+    required this.title,
+    required this.color,
+  });
 
   final IconData icon;
   final String title;
@@ -158,7 +178,11 @@ class _SectionTitle extends StatelessWidget {
         const SizedBox(width: 8),
         Text(
           title,
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color),
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
         ),
       ],
     );
@@ -199,14 +223,25 @@ class _DailyTipCard extends StatelessWidget {
           children: [
             Text(
               title,
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: textColor),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: textColor,
+              ),
             ),
             const SizedBox(height: 8),
-            Text(content, style: TextStyle(fontSize: 14, height: 1.45, color: mutedColor)),
+            Text(
+              content,
+              style: TextStyle(fontSize: 14, height: 1.45, color: mutedColor),
+            ),
             const SizedBox(height: 10),
             Text(
               'Ref: $reference',
-              style: TextStyle(fontStyle: FontStyle.italic, color: mutedColor, fontSize: 12),
+              style: TextStyle(
+                fontStyle: FontStyle.italic,
+                color: mutedColor,
+                fontSize: 12,
+              ),
             ),
             const SizedBox(height: 8),
             Align(
@@ -271,7 +306,11 @@ class _ContentMenuCard extends StatelessWidget {
                 item.title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: textColor),
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: textColor,
+                ),
               ),
               const SizedBox(height: 4),
               Text(

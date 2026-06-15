@@ -1,21 +1,15 @@
 import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tzdata;
-import '../../../prayer_schedule/presentation/prayer_times_provider.dart';
-import '../../../prayer_schedule/presentation/location_provider.dart';
+import 'package:timezone/timezone.dart' as tz;
+
 import '../../../prayer_schedule/data/prayer_timezone_service.dart';
+import '../../../prayer_schedule/presentation/location_provider.dart';
+import '../../../prayer_schedule/presentation/prayer_times_provider.dart';
 
 class CountdownState {
-  final String activePrayerName;
-  final String nextPrayerName;
-  final String nextPrayerKey;
-  final Duration remainingDuration;
-  final String formattedTime; // HH:mm:ss
-  final DateTime nextPrayerTime;
-  final bool isAccurate;
-
   CountdownState({
     required this.activePrayerName,
     required this.nextPrayerName,
@@ -37,15 +31,23 @@ class CountdownState {
       isAccurate: false,
     );
   }
+
+  final String activePrayerName;
+  final String nextPrayerName;
+  final String nextPrayerKey;
+  final Duration remainingDuration;
+  final String formattedTime; // HH:mm:ss
+  final DateTime nextPrayerTime;
+  final bool isAccurate;
 }
 
 class ImprovedCountdownNotifier extends StateNotifier<CountdownState> {
-  final Ref _ref;
-  Timer? _timer;
-
   ImprovedCountdownNotifier(this._ref) : super(CountdownState.initial()) {
     _startTimer();
   }
+
+  final Ref _ref;
+  Timer? _timer;
 
   void _startTimer() {
     _timer?.cancel();
