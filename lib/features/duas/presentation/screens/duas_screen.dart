@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../../core/widgets/responsive_layout.dart';
-import '../../../../../core/widgets/islamic/islamic_decorations.dart';
-import '../../domain/models/dua_model.dart';
-import '../providers/duas_provider.dart';
+import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
+import 'package:solatify/core/widgets/responsive_layout.dart';
+import 'package:solatify/features/duas/domain/entities/dua.dart';
+import 'package:solatify/features/duas/presentation/providers/duas_provider.dart';
 
 class DuasScreen extends ConsumerStatefulWidget {
   const DuasScreen({super.key});
@@ -14,57 +14,56 @@ class DuasScreen extends ConsumerStatefulWidget {
 
 class _DuasScreenState extends ConsumerState<DuasScreen> {
   final TextEditingController _searchController = TextEditingController();
-  List<Dua> _filteredDuas = [];
+  String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
-    _searchController.addListener(_filterDuas);
-  }
-
-  @override
-  void dispose() {
-    _searchController.removeListener(_filterDuas);
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  void _filterDuas() {
-    final query = _searchController.text.toLowerCase();
-    final allDuas = ref.read(duasProvider);
-    setState(() {
-      _filteredDuas = allDuas.where((dua) {
-        return dua.title.toLowerCase().contains(query) ||
-            dua.arabicText.toLowerCase().contains(query) ||
-            dua.meaning.toLowerCase().contains(query);
-      }).toList();
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text.toLowerCase();
+      });
     });
   }
 
   @override
-  Widget build(BuildContext context) {
-    final allDuas = ref.watch(duasProvider);
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
-    // Initialize filtered list once after allDuas is available
-    if (_filteredDuas.isEmpty && _searchController.text.isEmpty) {
-      _filteredDuas = allDuas;
-    }
+  @override
+  Widget build(BuildContext context) {
+    final duasAsync = ref.watch(duasProvider);
 
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final primaryColor = isDark ? const Color(0xFFC78A4C) : const Color(0xFF0E4D31);
-    final textColor = isDark ? const Color(0xFFF3FBF6) : const Color(0xFF241A12);
-    final textColorMuted = isDark ? const Color(0xFFC8B8A8) : const Color(0xFF5D4E47);
-    final borderColor = isDark ? Colors.white.withValues(alpha: 0.2) : Colors.black12;
+    final primaryColor = isDark
+        ? const Color(0xFFC78A4C)
+        : const Color(0xFF0E4D31);
+    final textColor = isDark
+        ? const Color(0xFFF3FBF6)
+        : const Color(0xFF241A12);
+    final textColorMuted = isDark
+        ? const Color(0xFFC8B8A8)
+        : const Color(0xFF5D4E47);
+    final borderColor = isDark
+        ? Colors.white.withValues(alpha: 0.2)
+        : Colors.black12;
     final cardBg = isDark ? const Color(0xFF241A14) : Colors.white;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF082E1D) : const Color(0xFFF3FBF6),
+      backgroundColor: isDark
+          ? const Color(0xFF082E1D)
+          : const Color(0xFFF3FBF6),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         foregroundColor: textColor,
         elevation: 0,
-        title: const Text('Doa-Doa Harian', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Doa-Doa Harian',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
       ),
       extendBodyBehindAppBar: true,
@@ -97,22 +96,52 @@ class _DuasScreenState extends ConsumerState<DuasScreen> {
                 ),
                 const SizedBox(height: 16),
                 Expanded(
-                  child: ListView.builder(
-                    itemCount: _filteredDuas.length,
-                    padding: ResponsiveLayout.pagePadding(context).copyWith(top: 0, bottom: 96),
-                    itemBuilder: (context, index) {
-                      final dua = _filteredDuas[index];
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: _DuaCard(
-                          dua: dua,
-                          surfaceColor: cardBg,
-                          primaryColor: primaryColor,
-                          textColor: textColor,
-                          mutedColor: textColorMuted,
-                        ),
+                  child: duasAsync.when(
+                    data: (allDuas) {
+                      final filteredList = allDuas.where((dua) {
+                        return dua.title.toLowerCase().contains(_searchQuery) ||
+                            dua.arabicText.toLowerCase().contains(_searchQuery) ||
+                            dua.meaning.toLowerCase().contains(_searchQuery);
+                      }).toList();
+
+                      if (filteredList.isEmpty) {
+                        return Center(
+                          child: Text(
+                            'Tidak ada hasil ditemukan.',
+                            style: TextStyle(color: textColorMuted),
+                          ),
+                        );
+                      }
+
+                      return ListView.builder(
+                        itemCount: filteredList.length,
+                        padding: ResponsiveLayout.pagePadding(
+                          context,
+                        ).copyWith(top: 0, bottom: 96),
+                        itemBuilder: (context, index) {
+                          final dua = filteredList[index];
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: _DuaCard(
+                              dua: dua,
+                              surfaceColor: cardBg,
+                              primaryColor: primaryColor,
+                              textColor: textColor,
+                              mutedColor: textColorMuted,
+                            ),
+                          );
+                        },
                       );
                     },
+                    loading: () => const Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                    error: (error, stackTrace) => Center(
+                      child: Text(
+                        'Gagal memuat data doa',
+                        style: TextStyle(color: textColorMuted),
+                      ),
+                    ),
                   ),
                 ),
               ],

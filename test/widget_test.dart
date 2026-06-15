@@ -1,6 +1,7 @@
 import 'dart:io';
-import 'package:flutter_test/flutter_test.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:solatify/main.dart';
@@ -13,13 +14,13 @@ void main() {
     Hive.init(tempDir.path);
     await initializeDateFormatting('id_ID', null);
     await initializeDateFormatting('en_US', null);
-    await Hive.openBox('settings');
-    await Hive.openBox('prayer_tracker');
-    await Hive.openBox('location_cache');
-    await Hive.openBox('prayer_schedules');
-    await Hive.openBox('quran_index');
-    await Hive.openBox('quran_surah_details');
-    await Hive.openBox('quran_bookmarks');
+    await Hive.openBox<dynamic>('settings');
+    await Hive.openBox<dynamic>('prayer_tracker');
+    await Hive.openBox<dynamic>('location_cache');
+    await Hive.openBox<dynamic>('prayer_schedules');
+    await Hive.openBox<dynamic>('quran_index');
+    await Hive.openBox<dynamic>('quran_surah_details');
+    await Hive.openBox<dynamic>('quran_bookmarks');
   });
 
   tearDown(() async {

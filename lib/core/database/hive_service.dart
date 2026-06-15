@@ -1,14 +1,15 @@
 import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:solatify/core/database/hive_constants.dart';
 
 class HiveService {
-  static const String settingsBoxName = 'settings';
-  static const String trackerBoxName = 'prayer_tracker';
-  static const String locationBoxName = 'location_cache';
-  static const String scheduleBoxName = 'prayer_schedules';
-  static const String quranIndexBoxName = 'quran_index';
-  static const String quranDetailBoxName = 'quran_surah_details';
-  static const String quranBookmarksBoxName = 'quran_bookmarks';
+  static const String settingsBoxName = HiveConstants.settingsBox;
+  static const String trackerBoxName = HiveConstants.trackerBox;
+  static const String locationBoxName = HiveConstants.locationBox;
+  static const String scheduleBoxName = HiveConstants.scheduleBox;
+  static const String quranIndexBoxName = HiveConstants.quranIndexBox;
+  static const String quranDetailBoxName = HiveConstants.quranDetailBox;
+  static const String quranBookmarksBoxName = HiveConstants.quranBookmarksBox;
 
   static bool _initialized = false;
   static bool _hiveInitialized = false;
@@ -194,7 +195,7 @@ class HiveService {
 
   static Map<String, int> getPrayerOffsets() {
     final data = getSetting('prayer_offsets', defaultValue: {});
-    
+
     final result = {
       'subuh': 0,
       'dzuhur': 0,

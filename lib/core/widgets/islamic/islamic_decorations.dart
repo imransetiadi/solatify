@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 
 class IslamicGeometricPattern extends StatelessWidget {
-  final double opacity;
-  final Color? color;
-  final double strokeWidth;
 
   const IslamicGeometricPattern({
     super.key,
@@ -11,11 +8,18 @@ class IslamicGeometricPattern extends StatelessWidget {
     this.color,
     this.strokeWidth = 1.0,
   });
+  final double opacity;
+  final Color? color;
+  final double strokeWidth;
 
   @override
   Widget build(BuildContext context) {
-    final themeColor = color ?? (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black);
-    
+    final themeColor =
+        color ??
+        (Theme.of(context).brightness == Brightness.dark
+            ? Colors.white
+            : Colors.black);
+
     return Opacity(
       opacity: opacity,
       child: CustomPaint(
@@ -27,10 +31,10 @@ class IslamicGeometricPattern extends StatelessWidget {
 }
 
 class _GeometricPainter extends CustomPainter {
-  final Color color;
-  final double strokeWidth;
 
   _GeometricPainter(this.color, this.strokeWidth);
+  final Color color;
+  final double strokeWidth;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -47,23 +51,28 @@ class _GeometricPainter extends CustomPainter {
     }
   }
 
-  void _drawPatternUnit(Canvas canvas, Offset center, double size, Paint paint) {
+  void _drawPatternUnit(
+    Canvas canvas,
+    Offset center,
+    double size,
+    Paint paint,
+  ) {
     final path = Path();
     final half = size / 2;
-    
+
     // Simple geometric Islamic star pattern logic
     path.moveTo(center.dx, center.dy - half);
     path.lineTo(center.dx + half, center.dy);
     path.lineTo(center.dx, center.dy + half);
     path.lineTo(center.dx - half, center.dy);
     path.close();
-    
+
     path.moveTo(center.dx - half * 0.7, center.dy - half * 0.7);
     path.lineTo(center.dx + half * 0.7, center.dy - half * 0.7);
     path.lineTo(center.dx + half * 0.7, center.dy + half * 0.7);
     path.lineTo(center.dx - half * 0.7, center.dy + half * 0.7);
     path.close();
-    
+
     canvas.drawPath(path, paint);
   }
 
@@ -72,14 +81,14 @@ class _GeometricPainter extends CustomPainter {
 }
 
 class IslamicBackground extends StatelessWidget {
-  final Widget child;
-  final bool showPattern;
 
   const IslamicBackground({
     super.key,
     required this.child,
     this.showPattern = true,
   });
+  final Widget child;
+  final bool showPattern;
 
   @override
   Widget build(BuildContext context) {
@@ -121,15 +130,16 @@ class IslamicBackground extends StatelessWidget {
 }
 
 class IslamicDivider extends StatelessWidget {
-  final Color? color;
-  final double width;
 
   const IslamicDivider({super.key, this.color, this.width = 100});
+  final Color? color;
+  final double width;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final dividerColor = color ?? theme.colorScheme.secondary; // Use the new Islamic Green
+    final dividerColor =
+        color ?? theme.colorScheme.secondary; // Use the new Islamic Green
 
     return Center(
       child: SizedBox(
@@ -150,17 +160,21 @@ class IslamicDivider extends StatelessWidget {
 }
 
 class IslamicHeaderDecoration extends StatelessWidget {
+
+  const IslamicHeaderDecoration({
+    super.key,
+    required this.title,
+    this.subtitle,
+  });
   final String title;
   final String? subtitle;
-
-  const IslamicHeaderDecoration({super.key, required this.title, this.subtitle});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final primary = theme.primaryColor;
-    
+
     return Column(
       children: [
         const SizedBox(height: 10),

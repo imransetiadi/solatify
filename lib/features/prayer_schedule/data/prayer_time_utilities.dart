@@ -23,16 +23,19 @@ class PrayerTimeUtilities {
   /// Format duration for countdown (HH:mm:ss)
   static String formatCountdown(Duration duration) {
     if (duration.isNegative) return '00:00:00';
-    
+
     final hours = duration.inHours.toString().padLeft(2, '0');
     final minutes = (duration.inMinutes % 60).toString().padLeft(2, '0');
     final seconds = (duration.inSeconds % 60).toString().padLeft(2, '0');
-    
+
     return '$hours:$minutes:$seconds';
   }
 
   /// Get prayer display name for current period
-  static String getCurrentPrayerName(DateTime now, Map<String, DateTime> prayers) {
+  static String getCurrentPrayerName(
+    DateTime now,
+    Map<String, DateTime> prayers,
+  ) {
     if (now.isBefore(prayers['subuh']!)) {
       return 'Isya';
     } else if (now.isBefore(prayers['dzuhur']!)) {

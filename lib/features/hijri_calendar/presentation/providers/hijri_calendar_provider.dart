@@ -1,104 +1,40 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../domain/models/hijri_event_model.dart';
+import 'package:solatify/features/hijri_calendar/data/datasources/hijri_calendar_local_data_source.dart';
+import 'package:solatify/features/hijri_calendar/data/repositories/hijri_calendar_repository_impl.dart';
+import 'package:solatify/features/hijri_calendar/domain/entities/hijri_event.dart';
+import 'package:solatify/features/hijri_calendar/domain/repositories/hijri_calendar_repository.dart';
+import 'package:solatify/features/hijri_calendar/domain/usecases/get_hijri_events.dart';
 
-final hijriEventsProvider = Provider<List<HijriEvent>>((ref) {
-  return _hijriEventsData;
+// Data Source Provider
+final hijriCalendarLocalDataSourceProvider = Provider<HijriCalendarLocalDataSource>((ref) {
+  return const HijriCalendarLocalDataSourceImpl();
 });
 
-final upcomingHijriEventsProvider = Provider<List<HijriEvent>>((ref) {
+// Repository Provider
+final hijriCalendarRepositoryProvider = Provider<HijriCalendarRepository>((ref) {
+  final localDataSource = ref.watch(hijriCalendarLocalDataSourceProvider);
+  return HijriCalendarRepositoryImpl(localDataSource: localDataSource);
+});
+
+// UseCase Provider
+final getHijriEventsUseCaseProvider = Provider<GetHijriEvents>((ref) {
+  final repository = ref.watch(hijriCalendarRepositoryProvider);
+  return GetHijriEvents(repository);
+});
+
+// Presentation State Provider (Asynchronously fetch Events)
+final hijriEventsProvider = FutureProvider<List<HijriEvent>>((ref) async {
+  final getHijriEvents = ref.watch(getHijriEventsUseCaseProvider);
+  return getHijriEvents.execute();
+});
+
+// Derived Provider for upcoming events
+final upcomingHijriEventsProvider = FutureProvider<List<HijriEvent>>((ref) async {
   final now = DateTime.now();
-  final events = ref.watch(hijriEventsProvider);
-  return events.where((event) => event.gregorianDate.isAfter(now)).toList()
+  final events = await ref.watch(hijriEventsProvider.future);
+  
+  final upcomingEvents = events.where((event) => event.gregorianDate.isAfter(now)).toList()
     ..sort((a, b) => a.gregorianDate.compareTo(b.gregorianDate));
+    
+  return upcomingEvents;
 });
-
-final List<HijriEvent> _hijriEventsData = [
-  HijriEvent(
-    id: 1,
-    nameAr: 'عاشوراء',
-    nameId: 'Asyura (10 Muharram)',
-    gregorianDate: DateTime(2026, 7, 19),
-    hijriYear: 1447,
-    hijriMonth: 1,
-    hijriDay: 10,
-    description: 'Hari ke-10 Muharram adalah hari bersejarah dalam Islam. Musa as. dan pengikutnya diselamatkan dari Firaun pada hari ini.',
-    isImportant: true,
-  ),
-  HijriEvent(
-    id: 2,
-    nameAr: 'مولد النبي',
-    nameId: 'Maulid Nabi Muhammad (12 Rabiul Awal)',
-    gregorianDate: DateTime(2026, 9, 26),
-    hijriYear: 1447,
-    hijriMonth: 3,
-    hijriDay: 12,
-    description: 'Perayaan kelahiran Nabi Muhammad SAW, didahului dengan ceramah-ceramah Islami dan sholawat.',
-    isImportant: true,
-  ),
-  HijriEvent(
-    id: 3,
-    nameAr: 'رمضان',
-    nameId: 'Bulan Ramadhan',
-    gregorianDate: DateTime(2026, 2, 20),
-    hijriYear: 1447,
-    hijriMonth: 9,
-    hijriDay: 1,
-    description: 'Bulan suci Ramadhan, bulan puasa dan ibadah yang sangat utama dalam Islam.',
-    isImportant: true,
-  ),
-  HijriEvent(
-    id: 4,
-    nameAr: 'عيد الفطر',
-    nameId: 'Hari Raya Idul Fitri',
-    gregorianDate: DateTime(2026, 3, 21),
-    hijriYear: 1447,
-    hijriMonth: 10,
-    hijriDay: 1,
-    description: 'Perayaan akhir bulan Ramadhan dengan sholat Id dan berkumpul bersama keluarga.',
-    isImportant: true,
-  ),
-  HijriEvent(
-    id: 5,
-    nameAr: 'عيد الأضحى',
-    nameId: 'Hari Raya Idul Adha',
-    gregorianDate: DateTime(2026, 6, 17),
-    hijriYear: 1447,
-    hijriMonth: 12,
-    hijriDay: 10,
-    description: 'Hari pesta korban untuk memperingati kesediaan Nabi Ibrahim menyembelih anaknya.',
-    isImportant: true,
-  ),
-  HijriEvent(
-    id: 6,
-    nameAr: 'السنة الهجرية الجديدة',
-    nameId: 'Tahun Baru Hijriah (1 Muharram)',
-    gregorianDate: DateTime(2027, 7, 9),
-    hijriYear: 1448,
-    hijriMonth: 1,
-    hijriDay: 1,
-    description: 'Pergantian tahun Hijriah, peringatan dari hijrah Nabi Muhammad dari Makkah ke Madinah.',
-    isImportant: true,
-  ),
-  HijriEvent(
-    id: 7,
-    nameAr: 'الإسراء والمعراج',
-    nameId: 'Isra dan Miraj (27 Rajab)',
-    gregorianDate: DateTime(2026, 12, 4),
-    hijriYear: 1447,
-    hijriMonth: 7,
-    hijriDay: 27,
-    description: 'Peristiwa perjalanan malam Nabi Muhammad dari Masjidil Haram ke Masjidil Aqsa dan naik ke langit.',
-    isImportant: true,
-  ),
-  HijriEvent(
-    id: 8,
-    nameAr: 'ليلة القدر',
-    nameId: 'Lailatul Qadr (27 Ramadhan)',
-    gregorianDate: DateTime(2026, 3, 19),
-    hijriYear: 1447,
-    hijriMonth: 9,
-    hijriDay: 27,
-    description: 'Malam yang mulia ketika Al-Quran pertama kali diturunkan kepada Nabi Muhammad SAW.',
-    isImportant: true,
-  ),
-];

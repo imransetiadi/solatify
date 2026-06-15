@@ -1,19 +1,21 @@
 import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../data/services/notification_service.dart';
-import '../../../prayer_schedule/presentation/prayer_times_provider.dart';
+
 import '../../../prayer_schedule/presentation/location_provider.dart';
+import '../../../prayer_schedule/presentation/prayer_times_provider.dart';
+import '../../data/services/notification_service.dart';
 
 class NotificationSchedulerNotifier extends StateNotifier<void> {
-  final Ref _ref;
-  Timer? _schedulingTimer;
-  final Set<String> _scheduledNotifications = {};
 
   NotificationSchedulerNotifier(this._ref) : super(null) {
     _initializeNotifications();
   }
+  final Ref _ref;
+  Timer? _schedulingTimer;
+  final Set<String> _scheduledNotifications = {};
 
   Future<void> _initializeNotifications() async {
     try {

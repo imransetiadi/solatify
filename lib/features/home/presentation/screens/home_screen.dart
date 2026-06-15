@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
-
-import '../../../../core/widgets/glass_container.dart';
-import '../../../../core/widgets/islamic/islamic_decorations.dart';
-import '../../../../core/widgets/responsive_layout.dart';
-import '../../../prayer_schedule/presentation/location_provider.dart';
-import '../../../prayer_schedule/presentation/prayer_times_provider.dart';
-import '../../../prayer_schedule/presentation/widgets/manual_location_dialog.dart';
+import 'package:solatify/core/widgets/glass_container.dart';
+import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
+import 'package:solatify/core/widgets/responsive_layout.dart';
+import 'package:solatify/features/prayer_schedule/presentation/location_provider.dart';
+import 'package:solatify/features/prayer_schedule/presentation/prayer_times_provider.dart';
+import 'package:solatify/features/prayer_schedule/presentation/widgets/manual_location_dialog.dart';
+import 'package:solatify/features/tracker/presentation/providers/tracker_provider.dart';
 import '../providers/countdown_provider.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -19,22 +19,13 @@ class HomeScreen extends ConsumerWidget {
     final location = ref.watch(locationProvider);
     final countdown = ref.watch(countdownProvider);
     final prayerList = ref.watch(prayerListProvider);
+    final trackerAsync = ref.watch(trackerProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primary = Theme.of(context).colorScheme.secondary;
     final redLine = Theme.of(context).colorScheme.tertiary;
-    final textColor = isDark
-        ? const Color(0xFFF3FBF6)
-        : const Color(0xFF241A12);
-    final mutedColor = isDark
-        ? const Color(0xFFE0D4C4)
-        : const Color(0xFF5D4E47);
-    final todayStr = DateFormat(
-      'EEEE, d MMMM yyyy',
-      'id_ID',
-    ).format(DateTime.now());
-    final brightGreen = isDark
-        ? const Color(0xFF4CAF50)
-        : const Color(0xFF0E4D31);
+    final textColor = isDark ? const Color(0xFFF3FBF6) : const Color(0xFF241A12);
+    final mutedColor = isDark ? const Color(0xFFE0D4C4) : const Color(0xFF5D4E47);
+    final brightGreen = isDark ? const Color(0xFF4CAF50) : const Color(0xFF0E4D31);
 
     return Scaffold(
       body: IslamicBackground(
@@ -46,9 +37,7 @@ class HomeScreen extends ConsumerWidget {
               slivers: [
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: ResponsiveLayout.pagePadding(
-                      context,
-                    ).copyWith(top: 20),
+                    padding: ResponsiveLayout.pagePadding(context).copyWith(top: 20),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
@@ -113,13 +102,10 @@ class HomeScreen extends ConsumerWidget {
                                         horizontal: 4,
                                         vertical: 2,
                                       ),
-                                      child: Text(
-                                        'Ubah',
-                                        style: TextStyle(
-                                          color: brightGreen,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w700,
-                                        ),
+                                      child: Icon(
+                                        Icons.edit_location_alt_outlined,
+                                        size: 14,
+                                        color: primary,
                                       ),
                                     ),
                                   ),
@@ -134,78 +120,86 @@ class HomeScreen extends ConsumerWidget {
                 ),
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: ResponsiveLayout.pagePadding(context),
-                    child: GlassContainer(
-                      blur: 20,
-                      opacity: isDark ? 0.06 : 0.03,
-                      borderColor: redLine.withValues(alpha: 0.30),
-                      borderRadius: 24,
-                      padding: EdgeInsets.all(
-                        MediaQuery.sizeOf(context).width < 360 ? 18 : 24,
-                      ),
-                      child: Column(
-                        children: [
-                          Text(
-                            todayStr,
-                            style: TextStyle(color: mutedColor, fontSize: 14),
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            'Menuju ${countdown.nextPrayerName}',
-                            style: TextStyle(
-                              color: textColor,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            countdown.formattedTime,
-                            maxLines: 1,
-                            style: TextStyle(
-                              color: textColor,
-                              fontSize: MediaQuery.sizeOf(context).width < 360
-                                  ? 42
-                                  : 54,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 2,
-                              fontFamily: 'monospace',
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: primary.withValues(alpha: 0.10),
-                              borderRadius: BorderRadius.circular(999),
-                              border: Border.all(
-                                color: primary.withValues(alpha: 0.25),
-                              ),
-                            ),
-                            child: Text(
-                              'Waktu Aktif: ${countdown.activePrayerName}',
+                    padding: ResponsiveLayout.pagePadding(context).copyWith(
+                      top: 24,
+                      bottom: 24,
+                    ),
+                    child: trackerAsync.when(
+                      data: (log) => GlassContainer(
+                        blur: 15,
+                        opacity: 0.05,
+                        padding: const EdgeInsets.all(18),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Ceklis Ibadah Hari Ini',
                               style: TextStyle(
-                                color: brightGreen,
+                                color: textColor,
+                                fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                fontSize: 12,
                               ),
                             ),
-                          ),
-                        ],
+                            const SizedBox(height: 16),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 10,
+                              children: log.prayers.keys.map((prayer) {
+                                final isDone = log.prayers[prayer] ?? false;
+                                return InkWell(
+                                  onTap: () => ref.read(trackerProvider.notifier).togglePrayer(prayer),
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                    decoration: BoxDecoration(
+                                      color: isDone ? brightGreen.withValues(alpha: 0.15) : Colors.transparent,
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: isDone ? brightGreen : mutedColor.withValues(alpha: 0.2),
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          isDone ? Icons.check_circle : Icons.circle_outlined,
+                                          size: 16,
+                                          color: isDone ? brightGreen : mutedColor,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          prayer[0].toUpperCase() + prayer.substring(1),
+                                          style: TextStyle(
+                                            color: isDone ? brightGreen : textColor,
+                                            fontWeight: isDone ? FontWeight.bold : FontWeight.normal,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ],
+                        ),
                       ),
+                      loading: () => const SizedBox.shrink(),
+                      error: (_, _) => const SizedBox.shrink(),
                     ),
                   ),
                 ),
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: ResponsiveLayout.pagePadding(
-                      context,
-                    ).copyWith(top: 8, bottom: 8),
+                    padding: EdgeInsets.fromLTRB(
+                      ResponsiveLayout.pagePadding(context).left,
+                      0,
+                      ResponsiveLayout.pagePadding(context).right,
+                      12,
+                    ),
                     child: Text(
-                      'Jadwal Waktu Sholat',
+                      'Jadwal Salat',
                       style: TextStyle(
                         color: textColor,
                         fontSize: 18,
@@ -216,8 +210,7 @@ class HomeScreen extends ConsumerWidget {
                 ),
                 SliverPadding(
                   padding: EdgeInsets.symmetric(
-                    horizontal:
-                        ResponsiveLayout.pagePadding(context).horizontal / 2,
+                    horizontal: ResponsiveLayout.pagePadding(context).horizontal / 2,
                   ),
                   sliver: prayerList.isEmpty
                       ? const SliverToBoxAdapter(
@@ -227,83 +220,65 @@ class HomeScreen extends ConsumerWidget {
                           ),
                         )
                       : SliverList(
-                          delegate: SliverChildBuilderDelegate((
-                            context,
-                            index,
-                          ) {
-                            final item = prayerList[index];
-                            final isNext = countdown.nextPrayerKey == item.key;
-                            final isActive =
-                                countdown.activePrayerName == item.name;
-                            final formattedTime = DateFormat(
-                              'HH:mm',
-                            ).format(item.time);
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) {
+                              final item = prayerList[index];
+                              final isNext = countdown.nextPrayerKey == item.key;
+                              final isActive = countdown.activePrayerName == item.name;
+                              final formattedTime = DateFormat('HH:mm').format(item.time);
 
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
-                              child: GlassContainer(
-                                blur: 15,
-                                opacity: isActive ? 0.08 : 0.03,
-                                borderColor: isActive || isNext
-                                    ? redLine.withValues(
-                                        alpha: isActive ? 0.8 : 0.45,
-                                      )
-                                    : redLine.withValues(
-                                        alpha: isDark ? 0.30 : 0.22,
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: GlassContainer(
+                                  blur: 15,
+                                  opacity: isActive ? 0.08 : 0.03,
+                                  borderColor: isActive || isNext
+                                      ? redLine.withValues(alpha: isActive ? 0.8 : 0.45)
+                                      : redLine.withValues(alpha: isDark ? 0.30 : 0.22),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 18,
+                                    vertical: 14,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        isActive ? Icons.circle : Icons.circle_outlined,
+                                        color: isActive || isNext ? redLine : mutedColor.withValues(alpha: 0.35),
+                                        size: 10,
                                       ),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 18,
-                                  vertical: 14,
-                                ),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      isActive
-                                          ? Icons.circle
-                                          : (isNext
-                                                ? Icons.circle_outlined
-                                                : Icons.circle_outlined),
-                                      color: isActive || isNext
-                                          ? redLine
-                                          : mutedColor.withValues(alpha: 0.35),
-                                      size: 10,
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            item.name,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: TextStyle(
-                                              color: isActive
-                                                  ? redLine
-                                                  : textColor,
-                                              fontSize: 16,
-                                              fontWeight: isActive
-                                                  ? FontWeight.bold
-                                                  : FontWeight.w600,
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              item.name,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                color: isActive ? redLine : textColor,
+                                                fontSize: 16,
+                                                fontWeight: isActive ? FontWeight.bold : FontWeight.w600,
+                                              ),
                                             ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            formattedTime,
-                                            style: TextStyle(
-                                              color: mutedColor,
-                                              fontSize: 13,
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              formattedTime,
+                                              style: TextStyle(
+                                                color: mutedColor,
+                                                fontSize: 13,
+                                              ),
                                             ),
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            );
-                          }, childCount: prayerList.length),
+                              );
+                            },
+                            childCount: prayerList.length,
+                          ),
                         ),
                 ),
                 const SliverToBoxAdapter(child: SizedBox(height: 96)),

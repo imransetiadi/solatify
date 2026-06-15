@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../domain/models/quran_models.dart';
-import '../quran_provider.dart';
+
 import '../../../../core/widgets/glass_container.dart';
 import '../../../../core/widgets/responsive_layout.dart';
+import '../../domain/models/quran_models.dart';
+import '../quran_provider.dart';
 
 class SurahDetailScreen extends ConsumerStatefulWidget {
-  final int surahId;
-  final int? initialScrollVerse;
 
   const SurahDetailScreen({
     super.key,
     required this.surahId,
     this.initialScrollVerse,
   });
+  final int surahId;
+  final int? initialScrollVerse;
 
   @override
   ConsumerState<SurahDetailScreen> createState() => _SurahDetailScreenState();
@@ -70,7 +71,9 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
     final audioState = ref.watch(quranAudioProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : const Color(0xFF241A12);
-    final textSecondary = isDark ? const Color(0xFFC8B8A8) : const Color(0xFF5D4E47);
+    final textSecondary = isDark
+        ? const Color(0xFFC8B8A8)
+        : const Color(0xFF5D4E47);
 
     return Scaffold(
       appBar: AppBar(
@@ -87,11 +90,16 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
                   surah.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 if (isPlayingThisSurah)
                   Text(
-                    audioState.isPlaying ? '🔊 Memutar semua ayat...' : '⏸ Dijeda',
+                    audioState.isPlaying
+                        ? '🔊 Memutar semua ayat...'
+                        : '⏸ Dijeda',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(fontSize: 11, color: textSecondary),
@@ -133,20 +141,15 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
         child: Stack(
           children: [
             surahAsync.when(
-              loading: () => Center(
-                child: CircularProgressIndicator(color: _redAccent),
-              ),
+              loading: () =>
+                  Center(child: CircularProgressIndicator(color: _redAccent)),
               error: (err, stack) => Center(
                 child: Padding(
                   padding: const EdgeInsets.all(24),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        Icons.error_outline,
-                        color: _redAccent,
-                        size: 64,
-                      ),
+                      Icon(Icons.error_outline, color: _redAccent, size: 64),
                       const SizedBox(height: 16),
                       Text(
                         'Gagal memuat Surah',
@@ -398,7 +401,7 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: Color(0xFF0E4D31),
+                      color: const Color(0xFF0E4D31),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: const Text(
@@ -418,9 +421,7 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
                     isCurrentlyPlaying && audioState.isPlaying
                         ? Icons.pause_circle_outline
                         : Icons.play_arrow_outlined,
-                    color: isCurrentlyPlaying
-                        ? _redAccent
-                        : _textSecondary,
+                    color: isCurrentlyPlaying ? _redAccent : _textSecondary,
                     size: 20,
                   ),
                   tooltip: 'Putar Ayat',
@@ -445,7 +446,7 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
                 IconButton(
                   icon: Icon(
                     isLastRead ? Icons.bookmark : Icons.bookmark_border,
-                    color: Color(0xFF0E4D31),
+                    color: const Color(0xFF0E4D31),
                     size: 20,
                   ),
                   tooltip: 'Tandai Terakhir Baca',
@@ -531,7 +532,9 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
     final isLoading = state.isLoading;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : const Color(0xFF241A12);
-    final textMuted = isDark ? const Color(0xFFAFA19A) : const Color(0xFF5D4E47);
+    final textMuted = isDark
+        ? const Color(0xFFAFA19A)
+        : const Color(0xFF5D4E47);
 
     final progressPercent = state.totalDuration.inMilliseconds > 0
         ? state.progress.inMilliseconds / state.totalDuration.inMilliseconds
@@ -594,11 +597,7 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
                   },
                 ),
                 IconButton(
-                  icon: Icon(
-                    Icons.stop,
-                    color: _textColor,
-                    size: 22,
-                  ),
+                  icon: Icon(Icons.stop, color: _textColor, size: 22),
                   onPressed: () {
                     ref.read(quranAudioProvider.notifier).stop();
                   },

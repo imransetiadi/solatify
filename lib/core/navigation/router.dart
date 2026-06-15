@@ -1,21 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../features/onboarding/presentation/screens/splash_screen.dart';
-import '../../features/onboarding/presentation/screens/onboarding_screen.dart';
-import '../../features/onboarding/presentation/screens/get_started_screen.dart';
-import '../../features/home/presentation/screens/home_screen.dart';
-import '../../features/prayer_schedule/presentation/screens/prayer_schedule_screen.dart';
-import '../../features/qibla/presentation/screens/qibla_screen.dart';
-import '../../features/mosque/presentation/screens/nearby_mosque_screen.dart';
-import '../../features/settings/presentation/screens/settings_screen.dart';
-import '../../features/quran/presentation/screens/quran_home_screen.dart';
-import '../../features/quran/presentation/screens/surah_detail_screen.dart';
-import '../../features/islamic_content/presentation/screens/islamic_content_screen.dart';
+
 import '../../features/asmaul_husna/presentation/screens/asmaul_husna_screen.dart';
+import '../../features/dhikr/presentation/screens/dhikr_screen.dart';
 import '../../features/duas/presentation/screens/duas_screen.dart';
 import '../../features/hijri_calendar/presentation/screens/hijri_calendar_screen.dart';
+import '../../features/home/presentation/screens/home_screen.dart';
+import '../../features/islamic_content/presentation/screens/islamic_content_screen.dart';
 import '../../features/islamic_tips/presentation/screens/islamic_tips_screen.dart';
-import '../../features/dhikr/presentation/screens/dhikr_screen.dart';
+import '../../features/mosque/presentation/screens/nearby_mosque_screen.dart';
+import '../../features/onboarding/presentation/screens/get_started_screen.dart';
+import '../../features/onboarding/presentation/screens/onboarding_screen.dart';
+import '../../features/onboarding/presentation/screens/splash_screen.dart';
+import '../../features/prayer_schedule/presentation/screens/prayer_schedule_screen.dart';
+import '../../features/qibla/presentation/screens/qibla_screen.dart';
+import '../../features/quran/presentation/screens/quran_home_screen.dart';
+import '../../features/quran/presentation/screens/surah_detail_screen.dart';
+import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../localization/app_localizations.dart';
 import '../widgets/responsive_layout.dart';
 
@@ -129,9 +130,9 @@ final goRouter = GoRouter(
 );
 
 class MainLayoutScreen extends StatelessWidget {
-  final Widget child;
 
   const MainLayoutScreen({super.key, required this.child});
+  final Widget child;
 
   static const _destinations = [
     _MainDestination(Icons.home_outlined, Icons.home, 'Beranda', '/home'),

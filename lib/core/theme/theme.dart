@@ -18,15 +18,16 @@ class AppTheme {
   static const Color textDark = Color(0xFF241A12);
   static const Color textMuted = Color(0xFF5D4E47);
 
-  
   // Text color tokens untuk reusable di komponen
   static const Color darkModeText = Colors.white;
-  static const Color darkModeTextSecondary = Color(0xFFB8A898);  // white87-like
-  static const Color darkModeTextTertiary = Color(0xFF999999);   // white70-like
-  static const Color darkModeTextHint = Color(0xFF666666);       // white54-like
-  
+  static const Color darkModeTextSecondary = Color(0xFFB8A898); // white87-like
+  static const Color darkModeTextTertiary = Color(0xFF999999); // white70-like
+  static const Color darkModeTextHint = Color(0xFF666666); // white54-like
+
   static const Color lightModeText = Color(0xFF241A12);
-  static const Color lightModeTextSecondary = Color(0xFF5D4E47); // Improved contrast
+  static const Color lightModeTextSecondary = Color(
+    0xFF5D4E47,
+  ); // Improved contrast
   static const Color lightModeTextTertiary = Color(0xFF5D4E47);
   static const Color lightModeTextHint = Color(0xFF9A8A7D);
 
@@ -239,10 +240,7 @@ class AppTheme {
         elevation: 2,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(18),
-          side: BorderSide(
-            color: redAccent.withValues(alpha: 0.35),
-            width: 1,
-          ),
+          side: BorderSide(color: redAccent.withValues(alpha: 0.35), width: 1),
         ),
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(

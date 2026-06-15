@@ -1,10 +1,12 @@
 import 'dart:math';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_compass_v2/flutter_compass_v2.dart';
+
 import 'package:adhan/adhan.dart';
-import '../../../../core/widgets/glass_container.dart';
-import '../../../../core/widgets/responsive_layout.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_compass_v2/flutter_compass_v2.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:solatify/core/widgets/glass_container.dart';
+import 'package:solatify/core/widgets/responsive_layout.dart';
+
 import '../../../prayer_schedule/presentation/location_provider.dart';
 
 class QiblaScreen extends ConsumerStatefulWidget {
@@ -27,8 +29,12 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : const Color(0xFF241A12);
-    final textSecondary = isDark ? const Color(0xFFB8A898) : const Color(0xFF5D4E47);
-    final textMuted = isDark ? const Color(0xFF999999) : const Color(0xFF5D4E47);
+    final textSecondary = isDark
+        ? const Color(0xFFB8A898)
+        : const Color(0xFF5D4E47);
+    final textMuted = isDark
+        ? const Color(0xFF999999)
+        : const Color(0xFF5D4E47);
     final textHint = isDark ? const Color(0xFF666666) : const Color(0xFF9A8A7D);
 
     return Scaffold(
@@ -202,7 +208,7 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
                                   boxShadow: isAligned
                                       ? [
                                           BoxShadow(
-                                            color: Color(
+                                            color: const Color(
                                               0xFF0E4D31,
                                             ).withValues(alpha: 0.15),
                                             blurRadius: 32,
@@ -280,8 +286,12 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
   Widget _buildSimulationPanel(double currentHeading, double qiblaAngle) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : const Color(0xFF241A12);
-    final textSecondary = isDark ? const Color(0xFFB8A898) : const Color(0xFF5D4E47);
-    final textMuted = isDark ? const Color(0xFF999999) : const Color(0xFF5D4E47);
+    final textSecondary = isDark
+        ? const Color(0xFFB8A898)
+        : const Color(0xFF5D4E47);
+    final textMuted = isDark
+        ? const Color(0xFF999999)
+        : const Color(0xFF5D4E47);
     final sliderInactive = isDark ? Colors.white12 : Colors.black12;
 
     return GlassContainer(
@@ -305,10 +315,10 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: Color(0xFFC78A4C).withValues(alpha: 0.12),
+                  color: const Color(0xFFC78A4C).withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: Color(0xFFC78A4C).withValues(alpha: 0.3),
+                    color: const Color(0xFFC78A4C).withValues(alpha: 0.3),
                   ),
                 ),
                 child: const Text(
@@ -382,8 +392,9 @@ class CompassDialPaint extends StatelessWidget {
 }
 
 class _CompassDialPainter extends CustomPainter {
-  final bool isDark;
   _CompassDialPainter({required this.isDark});
+
+  final bool isDark;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -484,8 +495,9 @@ class QiblaNeedlePaint extends StatelessWidget {
 }
 
 class _QiblaNeedlePainter extends CustomPainter {
-  final bool isDark;
   _QiblaNeedlePainter({required this.isDark});
+
+  final bool isDark;
 
   @override
   void paint(Canvas canvas, Size size) {

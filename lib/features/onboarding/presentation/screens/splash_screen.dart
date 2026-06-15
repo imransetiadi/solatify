@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/widgets/responsive_layout.dart';
+import 'package:solatify/features/settings/presentation/providers/settings_provider.dart';
+
 import '../../../../core/widgets/islamic/islamic_decorations.dart';
-import '../../../settings/presentation/settings_provider.dart';
+import '../../../../core/widgets/responsive_layout.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -33,7 +34,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   }
 
   Future<void> _navigateToNext() async {
-    await Future.delayed(const Duration(milliseconds: 2500));
+    await Future<void>.delayed(const Duration(milliseconds: 2500));
     if (!mounted) return;
 
     final settings = ref.read(settingsProvider);

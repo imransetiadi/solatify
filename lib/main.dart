@@ -1,18 +1,17 @@
 import 'dart:async';
 import 'dart:ui';
 
-import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'core/localization/app_localizations.dart';
-import 'core/navigation/router.dart';
-import 'core/theme/theme.dart';
-
-import 'core/database/hive_service.dart';
-import 'features/settings/presentation/settings_provider.dart';
-import 'features/notifications/presentation/providers/notification_scheduler_provider.dart';
+import 'package:solatify/core/database/hive_service.dart';
+import 'package:solatify/core/localization/app_localizations.dart';
+import 'package:solatify/core/navigation/router.dart';
+import 'package:solatify/core/theme/theme.dart';
+import 'package:solatify/features/notifications/presentation/providers/notification_scheduler_provider.dart';
+import 'package:solatify/features/settings/presentation/providers/settings_provider.dart';
 
 void main() {
   // Run everything inside a guarded zone so that any uncaught async error
@@ -73,14 +72,14 @@ class _AppErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
+    return const Material(
       color: AppTheme.lightBg,
       child: Center(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(24),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
+            children: [
               Icon(Icons.error_outline, color: AppTheme.redAccent, size: 48),
               SizedBox(height: 16),
               Text(

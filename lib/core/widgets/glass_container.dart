@@ -2,16 +2,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 class GlassContainer extends StatelessWidget {
-  final Widget child;
-  final double blur;
-  final double opacity;
-  final double borderRadius;
-  final Color? borderColor;
-  final Color? fillColor;
-  final EdgeInsetsGeometry? padding;
-  final EdgeInsetsGeometry? margin;
-  final double? width;
-  final double? height;
 
   const GlassContainer({
     super.key,
@@ -26,6 +16,16 @@ class GlassContainer extends StatelessWidget {
     this.width,
     this.height,
   });
+  final Widget child;
+  final double blur;
+  final double opacity;
+  final double borderRadius;
+  final Color? borderColor;
+  final Color? fillColor;
+  final EdgeInsetsGeometry? padding;
+  final EdgeInsetsGeometry? margin;
+  final double? width;
+  final double? height;
 
   @override
   Widget build(BuildContext context) {

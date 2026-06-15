@@ -1,9 +1,11 @@
 import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
+
+import '../../../core/database/hive_service.dart';
 import '../data/quran_repository.dart';
 import '../domain/models/quran_models.dart';
-import '../../../core/database/hive_service.dart';
 
 final quranRepositoryProvider = Provider<QuranRepository>((ref) {
   return QuranRepository();
@@ -46,11 +48,7 @@ final surahDetailProvider = FutureProvider.family<Surah, int>((
 });
 
 // BOOKMARK STATES
-class QuranBookmarksState {
-  final int? lastReadSurah;
-  final int? lastReadVerse;
-  final String? lastReadSurahName;
-  final Set<String> bookmarkedKeys; // Format: "surah:verse"
+class QuranBookmarksState { // Format: "surah:verse"
 
   QuranBookmarksState({
     this.lastReadSurah,
@@ -58,6 +56,10 @@ class QuranBookmarksState {
     this.lastReadSurahName,
     required this.bookmarkedKeys,
   });
+  final int? lastReadSurah;
+  final int? lastReadVerse;
+  final String? lastReadSurahName;
+  final Set<String> bookmarkedKeys;
 
   QuranBookmarksState copyWith({
     int? lastReadSurah,
@@ -185,12 +187,6 @@ final quranBookmarksProvider =
 
 // AUDIO STATES
 class QuranAudioState {
-  final int? playingSurah;
-  final int? playingVerse;
-  final bool isPlaying;
-  final bool isLoading;
-  final Duration progress;
-  final Duration totalDuration;
 
   QuranAudioState({
     this.playingSurah,
@@ -200,6 +196,12 @@ class QuranAudioState {
     this.progress = Duration.zero,
     this.totalDuration = Duration.zero,
   });
+  final int? playingSurah;
+  final int? playingVerse;
+  final bool isPlaying;
+  final bool isLoading;
+  final Duration progress;
+  final Duration totalDuration;
 
   QuranAudioState copyWith({
     int? playingSurah,
@@ -221,14 +223,6 @@ class QuranAudioState {
 }
 
 class QuranAudioNotifier extends StateNotifier<QuranAudioState> {
-  final AudioPlayer _audioPlayer = AudioPlayer();
-  List<Verse> _playlist = [];
-  int _playlistIndex = 0;
-  int? _surahNumber;
-
-  StreamSubscription<PlayerState>? _playerStateSub;
-  StreamSubscription<Duration>? _positionSub;
-  StreamSubscription<Duration?>? _durationSub;
 
   QuranAudioNotifier() : super(QuranAudioState()) {
     // Listen to player state changes
@@ -263,6 +257,14 @@ class QuranAudioNotifier extends StateNotifier<QuranAudioState> {
       }
     });
   }
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  List<Verse> _playlist = [];
+  int _playlistIndex = 0;
+  int? _surahNumber;
+
+  StreamSubscription<PlayerState>? _playerStateSub;
+  StreamSubscription<Duration>? _positionSub;
+  StreamSubscription<Duration?>? _durationSub;
 
   Future<void> playVerse({
     required int surahNumber,

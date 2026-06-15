@@ -1,10 +1,4 @@
 class Surah {
-  final int number;
-  final String name;
-  final String translation;
-  final int numberOfVerses;
-  final String revelation; // Makkiyah / Madaniyah
-  final List<Verse>? verses;
 
   Surah({
     required this.number,
@@ -14,24 +8,6 @@ class Surah {
     required this.revelation,
     this.verses,
   });
-
-  Surah copyWith({
-    int? number,
-    String? name,
-    String? translation,
-    int? numberOfVerses,
-    String? revelation,
-    List<Verse>? verses,
-  }) {
-    return Surah(
-      number: number ?? this.number,
-      name: name ?? this.name,
-      translation: translation ?? this.translation,
-      numberOfVerses: numberOfVerses ?? this.numberOfVerses,
-      revelation: revelation ?? this.revelation,
-      verses: verses ?? this.verses,
-    );
-  }
 
   factory Surah.fromJson(Map<String, dynamic> json) {
     final rawVerses = json['verses'] ?? json['ayat'];
@@ -97,6 +73,30 @@ class Surah {
       verses: parsedVerses,
     );
   }
+  final int number;
+  final String name;
+  final String translation;
+  final int numberOfVerses;
+  final String revelation; // Makkiyah / Madaniyah
+  final List<Verse>? verses;
+
+  Surah copyWith({
+    int? number,
+    String? name,
+    String? translation,
+    int? numberOfVerses,
+    String? revelation,
+    List<Verse>? verses,
+  }) {
+    return Surah(
+      number: number ?? this.number,
+      name: name ?? this.name,
+      translation: translation ?? this.translation,
+      numberOfVerses: numberOfVerses ?? this.numberOfVerses,
+      revelation: revelation ?? this.revelation,
+      verses: verses ?? this.verses,
+    );
+  }
 
   Map<String, dynamic> toJson() {
     return {
@@ -111,11 +111,6 @@ class Surah {
 }
 
 class Verse {
-  final int number;
-  final String arabic;
-  final String latin;
-  final String translation;
-  final String audioUrl;
 
   Verse({
     required this.number,
@@ -195,6 +190,11 @@ class Verse {
       audioUrl: aud,
     );
   }
+  final int number;
+  final String arabic;
+  final String latin;
+  final String translation;
+  final String audioUrl;
 
   Map<String, dynamic> toJson() {
     return {
