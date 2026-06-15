@@ -317,3 +317,8 @@ Fitur baru hanya menggunakan dependencies yang sudah ada:
 4. **User Data**
    - Favorite doas/asmaul husna
    - Custom reminders
+
+### Update 15 Juni 2026: Fix Notifikasi Android & UI Optimization
+- Notification Fix: Implementasi foreground service, penambahan permission (POST_NOTIFICATIONS, SCHEDULE_EXACT_ALARM), dan perbaikan inisialisasi plugin dengan init guard.
+- UI Harmony: Perbaikan warna teks Makkiyah/Madaniyyah di mode gelap agar lebih harmonis.
+- QA & Stability: Pembersihan codebase dari dead code dan test artifacts, verifikasi memory management pada semua dispose controller/timer.

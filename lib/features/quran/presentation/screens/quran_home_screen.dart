@@ -604,15 +604,7 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                         Text(
                           surah.revelation.toUpperCase(),
                           style: TextStyle(
-                            color:
-                                surah.revelation.toLowerCase().contains(
-                                      'mekah',
-                                    ) ||
-                                    surah.revelation.toLowerCase().contains(
-                                      'makkiyah',
-                                    )
-                                ? const Color(0xFF0E4D31)
-                                : const Color(0xFF0E4D31),
+                            color: _textSecondary, 
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
                             letterSpacing: 0.6,

@@ -6,7 +6,10 @@ import 'package:timezone/timezone.dart' as tz;
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
 
-  late FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin;
+  final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+
+  bool _initialized = false;
 
   NotificationService._internal();
 
@@ -15,16 +18,13 @@ class NotificationService {
   }
 
   Future<void> init() async {
-    _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+    if (_initialized) return;
 
-    // Initialize timezone data
     tz.initializeTimeZones();
 
-    // Android initialization settings
     const AndroidInitializationSettings androidInitSettings =
-        AndroidInitializationSettings('app_icon');
+        AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    // iOS initialization settings
     const DarwinInitializationSettings iosInitSettings =
         DarwinInitializationSettings(
           requestAlertPermission: true,
@@ -37,22 +37,81 @@ class NotificationService {
       iOS: iosInitSettings,
     );
 
-    await _flutterLocalNotificationsPlugin.initialize(
+    final didInit = await _flutterLocalNotificationsPlugin.initialize(
       initSettings,
       onDidReceiveNotificationResponse: (NotificationResponse response) {
         debugPrint('Notification tapped with payload: ${response.payload}');
       },
     );
 
-    // Request permissions for iOS 13+
+    debugPrint('flutter_local_notifications initialized: $didInit');
+
+    // Create Android notification channel explicitly (Android 8+)
+    await _createNotificationChannel();
+
+    // Request permissions for iOS
     await _flutterLocalNotificationsPlugin
         .resolvePlatformSpecificImplementation<
           IOSFlutterLocalNotificationsPlugin
         >()
         ?.requestPermissions(alert: true, badge: true, sound: true);
+
+    // Request Android 13+ POST_NOTIFICATIONS permission
+    await requestAndroidPermissions();
+
+    _initialized = true;
+    debugPrint('NotificationService fully initialized');
   }
 
-  /// Get proper prayer name in Indonesian
+  Future<void> _createNotificationChannel() async {
+    if (defaultTargetPlatform != TargetPlatform.android) return;
+
+    const AndroidNotificationChannel channel = AndroidNotificationChannel(
+      'prayer_times_channel',
+      'Prayer Times',
+      description: 'Notifications for prayer times',
+      importance: Importance.max,
+      playSound: true,
+      enableVibration: true,
+      enableLights: true,
+    );
+
+    final androidPlugin = _flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+
+    await androidPlugin?.createNotificationChannel(channel);
+    debugPrint('Notification channel created: prayer_times_channel');
+  }
+
+  Future<void> requestAndroidPermissions() async {
+    if (defaultTargetPlatform != TargetPlatform.android) return;
+
+    final androidImplementation =
+        _flutterLocalNotificationsPlugin
+            .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin
+            >();
+
+    if (androidImplementation == null) return;
+
+    final notifGranted =
+        await androidImplementation.requestNotificationsPermission();
+    debugPrint('Android POST_NOTIFICATIONS permission granted: $notifGranted');
+
+    final alarmGranted =
+        await androidImplementation.requestExactAlarmsPermission();
+    debugPrint('Android SCHEDULE_EXACT_ALARM permission granted: $alarmGranted');
+  }
+
+  /// Ensures init() has been called before any notification operation.
+  Future<void> _ensureInitialized() async {
+    if (!_initialized) {
+      await init();
+    }
+  }
+
   static String getPrayerNameInIndonesian(String prayerKey) {
     switch (prayerKey) {
       case 'subuh':
@@ -70,44 +129,33 @@ class NotificationService {
     }
   }
 
-  /// Generate proper notification title for each prayer
   static String getNotificationTitle(String prayerKey, String location) {
     final prayerName = getPrayerNameInIndonesian(prayerKey);
-
     return 'Waktu $prayerName - $location';
   }
 
-  /// Generate proper notification message for each prayer
   static String getNotificationMessage(
     String prayerKey,
     String location,
     String prayerTime,
   ) {
     final prayerName = getPrayerNameInIndonesian(prayerKey);
-
-    // Proper Indonesian messages for each prayer
     switch (prayerKey) {
       case 'subuh':
         return 'Telah masuk waktu salat Subuh di wilayah $location pada pukul $prayerTime. Mulailah persiapan untuk menunaikan ibadah Subuh.';
-
       case 'dzuhur':
         return 'Telah masuk waktu salat Dzuhur di wilayah $location pada pukul $prayerTime. Segera menunaikan ibadah Dzuhur Anda.';
-
       case 'ashar':
         return 'Telah masuk waktu salat Ashar di wilayah $location pada pukul $prayerTime. Jangan lewatkan waktu salat Ashar.';
-
       case 'magrib':
         return 'Telah masuk waktu salat Magrib di wilayah $location pada pukul $prayerTime. Bukalah puasa (jika sedang berpuasa) dan segera salat Magrib.';
-
       case 'isya':
         return 'Telah masuk waktu salat Isya di wilayah $location pada pukul $prayerTime. Sempurnakannya ibadah Isya Anda sebelum tidur.';
-
       default:
         return 'Telah masuk waktu salat $prayerName di wilayah $location pada pukul $prayerTime.';
     }
   }
 
-  /// Show prayer time notification
   Future<void> showPrayerNotification({
     required String prayerKey,
     required String location,
@@ -115,6 +163,8 @@ class NotificationService {
     required int notificationId,
   }) async {
     try {
+      await _ensureInitialized();
+
       final title = getNotificationTitle(prayerKey, location);
       final body = getNotificationMessage(prayerKey, location, prayerTime);
 
@@ -128,6 +178,7 @@ class NotificationService {
             enableVibration: true,
             playSound: true,
             enableLights: true,
+            icon: '@mipmap/ic_launcher',
           );
 
       const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
@@ -149,14 +200,12 @@ class NotificationService {
         notificationDetails,
         payload: prayerKey,
       );
-
       debugPrint('Prayer notification sent: $title - $body');
-    } catch (e) {
-      debugPrint('Error showing prayer notification: $e');
+    } catch (e, stack) {
+      debugPrint('Error showing prayer notification: $e\n$stack');
     }
   }
 
-  /// Schedule notification for a specific time
   Future<void> schedulePrayerNotification({
     required String prayerKey,
     required String location,
@@ -165,6 +214,8 @@ class NotificationService {
     required int notificationId,
   }) async {
     try {
+      await _ensureInitialized();
+
       final title = getNotificationTitle(prayerKey, location);
       final body = getNotificationMessage(prayerKey, location, prayerTime);
 
@@ -178,6 +229,7 @@ class NotificationService {
             enableVibration: true,
             playSound: true,
             enableLights: true,
+            icon: '@mipmap/ic_launcher',
           );
 
       const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
@@ -192,11 +244,9 @@ class NotificationService {
         iOS: iosDetails,
       );
 
-      // Convert DateTime to TZDateTime for scheduling
       final localTimezone = tz.local;
       final scheduledDate = tz.TZDateTime.from(notificationTime, localTimezone);
 
-      // Schedule the notification
       await _flutterLocalNotificationsPlugin.zonedSchedule(
         notificationId,
         title,
@@ -207,14 +257,12 @@ class NotificationService {
             UILocalNotificationDateInterpretation.absoluteTime,
         payload: prayerKey,
       );
-
       debugPrint('Prayer notification scheduled for $notificationTime: $title');
-    } catch (e) {
-      debugPrint('Error scheduling prayer notification: $e');
+    } catch (e, stack) {
+      debugPrint('Error scheduling prayer notification: $e\n$stack');
     }
   }
 
-  /// Cancel notification
   Future<void> cancelNotification(int notificationId) async {
     try {
       await _flutterLocalNotificationsPlugin.cancel(notificationId);
@@ -224,7 +272,6 @@ class NotificationService {
     }
   }
 
-  /// Cancel all notifications
   Future<void> cancelAllNotifications() async {
     try {
       await _flutterLocalNotificationsPlugin.cancelAll();
