@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/features/settings/presentation/providers/settings_provider.dart';
 
 import '../../../../core/widgets/responsive_layout.dart';
-import '../../../../core/widgets/glass_container.dart';
 
 class GetStartedScreen extends ConsumerStatefulWidget {
   const GetStartedScreen({super.key});

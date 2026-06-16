@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import '../../../../core/widgets/islamic/islamic_decorations.dart';
-import '../../../../core/widgets/responsive_layout.dart';
-import '../../../../core/widgets/glass_container.dart';
-import '../providers/dhikr_provider.dart';
+import 'package:solatify/core/widgets/glass_container.dart';
+import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
+import 'package:solatify/core/widgets/responsive_layout.dart';
+import 'package:solatify/features/dhikr/presentation/providers/dhikr_provider.dart';
 
 class DhikrScreen extends ConsumerWidget {
   const DhikrScreen({super.key});
@@ -41,9 +40,9 @@ class DhikrScreen extends ConsumerWidget {
           ),
         ),
         extendBodyBehindAppBar: true,
-        body: IslamicBackground(
-          child: const TabBarView(
-            children: [
+        body: const IslamicBackground(
+          child: TabBarView(
+            children: <Widget>[
               _DhikrListView(isMorning: true),
               _DhikrListView(isMorning: false),
             ],
@@ -64,10 +63,12 @@ class _DhikrListView extends ConsumerWidget {
       isMorning ? morningDhikrProvider : eveningDhikrProvider,
     );
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final redAccent = Theme.of(context).colorScheme.tertiary;
-    final textColor = isDark
-        ? const Color(0xFFF3FBF6)
-        : const Color(0xFF241A12);
+    final theme = Theme.of(context);
+    final redAccent = theme.colorScheme.tertiary;
+    final textColor = theme.colorScheme.onSurface;
+    final secondaryText = isDark
+        ? const Color(0xFFB8A898)
+        : const Color(0xFF6A5B51);
 
     return ResponsiveCenter(
       child: ListView.builder(
@@ -79,10 +80,10 @@ class _DhikrListView extends ConsumerWidget {
         itemBuilder: (context, index) {
           final dhikr = dhikrList[index];
           return GlassContainer(
-            margin: const EdgeInsets.only(bottom: 16),
+            margin: const EdgeInsets.only(bottom: 12),
             borderRadius: 16,
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -135,7 +136,7 @@ class _DhikrListView extends ConsumerWidget {
                     dhikr.latinText,
                     style: TextStyle(
                       fontStyle: FontStyle.italic,
-                      color: textColor.withValues(alpha: 0.7),
+                      color: secondaryText,
                       fontSize: 14,
                     ),
                   ),

@@ -3,9 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:solatify/core/localization/app_localizations.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
+import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
 import 'package:solatify/features/settings/presentation/providers/settings_provider.dart';
-import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 
 enum PrayerOffsetType { subuh, dzuhur, ashar, magrib, isya }
 
@@ -56,10 +56,10 @@ class SettingsScreen extends ConsumerWidget {
     final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final dialogBg = isDarkTheme ? const Color(0xFF2A1B12) : Colors.white;
     final textColor = isDarkTheme ? Colors.white : const Color(0xFF241A12);
-    final textMuted = isDarkTheme ? Colors.white : const Color(0xFFAFA19A);
-    final primaryColor = isDarkTheme
-        ? const Color(0xFFC78A4C)
-        : const Color(0xFF0E4D31);
+    final textMuted = isDarkTheme
+        ? const Color(0xFFB8A898)
+        : const Color(0xFF6A5B51);
+    final primaryColor = Theme.of(context).colorScheme.secondary;
 
     showDialog<void>(
       context: context,
@@ -206,21 +206,22 @@ class SettingsScreen extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: methods.entries.map((entry) {
-                return RadioListTile<String>(
+                return ListTile(
                   title: Text(
                     entry.value,
                     style: TextStyle(color: textColor, fontSize: 14),
                   ),
-                  value: entry.key,
-                  groupValue: currentMethod,
-                  activeColor: const Color(0xFF0E4D31),
-                  onChanged: (val) {
-                    if (val != null) {
-                      ref
-                          .read(settingsProvider.notifier)
-                          .updateCalculationMethod(val);
-                      Navigator.pop(context);
-                    }
+                  leading: Icon(
+                    currentMethod == entry.key
+                        ? Icons.radio_button_checked
+                        : Icons.radio_button_off,
+                    color: const Color(0xFF0E4D31),
+                  ),
+                  onTap: () {
+                    ref
+                        .read(settingsProvider.notifier)
+                        .updateCalculationMethod(entry.key);
+                    Navigator.pop(context);
                   },
                 );
               }).toList(),
@@ -241,10 +242,7 @@ class SettingsScreen extends ConsumerWidget {
     final dialogBg = isDark ? const Color(0xFF2A1B12) : Colors.white;
     final textColor = isDark ? Colors.white : const Color(0xFF241A12);
 
-    final langs = {
-      'id': 'Bahasa Indonesia',
-      'en': 'English',
-    };
+    final langs = {'id': 'Bahasa Indonesia', 'en': 'English'};
 
     showDialog<void>(
       context: context,
@@ -255,19 +253,20 @@ class SettingsScreen extends ConsumerWidget {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: langs.entries.map((entry) {
-              return RadioListTile<String>(
+              return ListTile(
                 title: Text(
                   entry.value,
                   style: TextStyle(color: textColor, fontSize: 14),
                 ),
-                value: entry.key,
-                groupValue: currentLang,
-                activeColor: const Color(0xFF0E4D31),
-                onChanged: (val) {
-                  if (val != null) {
-                    ref.read(settingsProvider.notifier).updateLanguage(val);
-                    Navigator.pop(context);
-                  }
+                leading: Icon(
+                  currentLang == entry.key
+                      ? Icons.radio_button_checked
+                      : Icons.radio_button_off,
+                  color: const Color(0xFF0E4D31),
+                ),
+                onTap: () {
+                  ref.read(settingsProvider.notifier).updateLanguage(entry.key);
+                  Navigator.pop(context);
                 },
               );
             }).toList(),
@@ -339,8 +338,10 @@ class SettingsScreen extends ConsumerWidget {
                               fontSize: 12,
                             ),
                           ),
-                          trailing:
-                              Icon(Icons.chevron_right, color: textSecondary),
+                          trailing: Icon(
+                            Icons.chevron_right,
+                            color: textSecondary,
+                          ),
                           onTap: () => _showCalculationMethodDialog(
                             context,
                             ref,
@@ -361,8 +362,10 @@ class SettingsScreen extends ConsumerWidget {
                               fontSize: 12,
                             ),
                           ),
-                          trailing:
-                              Icon(Icons.chevron_right, color: textSecondary),
+                          trailing: Icon(
+                            Icons.chevron_right,
+                            color: textSecondary,
+                          ),
                           onTap: () => _showLanguageDialog(
                             context,
                             ref,

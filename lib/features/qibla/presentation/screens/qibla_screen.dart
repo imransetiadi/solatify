@@ -6,8 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_compass_v2/flutter_compass_v2.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
-import 'package:solatify/core/widgets/responsive_layout.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
+import 'package:solatify/core/widgets/responsive_layout.dart';
 
 import '../../../prayer_schedule/presentation/location_provider.dart';
 

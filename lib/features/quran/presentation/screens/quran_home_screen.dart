@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/widgets/glass_container.dart';
-import '../../../../core/widgets/responsive_layout.dart';
+import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
+import 'package:solatify/core/widgets/responsive_layout.dart';
 import '../../domain/models/quran_models.dart';
 import '../quran_provider.dart';
 
@@ -340,11 +340,9 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
 
         return ListView.builder(
           physics: const BouncingScrollPhysics(),
-          padding: EdgeInsets.fromLTRB(
-            ResponsiveLayout.pagePadding(context).horizontal / 2,
-            12,
-            ResponsiveLayout.pagePadding(context).horizontal / 2,
-            80,
+          padding: ResponsiveLayout.pagePadding(context).copyWith(
+            top: 12,
+            bottom: 80,
           ),
           itemCount: list.length,
           itemBuilder: (context, index) {
@@ -408,11 +406,9 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
 
         return ListView.builder(
           physics: const BouncingScrollPhysics(),
-          padding: EdgeInsets.fromLTRB(
-            ResponsiveLayout.pagePadding(context).horizontal / 2,
-            12,
-            ResponsiveLayout.pagePadding(context).horizontal / 2,
-            96,
+          padding: ResponsiveLayout.pagePadding(context).copyWith(
+            top: 12,
+            bottom: 96,
           ),
           itemCount: parsedBookmarks.length,
           itemBuilder: (context, index) {

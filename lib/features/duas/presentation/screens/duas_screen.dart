@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
-import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/features/duas/domain/entities/dua.dart';
 import 'package:solatify/features/duas/presentation/providers/duas_provider.dart';
 
@@ -101,7 +101,9 @@ class _DuasScreenState extends ConsumerState<DuasScreen> {
                     data: (allDuas) {
                       final filteredList = allDuas.where((dua) {
                         return dua.title.toLowerCase().contains(_searchQuery) ||
-                            dua.arabicText.toLowerCase().contains(_searchQuery) ||
+                            dua.arabicText.toLowerCase().contains(
+                              _searchQuery,
+                            ) ||
                             dua.meaning.toLowerCase().contains(_searchQuery);
                       }).toList();
 
@@ -134,9 +136,8 @@ class _DuasScreenState extends ConsumerState<DuasScreen> {
                         },
                       );
                     },
-                    loading: () => const Center(
-                      child: CircularProgressIndicator(),
-                    ),
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
                     error: (error, stackTrace) => Center(
                       child: Text(
                         'Gagal memuat data doa',
@@ -179,14 +180,16 @@ class _DuaCardState extends State<_DuaCard> {
   @override
   Widget build(BuildContext context) {
     final redAccent = Theme.of(context).colorScheme.tertiary;
+    final surfaceColor = Theme.of(context).colorScheme.surface;
     return GlassContainer(
       borderRadius: 18,
       padding: EdgeInsets.zero,
+      fillColor: surfaceColor,
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
         onTap: () => setState(() => _isExpanded = !_isExpanded),
         child: Padding(
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -209,7 +212,7 @@ class _DuaCardState extends State<_DuaCard> {
                 ],
               ),
               if (_isExpanded) ...[
-                const SizedBox(height: 16),
+                const SizedBox(height: 14),
                 Text(
                   widget.dua.arabicText,
                   style: TextStyle(
@@ -219,7 +222,7 @@ class _DuaCardState extends State<_DuaCard> {
                   ),
                   textAlign: TextAlign.right,
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 12),
                 Text(
                   widget.dua.latinText,
                   style: TextStyle(
@@ -229,7 +232,7 @@ class _DuaCardState extends State<_DuaCard> {
                     height: 1.6,
                   ),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 12),
                 Text(
                   widget.dua.meaning,
                   style: TextStyle(
@@ -238,7 +241,7 @@ class _DuaCardState extends State<_DuaCard> {
                     height: 1.6,
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
                 Text(
                   'Sumber: ${widget.dua.source}',
                   style: TextStyle(
