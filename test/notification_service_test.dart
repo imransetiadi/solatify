@@ -88,35 +88,44 @@ void main() {
     expect(readiness.canSendTestNotification, isTrue);
   });
 
-  test('reports notification permission action when permission is denied', () async {
-    final readiness = NotificationReadiness.needsNotificationPermission();
+  test(
+    'reports notification permission action when permission is denied',
+    () async {
+      final readiness = NotificationReadiness.needsNotificationPermission();
 
-    expect(
-      readiness.status,
-      NotificationReadinessStatus.needsNotificationPermission,
-    );
-    expect(readiness.title, 'Perlu izin notifikasi');
-    expect(readiness.needsPermissionAction, isTrue);
-    expect(readiness.canSendTestNotification, isFalse);
-  });
+      expect(
+        readiness.status,
+        NotificationReadinessStatus.needsNotificationPermission,
+      );
+      expect(readiness.title, 'Perlu izin notifikasi');
+      expect(readiness.needsPermissionAction, isTrue);
+      expect(readiness.canSendTestNotification, isFalse);
+    },
+  );
 
-  test('reports less precise schedule when exact alarms are unavailable', () async {
-    final readiness = NotificationReadiness.inexactScheduling();
+  test(
+    'reports less precise schedule when exact alarms are unavailable',
+    () async {
+      final readiness = NotificationReadiness.inexactScheduling();
 
-    expect(readiness.status, NotificationReadinessStatus.inexactScheduling);
-    expect(readiness.title, 'Jadwal mungkin tidak tepat');
-    expect(readiness.needsPermissionAction, isTrue);
-    expect(readiness.canSendTestNotification, isTrue);
-  });
+      expect(readiness.status, NotificationReadinessStatus.inexactScheduling);
+      expect(readiness.title, 'Jadwal mungkin tidak tepat');
+      expect(readiness.needsPermissionAction, isTrue);
+      expect(readiness.canSendTestNotification, isTrue);
+    },
+  );
 
-  test('getReadinessStatus returns inexact scheduling when exact alarm is denied', () async {
-    await service.init();
+  test(
+    'getReadinessStatus returns inexact scheduling when exact alarm is denied',
+    () async {
+      await service.init();
 
-    final readiness = await service.getReadinessStatus();
+      final readiness = await service.getReadinessStatus();
 
-    expect(readiness.status, NotificationReadinessStatus.inexactScheduling);
-    expect(readiness.title, 'Jadwal mungkin tidak tepat');
-  });
+      expect(readiness.status, NotificationReadinessStatus.inexactScheduling);
+      expect(readiness.title, 'Jadwal mungkin tidak tepat');
+    },
+  );
 
   test('showTestNotification sends an immediate notification', () async {
     await service.init();

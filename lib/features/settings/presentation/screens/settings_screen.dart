@@ -93,9 +93,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     try {
       await _notificationService.showTestNotification();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Notifikasi uji dikirim.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Notifikasi uji dikirim.')));
       await _refreshNotificationReadiness();
     } catch (e) {
       debugPrint('Error sending test notification from settings: $e');

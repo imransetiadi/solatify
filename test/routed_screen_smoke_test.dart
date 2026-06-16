@@ -36,15 +36,11 @@ void main() {
   });
 
   Widget wrap(Widget child) {
-    return ProviderScope(
-      child: MaterialApp(home: child),
-    );
+    return ProviderScope(child: MaterialApp(home: child));
   }
 
   testWidgets('Qibla screen renders', (tester) async {
-    await tester.pumpWidget(
-      wrap(const QiblaScreen()),
-    );
+    await tester.pumpWidget(wrap(const QiblaScreen()));
 
     await tester.pumpAndSettle();
 
@@ -53,9 +49,7 @@ void main() {
   });
 
   testWidgets('Mosque screen renders', (tester) async {
-    await tester.pumpWidget(
-      wrap(const NearbyMosqueScreen()),
-    );
+    await tester.pumpWidget(wrap(const NearbyMosqueScreen()));
 
     await tester.pumpAndSettle();
 
@@ -64,9 +58,7 @@ void main() {
   });
 
   testWidgets('Settings screen renders', (tester) async {
-    await tester.pumpWidget(
-      wrap(const SettingsScreen()),
-    );
+    await tester.pumpWidget(wrap(const SettingsScreen()));
 
     await tester.pumpAndSettle();
 
@@ -77,9 +69,7 @@ void main() {
   });
 
   testWidgets('Hijri calendar screen renders', (tester) async {
-    await tester.pumpWidget(
-      wrap(const HijriCalendarScreen()),
-    );
+    await tester.pumpWidget(wrap(const HijriCalendarScreen()));
 
     await tester.pumpAndSettle();
 
