@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:solatify/features/notifications/data/services/notification_service.dart';
+import 'package:solatify/features/prayer_schedule/domain/entities/location_entity.dart';
+import 'package:solatify/features/prayer_schedule/domain/entities/prayer_times_state_entity.dart';
 import 'package:solatify/features/prayer_schedule/presentation/location_provider.dart';
 import 'package:solatify/features/prayer_schedule/presentation/prayer_times_provider.dart';
 
@@ -62,10 +64,30 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
   final Ref _ref;
   Timer? _schedulingTimer;
   final Set<String> _scheduledNotifications = {};
+  ProviderSubscription<PrayerTimesStateEntity>? _prayerTimesSubscription;
+  ProviderSubscription<LocationEntity>? _locationSubscription;
 
   Future<void> _initializeNotifications() async {
     try {
       await NotificationService().init();
+      _prayerTimesSubscription?.close();
+      _locationSubscription?.close();
+      _prayerTimesSubscription = _ref.listen<PrayerTimesStateEntity>(
+        prayerTimesProvider,
+        (previous, next) {
+          if (mounted) {
+            _scheduleAllNotifications();
+          }
+        },
+      );
+      _locationSubscription = _ref.listen<LocationEntity>(locationProvider, (
+        previous,
+        next,
+      ) {
+        if (mounted) {
+          _scheduleAllNotifications();
+        }
+      });
       _scheduleAllNotifications();
 
       // Re-check notifications every minute to ensure they're scheduled
@@ -177,6 +199,8 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
   @override
   void dispose() {
     _schedulingTimer?.cancel();
+    _prayerTimesSubscription?.close();
+    _locationSubscription?.close();
     super.dispose();
   }
 }

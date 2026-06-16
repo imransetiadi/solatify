@@ -45,14 +45,12 @@ class IslamicContentScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final textColor = isDark
-        ? const Color(0xFFF3FBF6)
-        : const Color(0xFF241A12);
+    final textColor = theme.colorScheme.onSurface;
     final mutedColor = isDark
-        ? const Color(0xFFC8B8A8)
-        : const Color(0xFFAFA19A);
+        ? const Color(0xFFB8A898)
+        : const Color(0xFF6A5B51);
     final redAccent = theme.colorScheme.tertiary;
-    final surfaceColor = isDark ? const Color(0xFF241A14) : Colors.white;
+    final surfaceColor = theme.colorScheme.surface;
     final randomTip = ref.watch(randomTipProvider);
 
     return Scaffold(
@@ -79,7 +77,7 @@ class IslamicContentScreen extends ConsumerWidget {
                 title: 'Jelajahi Spiritual',
                 subtitle: 'Ilmu, doa, dzikir, dan amalan harian',
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               _SectionTitle(
                 icon: Icons.auto_awesome,
                 title: 'Tip Harian',
@@ -97,11 +95,10 @@ class IslamicContentScreen extends ConsumerWidget {
                   primaryColor: redAccent,
                   onTap: () => context.go('/islamic-content/tips'),
                 ),
-                loading: () =>
-                    const Center(child: CircularProgressIndicator()),
+                loading: () => const Center(child: CircularProgressIndicator()),
                 error: (e, _) => Text('Gagal memuat tip: $e'),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
               _SectionTitle(
                 icon: Icons.grid_view_rounded,
                 title: 'Menu Konten',
@@ -110,24 +107,30 @@ class IslamicContentScreen extends ConsumerWidget {
               const SizedBox(height: 12),
               LayoutBuilder(
                 builder: (context, constraints) {
-                  // Calculate card width to ensure exactly 2 columns on mobile, 3 on tablet
-                  // subtracting total spacing (12 between cards)
+                  // Keep the grid evenly spaced with fixed columns on all widths.
                   final crossAxisCount = constraints.maxWidth >= 720 ? 3 : 2;
                   final spacing = 12.0;
-                  final cardWidth = (constraints.maxWidth - (spacing * (crossAxisCount - 1))) / crossAxisCount;
+                  final cardWidth =
+                      (constraints.maxWidth -
+                          (spacing * (crossAxisCount - 1))) /
+                      crossAxisCount;
 
                   return Wrap(
+                    alignment: WrapAlignment.center,
                     spacing: spacing,
                     runSpacing: spacing,
                     children: _menuItems.map((item) {
                       return SizedBox(
                         width: cardWidth,
-                        child: _ContentMenuCard(
-                          item: item,
-                          surfaceColor: surfaceColor,
-                          textColor: textColor,
-                          mutedColor: mutedColor,
-                          primaryColor: redAccent,
+                        child: SizedBox(
+                          height: 140,
+                          child: _ContentMenuCard(
+                            item: item,
+                            surfaceColor: surfaceColor,
+                            textColor: textColor,
+                            mutedColor: mutedColor,
+                            primaryColor: redAccent,
+                          ),
                         ),
                       );
                     }).toList(),
@@ -156,6 +159,7 @@ class _SectionTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, color: color, size: 20),
         const SizedBox(width: 8),
@@ -200,7 +204,7 @@ class _DailyTipCard extends StatelessWidget {
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: Padding(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -271,7 +275,7 @@ class _ContentMenuCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         onTap: () => context.go(item.path),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -284,7 +288,7 @@ class _ContentMenuCard extends StatelessWidget {
                 ),
                 child: Icon(item.icon, color: primaryColor, size: 20),
               ),
-              const Spacer(),
+              const SizedBox(height: 20),
               Text(
                 item.title,
                 maxLines: 1,

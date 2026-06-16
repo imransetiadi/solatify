@@ -38,19 +38,13 @@ class _AsmaulHusnaScreenState extends ConsumerState<AsmaulHusnaScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final redAccent = theme.colorScheme.tertiary;
-    final primaryColor = isDark
-        ? const Color(0xFFC78A4C)
-        : const Color(0xFF0E4D31);
-    final textColor = isDark
-        ? const Color(0xFFF3FBF6)
-        : const Color(0xFF241A12);
+    final primaryColor = theme.colorScheme.secondary;
+    final textColor = theme.colorScheme.onSurface;
     final textColorMuted = isDark
-        ? const Color(0xFFC8B8A8)
-        : const Color(0xFFAFA19A);
-    final borderColor = isDark
-        ? Colors.white.withValues(alpha: 0.2)
-        : Colors.black12;
-    final cardBg = isDark ? const Color(0xFF241A14) : Colors.white;
+        ? const Color(0xFFB8A898)
+        : const Color(0xFF6A5B51);
+    final borderColor = theme.colorScheme.outline.withValues(alpha: 0.7);
+    final cardBg = theme.colorScheme.surface;
 
     return Scaffold(
       appBar: AppBar(
@@ -91,7 +85,7 @@ class _AsmaulHusnaScreenState extends ConsumerState<AsmaulHusnaScreen> {
                     fillColor: cardBg,
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 14),
                 Expanded(
                   child: asmaulHusnaAsync.when(
                     data: (allAsmaulHusna) {
@@ -113,16 +107,16 @@ class _AsmaulHusnaScreenState extends ConsumerState<AsmaulHusnaScreen> {
                       }
 
                       return ListView.builder(
-                        padding: const EdgeInsets.only(bottom: 96),
+                        padding: const EdgeInsets.only(bottom: 96, top: 4),
                         itemCount: filteredList.length,
                         itemBuilder: (context, index) {
                           final name = filteredList[index];
                           return Card(
-                            margin: const EdgeInsets.symmetric(vertical: 8),
+                            margin: const EdgeInsets.symmetric(vertical: 6),
                             color: cardBg,
                             elevation: 2,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(14),
                               side: BorderSide(
                                 color: redAccent.withValues(alpha: 0.30),
                                 width: 1,
@@ -132,7 +126,7 @@ class _AsmaulHusnaScreenState extends ConsumerState<AsmaulHusnaScreen> {
                               iconColor: redAccent,
                               collapsedIconColor: redAccent,
                               tilePadding: const EdgeInsets.symmetric(
-                                vertical: 8,
+                                vertical: 10,
                                 horizontal: 16,
                               ),
                               title: Text(

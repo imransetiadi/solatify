@@ -15,6 +15,7 @@ class NotificationService {
       FlutterLocalNotificationsPlugin();
 
   bool _initialized = false;
+  bool _canUseExactAlarms = true;
 
   Future<void> init() async {
     if (_initialized) return;
@@ -101,9 +102,21 @@ class NotificationService {
 
     final alarmGranted = await androidImplementation
         .requestExactAlarmsPermission();
+    _canUseExactAlarms = alarmGranted ?? false;
     debugPrint(
       'Android SCHEDULE_EXACT_ALARM permission granted: $alarmGranted',
     );
+  }
+
+  AndroidScheduleMode _androidScheduleMode() {
+    if (_canUseExactAlarms) {
+      return AndroidScheduleMode.exactAllowWhileIdle;
+    }
+
+    debugPrint(
+      'Exact alarm permission denied; falling back to inexact scheduling.',
+    );
+    return AndroidScheduleMode.inexactAllowWhileIdle;
   }
 
   /// Ensures init() has been called before any notification operation.
@@ -256,7 +269,7 @@ class NotificationService {
         body,
         scheduledDate,
         notificationDetails,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        androidScheduleMode: _androidScheduleMode(),
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
         payload: prayerKey,
@@ -289,27 +302,15 @@ class NotificationService {
   /// Returns the count of notifications awaiting delivery.
   Future<int> getPendingNotificationsCount() async {
     try {
-      if (defaultTargetPlatform != TargetPlatform.android) return 0;
-      
-      final androidPlugin = _flutterLocalNotificationsPlugin
-          .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin
-          >();
+      final pendingNotifications = await _flutterLocalNotificationsPlugin
+          .pendingNotificationRequests();
+      final count = pendingNotifications.length;
 
-      if (androidPlugin == null) return 0;
-
-      final pendingNotifications =
-          await androidPlugin.getNotificationAppLaunchDetails();
-      final count = pendingNotifications != null ? 1 : 0;
-      
-      debugPrint(
-        'Pending scheduled notifications: $count (debug info available)',
-      );
+      debugPrint('Pending scheduled notifications: $count');
       return count;
     } catch (e) {
       debugPrint('Error retrieving pending notifications: $e');
       return 0;
     }
   }
-
 }

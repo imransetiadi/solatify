@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:solatify/core/utils/location_service.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
+import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
 import 'package:solatify/features/settings/presentation/providers/settings_provider.dart';
-import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 
 import '../../data/prayer_calculation_service.dart';
 import '../../data/prayer_timezone_service.dart';
@@ -134,36 +134,6 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
         );
       },
     );
-  }
-
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
-      builder: (context, child) {
-        final isDark = Theme.of(context).brightness == Brightness.dark;
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.dark(
-              primary: const Color(0xFF0E4D31),
-              onPrimary: Colors.white,
-              surface: isDark ? const Color(0xFF241A14) : Colors.white,
-              onSurface: isDark ? Colors.white : const Color(0xFF241A12),
-            ),
-            dialogBackgroundColor:
-                isDark ? const Color(0xFF2A1B12) : Colors.white,
-          ),
-          child: child!,
-        );
-      },
-    );
-    if (picked != null && picked != _selectedDate) {
-      setState(() {
-        _selectedDate = picked;
-      });
-    }
   }
 
   @override
@@ -318,7 +288,7 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
                     margin: const EdgeInsets.symmetric(vertical: 12),
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      padding: ResponsiveLayout.pagePadding(context).copyWith(top: 0, bottom: 0),
                       itemCount: dateStrip.length,
                       itemBuilder: (context, index) {
                         final date = dateStrip[index];
