@@ -123,7 +123,7 @@ class IslamicContentScreen extends ConsumerWidget {
                       return SizedBox(
                         width: cardWidth,
                         child: SizedBox(
-                          height: 140,
+                          height: 148,
                           child: _ContentMenuCard(
                             item: item,
                             surfaceColor: surfaceColor,
