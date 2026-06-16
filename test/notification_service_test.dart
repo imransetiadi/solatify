@@ -1,9 +1,12 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:solatify/features/notifications/data/services/notification_service.dart';
+import 'package:timezone/data/latest_all.dart' as tzdata;
+import 'package:timezone/timezone.dart' as tz;
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  tzdata.initializeTimeZones();
 
   const channel = MethodChannel('dexterous.com/flutter/local_notifications');
   final service = NotificationService();
@@ -60,6 +63,7 @@ void main() {
       location: 'Jakarta, Indonesia',
       prayerTime: '04:30',
       notificationTime: DateTime.now().add(const Duration(minutes: 10)),
+      timezoneName: 'Asia/Jakarta',
       notificationId: 1001,
     );
 
@@ -69,6 +73,38 @@ void main() {
     expect(
       zonedSchedule.arguments['platformSpecifics']['scheduleMode'],
       'inexactAllowWhileIdle',
+    );
+  });
+
+  test('schedules prayer adzan in the selected prayer timezone', () async {
+    await service.init();
+    final makassar = tz.getLocation('Asia/Makassar');
+    final prayerTime = tz.TZDateTime.now(
+      makassar,
+    ).add(const Duration(minutes: 10));
+
+    await service.schedulePrayerNotification(
+      prayerKey: 'dzuhur',
+      location: 'Makassar, Indonesia',
+      prayerTime: '12:00',
+      notificationTime: prayerTime,
+      timezoneName: 'Asia/Makassar',
+      notificationId: 1002,
+    );
+
+    final zonedSchedule = capturedMethods.lastWhere(
+      (call) => call.method == 'zonedSchedule',
+    );
+    expect(zonedSchedule.arguments['id'], 1002);
+    expect(zonedSchedule.arguments['payload'], 'dzuhur');
+    expect(zonedSchedule.arguments['timeZoneName'], 'Asia/Makassar');
+    expect(
+      zonedSchedule.arguments['scheduledDateTimeISO8601'],
+      prayerTime.toIso8601String(),
+    );
+    expect(
+      zonedSchedule.arguments['platformSpecifics']['channelId'],
+      'prayer_times_adhan_channel_v2',
     );
   });
 

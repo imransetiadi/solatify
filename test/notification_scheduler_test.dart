@@ -23,14 +23,57 @@ void main() {
       );
 
       expect(requests, hasLength(6));
-      expect(
-        requests.map((request) => request.prayerKey),
-        ['subuh', 'dzuhur', 'ashar', 'magrib', 'isya', 'subuh'],
+      expect(requests.map((request) => request.prayerKey), [
+        'subuh',
+        'dzuhur',
+        'ashar',
+        'magrib',
+        'isya',
+        'subuh',
+      ]);
+      expect(requests.map((request) => request.notificationId), [
+        1001,
+        1002,
+        1003,
+        1004,
+        1005,
+        2001,
+      ]);
+      expect(requests.map((request) => request.prayerTime), [
+        today['subuh'],
+        today['dzuhur'],
+        today['ashar'],
+        today['magrib'],
+        today['isya'],
+        tomorrow['subuh'],
+      ]);
+    });
+
+    test('keeps notification time exactly at prayer entry time', () {
+      final now = DateTime(2026, 6, 16, 11, 59);
+      final dzuhur = DateTime(2026, 6, 16, 12);
+      final today = <String, DateTime?>{
+        'subuh': DateTime(2026, 6, 16, 4, 30),
+        'dzuhur': dzuhur,
+        'ashar': DateTime(2026, 6, 16, 15, 20),
+        'magrib': DateTime(2026, 6, 16, 18),
+        'isya': DateTime(2026, 6, 16, 19, 15),
+      };
+      final tomorrow = <String, DateTime?>{
+        'subuh': DateTime(2026, 6, 17, 4, 31),
+      };
+
+      final requests = buildPrayerNotificationRequests(
+        today: today,
+        tomorrow: tomorrow,
+        now: now,
       );
-      expect(
-        requests.map((request) => request.notificationId),
-        [1001, 1002, 1003, 1004, 1005, 2001],
+
+      final dzuhurRequest = requests.firstWhere(
+        (request) => request.prayerKey == 'dzuhur',
       );
+      expect(dzuhurRequest.prayerTime, dzuhur);
+      expect(dzuhurRequest.prayerTime.difference(dzuhur), Duration.zero);
     });
 
     test('schedules tomorrow subuh when today prayer times have passed', () {
@@ -75,14 +118,8 @@ void main() {
       );
 
       expect(requests, hasLength(2));
-      expect(
-        requests.map((request) => request.prayerKey),
-        ['ashar', 'isya'],
-      );
-      expect(
-        requests.map((request) => request.notificationId),
-        [1003, 1005],
-      );
+      expect(requests.map((request) => request.prayerKey), ['ashar', 'isya']);
+      expect(requests.map((request) => request.notificationId), [1003, 1005]);
     });
   });
 }

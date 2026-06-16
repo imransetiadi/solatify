@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:solatify/features/notifications/data/services/notification_service.dart';
+import 'package:solatify/features/prayer_schedule/data/prayer_timezone_service.dart';
 import 'package:solatify/features/prayer_schedule/domain/entities/location_entity.dart';
 import 'package:solatify/features/prayer_schedule/domain/entities/prayer_times_state_entity.dart';
 import 'package:solatify/features/prayer_schedule/presentation/location_provider.dart';
@@ -109,6 +110,11 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
       final today = timesState.todayTimes;
       final tomorrow = timesState.tomorrowTimes;
       final locationStr = '${location.city}, ${location.country}';
+      final timezoneName = PrayerTimezoneService.inferTimezoneName(
+        latitude: location.latitude,
+        longitude: location.longitude,
+        country: location.country,
+      );
 
       if (!_hasAllRequiredTimes(today, tomorrow)) return;
 
@@ -125,7 +131,7 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
         debugPrint(
           'Prayer notification request: prayer=${request.prayerKey}, '
           'id=${request.notificationId}, target=${request.prayerTime.toIso8601String()}, '
-          'isFuture=${request.prayerTime.isAfter(now)}',
+          'timezone=$timezoneName, isFuture=${request.prayerTime.isAfter(now)}',
         );
       }
 
@@ -140,6 +146,7 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
           prayerKey: request.prayerKey,
           prayerTime: request.prayerTime,
           location: locationStr,
+          timezoneName: timezoneName,
           notificationId: request.notificationId,
         );
       }
@@ -161,6 +168,7 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
     required String prayerKey,
     required DateTime prayerTime,
     required String location,
+    required String timezoneName,
     required int notificationId,
   }) async {
     try {
@@ -180,6 +188,7 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
         location: location,
         prayerTime: prayerTimeStr,
         notificationTime: prayerTime,
+        timezoneName: timezoneName,
         notificationId: notificationId,
       );
 

@@ -107,10 +107,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('Pengaturan'), findsWidgets);
-    expect(find.text('NOTIFIKASI'), findsOneWidget);
-    expect(find.text('Kirim notifikasi uji'), findsOneWidget);
-    expect(find.text('Jadwalkan tes 2 menit'), findsOneWidget);
-    expect(find.textContaining('Belum ada status aksi'), findsOneWidget);
+    expect(find.text('NOTIFIKASI'), findsNothing);
+    expect(find.text('Kirim notifikasi uji'), findsNothing);
+    expect(find.text('Jadwalkan tes 2 menit'), findsNothing);
+    expect(find.textContaining('Pending:'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
