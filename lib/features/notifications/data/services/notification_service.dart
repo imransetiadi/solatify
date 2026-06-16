@@ -3,6 +3,69 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
+enum NotificationReadinessStatus {
+  ready,
+  needsNotificationPermission,
+  inexactScheduling,
+  unknown,
+}
+
+class NotificationReadiness {
+  const NotificationReadiness({
+    required this.status,
+    required this.title,
+    required this.message,
+    required this.needsPermissionAction,
+    required this.canSendTestNotification,
+  });
+
+  factory NotificationReadiness.ready() {
+    return const NotificationReadiness(
+      status: NotificationReadinessStatus.ready,
+      title: 'Notifikasi aktif',
+      message: 'Pengingat waktu salat siap digunakan.',
+      needsPermissionAction: false,
+      canSendTestNotification: true,
+    );
+  }
+
+  factory NotificationReadiness.needsNotificationPermission() {
+    return const NotificationReadiness(
+      status: NotificationReadinessStatus.needsNotificationPermission,
+      title: 'Perlu izin notifikasi',
+      message: 'Aktifkan izin agar pengingat waktu salat dapat muncul.',
+      needsPermissionAction: true,
+      canSendTestNotification: false,
+    );
+  }
+
+  factory NotificationReadiness.inexactScheduling() {
+    return const NotificationReadiness(
+      status: NotificationReadinessStatus.inexactScheduling,
+      title: 'Jadwal mungkin tidak tepat',
+      message: 'Aktifkan alarm tepat waktu agar pengingat lebih akurat.',
+      needsPermissionAction: true,
+      canSendTestNotification: true,
+    );
+  }
+
+  factory NotificationReadiness.unknown() {
+    return const NotificationReadiness(
+      status: NotificationReadinessStatus.unknown,
+      title: 'Periksa izin notifikasi',
+      message: 'Status notifikasi belum dapat dipastikan.',
+      needsPermissionAction: true,
+      canSendTestNotification: false,
+    );
+  }
+
+  final NotificationReadinessStatus status;
+  final String title;
+  final String message;
+  final bool needsPermissionAction;
+  final bool canSendTestNotification;
+}
+
 class NotificationService {
   NotificationService._internal();
 

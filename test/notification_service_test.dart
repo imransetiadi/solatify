@@ -74,4 +74,34 @@ void main() {
     expect(count, 2);
     expect(capturedMethods.last.method, 'pendingNotificationRequests');
   });
+
+  test('reports ready readiness when permissions are available', () async {
+    final readiness = NotificationReadiness.ready();
+
+    expect(readiness.status, NotificationReadinessStatus.ready);
+    expect(readiness.title, 'Notifikasi aktif');
+    expect(readiness.needsPermissionAction, isFalse);
+    expect(readiness.canSendTestNotification, isTrue);
+  });
+
+  test('reports notification permission action when permission is denied', () async {
+    final readiness = NotificationReadiness.needsNotificationPermission();
+
+    expect(
+      readiness.status,
+      NotificationReadinessStatus.needsNotificationPermission,
+    );
+    expect(readiness.title, 'Perlu izin notifikasi');
+    expect(readiness.needsPermissionAction, isTrue);
+    expect(readiness.canSendTestNotification, isFalse);
+  });
+
+  test('reports less precise schedule when exact alarms are unavailable', () async {
+    final readiness = NotificationReadiness.inexactScheduling();
+
+    expect(readiness.status, NotificationReadinessStatus.inexactScheduling);
+    expect(readiness.title, 'Jadwal mungkin tidak tepat');
+    expect(readiness.needsPermissionAction, isTrue);
+    expect(readiness.canSendTestNotification, isTrue);
+  });
 }
