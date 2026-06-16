@@ -52,178 +52,207 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
   Widget build(BuildContext context) {
     final searchListAsync = ref.watch(filteredSurahListProvider);
     final bookmarksState = ref.watch(quranBookmarksProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final appBarColor = Theme.of(
+      context,
+    ).colorScheme.surface.withValues(alpha: isDark ? 0.96 : 0.94);
 
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: appBarColor,
+        foregroundColor: _textColor,
+        surfaceTintColor: Colors.transparent,
+        elevation: 2,
+        shadowColor: Colors.black.withValues(alpha: 0.12),
+        title: const Text(
+          'Al-Qur\'an',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+      ),
       body: IslamicBackground(
         child: SafeArea(
-        child: ResponsiveCenter(
-          child: NestedScrollView(
-            headerSliverBuilder: (context, innerBoxIsScrolled) {
-              return [
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: ResponsiveLayout.pagePadding(
-                      context,
-                    ).copyWith(top: 20, bottom: 10),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Header title
-                        Row(
-                          children: [
-                            Icon(Icons.menu_book, color: _textColor, size: 28),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                'Al-Qur\'an',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  color: _textColor,
-                                  fontSize: 26,
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: 'Outfit',
-                                ),
+          child: ResponsiveCenter(
+            child: NestedScrollView(
+              headerSliverBuilder: (context, innerBoxIsScrolled) {
+                return [
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: ResponsiveLayout.pagePadding(
+                        context,
+                      ).copyWith(top: 20, bottom: 10),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Header title
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.menu_book,
+                                color: _textColor,
+                                size: 28,
                               ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          'Baca dan renungkan firman Allah SWT',
-                          style: TextStyle(color: _textSecondary, fontSize: 14),
-                        ),
-                        const SizedBox(height: 20),
-
-                        // Floating Search Bar
-                        Container(
-                          decoration: BoxDecoration(
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(
-                                  alpha:
-                                      Theme.of(context).brightness ==
-                                          Brightness.dark
-                                      ? 0.3
-                                      : 0.05,
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  'Al-Qur\'an',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: _textColor,
+                                    fontSize: 26,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'Outfit',
+                                  ),
                                 ),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
                               ),
                             ],
                           ),
-                          child: TextField(
-                            controller: _searchController,
-                            style: TextStyle(color: _textColor),
-                            decoration: InputDecoration(
-                              hintText: 'Cari nama Surah, arti, atau nomor...',
-                              hintStyle: TextStyle(
-                                color: _textHint,
-                                fontSize: 14,
-                              ),
-                              prefixIcon: Icon(
-                                Icons.search,
-                                color: _accentColor,
-                              ),
-                              suffixIcon: _searchController.text.isNotEmpty
-                                  ? IconButton(
-                                      icon: Icon(
-                                        Icons.clear,
-                                        color: _textSecondary,
-                                      ),
-                                      onPressed: () {
-                                        _searchController.clear();
-                                        ref
-                                                .read(
-                                                  surahSearchQueryProvider
-                                                      .notifier,
-                                                )
-                                                .state =
-                                            '';
-                                        setState(() {});
-                                      },
-                                    )
-                                  : null,
-                              filled: true,
-                              fillColor:
-                                  Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? const Color(0xFF2A1B12)
-                                  : Colors.white,
-                              enabledBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: _cardBorderColor),
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: _accentColor,
-                                  width: 1.5,
-                                ),
-                                borderRadius: BorderRadius.circular(16),
-                              ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Baca dan renungkan firman Allah SWT',
+                            style: TextStyle(
+                              color: _textSecondary,
+                              fontSize: 14,
                             ),
-                            onChanged: (val) {
-                              ref
-                                      .read(surahSearchQueryProvider.notifier)
-                                      .state =
-                                  val;
-                              setState(() {});
-                            },
                           ),
-                        ),
-                        const SizedBox(height: 16),
+                          const SizedBox(height: 20),
 
-                        // Bookmark shortcut last read card
-                        if (bookmarksState.lastReadSurah != null)
-                          _buildLastReadCard(bookmarksState),
-                      ],
-                    ),
-                  ),
-                ),
-                SliverPersistentHeader(
-                  pinned: true,
-                  delegate: _SliverTabHeaderDelegate(
-                    child: Container(
-                      color: Theme.of(context).scaffoldBackgroundColor,
-                      padding: EdgeInsets.symmetric(
-                        horizontal:
-                            ResponsiveLayout.pagePadding(context).horizontal /
-                            2,
-                        vertical: 4,
-                      ),
-                      child: TabBar(
-                        controller: _tabController,
-                        indicatorColor: Theme.of(context).colorScheme.tertiary,
-                        labelColor: _textColor,
-                        unselectedLabelColor: _textSecondary,
-                        labelStyle: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                        ),
-                        tabs: const [
-                          Tab(text: 'Daftar Surah'),
-                          Tab(text: 'Tandai & Simpan'),
+                          // Floating Search Bar
+                          Container(
+                            decoration: BoxDecoration(
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(
+                                    alpha:
+                                        Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? 0.3
+                                        : 0.05,
+                                  ),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: TextField(
+                              controller: _searchController,
+                              style: TextStyle(color: _textColor),
+                              decoration: InputDecoration(
+                                hintText:
+                                    'Cari nama Surah, arti, atau nomor...',
+                                hintStyle: TextStyle(
+                                  color: _textHint,
+                                  fontSize: 14,
+                                ),
+                                prefixIcon: Icon(
+                                  Icons.search,
+                                  color: _accentColor,
+                                ),
+                                suffixIcon: _searchController.text.isNotEmpty
+                                    ? IconButton(
+                                        icon: Icon(
+                                          Icons.clear,
+                                          color: _textSecondary,
+                                        ),
+                                        onPressed: () {
+                                          _searchController.clear();
+                                          ref
+                                                  .read(
+                                                    surahSearchQueryProvider
+                                                        .notifier,
+                                                  )
+                                                  .state =
+                                              '';
+                                          setState(() {});
+                                        },
+                                      )
+                                    : null,
+                                filled: true,
+                                fillColor:
+                                    Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? const Color(0xFF2A1B12)
+                                    : Colors.white,
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: _cardBorderColor,
+                                  ),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: _accentColor,
+                                    width: 1.5,
+                                  ),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                              ),
+                              onChanged: (val) {
+                                ref
+                                        .read(surahSearchQueryProvider.notifier)
+                                        .state =
+                                    val;
+                                setState(() {});
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Bookmark shortcut last read card
+                          if (bookmarksState.lastReadSurah != null)
+                            _buildLastReadCard(bookmarksState),
                         ],
                       ),
                     ),
                   ),
-                ),
-              ];
-            },
-            body: TabBarView(
-              controller: _tabController,
-              children: [
-                // Tab 1: Surah list
-                _buildSurahListTab(searchListAsync),
+                  SliverPersistentHeader(
+                    pinned: true,
+                    delegate: _SliverTabHeaderDelegate(
+                      child: Container(
+                        color: Theme.of(context).scaffoldBackgroundColor,
+                        padding: EdgeInsets.symmetric(
+                          horizontal:
+                              ResponsiveLayout.pagePadding(context).horizontal /
+                              2,
+                          vertical: 4,
+                        ),
+                        child: TabBar(
+                          controller: _tabController,
+                          indicatorColor: Theme.of(
+                            context,
+                          ).colorScheme.tertiary,
+                          labelColor: _textColor,
+                          unselectedLabelColor: _textSecondary,
+                          labelStyle: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          ),
+                          tabs: const [
+                            Tab(text: 'Daftar Surah'),
+                            Tab(text: 'Tandai & Simpan'),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ];
+              },
+              body: TabBarView(
+                controller: _tabController,
+                children: [
+                  // Tab 1: Surah list
+                  _buildSurahListTab(searchListAsync),
 
-                // Tab 2: Bookmarks tab
-                _buildBookmarksTab(bookmarksState),
-              ],
+                  // Tab 2: Bookmarks tab
+                  _buildBookmarksTab(bookmarksState),
+                ],
+              ),
             ),
           ),
         ),
       ),
-    ),);
+    );
   }
 
   Widget _buildLastReadCard(QuranBookmarksState state) {
@@ -286,9 +315,8 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
 
   Widget _buildSurahListTab(AsyncValue<List<Surah>> searchListAsync) {
     return searchListAsync.when(
-      loading: () => Center(
-        child: CircularProgressIndicator(color: _accentColor),
-      ),
+      loading: () =>
+          Center(child: CircularProgressIndicator(color: _accentColor)),
       error: (err, stack) => Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -342,10 +370,9 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
 
         return ListView.builder(
           physics: const BouncingScrollPhysics(),
-          padding: ResponsiveLayout.pagePadding(context).copyWith(
-            top: 12,
-            bottom: 80,
-          ),
+          padding: ResponsiveLayout.pagePadding(
+            context,
+          ).copyWith(top: 12, bottom: 80),
           itemCount: list.length,
           itemBuilder: (context, index) {
             final surah = list[index];
@@ -360,9 +387,8 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
     final listAsync = ref.watch(surahListProvider);
 
     return listAsync.when(
-      loading: () => Center(
-        child: CircularProgressIndicator(color: _accentColor),
-      ),
+      loading: () =>
+          Center(child: CircularProgressIndicator(color: _accentColor)),
       error: (err, stack) => Center(
         child: Text(
           'Terjadi kesalahan: $err',
@@ -408,10 +434,9 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
 
         return ListView.builder(
           physics: const BouncingScrollPhysics(),
-          padding: ResponsiveLayout.pagePadding(context).copyWith(
-            top: 12,
-            bottom: 96,
-          ),
+          padding: ResponsiveLayout.pagePadding(
+            context,
+          ).copyWith(top: 12, bottom: 96),
           itemCount: parsedBookmarks.length,
           itemBuilder: (context, index) {
             final surahNum = parsedBookmarks[index][0];
@@ -625,11 +650,7 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                   shape: BoxShape.circle,
                   color: Color(0xFFE8F5E9),
                 ),
-                child: Icon(
-                  Icons.chevron_right,
-                  color: _accentColor,
-                  size: 20,
-                ),
+                child: Icon(Icons.chevron_right, color: _accentColor, size: 20),
               ),
             ],
           ),
@@ -640,7 +661,6 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
 }
 
 class _SliverTabHeaderDelegate extends SliverPersistentHeaderDelegate {
-
   _SliverTabHeaderDelegate({required this.child});
   final Widget child;
 

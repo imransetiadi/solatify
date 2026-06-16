@@ -10,7 +10,7 @@ import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
 
-import '../../../prayer_schedule/presentation/location_provider.dart';
+import 'package:solatify/features/prayer_schedule/presentation/location_provider.dart';
 
 class QiblaScreen extends ConsumerStatefulWidget {
   const QiblaScreen({super.key});
@@ -41,210 +41,211 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
         : const Color(0xFFAFA19A);
     final textHint = isDark ? const Color(0xFF666666) : const Color(0xFF9A8A7D);
     final accentColor = AppTheme.readableAccent(context);
+    final appBarColor = Theme.of(
+      context,
+    ).colorScheme.surface.withValues(alpha: isDark ? 0.96 : 0.94);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Arah Kiblat'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+        backgroundColor: appBarColor,
+        surfaceTintColor: Colors.transparent,
+        elevation: 2,
+        shadowColor: Colors.black.withValues(alpha: 0.12),
       ),
-      extendBodyBehindAppBar: true,
       body: IslamicBackground(
-        child: SafeArea(
-          child: StreamBuilder<CompassEvent>(
-            stream: FlutterCompass.events,
-            builder: (context, snapshot) {
-              // Check if compass is available or we need simulation
-              final hasSensor =
-                  snapshot.hasData && snapshot.data?.heading != null;
-              final heading = hasSensor
-                  ? snapshot.data!.heading!
-                  : _simulatedHeading;
+        child: StreamBuilder<CompassEvent>(
+          stream: FlutterCompass.events,
+          builder: (context, snapshot) {
+            // Check if compass is available or we need simulation
+            final hasSensor =
+                snapshot.hasData && snapshot.data?.heading != null;
+            final heading = hasSensor
+                ? snapshot.data!.heading!
+                : _simulatedHeading;
 
-              // Qibla direction relative to the top of the phone
-              // (Bearing to Mecca - Phone's Heading)
-              final qiblaRelativeAngle = (qiblaAngle - heading + 360) % 360;
+            // Qibla direction relative to the top of the phone
+            // (Bearing to Mecca - Phone's Heading)
+            final qiblaRelativeAngle = (qiblaAngle - heading + 360) % 360;
 
-              // Check if user is pointing exactly towards Mecca (tolerance: +/- 3 degrees)
-              final isAligned =
-                  qiblaRelativeAngle <= 2 || qiblaRelativeAngle >= 358;
+            // Check if user is pointing exactly towards Mecca (tolerance: +/- 3 degrees)
+            final isAligned =
+                qiblaRelativeAngle <= 2 || qiblaRelativeAngle >= 358;
 
-              if (isAligned && !_wasAligned) {
-                HapticFeedback.heavyImpact();
-                _wasAligned = true;
-              } else if (!isAligned && _wasAligned) {
-                _wasAligned = false;
-              }
+            if (isAligned && !_wasAligned) {
+              HapticFeedback.heavyImpact();
+              _wasAligned = true;
+            } else if (!isAligned && _wasAligned) {
+              _wasAligned = false;
+            }
 
-              return SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: ResponsiveLayout.pagePadding(
-                  context,
-                ).copyWith(bottom: 96),
-                child: ResponsiveCenter(
-                  child: Column(
-                    children: [
-                      // Location Status Card
-                      GlassContainer(
-                        blur: 15,
-                        opacity: isDark ? 0.03 : 0.015,
-                        padding: const EdgeInsets.all(16),
-                        child: Wrap(
-                          spacing: 12,
-                          runSpacing: 8,
-                          alignment: WrapAlignment.spaceBetween,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          children: [
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.my_location,
-                                  color: accentColor,
-                                  size: 18,
-                                ),
-                                const SizedBox(width: 8),
-                                ConstrainedBox(
-                                  constraints: BoxConstraints(
-                                    maxWidth: max(
-                                      160,
-                                      MediaQuery.sizeOf(context).width - 150,
-                                    ).toDouble(),
-                                  ),
-                                  child: Text(
-                                    '${location.city}, ${location.country}',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: textColor,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Text(
-                              'Kiblat: ${qiblaAngle.toStringAsFixed(1)}°',
-                              style: TextStyle(
-                                color: textColor,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
+            return SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: ResponsiveLayout.pagePadding(
+                context,
+              ).copyWith(top: 16, bottom: 96),
+              child: ResponsiveCenter(
+                child: Column(
+                  children: [
+                    // Location Status Card
+                    GlassContainer(
+                      blur: 15,
+                      opacity: isDark ? 0.03 : 0.015,
+                      padding: const EdgeInsets.all(16),
+                      child: Wrap(
+                        spacing: 12,
+                        runSpacing: 8,
+                        alignment: WrapAlignment.spaceBetween,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.my_location,
+                                color: accentColor,
+                                size: 18,
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Aligned indicator Banner
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 12,
-                          horizontal: 24,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isAligned ? accentColor : Colors.transparent,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: isAligned
-                                ? accentColor
-                                : textHint.withValues(alpha: 0.4),
-                            width: 1.5,
-                          ),
-                        ),
-                        child: Text(
-                          isAligned
-                              ? 'KIBLAT TERARAH 🕋'
-                              : 'Putar Perangkat Anda',
-                          style: TextStyle(
-                            color: isAligned ? Colors.white : textSecondary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                            letterSpacing: 1.0,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 36),
-
-                      // Compass Ring Dial Viewports wrapper
-                      LayoutBuilder(
-                        builder: (context, constraints) {
-                          final size = (constraints.maxWidth * 0.82).clamp(
-                            220.0,
-                            340.0,
-                          );
-
-                          return SizedBox(
-                            width: size,
-                            height: size,
-                            child: Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                // Rotate the dial according to the compass heading
-                                Transform.rotate(
-                                  angle: -heading * pi / 180,
-                                  child: CompassDialPaint(size: size),
+                              const SizedBox(width: 8),
+                              ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  maxWidth: max(
+                                    160,
+                                    MediaQuery.sizeOf(context).width - 150,
+                                  ).toDouble(),
                                 ),
-
-                                // Rotate the pointing Qibla needle relative to top
-                                Transform.rotate(
-                                  angle: qiblaRelativeAngle * pi / 180,
-                                  child: QiblaNeedlePaint(size: size),
-                                ),
-
-                                // Center decorative hub
-                                Container(
-                                  width: 24,
-                                  height: 24,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: accentColor,
-                                    border: Border.all(
-                                      color: Colors.white,
-                                      width: 2.5,
-                                    ),
-                                    boxShadow: const [
-                                      BoxShadow(
-                                        color: Colors.black26,
-                                        blurRadius: 6,
-                                        offset: Offset(0, 3),
-                                      ),
-                                    ],
+                                child: Text(
+                                  '${location.city}, ${location.country}',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: textColor,
                                   ),
                                 ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 36),
-
-                      // Details description helper text
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: Text(
-                          hasSensor
-                              ? 'Posisikan HP Anda mendatar. Sejajarkan jarum kiblat yang berlambang Kabah di atas agar lurus tegak ke arah depan Anda.'
-                              : 'Sensor kompas tidak terdeteksi pada perangkat Anda. Gunakan simulasi di bawah untuk menguji arah kiblat.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: textMuted,
-                            fontSize: 13,
-                            height: 1.5,
+                              ),
+                            ],
                           ),
+                          Text(
+                            'Kiblat: ${qiblaAngle.toStringAsFixed(1)}°',
+                            style: TextStyle(
+                              color: textColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Aligned indicator Banner
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 24,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isAligned ? accentColor : Colors.transparent,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: isAligned
+                              ? accentColor
+                              : textHint.withValues(alpha: 0.4),
+                          width: 1.5,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      child: Text(
+                        isAligned
+                            ? 'KIBLAT TERARAH 🕋'
+                            : 'Putar Perangkat Anda',
+                        style: TextStyle(
+                          color: isAligned ? Colors.white : textSecondary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          letterSpacing: 1.0,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 36),
 
-                      if (!hasSensor)
-                        _buildSimulationPanel(heading, qiblaAngle),
-                    ],
-                  ),
+                    // Compass Ring Dial Viewports wrapper
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final size = (constraints.maxWidth * 0.82).clamp(
+                          220.0,
+                          340.0,
+                        );
+
+                        return SizedBox(
+                          width: size,
+                          height: size,
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              // Rotate the dial according to the compass heading
+                              Transform.rotate(
+                                angle: -heading * pi / 180,
+                                child: CompassDialPaint(size: size),
+                              ),
+
+                              // Rotate the pointing Qibla needle relative to top
+                              Transform.rotate(
+                                angle: qiblaRelativeAngle * pi / 180,
+                                child: QiblaNeedlePaint(size: size),
+                              ),
+
+                              // Center decorative hub
+                              Container(
+                                width: 24,
+                                height: 24,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: accentColor,
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 2.5,
+                                  ),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      color: Colors.black26,
+                                      blurRadius: 6,
+                                      offset: Offset(0, 3),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 36),
+
+                    // Details description helper text
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Text(
+                        hasSensor
+                            ? 'Posisikan HP Anda mendatar. Sejajarkan jarum kiblat yang berlambang Kabah di atas agar lurus tegak ke arah depan Anda.'
+                            : 'Sensor kompas tidak terdeteksi pada perangkat Anda. Gunakan simulasi di bawah untuk menguji arah kiblat.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: textMuted,
+                          fontSize: 13,
+                          height: 1.5,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    if (!hasSensor) _buildSimulationPanel(heading, qiblaAngle),
+                  ],
                 ),
-              );
-            },
-          ),
+              ),
+            );
+          },
         ),
       ),
     );
