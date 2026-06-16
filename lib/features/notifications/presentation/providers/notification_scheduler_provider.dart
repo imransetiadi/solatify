@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:solatify/core/performance/performance_tuning.dart';
 import 'package:solatify/features/notifications/data/services/notification_service.dart';
 import 'package:solatify/features/prayer_schedule/data/prayer_timezone_service.dart';
 import 'package:solatify/features/prayer_schedule/domain/entities/location_entity.dart';
@@ -91,10 +92,11 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
       });
       _scheduleAllNotifications();
 
-      // Re-check notifications every minute to ensure they're scheduled
+      // Re-check periodically as a safety net; provider listeners handle normal
+      // location and prayer-time changes immediately.
       _schedulingTimer?.cancel();
       _schedulingTimer = Timer.periodic(
-        const Duration(minutes: 1),
+        PerformanceTuning.notificationScheduleAuditInterval,
         (_) => _scheduleAllNotifications(),
       );
     } catch (e) {
