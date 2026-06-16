@@ -298,25 +298,27 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen> {
         ? const Color(0xFFC8B8A8)
         : const Color(0xFFAFA19A);
     final cardBg = isDark ? const Color(0xFF241A14) : Colors.white;
+    final appBarColor = theme.colorScheme.surface.withValues(
+      alpha: isDark ? 0.96 : 0.94,
+    );
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: appBarColor,
         foregroundColor: textColor,
-        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        elevation: 2,
+        shadowColor: Colors.black.withValues(alpha: 0.12),
         title: const Text(
           'Masjid Terdekat',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
       ),
-      extendBodyBehindAppBar: true,
       body: IslamicBackground(
         child: ResponsiveCenter(
           child: Padding(
-            padding: ResponsiveLayout.pagePadding(context).copyWith(
-              top: kToolbarHeight + MediaQuery.paddingOf(context).top + 8,
-            ),
+            padding: ResponsiveLayout.pagePadding(context).copyWith(top: 16),
             child: Column(
               children: [
                 // Top header controls
