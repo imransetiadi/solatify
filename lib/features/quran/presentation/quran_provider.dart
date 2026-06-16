@@ -48,7 +48,8 @@ final surahDetailProvider = FutureProvider.family<Surah, int>((
 });
 
 // BOOKMARK STATES
-class QuranBookmarksState { // Format: "surah:verse"
+class QuranBookmarksState {
+  // Format: "surah:verse"
 
   QuranBookmarksState({
     this.lastReadSurah,
@@ -187,7 +188,6 @@ final quranBookmarksProvider =
 
 // AUDIO STATES
 class QuranAudioState {
-
   QuranAudioState({
     this.playingSurah,
     this.playingVerse,
@@ -223,7 +223,6 @@ class QuranAudioState {
 }
 
 class QuranAudioNotifier extends StateNotifier<QuranAudioState> {
-
   QuranAudioNotifier() : super(QuranAudioState()) {
     // Listen to player state changes
     _playerStateSub = _audioPlayer.playerStateStream.listen((playerState) {
@@ -278,6 +277,7 @@ class QuranAudioNotifier extends StateNotifier<QuranAudioState> {
     _playlistIndex = 0;
     _surahNumber = surahNumber;
 
+    if (!mounted) return;
     state = state.copyWith(
       playingSurah: surahNumber,
       playingVerse: verseNumber,
@@ -289,8 +289,10 @@ class QuranAudioNotifier extends StateNotifier<QuranAudioState> {
 
     try {
       await _audioPlayer.setUrl(audioUrl);
+      if (!mounted) return;
       await _audioPlayer.play();
     } catch (_) {
+      if (!mounted) return;
       state = state.copyWith(isLoading: false, isPlaying: false);
     }
   }
@@ -307,6 +309,7 @@ class QuranAudioNotifier extends StateNotifier<QuranAudioState> {
   }
 
   Future<void> _playCurrentPlaylistItem() async {
+    if (!mounted) return;
     if (_playlistIndex >= _playlist.length) {
       stop();
       return;
@@ -324,14 +327,17 @@ class QuranAudioNotifier extends StateNotifier<QuranAudioState> {
 
     try {
       await _audioPlayer.setUrl(verse.audioUrl);
+      if (!mounted) return;
       await _audioPlayer.play();
     } catch (_) {
+      if (!mounted) return;
       // Skip to next if this fails
       _handlePlaybackCompleted();
     }
   }
 
   void _handlePlaybackCompleted() {
+    if (!mounted) return;
     if (_playlist.isNotEmpty && _playlistIndex < _playlist.length - 1) {
       _playlistIndex++;
       _playCurrentPlaylistItem();
@@ -341,15 +347,18 @@ class QuranAudioNotifier extends StateNotifier<QuranAudioState> {
   }
 
   Future<void> pause() async {
+    if (!mounted) return;
     await _audioPlayer.pause();
   }
 
   Future<void> resume() async {
+    if (!mounted) return;
     await _audioPlayer.play();
   }
 
   Future<void> stop() async {
     await _audioPlayer.stop();
+    if (!mounted) return;
     _playlist = [];
     _playlistIndex = 0;
     _surahNumber = null;
@@ -368,9 +377,5 @@ class QuranAudioNotifier extends StateNotifier<QuranAudioState> {
 
 final quranAudioProvider =
     StateNotifierProvider<QuranAudioNotifier, QuranAudioState>((ref) {
-      final notifier = QuranAudioNotifier();
-      ref.onDispose(() {
-        notifier.dispose();
-      });
-      return notifier;
+      return QuranAudioNotifier();
     });
