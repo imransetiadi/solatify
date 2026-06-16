@@ -66,6 +66,8 @@ void main() {
     expect(find.textContaining('Pengaturan'), findsWidgets);
     expect(find.text('NOTIFIKASI'), findsOneWidget);
     expect(find.text('Kirim notifikasi uji'), findsOneWidget);
+    expect(find.text('Jadwalkan tes 2 menit'), findsOneWidget);
+    expect(find.textContaining('Belum ada status aksi'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

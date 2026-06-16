@@ -52,6 +52,11 @@ class SettingsScreen extends ConsumerStatefulWidget {
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   final NotificationService _notificationService = NotificationService();
   late final ValueNotifier<NotificationReadiness> _notificationReadiness;
+  final ValueNotifier<String> _notificationActionStatus = ValueNotifier<String>(
+    'Belum ada status aksi.',
+  );
+  final ValueNotifier<int> _pendingNotificationCount = ValueNotifier<int>(0);
+  bool _isNotificationActionRunning = false;
 
   @override
   void initState() {
@@ -65,45 +70,123 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   void dispose() {
     _notificationReadiness.dispose();
+    _notificationActionStatus.dispose();
+    _pendingNotificationCount.dispose();
     super.dispose();
   }
 
   Future<void> _refreshNotificationReadiness() async {
     final readiness = await _notificationService.getReadinessStatus();
+    final pendingCount = await _notificationService
+        .getPendingNotificationsCount();
     if (!mounted) return;
     _notificationReadiness.value = readiness;
+    _pendingNotificationCount.value = pendingCount;
+  }
+
+  Future<void> _runNotificationAction(Future<void> Function() action) async {
+    if (_isNotificationActionRunning) return;
+
+    setState(() {
+      _isNotificationActionRunning = true;
+    });
+
+    try {
+      await action();
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isNotificationActionRunning = false;
+        });
+      }
+    }
   }
 
   Future<void> _requestNotificationPermissions() async {
-    try {
-      await _notificationService.requestAndroidPermissions();
-      await _refreshNotificationReadiness();
-    } catch (e) {
-      debugPrint('Error requesting notification permissions: $e');
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Izin notifikasi belum dapat diperbarui.'),
-        ),
-      );
-    }
+    await _runNotificationAction(() async {
+      try {
+        final before = _notificationReadiness.value;
+        await _notificationService.requestAndroidPermissions();
+        await _refreshNotificationReadiness();
+        final after = _notificationReadiness.value;
+
+        final message = after.status == NotificationReadinessStatus.ready
+            ? 'Notifikasi sudah aktif.'
+            : after.title;
+        _notificationActionStatus.value = message;
+
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
+        debugPrint(
+          'Notification permission action: before=${before.status.name}, after=${after.status.name}',
+        );
+      } catch (e) {
+        debugPrint('Error requesting notification permissions: $e');
+        _notificationActionStatus.value =
+            'Izin notifikasi belum dapat diperbarui.';
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Izin notifikasi belum dapat diperbarui.'),
+          ),
+        );
+      }
+    });
   }
 
   Future<void> _sendTestNotification() async {
-    try {
-      await _notificationService.showTestNotification();
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Notifikasi uji dikirim.')));
-      await _refreshNotificationReadiness();
-    } catch (e) {
-      debugPrint('Error sending test notification from settings: $e');
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Notifikasi uji belum dapat dikirim.')),
-      );
-    }
+    await _runNotificationAction(() async {
+      try {
+        await _notificationService.showTestNotification();
+        _notificationActionStatus.value = 'Tes terkirim.';
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Notifikasi uji dikirim.')),
+        );
+        await _refreshNotificationReadiness();
+      } catch (e) {
+        debugPrint('Error sending test notification from settings: $e');
+        _notificationActionStatus.value = 'Notifikasi uji belum dapat dikirim.';
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Notifikasi uji belum dapat dikirim.')),
+        );
+      }
+    });
+  }
+
+  Future<void> _scheduleDiagnosticNotification() async {
+    await _runNotificationAction(() async {
+      try {
+        final scheduledAt = DateTime.now().add(const Duration(minutes: 2));
+        await _notificationService.scheduleDiagnosticNotification(
+          scheduledAt: scheduledAt,
+        );
+        await _refreshNotificationReadiness();
+        if (!mounted) return;
+        final scheduledTimeLabel = TimeOfDay.fromDateTime(
+          scheduledAt,
+        ).format(context);
+        _notificationActionStatus.value =
+            'Jadwal uji tersimpan untuk $scheduledTimeLabel.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Notifikasi terjadwal untuk 2 menit lagi.'),
+          ),
+        );
+      } catch (e) {
+        debugPrint(
+          'Error scheduling diagnostic notification from settings: $e',
+        );
+        _notificationActionStatus.value = 'Jadwal uji belum dapat disimpan.';
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Jadwal uji belum dapat disimpan.')),
+        );
+      }
+    });
   }
 
   void _showPrayerOffsetDialog(
@@ -664,22 +747,49 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           ),
           Divider(color: dividerColor, height: 16),
+          ValueListenableBuilder<int>(
+            valueListenable: _pendingNotificationCount,
+            builder: (context, pendingCount, _) {
+              return ValueListenableBuilder<String>(
+                valueListenable: _notificationActionStatus,
+                builder: (context, actionStatus, _) {
+                  return ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    dense: true,
+                    title: Text(
+                      'Status aksi',
+                      style: TextStyle(color: textColor, fontSize: 13),
+                    ),
+                    subtitle: Text(
+                      '$actionStatus Pending: $pendingCount',
+                      style: TextStyle(color: textSecondary, fontSize: 12),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+          Divider(color: dividerColor, height: 16),
           Row(
             children: [
               Expanded(
                 child: OutlinedButton(
-                  onPressed: readiness.needsPermissionAction
-                      ? _requestNotificationPermissions
-                      : null,
-                  child: const Text('Aktifkan izin notifikasi'),
+                  onPressed: _isNotificationActionRunning
+                      ? null
+                      : _requestNotificationPermissions,
+                  child: Text(
+                    readiness.needsPermissionAction
+                        ? 'Aktifkan izin notifikasi'
+                        : 'Periksa izin notifikasi',
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton(
-                  onPressed: readiness.canSendTestNotification
-                      ? _sendTestNotification
-                      : null,
+                  onPressed: _isNotificationActionRunning
+                      ? null
+                      : _sendTestNotification,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryColor,
                     foregroundColor: Colors.white,
@@ -688,6 +798,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _isNotificationActionRunning
+                  ? null
+                  : _scheduleDiagnosticNotification,
+              icon: const Icon(Icons.schedule, size: 17),
+              label: const Text('Jadwalkan tes 2 menit'),
+            ),
           ),
         ],
       ),
