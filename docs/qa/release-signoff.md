@@ -22,6 +22,14 @@
 - Screenshot or recording for any UI regression
 - Performance notes if any threshold is near or exceeded
 
+## Notification UX Checks
+- [ ] Settings shows the `NOTIFIKASI` section without layout overflow
+- [ ] Status text updates after notification permission changes
+- [ ] `Aktifkan izin notifikasi` opens or requests the platform permission flow when action is needed
+- [ ] `Kirim notifikasi uji` sends a visible test notification when notifications are available
+- [ ] Failure states show a SnackBar instead of crashing the Settings screen
+- [ ] Android exact-alarm denial shows the less precise schedule status and still allows a test notification
+
 ## iOS Verification
 - [ ] Cold start works on the tested iPhone and iPad devices
 - [ ] Main navigation works
