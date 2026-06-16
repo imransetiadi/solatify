@@ -4,7 +4,6 @@ import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
 class NotificationService {
-
   NotificationService._internal();
 
   factory NotificationService() {
@@ -67,11 +66,12 @@ class NotificationService {
     if (defaultTargetPlatform != TargetPlatform.android) return;
 
     const AndroidNotificationChannel channel = AndroidNotificationChannel(
-      'prayer_times_channel',
-      'Prayer Times',
-      description: 'Notifications for prayer times',
+      'prayer_times_adhan_channel_v1',
+      'Prayer Times Adhan',
+      description: 'Adhan notifications for prayer times',
       importance: Importance.max,
       playSound: true,
+      sound: RawResourceAndroidNotificationSound('adhan'),
       enableVibration: true,
       enableLights: true,
     );
@@ -82,7 +82,7 @@ class NotificationService {
         >();
 
     await androidPlugin?.createNotificationChannel(channel);
-    debugPrint('Notification channel created: prayer_times_channel');
+    debugPrint('Notification channel created: prayer_times_adhan_channel_v1');
   }
 
   Future<void> requestAndroidPermissions() async {
@@ -171,13 +171,14 @@ class NotificationService {
 
       const AndroidNotificationDetails androidDetails =
           AndroidNotificationDetails(
-            'prayer_times_channel',
-            'Prayer Times',
-            channelDescription: 'Notifications for prayer times',
+            'prayer_times_adhan_channel_v1',
+            'Prayer Times Adhan',
+            channelDescription: 'Adhan notifications for prayer times',
             importance: Importance.max,
             priority: Priority.high,
             enableVibration: true,
             playSound: true,
+            sound: RawResourceAndroidNotificationSound('adhan'),
             enableLights: true,
             icon: '@mipmap/ic_launcher',
           );
@@ -186,7 +187,7 @@ class NotificationService {
         presentAlert: true,
         presentBadge: true,
         presentSound: true,
-        sound: 'default',
+        sound: 'adhan.mp3', // Requires manual Xcode import
       );
 
       const NotificationDetails notificationDetails = NotificationDetails(
@@ -222,13 +223,14 @@ class NotificationService {
 
       const AndroidNotificationDetails androidDetails =
           AndroidNotificationDetails(
-            'prayer_times_channel',
-            'Prayer Times',
-            channelDescription: 'Notifications for prayer times',
+            'prayer_times_adhan_channel_v1',
+            'Prayer Times Adhan',
+            channelDescription: 'Adhan notifications for prayer times',
             importance: Importance.max,
             priority: Priority.high,
             enableVibration: true,
             playSound: true,
+            sound: RawResourceAndroidNotificationSound('adhan'),
             enableLights: true,
             icon: '@mipmap/ic_launcher',
           );
@@ -237,7 +239,7 @@ class NotificationService {
         presentAlert: true,
         presentBadge: true,
         presentSound: true,
-        sound: 'default',
+        sound: 'adhan.mp3', // Requires manual Xcode import
       );
 
       const NotificationDetails notificationDetails = NotificationDetails(
@@ -254,6 +256,7 @@ class NotificationService {
         body,
         scheduledDate,
         notificationDetails,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
         payload: prayerKey,

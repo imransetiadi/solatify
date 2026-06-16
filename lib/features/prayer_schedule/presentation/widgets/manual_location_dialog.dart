@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import '../../../../core/utils/location_service.dart';
-import '../location_provider.dart';
+import 'package:solatify/core/utils/location_service.dart';
+import 'package:solatify/features/prayer_schedule/presentation/location_provider.dart';
 
 Future<void> showManualLocationDialog({
   required BuildContext context,

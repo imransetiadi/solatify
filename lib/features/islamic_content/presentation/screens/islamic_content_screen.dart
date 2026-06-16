@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
-import '../../../../../core/widgets/islamic/islamic_decorations.dart';
-import '../../../../../core/widgets/responsive_layout.dart';
-import '../../../islamic_tips/presentation/providers/tips_provider.dart';
+import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
+import 'package:solatify/core/widgets/responsive_layout.dart';
+import 'package:solatify/features/islamic_tips/presentation/providers/tips_provider.dart';
 
 class IslamicContentScreen extends ConsumerWidget {
   const IslamicContentScreen({super.key});
@@ -110,7 +109,8 @@ class IslamicContentScreen extends ConsumerWidget {
                     primaryColor: redAccent,
                     onTap: () => context.go('/islamic-content/tips'),
                   ),
-                  loading: () => const Center(child: CircularProgressIndicator()),
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
                   error: (e, _) => Text('Gagal memuat tip: $e'),
                 ),
                 const SizedBox(height: 24),

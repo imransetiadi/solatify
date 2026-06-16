@@ -3,13 +3,59 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:solatify/features/notifications/data/services/notification_service.dart';
+import 'package:solatify/features/prayer_schedule/presentation/location_provider.dart';
+import 'package:solatify/features/prayer_schedule/presentation/prayer_times_provider.dart';
 
-import '../../../prayer_schedule/presentation/location_provider.dart';
-import '../../../prayer_schedule/presentation/prayer_times_provider.dart';
-import '../../data/services/notification_service.dart';
+class PrayerNotificationRequest {
+  const PrayerNotificationRequest({
+    required this.prayerKey,
+    required this.prayerTime,
+    required this.notificationId,
+  });
+
+  final String prayerKey;
+  final DateTime prayerTime;
+  final int notificationId;
+}
+
+List<PrayerNotificationRequest> buildPrayerNotificationRequests({
+  required Map<String, DateTime?> today,
+  required Map<String, DateTime?> tomorrow,
+  required DateTime now,
+}) {
+  const prayerKeys = ['subuh', 'dzuhur', 'ashar', 'magrib', 'isya'];
+  final requests = <PrayerNotificationRequest>[];
+
+  for (var index = 0; index < prayerKeys.length; index++) {
+    final key = prayerKeys[index];
+    final prayerTime = today[key];
+    if (prayerTime != null && prayerTime.isAfter(now)) {
+      requests.add(
+        PrayerNotificationRequest(
+          prayerKey: key,
+          prayerTime: prayerTime,
+          notificationId: 1001 + index,
+        ),
+      );
+    }
+  }
+
+  final tomorrowSubuh = tomorrow['subuh'];
+  if (tomorrowSubuh != null && tomorrowSubuh.isAfter(now)) {
+    requests.add(
+      PrayerNotificationRequest(
+        prayerKey: 'subuh',
+        prayerTime: tomorrowSubuh,
+        notificationId: 2001,
+      ),
+    );
+  }
+
+  return requests;
+}
 
 class NotificationSchedulerNotifier extends StateNotifier<void> {
-
   NotificationSchedulerNotifier(this._ref) : super(null) {
     _initializeNotifications();
   }
@@ -46,21 +92,19 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
 
       final now = DateTime.now();
 
-      // Prayer keys in order for today
-      const prayerKeys = ['subuh', 'dzuhur', 'ashar', 'magrib', 'isya'];
-      int notificationId = 1001;
+      final requests = buildPrayerNotificationRequests(
+        today: today,
+        tomorrow: tomorrow,
+        now: now,
+      );
 
-      for (final key in prayerKeys) {
-        final prayerTime = today[key];
-        if (prayerTime != null && prayerTime.isAfter(now)) {
-          await _scheduleNotification(
-            prayerKey: key,
-            prayerTime: prayerTime,
-            location: locationStr,
-            notificationId: notificationId,
-          );
-        }
-        notificationId++;
+      for (final request in requests) {
+        await _scheduleNotification(
+          prayerKey: request.prayerKey,
+          prayerTime: request.prayerTime,
+          location: locationStr,
+          notificationId: request.notificationId,
+        );
       }
     } catch (e) {
       debugPrint('Error scheduling notifications: $e');

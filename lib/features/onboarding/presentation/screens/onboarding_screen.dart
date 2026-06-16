@@ -2,14 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:solatify/core/utils/location_service.dart';
+import 'package:solatify/core/widgets/glass_container.dart';
+import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
+import 'package:solatify/core/widgets/responsive_layout.dart';
 import 'package:solatify/features/prayer_schedule/domain/entities/location_entity.dart';
+import 'package:solatify/features/prayer_schedule/presentation/location_provider.dart';
 import 'package:solatify/features/settings/presentation/providers/settings_provider.dart';
-
-import '../../../../core/utils/location_service.dart';
-import '../../../../core/widgets/glass_container.dart';
-import '../../../../core/widgets/islamic/islamic_decorations.dart';
-import '../../../../core/widgets/responsive_layout.dart';
-import '../../../prayer_schedule/presentation/location_provider.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -46,7 +45,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   void _showManualCityDialog() {
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (context) {
         String searchQuery = '';
