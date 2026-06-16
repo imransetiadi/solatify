@@ -53,15 +53,20 @@ class _DuasScreenState extends ConsumerState<DuasScreen> {
         ? Colors.white.withValues(alpha: 0.2)
         : Colors.black12;
     final cardBg = isDark ? const Color(0xFF241A14) : Colors.white;
+    final appBarColor = Theme.of(
+      context,
+    ).colorScheme.surface.withValues(alpha: isDark ? 0.96 : 0.94);
 
     return Scaffold(
       backgroundColor: isDark
           ? const Color(0xFF082E1D)
           : const Color(0xFFF3FBF6),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: appBarColor,
         foregroundColor: textColor,
-        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        elevation: 2,
+        shadowColor: Colors.black.withValues(alpha: 0.12),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/islamic-content'),
@@ -72,13 +77,10 @@ class _DuasScreenState extends ConsumerState<DuasScreen> {
         ),
         centerTitle: true,
       ),
-      extendBodyBehindAppBar: true,
       body: IslamicBackground(
         child: ResponsiveCenter(
           child: Padding(
-            padding: ResponsiveLayout.pagePadding(context).copyWith(
-              top: kToolbarHeight + MediaQuery.paddingOf(context).top + 8,
-            ),
+            padding: ResponsiveLayout.pagePadding(context).copyWith(top: 16),
             child: Column(
               children: [
                 TextField(

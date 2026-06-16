@@ -20,15 +20,20 @@ class PrayerGuideScreen extends ConsumerWidget {
     final mutedColor = theme.brightness == Brightness.dark
         ? AppTheme.darkModeTextSecondary
         : AppTheme.lightModeTextSecondary;
+    final appBarColor = theme.colorScheme.surface.withValues(
+      alpha: theme.brightness == Brightness.dark ? 0.96 : 0.94,
+    );
     final summaries = ref.watch(prayerGuideSummariesProvider);
     final steps = ref.watch(prayerGuideStepsProvider);
     final dhikrItems = ref.watch(postPrayerDhikrProvider);
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: appBarColor,
         foregroundColor: textColor,
-        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        elevation: 2,
+        shadowColor: Colors.black.withValues(alpha: 0.12),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/islamic-content'),
@@ -39,15 +44,13 @@ class PrayerGuideScreen extends ConsumerWidget {
         ),
         centerTitle: true,
       ),
-      extendBodyBehindAppBar: true,
       body: IslamicBackground(
         child: ResponsiveCenter(
           child: ListView(
             scrollCacheExtent: const ScrollCacheExtent.pixels(10000),
-            padding: ResponsiveLayout.pagePadding(context).copyWith(
-              top: kToolbarHeight + MediaQuery.paddingOf(context).top + 8,
-              bottom: 96,
-            ),
+            padding: ResponsiveLayout.pagePadding(
+              context,
+            ).copyWith(top: 16, bottom: 96),
             children: [
               const IslamicHeaderDecoration(
                 title: 'Tuntunan Salat Lengkap',

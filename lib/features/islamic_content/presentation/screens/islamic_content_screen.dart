@@ -57,27 +57,28 @@ class IslamicContentScreen extends ConsumerWidget {
         : const Color(0xFF6A5B51);
     final redAccent = theme.colorScheme.tertiary;
     final surfaceColor = theme.colorScheme.surface;
+    final appBarColor = surfaceColor.withValues(alpha: isDark ? 0.96 : 0.94);
     final randomTip = ref.watch(randomTipProvider);
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: appBarColor,
         foregroundColor: textColor,
-        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        elevation: 2,
+        shadowColor: Colors.black.withValues(alpha: 0.12),
         title: Text(
           'Konten Islami',
           style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
       ),
-      extendBodyBehindAppBar: true,
       body: IslamicBackground(
         child: ResponsiveCenter(
           child: ListView(
-            padding: ResponsiveLayout.pagePadding(context).copyWith(
-              top: kToolbarHeight + MediaQuery.paddingOf(context).top + 8,
-              bottom: 96,
-            ),
+            padding: ResponsiveLayout.pagePadding(
+              context,
+            ).copyWith(top: 16, bottom: 96),
             children: [
               const IslamicHeaderDecoration(
                 title: 'Jelajahi Spiritual',

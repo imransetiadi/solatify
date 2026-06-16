@@ -20,14 +20,19 @@ class IslamicTipsScreen extends ConsumerWidget {
         ? const Color(0xFFF3FBF6)
         : const Color(0xFF241A12);
     final cardBg = isDark ? const Color(0xFF241A14) : Colors.white;
+    final appBarColor = Theme.of(
+      context,
+    ).colorScheme.surface.withValues(alpha: isDark ? 0.96 : 0.94);
 
     final tipsAsync = ref.watch(tipsProvider);
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: appBarColor,
         foregroundColor: textColor,
-        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        elevation: 2,
+        shadowColor: Colors.black.withValues(alpha: 0.12),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/islamic-content'),
@@ -38,13 +43,10 @@ class IslamicTipsScreen extends ConsumerWidget {
         ),
         centerTitle: true,
       ),
-      extendBodyBehindAppBar: true,
       body: IslamicBackground(
         child: ResponsiveCenter(
           child: Padding(
-            padding: ResponsiveLayout.pagePadding(context).copyWith(
-              top: kToolbarHeight + MediaQuery.paddingOf(context).top + 8,
-            ),
+            padding: ResponsiveLayout.pagePadding(context).copyWith(top: 16),
             child: tipsAsync.when(
               data: (tips) {
                 if (tips.isEmpty) {
