@@ -101,4 +101,20 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('content sub screens show explicit back button', (tester) async {
+    for (final screen in const [
+      AsmaulHusnaScreen(),
+      DuasScreen(),
+      HijriCalendarScreen(),
+      IslamicTipsScreen(),
+      DhikrScreen(),
+    ]) {
+      await tester.pumpWidget(wrap(screen));
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.arrow_back), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    }
+  });
 }

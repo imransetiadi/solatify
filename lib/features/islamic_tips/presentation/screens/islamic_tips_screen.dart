@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
 import 'package:solatify/features/islamic_tips/presentation/providers/tips_provider.dart';
@@ -27,6 +28,10 @@ class IslamicTipsScreen extends ConsumerWidget {
         backgroundColor: Colors.transparent,
         foregroundColor: textColor,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go('/islamic-content'),
+        ),
         title: Text(
           'Tips Islami Harian',
           style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
@@ -64,7 +69,10 @@ class IslamicTipsScreen extends ConsumerWidget {
                       child: ExpansionTile(
                         iconColor: redAccent,
                         collapsedIconColor: redAccent,
-                        leading: Icon(Icons.lightbulb_outline, color: redAccent),
+                        leading: Icon(
+                          Icons.lightbulb_outline,
+                          color: redAccent,
+                        ),
                         tilePadding: const EdgeInsets.symmetric(
                           vertical: 8,
                           horizontal: 16,
@@ -110,9 +118,8 @@ class IslamicTipsScreen extends ConsumerWidget {
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stackTrace) => const Center(
-                child: Text('Gagal memuat tips islami.'),
-              ),
+              error: (error, stackTrace) =>
+                  const Center(child: Text('Gagal memuat tips islami.')),
             ),
           ),
         ),

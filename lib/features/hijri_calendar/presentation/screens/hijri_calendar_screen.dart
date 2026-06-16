@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
@@ -31,6 +32,10 @@ class HijriCalendarScreen extends ConsumerWidget {
         backgroundColor: Colors.transparent,
         foregroundColor: textColor,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go('/islamic-content'),
+        ),
         title: const Text(
           'Kalender Hijriah',
           style: TextStyle(fontWeight: FontWeight.bold),
@@ -156,9 +161,8 @@ class HijriCalendarScreen extends ConsumerWidget {
                         },
                       );
                     },
-                    loading: () => const Center(
-                      child: CircularProgressIndicator(),
-                    ),
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
                     error: (error, stackTrace) => Center(
                       child: Text(
                         'Gagal memuat event Hijriah',
