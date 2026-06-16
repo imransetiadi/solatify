@@ -110,30 +110,27 @@ class IslamicContentScreen extends ConsumerWidget {
               const SizedBox(height: 12),
               LayoutBuilder(
                 builder: (context, constraints) {
+                  // Calculate card width to ensure exactly 2 columns on mobile, 3 on tablet
+                  // subtracting total spacing (12 between cards)
                   final crossAxisCount = constraints.maxWidth >= 720 ? 3 : 2;
-                  final cardHeight = constraints.maxWidth < 380
-                      ? 120.0
-                      : 110.0;
+                  final spacing = 12.0;
+                  final cardWidth = (constraints.maxWidth - (spacing * (crossAxisCount - 1))) / crossAxisCount;
 
-                  return GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: _menuItems.length,
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: crossAxisCount,
-                      crossAxisSpacing: 10,
-                      mainAxisSpacing: 10,
-                      mainAxisExtent: cardHeight,
-                    ),
-                    itemBuilder: (context, index) {
-                      return _ContentMenuCard(
-                        item: _menuItems[index],
-                        surfaceColor: surfaceColor,
-                        textColor: textColor,
-                        mutedColor: mutedColor,
-                        primaryColor: redAccent,
+                  return Wrap(
+                    spacing: spacing,
+                    runSpacing: spacing,
+                    children: _menuItems.map((item) {
+                      return SizedBox(
+                        width: cardWidth,
+                        child: _ContentMenuCard(
+                          item: item,
+                          surfaceColor: surfaceColor,
+                          textColor: textColor,
+                          mutedColor: mutedColor,
+                          primaryColor: redAccent,
+                        ),
                       );
-                    },
+                    }).toList(),
                   );
                 },
               ),
@@ -274,7 +271,7 @@ class _ContentMenuCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         onTap: () => context.go(item.path),
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
