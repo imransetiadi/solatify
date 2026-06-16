@@ -181,9 +181,12 @@ class NotificationService {
 
     final alarmGranted = await androidImplementation
         .requestExactAlarmsPermission();
-    _canUseExactAlarms = alarmGranted ?? false;
+    final canScheduleExact = await androidImplementation
+        .canScheduleExactNotifications();
+    _canUseExactAlarms = canScheduleExact ?? alarmGranted ?? false;
     debugPrint(
-      'Android SCHEDULE_EXACT_ALARM permission granted: $alarmGranted',
+      'Android exact alarm request result: $alarmGranted, '
+      'can schedule exact: $canScheduleExact',
     );
   }
 
@@ -223,6 +226,21 @@ class NotificationService {
   Future<void> _ensureInitialized() async {
     if (!_initialized) {
       await init();
+    }
+  }
+
+  Future<void> _refreshExactAlarmCapability() async {
+    if (defaultTargetPlatform != TargetPlatform.android) return;
+
+    final androidImplementation = _flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+
+    final canScheduleExact = await androidImplementation
+        ?.canScheduleExactNotifications();
+    if (canScheduleExact != null) {
+      _canUseExactAlarms = canScheduleExact;
     }
   }
 
@@ -331,6 +349,7 @@ class NotificationService {
   }) async {
     try {
       await _ensureInitialized();
+      await _refreshExactAlarmCapability();
 
       final title = getNotificationTitle(prayerKey, location);
       final body = getNotificationMessage(prayerKey, location, prayerTime);
@@ -391,6 +410,7 @@ class NotificationService {
   Future<NotificationReadiness> getReadinessStatus() async {
     try {
       await _ensureInitialized();
+      await _refreshExactAlarmCapability();
       final notificationsEnabled = await _areNotificationsEnabled();
 
       if (!notificationsEnabled) {

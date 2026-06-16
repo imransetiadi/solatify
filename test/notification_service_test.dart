@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:solatify/features/notifications/data/services/notification_service.dart';
@@ -23,6 +25,8 @@ void main() {
             case 'requestNotificationsPermission':
               return true;
             case 'requestExactAlarmsPermission':
+              return false;
+            case 'canScheduleExactNotifications':
               return false;
             case 'areNotificationsEnabled':
               return true;
@@ -106,6 +110,58 @@ void main() {
       zonedSchedule.arguments['platformSpecifics']['channelId'],
       'prayer_times_adhan_channel_v2',
     );
+  });
+
+  test(
+    'uses exact scheduling when Android reports exact notifications allowed',
+    () async {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (MethodCall call) async {
+            capturedMethods.add(call);
+            switch (call.method) {
+              case 'initialize':
+              case 'createNotificationChannel':
+              case 'requestNotificationsPermission':
+                return true;
+              case 'requestExactAlarmsPermission':
+                return false;
+              case 'canScheduleExactNotifications':
+              case 'areNotificationsEnabled':
+                return true;
+              case 'zonedSchedule':
+                return null;
+              default:
+                return null;
+            }
+          });
+
+      await service.init();
+      await service.schedulePrayerNotification(
+        prayerKey: 'ashar',
+        location: 'Jakarta, Indonesia',
+        prayerTime: '15:20',
+        notificationTime: DateTime.now().add(const Duration(minutes: 10)),
+        timezoneName: 'Asia/Jakarta',
+        notificationId: 1003,
+      );
+
+      final zonedSchedule = capturedMethods.lastWhere(
+        (call) => call.method == 'zonedSchedule',
+      );
+      expect(
+        zonedSchedule.arguments['platformSpecifics']['scheduleMode'],
+        'exactAllowWhileIdle',
+      );
+    },
+  );
+
+  test('Android manifest declares exact alarm permissions', () {
+    final manifest = File(
+      'android/app/src/main/AndroidManifest.xml',
+    ).readAsStringSync();
+
+    expect(manifest, contains('android.permission.SCHEDULE_EXACT_ALARM'));
+    expect(manifest, contains('android.permission.USE_EXACT_ALARM'));
   });
 
   test('reports pending notification count from the platform API', () async {
