@@ -112,15 +112,28 @@ void main() {
     );
   });
 
-  test('buildMosqueMapUri prefers Apple Maps for iOS', () {
+  test('buildMosqueMapUri uses Google Maps for iOS', () {
     final uri = buildMosqueMapUri(
       latitude: -6.2,
       longitude: 106.8,
       platform: MosqueMapPlatform.ios,
     );
 
-    expect(uri.host, 'maps.apple.com');
-    expect(uri.queryParameters['q'], '-6.2,106.8');
+    expect(uri.host, 'www.google.com');
+    expect(uri.path, '/maps/search/');
+    expect(uri.queryParameters['query'], '-6.2,106.8');
+  });
+
+  test('buildMosqueRouteUri uses Google Maps for iOS', () {
+    final uri = buildMosqueRouteUri(
+      latitude: -6.2,
+      longitude: 106.8,
+      platform: MosqueMapPlatform.ios,
+    );
+
+    expect(uri.host, 'www.google.com');
+    expect(uri.path, '/maps/dir/');
+    expect(uri.queryParameters['destination'], '-6.2,106.8');
   });
 
   test('buildMosqueRouteUri uses Google Maps destination for Android', () {

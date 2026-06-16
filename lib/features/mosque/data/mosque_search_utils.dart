@@ -148,14 +148,14 @@ Uri buildMosqueMapUri({
   required MosqueMapPlatform platform,
 }) {
   final query = '$latitude,$longitude';
-  if (platform == MosqueMapPlatform.ios) {
-    return Uri.https('maps.apple.com', '/', {'q': query});
+  switch (platform) {
+    case MosqueMapPlatform.android:
+    case MosqueMapPlatform.ios:
+      return Uri.https('www.google.com', '/maps/search/', {
+        'api': '1',
+        'query': query,
+      });
   }
-
-  return Uri.https('www.google.com', '/maps/search/', {
-    'api': '1',
-    'query': query,
-  });
 }
 
 Uri buildMosqueRouteUri({
@@ -164,12 +164,12 @@ Uri buildMosqueRouteUri({
   required MosqueMapPlatform platform,
 }) {
   final destination = '$latitude,$longitude';
-  if (platform == MosqueMapPlatform.ios) {
-    return Uri.https('maps.apple.com', '/', {'daddr': destination});
+  switch (platform) {
+    case MosqueMapPlatform.android:
+    case MosqueMapPlatform.ios:
+      return Uri.https('www.google.com', '/maps/dir/', {
+        'api': '1',
+        'destination': destination,
+      });
   }
-
-  return Uri.https('www.google.com', '/maps/dir/', {
-    'api': '1',
-    'destination': destination,
-  });
 }
