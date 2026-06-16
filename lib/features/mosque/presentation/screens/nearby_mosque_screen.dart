@@ -10,6 +10,7 @@ import 'package:solatify/core/widgets/responsive_layout.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/features/prayer_schedule/presentation/location_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 
 class MosqueItem {
   const MosqueItem({
@@ -164,7 +165,7 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen> {
             lastError = error;
             remaining--;
             if (remaining == 0 && !completer.isCompleted) {
-              completer.completeError(lastError ?? 'Semua permintaan gagal.');
+              completer.completeError(lastError ?? 'Semua future gagal.');
             }
           });
     }
@@ -179,183 +180,105 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen> {
     required double longitude,
   }) async {
     final query =
-        '''
-[out:json][timeout:10];
-(
-  nwr["amenity"="place_of_worship"]["religion"="muslim"](around:$radiusMeters,$latitude,$longitude);
-  nwr["building"="mosque"](around:$radiusMeters,$latitude,$longitude);
-);
-out center tags;
-''';
-
+        '[out:json][timeout:${_requestTimeout.inSeconds}];node["amenity"="mosque"](around:$radiusMeters,$latitude,$longitude);out body;';
     final response = await http
-        .post(
-          Uri.parse(endpoint),
-          headers: const {
-            'Accept': 'application/json',
-            'User-Agent': 'Solatify/1.0 (OpenStreetMap mosque search)',
-          },
-          body: {'data': query},
-        )
+        .post(Uri.parse(endpoint), body: {'data': query})
         .timeout(_requestTimeout);
 
-    if (response.statusCode != 200) {
-      final bodyPreview = response.body.replaceAll(RegExp(r'\s+'), ' ').trim();
-      final message = bodyPreview.length > 140
-          ? '${bodyPreview.substring(0, 140)}...'
-          : bodyPreview;
-      throw 'Overpass API HTTP ${response.statusCode} (${Uri.parse(endpoint).host}, radius ${radiusMeters}m)${message.isEmpty ? '' : ': $message'}';
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final List<dynamic> elements = data['elements'] ?? [];
+      final List<MosqueItem> results = [];
+
+      for (var element in elements) {
+        final double lat = element['lat'];
+        final double lon = element['lon'];
+        final String name = element['tags']?['name'] ?? 'Masjid Tanpa Nama';
+        final String address = element['tags']?['addr:full'] ??
+            element['tags']?['addr:street'] ??
+            'Alamat tidak diketahui';
+
+        final distance = _calculateDistance(latitude, longitude, lat, lon);
+
+        results.add(
+          MosqueItem(
+            id: element['id'].toString(),
+            name: name,
+            address: address,
+            latitude: lat,
+            longitude: lon,
+            distanceInMeters: distance,
+            sourceType: element['type']?.toString().toUpperCase() ?? 'NODE',
+          ),
+        );
+      }
+
+      // Sort by distance (closest first)
+      results.sort((a, b) => a.distanceInMeters.compareTo(b.distanceInMeters));
+      return results;
+    } else {
+      throw Exception('Gagal memuat data masjid dari $endpoint');
     }
-
-    final body = jsonDecode(response.body) as Map<String, dynamic>;
-    final elements = body['elements'];
-    if (elements is! List) return const [];
-
-    final seen = <String>{};
-    final mosques = <MosqueItem>[];
-
-    for (final element in elements.whereType<Map<String, dynamic>>()) {
-      final mosque = _parseOverpassMosque(element, latitude, longitude);
-      if (mosque == null || !seen.add(mosque.id)) continue;
-      mosques.add(mosque);
-    }
-
-    mosques.sort((a, b) => a.distanceInMeters.compareTo(b.distanceInMeters));
-    return mosques;
   }
 
-  MosqueItem? _parseOverpassMosque(
-    Map<String, dynamic> element,
-    double userLatitude,
-    double userLongitude,
+  double _calculateDistance(
+    double lat1,
+    double lon1,
+    double lat2,
+    double lon2,
   ) {
-    final type = element['type']?.toString() ?? 'osm';
-    final rawId = element['id']?.toString();
-    if (rawId == null) return null;
+    const r = 6371000.0; // Earth radius in meters
+    final phi1 = lat1 * math.pi / 180;
+    final phi2 = lat2 * math.pi / 180;
+    final deltaPhi = (lat2 - lat1) * math.pi / 180;
+    final deltaLambda = (lon2 - lon1) * math.pi / 180;
 
-    final center = element['center'];
-    final latitude =
-        (element['lat'] as num?)?.toDouble() ??
-        (center is Map ? (center['lat'] as num?)?.toDouble() : null);
-    final longitude =
-        (element['lon'] as num?)?.toDouble() ??
-        (center is Map ? (center['lon'] as num?)?.toDouble() : null);
-    if (latitude == null || longitude == null) return null;
+    final a = math.sin(deltaPhi / 2) * math.sin(deltaPhi / 2) +
+        math.cos(phi1) *
+            math.cos(phi2) *
+            math.sin(deltaLambda / 2) *
+            math.sin(deltaLambda / 2);
+    final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
 
-    final tags = element['tags'] is Map
-        ? Map<String, dynamic>.from(element['tags'] as Map)
-        : const <String, dynamic>{};
-    final name =
-        _firstTag(tags, const ['name', 'name:id', 'official_name']) ??
-        'Masjid tanpa nama';
-    final address = _formatAddress(tags);
-
-    return MosqueItem(
-      id: '$type/$rawId',
-      name: name,
-      address: address,
-      latitude: latitude,
-      longitude: longitude,
-      distanceInMeters: _distanceInMeters(
-        userLatitude,
-        userLongitude,
-        latitude,
-        longitude,
-      ),
-      sourceType: type,
-    );
+    return r * c;
   }
 
-  String? _firstTag(Map<String, dynamic> tags, List<String> keys) {
-    for (final key in keys) {
-      final value = tags[key]?.toString().trim();
-      if (value != null && value.isNotEmpty) return value;
-    }
-    return null;
-  }
-
-  String _formatAddress(Map<String, dynamic> tags) {
-    final fullAddress = _firstTag(tags, const ['addr:full']);
-    if (fullAddress != null) return fullAddress;
-
-    final parts = [
-      _firstTag(tags, const ['addr:street']),
-      _firstTag(tags, const ['addr:suburb', 'addr:village']),
-      _firstTag(tags, const ['addr:city', 'addr:district']),
-    ].whereType<String>().toList();
-
-    if (parts.isNotEmpty) return parts.join(', ');
-    return 'Alamat belum tersedia di OpenStreetMap';
-  }
-
-  double _distanceInMeters(double lat1, double lng1, double lat2, double lng2) {
-    const earthRadius = 6371000.0;
-    final dLat = _toRadians(lat2 - lat1);
-    final dLng = _toRadians(lng2 - lng1);
-    final a =
-        math.sin(dLat / 2) * math.sin(dLat / 2) +
-        math.cos(_toRadians(lat1)) *
-            math.cos(_toRadians(lat2)) *
-            math.sin(dLng / 2) *
-            math.sin(dLng / 2);
-    return earthRadius * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
-  }
-
-  double _toRadians(double degree) => degree * math.pi / 180;
-
-  Future<void> _openOpenStreetMap(
-    BuildContext context,
-    MosqueItem mosque,
-  ) async {
-    final url = Uri.parse(
-      'https://www.openstreetmap.org/?mlat=${mosque.latitude}&mlon=${mosque.longitude}#map=18/${mosque.latitude}/${mosque.longitude}',
-    );
-
-    final opened = await launchUrl(url, mode: LaunchMode.externalApplication);
-    if (!opened && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Gagal membuka OpenStreetMap.')),
-      );
+  void _openInMap(MosqueItem mosque) async {
+    final url =
+        'https://www.google.com/maps/search/?api=1&query=${mosque.latitude},${mosque.longitude}';
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
   }
 
-  Future<void> _openRoute(BuildContext context, MosqueItem mosque) async {
-    final userLat = _gpsLatitude;
-    final userLng = _gpsLongitude;
-    final url = userLat == null || userLng == null
-        ? Uri.parse(
-            'https://www.openstreetmap.org/?mlat=${mosque.latitude}&mlon=${mosque.longitude}#map=18/${mosque.latitude}/${mosque.longitude}',
-          )
-        : Uri.parse(
-            'https://www.openstreetmap.org/directions?engine=fossgis_osrm_car&route=$userLat%2C$userLng%3B${mosque.latitude}%2C${mosque.longitude}',
-          );
-
-    final opened = await launchUrl(url, mode: LaunchMode.externalApplication);
-    if (!opened && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Gagal membuka rute OpenStreetMap.')),
-      );
+  void _openRoute(MosqueItem mosque) async {
+    final url =
+        'https://www.google.com/maps/dir/?api=1&destination=${mosque.latitude},${mosque.longitude}';
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final location = ref.watch(locationProvider);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primary = Theme.of(context).colorScheme.secondary;
-    final textColor = isDark ? Colors.white : const Color(0xFF241A12);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = isDark
+        ? const Color(0xFFC78A4C)
+        : const Color(0xFF0E4D31);
+    final textColor = isDark
+        ? const Color(0xFFF3FBF6)
+        : const Color(0xFF241A12);
     final mutedColor = isDark
-        ? const Color(0xFFB8A898)
+        ? const Color(0xFFC8B8A8)
         : const Color(0xFF5D4E47);
-    final backgroundColor = isDark
-        ? const Color(0xFF082E1D)
-        : const Color(0xFFF3FBF6);
-    final cardColor = isDark ? const Color(0xFF123B29) : Colors.white;
+    final cardBg = isDark ? const Color(0xFF241A14) : Colors.white;
 
     return Scaffold(
-      backgroundColor: backgroundColor,
       appBar: AppBar(
-        backgroundColor: backgroundColor,
+        backgroundColor: Colors.transparent,
         foregroundColor: textColor,
         elevation: 0,
         title: const Text(
@@ -364,83 +287,92 @@ out center tags;
         ),
         centerTitle: true,
       ),
-      body: SafeArea(
+      extendBodyBehindAppBar: true,
+      body: IslamicBackground(
         child: ResponsiveCenter(
-          child: RefreshIndicator(
-            onRefresh: _loadNearbyMosques,
-            child: ListView(
-              padding: ResponsiveLayout.pagePadding(
-                context,
-              ).copyWith(bottom: 96),
+          child: Padding(
+            padding: ResponsiveLayout.pagePadding(context).copyWith(
+              top: kToolbarHeight + MediaQuery.paddingOf(context).top + 8,
+            ),
+            child: Column(
               children: [
-                _LocationHeader(
-                  city: location.city,
-                  country: location.country,
-                  isLoading: _isLoading || location.isLoading,
-                  textColor: textColor,
-                  mutedColor: mutedColor,
-                  primary: primary,
-                  cardColor: cardColor,
-                  onRefresh: _loadNearbyMosques,
-                ),
-                const SizedBox(height: 16),
-                _OsmInfoPanel(
-                  cardColor: cardColor,
-                  textColor: textColor,
-                  mutedColor: mutedColor,
-                  primary: primary,
-                  mosqueCount: _mosques.length,
-                  radiusKm: _searchRadiusMeters ~/ 1000,
-                ),
-                const SizedBox(height: 18),
+                // Top header controls
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
-                      child: Text(
-                        'Masjid dari OpenStreetMap',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: textColor,
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Temukan Masjid terdekat di sekitar Anda',
+                            style: TextStyle(color: mutedColor, fontSize: 13),
+                          ),
+                          if (_gpsLatitude != null && _gpsLongitude != null) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              'GPS: ${_gpsLatitude!.toStringAsFixed(4)}, ${_gpsLongitude!.toStringAsFixed(4)}',
+                              style: TextStyle(
+                                color: primaryColor,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
-                    if (_isLoading)
-                      SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: primary,
-                        ),
-                      ),
+                    IconButton(
+                      icon: const Icon(Icons.my_location),
+                      color: primaryColor,
+                      tooltip: 'Gunakan Lokasi GPS Saat Ini',
+                      onPressed: _loadNearbyMosques,
+                    ),
                   ],
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  'Radius ${_searchRadiusMeters ~/ 1000} km dari GPS aktif. Data bersumber dari Overpass API.',
-                  style: TextStyle(color: mutedColor, fontSize: 13),
+                const SizedBox(height: 16),
+
+                // Main Mosque List
+                Expanded(
+                  child: _isLoading
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Color(0xFF0E4D31),
+                            ),
+                          ),
+                        )
+                      : _errorMessage != null
+                          ? Center(
+                              child: SingleChildScrollView(
+                                child: _StatusCard(
+                                  message: _errorMessage!,
+                                  primary: primaryColor,
+                                  textColor: textColor,
+                                  mutedColor: mutedColor,
+                                  cardColor: cardBg,
+                                  onRetry: _loadNearbyMosques,
+                                ),
+                              ),
+                            )
+                          : ListView.builder(
+                              itemCount: _mosques.length,
+                              physics: const BouncingScrollPhysics(),
+                              padding: const EdgeInsets.only(bottom: 96),
+                              itemBuilder: (context, index) {
+                                final mosque = _mosques[index];
+                                return _MosqueCard(
+                                  mosque: mosque,
+                                  primary: primaryColor,
+                                  textColor: textColor,
+                                  mutedColor: mutedColor,
+                                  cardColor: cardBg,
+                                  onOpenMap: () => _openInMap(mosque),
+                                  onOpenRoute: () => _openRoute(mosque),
+                                );
+                              },
+                            ),
                 ),
-                const SizedBox(height: 12),
-                if (_errorMessage != null)
-                  _StatusCard(
-                    message: _errorMessage!,
-                    cardColor: cardColor,
-                    textColor: textColor,
-                    mutedColor: mutedColor,
-                    primary: primary,
-                    onRetry: _loadNearbyMosques,
-                  ),
-                for (final mosque in _mosques)
-                  _MosqueCard(
-                    mosque: mosque,
-                    primary: primary,
-                    textColor: textColor,
-                    mutedColor: mutedColor,
-                    cardColor: cardColor,
-                    onOpenMap: () => _openOpenStreetMap(context, mosque),
-                    onOpenRoute: () => _openRoute(context, mosque),
-                  ),
               ],
             ),
           ),
@@ -450,163 +382,20 @@ out center tags;
   }
 }
 
-class _LocationHeader extends StatelessWidget {
-  const _LocationHeader({
-    required this.city,
-    required this.country,
-    required this.isLoading,
-    required this.textColor,
-    required this.mutedColor,
-    required this.primary,
-    required this.cardColor,
-    required this.onRefresh,
-  });
-
-  final String city;
-  final String country;
-  final bool isLoading;
-  final Color textColor;
-  final Color mutedColor;
-  final Color primary;
-  final Color cardColor;
-  final VoidCallback onRefresh;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      color: cardColor,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            CircleAvatar(
-              backgroundColor: primary.withValues(alpha: 0.12),
-              child: Icon(Icons.location_on_outlined, color: primary),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Lokasi GPS Aktif',
-                    style: TextStyle(color: mutedColor, fontSize: 12),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    '$city, $country',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: textColor,
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            IconButton(
-              tooltip: 'Cari ulang dari GPS',
-              onPressed: isLoading ? null : onRefresh,
-              icon: isLoading
-                  ? SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: primary,
-                      ),
-                    )
-                  : Icon(Icons.my_location, color: primary),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _OsmInfoPanel extends StatelessWidget {
-  const _OsmInfoPanel({
-    required this.cardColor,
-    required this.textColor,
-    required this.mutedColor,
-    required this.primary,
-    required this.mosqueCount,
-    required this.radiusKm,
-  });
-
-  final Color cardColor;
-  final Color textColor;
-  final Color mutedColor;
-  final Color primary;
-  final int mosqueCount;
-  final int radiusKm;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      color: cardColor,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Container(
-              width: 54,
-              height: 54,
-              decoration: BoxDecoration(
-                color: primary.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Icon(Icons.map_outlined, color: primary, size: 28),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'OpenStreetMap + Overpass',
-                    style: TextStyle(
-                      color: textColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    '$mosqueCount masjid ditemukan dalam radius $radiusKm km.',
-                    style: TextStyle(color: mutedColor, fontSize: 13),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _StatusCard extends StatelessWidget {
   const _StatusCard({
     required this.message,
-    required this.cardColor,
     required this.textColor,
     required this.mutedColor,
+    required this.cardColor,
     required this.primary,
     required this.onRetry,
   });
 
   final String message;
-  final Color cardColor;
   final Color textColor;
   final Color mutedColor;
+  final Color cardColor;
   final Color primary;
   final VoidCallback onRetry;
 

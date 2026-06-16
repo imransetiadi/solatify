@@ -22,13 +22,9 @@ class DhikrScreen extends ConsumerWidget {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        backgroundColor: isDark
-            ? const Color(0xFF082E1D)
-            : const Color(0xFFF3FBF6),
         appBar: AppBar(
-          backgroundColor: isDark
-              ? const Color(0xFF082E1D)
-              : const Color(0xFFF3FBF6),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
           title: Text(
             'Dzikir Pagi & Petang',
             style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
@@ -44,21 +40,14 @@ class DhikrScreen extends ConsumerWidget {
             ],
           ),
         ),
-        body: Stack(
-          children: [
-            Positioned.fill(
-              child: IslamicGeometricPattern(
-                opacity: 0.03,
-                color: primaryColor,
-              ),
-            ),
-            const TabBarView(
-              children: [
-                _DhikrListView(isMorning: true),
-                _DhikrListView(isMorning: false),
-              ],
-            ),
-          ],
+        extendBodyBehindAppBar: true,
+        body: IslamicBackground(
+          child: const TabBarView(
+            children: [
+              _DhikrListView(isMorning: true),
+              _DhikrListView(isMorning: false),
+            ],
+          ),
         ),
       ),
     );
@@ -79,11 +68,13 @@ class _DhikrListView extends ConsumerWidget {
     final textColor = isDark
         ? const Color(0xFFF3FBF6)
         : const Color(0xFF241A12);
-    final cardBg = isDark ? const Color(0xFF241A14) : Colors.white;
 
     return ResponsiveCenter(
       child: ListView.builder(
-        padding: ResponsiveLayout.pagePadding(context).copyWith(bottom: 96),
+        padding: ResponsiveLayout.pagePadding(context).copyWith(
+          top: kToolbarHeight + MediaQuery.paddingOf(context).top + 48,
+          bottom: 96,
+        ),
         itemCount: dhikrList.length,
         itemBuilder: (context, index) {
           final dhikr = dhikrList[index];

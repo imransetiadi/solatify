@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/widgets/glass_container.dart';
 import '../../../../core/widgets/responsive_layout.dart';
+import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import '../../domain/models/quran_models.dart';
 import '../quran_provider.dart';
 
@@ -51,7 +52,8 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
     final bookmarksState = ref.watch(quranBookmarksProvider);
 
     return Scaffold(
-      body: SafeArea(
+      body: IslamicBackground(
+        child: SafeArea(
         child: ResponsiveCenter(
           child: NestedScrollView(
             headerSliverBuilder: (context, innerBoxIsScrolled) {
@@ -219,7 +221,7 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
           ),
         ),
       ),
-    );
+    ),);
   }
 
   Widget _buildLastReadCard(QuranBookmarksState state) {

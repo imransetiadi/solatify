@@ -51,20 +51,13 @@ class IslamicContentScreen extends ConsumerWidget {
     final mutedColor = isDark
         ? const Color(0xFFC8B8A8)
         : const Color(0xFF5D4E47);
-    final primaryColor = isDark
-        ? const Color(0xFFC78A4C)
-        : const Color(0xFF0E4D31);
     final redAccent = theme.colorScheme.tertiary;
     final surfaceColor = isDark ? const Color(0xFF241A14) : Colors.white;
-    final backgroundColor = isDark
-        ? const Color(0xFF082E1D)
-        : const Color(0xFFF3FBF6);
     final randomTip = ref.watch(randomTipProvider);
 
     return Scaffold(
-      backgroundColor: backgroundColor,
       appBar: AppBar(
-        backgroundColor: backgroundColor,
+        backgroundColor: Colors.transparent,
         foregroundColor: textColor,
         elevation: 0,
         title: Text(
@@ -73,87 +66,80 @@ class IslamicContentScreen extends ConsumerWidget {
         ),
         centerTitle: true,
       ),
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: IslamicGeometricPattern(
-              color: primaryColor,
-              opacity: isDark ? 0.03 : 0.05,
+      extendBodyBehindAppBar: true,
+      body: IslamicBackground(
+        child: ResponsiveCenter(
+          child: ListView(
+            padding: ResponsiveLayout.pagePadding(context).copyWith(
+              top: kToolbarHeight + MediaQuery.paddingOf(context).top + 8,
+              bottom: 96,
             ),
-          ),
-          ResponsiveCenter(
-            child: ListView(
-              padding: ResponsiveLayout.pagePadding(
-                context,
-              ).copyWith(bottom: 96),
-              children: [
-                const IslamicHeaderDecoration(
-                  title: 'Jelajahi Spiritual',
-                  subtitle: 'Ilmu, doa, dzikir, dan amalan harian',
+            children: [
+              const IslamicHeaderDecoration(
+                title: 'Jelajahi Spiritual',
+                subtitle: 'Ilmu, doa, dzikir, dan amalan harian',
+              ),
+              const SizedBox(height: 8),
+              _SectionTitle(
+                icon: Icons.auto_awesome,
+                title: 'Tip Harian',
+                color: redAccent,
+              ),
+              const SizedBox(height: 12),
+              randomTip.when(
+                data: (tip) => _DailyTipCard(
+                  title: tip.title,
+                  content: tip.content,
+                  reference: tip.reference,
+                  surfaceColor: surfaceColor,
+                  textColor: textColor,
+                  mutedColor: mutedColor,
+                  primaryColor: redAccent,
+                  onTap: () => context.go('/islamic-content/tips'),
                 ),
-                const SizedBox(height: 8),
-                _SectionTitle(
-                  icon: Icons.auto_awesome,
-                  title: 'Tip Harian',
-                  color: redAccent,
-                ),
-                const SizedBox(height: 12),
-                randomTip.when(
-                  data: (tip) => _DailyTipCard(
-                    title: tip.title,
-                    content: tip.content,
-                    reference: tip.reference,
-                    surfaceColor: surfaceColor,
-                    textColor: textColor,
-                    mutedColor: mutedColor,
-                    primaryColor: redAccent,
-                    onTap: () => context.go('/islamic-content/tips'),
-                  ),
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
-                  error: (e, _) => Text('Gagal memuat tip: $e'),
-                ),
-                const SizedBox(height: 24),
-                _SectionTitle(
-                  icon: Icons.grid_view_rounded,
-                  title: 'Menu Konten',
-                  color: redAccent,
-                ),
-                const SizedBox(height: 12),
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final crossAxisCount = constraints.maxWidth >= 720 ? 3 : 2;
-                    final cardHeight = constraints.maxWidth < 380
-                        ? 170.0
-                        : 156.0;
+                loading: () =>
+                    const Center(child: CircularProgressIndicator()),
+                error: (e, _) => Text('Gagal memuat tip: $e'),
+              ),
+              const SizedBox(height: 24),
+              _SectionTitle(
+                icon: Icons.grid_view_rounded,
+                title: 'Menu Konten',
+                color: redAccent,
+              ),
+              const SizedBox(height: 12),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final crossAxisCount = constraints.maxWidth >= 720 ? 3 : 2;
+                  final cardHeight = constraints.maxWidth < 380
+                      ? 170.0
+                      : 156.0;
 
-                    return GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: _menuItems.length,
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: crossAxisCount,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                        mainAxisExtent: cardHeight,
-                      ),
-                      itemBuilder: (context, index) {
-                        final item = _menuItems[index];
-                        return _ContentMenuCard(
-                          item: item,
-                          surfaceColor: surfaceColor,
-                          textColor: textColor,
-                          mutedColor: mutedColor,
-                          primaryColor: redAccent,
-                        );
-                      },
-                    );
-                  },
-                ),
-              ],
-            ),
+                  return GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: _menuItems.length,
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: crossAxisCount,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      mainAxisExtent: cardHeight,
+                    ),
+                    itemBuilder: (context, index) {
+                      return _ContentMenuCard(
+                        item: _menuItems[index],
+                        surfaceColor: surfaceColor,
+                        textColor: textColor,
+                        mutedColor: mutedColor,
+                        primaryColor: redAccent,
+                      );
+                    },
+                  );
+                },
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

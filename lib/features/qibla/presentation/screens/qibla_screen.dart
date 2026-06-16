@@ -7,6 +7,7 @@ import 'package:flutter_compass_v2/flutter_compass_v2.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
+import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 
 import '../../../prayer_schedule/presentation/location_provider.dart';
 
@@ -40,345 +41,248 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
     final textHint = isDark ? const Color(0xFF666666) : const Color(0xFF9A8A7D);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Arah Kiblat')),
-      body: SafeArea(
-        child: StreamBuilder<CompassEvent>(
-          stream: FlutterCompass.events,
-          builder: (context, snapshot) {
-            // Check if compass is available or we need simulation
-            final hasSensor =
-                snapshot.hasData && snapshot.data?.heading != null;
-            final heading = hasSensor
-                ? snapshot.data!.heading!
-                : _simulatedHeading;
+      appBar: AppBar(
+        title: const Text('Arah Kiblat'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      extendBodyBehindAppBar: true,
+      body: IslamicBackground(
+        child: SafeArea(
+          child: StreamBuilder<CompassEvent>(
+            stream: FlutterCompass.events,
+            builder: (context, snapshot) {
+              // Check if compass is available or we need simulation
+              final hasSensor =
+                  snapshot.hasData && snapshot.data?.heading != null;
+              final heading = hasSensor
+                  ? snapshot.data!.heading!
+                  : _simulatedHeading;
 
-            // Qibla direction relative to the top of the phone
-            // (Bearing to Mecca - Phone's Heading)
-            final qiblaRelativeAngle = (qiblaAngle - heading + 360) % 360;
+              // Qibla direction relative to the top of the phone
+              // (Bearing to Mecca - Phone's Heading)
+              final qiblaRelativeAngle = (qiblaAngle - heading + 360) % 360;
 
-            // Check if user is pointing exactly towards Mecca (tolerance: +/- 3 degrees)
-            final isAligned = qiblaRelativeAngle <= 2 || qiblaRelativeAngle >= 358;
+              // Check if user is pointing exactly towards Mecca (tolerance: +/- 3 degrees)
+              final isAligned = qiblaRelativeAngle <= 2 || qiblaRelativeAngle >= 358;
 
-            if (isAligned && !_wasAligned) {
-              HapticFeedback.heavyImpact();
-              _wasAligned = true;
-            } else if (!isAligned && _wasAligned) {
-              _wasAligned = false;
-            }
+              if (isAligned && !_wasAligned) {
+                HapticFeedback.heavyImpact();
+                _wasAligned = true;
+              } else if (!isAligned && _wasAligned) {
+                _wasAligned = false;
+              }
 
-            return SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              padding: ResponsiveLayout.pagePadding(
-                context,
-              ).copyWith(bottom: 96),
-              child: ResponsiveCenter(
-                child: Column(
-                  children: [
-                    // Location Status Card
-                    GlassContainer(
-                      blur: 15,
-                      opacity: isDark ? 0.03 : 0.015,
-                      padding: const EdgeInsets.all(16),
-                      child: Wrap(
-                        spacing: 12,
-                        runSpacing: 8,
-                        alignment: WrapAlignment.spaceBetween,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        children: [
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.my_location,
-                                color: Color(0xFF0E4D31),
-                                size: 18,
-                              ),
-                              const SizedBox(width: 8),
-                              ConstrainedBox(
-                                constraints: BoxConstraints(
-                                  maxWidth: max(
-                                    160,
-                                    MediaQuery.sizeOf(context).width - 150,
-                                  ).toDouble(),
+              return SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: ResponsiveLayout.pagePadding(
+                  context,
+                ).copyWith(bottom: 96),
+                child: ResponsiveCenter(
+                  child: Column(
+                    children: [
+                      // Location Status Card
+                      GlassContainer(
+                        blur: 15,
+                        opacity: isDark ? 0.03 : 0.015,
+                        padding: const EdgeInsets.all(16),
+                        child: Wrap(
+                          spacing: 12,
+                          runSpacing: 8,
+                          alignment: WrapAlignment.spaceBetween,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.my_location,
+                                  color: Color(0xFF0E4D31),
+                                  size: 18,
                                 ),
-                                child: Text(
-                                  '${location.city}, ${location.country}',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: textColor,
+                                const SizedBox(width: 8),
+                                ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    maxWidth: max(
+                                      160,
+                                      MediaQuery.sizeOf(context).width - 150,
+                                    ).toDouble(),
+                                  ),
+                                  child: Text(
+                                    '${location.city}, ${location.country}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: textColor,
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          Text(
-                            'Kiblat: ${qiblaAngle.toStringAsFixed(1)}°',
-                            style: TextStyle(
-                              color: textColor,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
+                              ],
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Aligned indicator Banner
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isAligned
-                            ? const Color(0xFF0E4D31).withValues(alpha: 0.15)
-                            : (isDark
-                                  ? Colors.white.withValues(alpha: 0.02)
-                                  : Colors.black.withValues(alpha: 0.02)),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: isAligned
-                              ? const Color(0xFF0E4D31).withValues(alpha: 0.5)
-                              : (isDark
-                                    ? Colors.white.withValues(alpha: 0.08)
-                                    : Colors.black.withValues(alpha: 0.08)),
-                          width: 1.2,
+                            Text(
+                              'Kiblat: ${qiblaAngle.toStringAsFixed(1)}°',
+                              style: TextStyle(
+                                color: textColor,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            isAligned ? Icons.verified : Icons.explore,
+                      const SizedBox(height: 24),
+
+                      // Aligned indicator Banner
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 12,
+                          horizontal: 24,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isAligned
+                              ? const Color(0xFF0E4D31)
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
                             color: isAligned
                                 ? const Color(0xFF0E4D31)
-                                : textSecondary,
-                            size: 20,
+                                : textHint.withValues(alpha: 0.4),
+                            width: 1.5,
                           ),
-                          const SizedBox(width: 8),
-                          Flexible(
-                            child: Text(
-                              isAligned
-                                  ? 'Terarah ke Kakbah'
-                                  : 'Putar Perangkat Anda: ${(qiblaRelativeAngle.round())}°',
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: isAligned
-                                    ? const Color(0xFF0E4D31)
-                                    : textMuted,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
+                        ),
+                        child: Text(
+                          isAligned ? 'KIBLAT TERARAH 🕋' : 'Putar Perangkat Anda',
+                          style: TextStyle(
+                            color: isAligned ? Colors.white : textSecondary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                            letterSpacing: 1.0,
                           ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-
-                    // Animated Compass Art
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        final compassSize = constraints.maxWidth
-                            .clamp(220.0, 300.0)
-                            .toDouble();
-                        final paintSize = compassSize - 40;
-
-                        return SizedBox(
-                          height: compassSize,
-                          width: compassSize,
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              // Compass Outer Ring Decor
-                              Container(
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: isAligned
-                                        ? const Color(
-                                            0xFF0E4D31,
-                                          ).withValues(alpha: 0.4)
-                                        : (isDark
-                                              ? Colors.white.withValues(
-                                                  alpha: 0.08,
-                                                )
-                                              : Colors.black.withValues(
-                                                  alpha: 0.08,
-                                                )),
-                                    width: 3.0,
-                                  ),
-                                  boxShadow: isAligned
-                                      ? [
-                                          BoxShadow(
-                                            color: const Color(
-                                              0xFF0E4D31,
-                                            ).withValues(alpha: 0.15),
-                                            blurRadius: 32,
-                                            spreadRadius: 4,
-                                          ),
-                                        ]
-                                      : [],
-                                ),
-                              ),
-
-                              // Compass Dial (Rotates in negative heading to align North correctly)
-                              Transform.rotate(
-                                angle: -heading * pi / 180,
-                                child: CompassDialPaint(size: paintSize),
-                              ),
-
-                              // Black Qibla Needle (points towards Mecca)
-                              Transform.rotate(
-                                angle: qiblaRelativeAngle * pi / 180,
-                                child: QiblaNeedlePaint(size: paintSize),
-                              ),
-
-                              // Center Hub
-                              Container(
-                                width: 18,
-                                height: 18,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: isDark
-                                      ? Colors.white
-                                      : const Color(0xFF241A12),
-                                  boxShadow: const [
-                                    BoxShadow(
-                                      color: Colors.black26,
-                                      blurRadius: 4,
-                                      offset: Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 36),
-
-                    // Calibration Tip
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text(
-                        'Tips: Pegang ponsel Anda mendatar (horizontal) dan hindari meletakkannya dekat dengan bahan magnetik untuk hasil terbaik.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: textHint,
-                          fontSize: 12,
-                          height: 1.4,
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 36),
+                      const SizedBox(height: 36),
 
-                    // Simulation panel is only shown when compass sensor is unavailable.
-                    if (!hasSensor) _buildSimulationPanel(heading, qiblaAngle),
-                  ],
+                      // Compass Ring Dial Viewports wrapper
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final size = (constraints.maxWidth * 0.82).clamp(
+                            220.0,
+                            340.0,
+                          );
+
+                          return SizedBox(
+                            width: size,
+                            height: size,
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                // Rotate the dial according to the compass heading
+                                Transform.rotate(
+                                  angle: -heading * pi / 180,
+                                  child: CompassDialPaint(size: size),
+                                ),
+
+                                // Rotate the pointing Qibla needle relative to top
+                                Transform.rotate(
+                                  angle: qiblaRelativeAngle * pi / 180,
+                                  child: QiblaNeedlePaint(size: size),
+                                ),
+
+                                // Center decorative hub
+                                Container(
+                                  width: 24,
+                                  height: 24,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: const Color(0xFF0E4D31),
+                                    border: Border.all(
+                                      color: Colors.white,
+                                      width: 2.5,
+                                    ),
+                                    boxShadow: const [
+                                      BoxShadow(
+                                        color: Colors.black26,
+                                        blurRadius: 6,
+                                        offset: Offset(0, 3),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 36),
+
+                      // Details description helper text
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Text(
+                          hasSensor
+                              ? 'Posisikan HP Anda mendatar. Sejajarkan jarum kiblat yang berlambang Kabah di atas agar lurus tegak ke arah depan Anda.'
+                              : 'Sensor kompas tidak terdeteksi pada perangkat Anda. Gunakan simulasi di bawah untuk menguji arah kiblat.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: textMuted,
+                            fontSize: 13,
+                            height: 1.5,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      if (!hasSensor) _buildSimulationPanel(heading, qiblaAngle),
+                    ],
+                  ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildSimulationPanel(double currentHeading, double qiblaAngle) {
+  Widget _buildSimulationPanel(double currentVal, double qiblaAngle) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : const Color(0xFF241A12);
     final textSecondary = isDark
-        ? const Color(0xFFB8A898)
+        ? const Color(0xFFC8B8A8)
         : const Color(0xFF5D4E47);
-    final textMuted = isDark
-        ? const Color(0xFF999999)
-        : const Color(0xFF5D4E47);
-    final sliderInactive = isDark ? Colors.white12 : Colors.black12;
 
-    return GlassContainer(
-      blur: 10,
-      opacity: isDark ? 0.02 : 0.01,
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Simulator Sensor Kompas',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: textMuted,
-                  fontSize: 14,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFC78A4C).withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: const Color(0xFFC78A4C).withValues(alpha: 0.3),
-                  ),
-                ),
-                child: const Text(
-                  'Simulator Active',
-                  style: TextStyle(color: Color(0xFFC78A4C), fontSize: 10),
-                ),
-              ),
-            ],
+    return Column(
+      children: [
+        const Divider(height: 32),
+        Text(
+          'Simulasi Heading HP (°)',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: textSecondary,
           ),
-          const SizedBox(height: 12),
-          Text(
-            'Gunakan slider di bawah untuk mensimulasikan putaran ponsel Anda untuk mencari kiblat.',
-            style: TextStyle(color: textSecondary, fontSize: 11),
-          ),
-          const SizedBox(height: 16),
-          Wrap(
-            spacing: 12,
-            runSpacing: 4,
-            alignment: WrapAlignment.spaceBetween,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              Text(
-                'Heading Ponsel: ${currentHeading.round()}°',
-                style: TextStyle(color: textColor, fontSize: 13),
-              ),
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    _simulatedHeading = qiblaAngle; // Instantly align
-                  });
-                },
-                child: const Text(
-                  'Luruskan Kiblat',
-                  style: TextStyle(color: Color(0xFF0E4D31), fontSize: 12),
-                ),
-              ),
-            ],
-          ),
-          Slider(
-            min: 0,
-            max: 360,
-            value: _simulatedHeading,
-            activeColor: const Color(0xFF0E4D31),
-            inactiveColor: sliderInactive,
-            onChanged: (val) {
-              setState(() {
-                _simulatedHeading = val;
-              });
-            },
-          ),
-        ],
-      ),
+        ),
+        Slider(
+          min: 0,
+          max: 360,
+          value: currentVal,
+          activeColor: const Color(0xFF0E4D31),
+          onChanged: (val) {
+            setState(() {
+              _simulatedHeading = val;
+            });
+          },
+        ),
+        OutlinedButton(
+          onPressed: () {
+            setState(() {
+              _simulatedHeading = qiblaAngle; // Instantly align
+            });
+          },
+          child: const Text('Simulasikan Lurus Kiblat'),
+        ),
+      ],
     );
   }
 }

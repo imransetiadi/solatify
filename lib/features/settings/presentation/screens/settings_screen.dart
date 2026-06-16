@@ -5,6 +5,7 @@ import 'package:solatify/core/localization/app_localizations.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
 import 'package:solatify/features/settings/presentation/providers/settings_provider.dart';
+import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 
 enum PrayerOffsetType { subuh, dzuhur, ashar, magrib, isya }
 
@@ -129,16 +130,7 @@ class SettingsScreen extends ConsumerWidget {
                           });
                         },
                       ),
-                      const SizedBox(width: 16),
-                      Text(
-                        '${selectedOffset > 0 ? '+' : ''}$selectedOffset ${l.minutes}',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: textColor,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: 24),
                       IconButton(
                         icon: Icon(
                           Icons.add_circle,
@@ -159,19 +151,23 @@ class SettingsScreen extends ConsumerWidget {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(dialogContext),
-                  child: Text(l.cancel, style: TextStyle(color: textMuted)),
+                  child: Text(
+                    l.cancel,
+                    style: const TextStyle(color: Colors.grey),
+                  ),
                 ),
-                TextButton(
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    foregroundColor: Colors.white,
+                  ),
                   onPressed: () {
-                    selectedOffset = (int.tryParse(controller.text) ?? 0)
-                        .clamp(-120, 120)
-                        .toInt();
                     ref
                         .read(settingsProvider.notifier)
                         .updatePrayerOffsets(prayer.key, selectedOffset);
                     Navigator.pop(dialogContext);
                   },
-                  child: Text(l.save, style: TextStyle(color: primaryColor)),
+                  child: Text(l.save),
                 ),
               ],
             );
@@ -187,19 +183,18 @@ class SettingsScreen extends ConsumerWidget {
     String currentMethod,
   ) {
     final l = AppLocalizations.of(context);
-    final methods = {
-      'Kemenag': l.calculationMethodLabel('Kemenag'),
-      'MuslimWorldLeague': l.calculationMethodLabel('MuslimWorldLeague'),
-      'Egypt': l.calculationMethodLabel('Egypt'),
-      'Karachi': l.calculationMethodLabel('Karachi'),
-      'UmmAlQura': l.calculationMethodLabel('UmmAlQura'),
-      'NorthAmerica': l.calculationMethodLabel('NorthAmerica'),
-    };
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final dialogBg = isDark ? const Color(0xFF2A1B12) : Colors.white;
+    final textColor = isDark ? Colors.white : const Color(0xFF241A12);
 
-    final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
-    final dialogBg = isDarkTheme ? const Color(0xFF2A1B12) : Colors.white;
-    final textColor = isDarkTheme ? Colors.white : const Color(0xFF241A12);
-    final textMuted = isDarkTheme ? Colors.white : const Color(0xFF5D4E47);
+    final methods = {
+      'Kemenag': 'Kemenag RI',
+      'MWL': 'Muslim World League',
+      'ISNA': 'ISNA (North America)',
+      'Egypt': 'Egyptian General Authority',
+      'Makkah': 'Umm al-Qura University, Makkah',
+      'Singapore': 'MUIS Singapore',
+    };
 
     showDialog<void>(
       context: context,
@@ -207,39 +202,30 @@ class SettingsScreen extends ConsumerWidget {
         return AlertDialog(
           backgroundColor: dialogBg,
           title: Text(l.calculationMethod, style: TextStyle(color: textColor)),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: RadioGroup<String>(
-              groupValue: currentMethod,
-              onChanged: (val) {
-                if (val != null) {
-                  ref
-                      .read(settingsProvider.notifier)
-                      .updateCalculationMethod(val);
-                  Navigator.pop(context);
-                }
-              },
-              child: ListView(
-                shrinkWrap: true,
-                children: methods.entries.map((entry) {
-                  return RadioListTile<String>(
-                    activeColor: const Color(0xFF0E4D31),
-                    title: Text(
-                      entry.value,
-                      style: TextStyle(color: textColor),
-                    ),
-                    value: entry.key,
-                  );
-                }).toList(),
-              ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: methods.entries.map((entry) {
+                return RadioListTile<String>(
+                  title: Text(
+                    entry.value,
+                    style: TextStyle(color: textColor, fontSize: 14),
+                  ),
+                  value: entry.key,
+                  groupValue: currentMethod,
+                  activeColor: const Color(0xFF0E4D31),
+                  onChanged: (val) {
+                    if (val != null) {
+                      ref
+                          .read(settingsProvider.notifier)
+                          .updateCalculationMethod(val);
+                      Navigator.pop(context);
+                    }
+                  },
+                );
+              }).toList(),
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(l.cancel, style: TextStyle(color: textMuted)),
-            ),
-          ],
         );
       },
     );
@@ -251,50 +237,41 @@ class SettingsScreen extends ConsumerWidget {
     String currentLang,
   ) {
     final l = AppLocalizations.of(context);
-    final langs = {'id': l.indonesiaLanguage, 'en': l.englishLanguage};
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final dialogBg = isDark ? const Color(0xFF2A1B12) : Colors.white;
+    final textColor = isDark ? Colors.white : const Color(0xFF241A12);
 
-    final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
-    final dialogBg = isDarkTheme ? const Color(0xFF2A1B12) : Colors.white;
-    final textColor = isDarkTheme ? Colors.white : const Color(0xFF241A12);
-    final textMuted = isDarkTheme ? Colors.white : const Color(0xFF5D4E47);
+    final langs = {
+      'id': 'Bahasa Indonesia',
+      'en': 'English',
+    };
 
     showDialog<void>(
       context: context,
       builder: (context) {
         return AlertDialog(
           backgroundColor: dialogBg,
-          title: Text(l.chooseLanguage, style: TextStyle(color: textColor)),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: RadioGroup<String>(
-              groupValue: currentLang,
-              onChanged: (val) {
-                if (val != null) {
-                  ref.read(settingsProvider.notifier).updateLanguage(val);
-                  Navigator.pop(context);
-                }
-              },
-              child: ListView(
-                shrinkWrap: true,
-                children: langs.entries.map((entry) {
-                  return RadioListTile<String>(
-                    activeColor: const Color(0xFF0E4D31),
-                    title: Text(
-                      entry.value,
-                      style: TextStyle(color: textColor),
-                    ),
-                    value: entry.key,
-                  );
-                }).toList(),
-              ),
-            ),
+          title: Text(l.language, style: TextStyle(color: textColor)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: langs.entries.map((entry) {
+              return RadioListTile<String>(
+                title: Text(
+                  entry.value,
+                  style: TextStyle(color: textColor, fontSize: 14),
+                ),
+                value: entry.key,
+                groupValue: currentLang,
+                activeColor: const Color(0xFF0E4D31),
+                onChanged: (val) {
+                  if (val != null) {
+                    ref.read(settingsProvider.notifier).updateLanguage(val);
+                    Navigator.pop(context);
+                  }
+                },
+              );
+            }).toList(),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(l.cancel, style: TextStyle(color: textMuted)),
-            ),
-          ],
         );
       },
     );
@@ -305,9 +282,7 @@ class SettingsScreen extends ConsumerWidget {
     final settings = ref.watch(settingsProvider);
     final l = AppLocalizations.of(context);
 
-    final String displayMethod = l.calculationMethodLabel(
-      settings.calculationMethod,
-    );
+    final String displayMethod = settings.calculationMethod;
     final String displayLang = l.languageLabel(settings.language);
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -315,201 +290,193 @@ class SettingsScreen extends ConsumerWidget {
     final textSecondary = isDark
         ? const Color(0xFFB8A898)
         : const Color(0xFF5D4E47);
-    final dividerColor = isDark ? Colors.white12 : Colors.black12;
+    final dividerColor = isDark
+        ? Colors.white.withValues(alpha: 0.1)
+        : Colors.black.withValues(alpha: 0.05);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l.settingsTitle)),
-      body: SafeArea(
-        child: ResponsiveCenter(
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            padding: ResponsiveLayout.pagePadding(context),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Section 2: Calculation Settings
-                _buildSectionHeader(context, l.calculationSchedule),
-                const SizedBox(height: 12),
-                GlassContainer(
-                  blur: 15,
-                  opacity: isDark ? 0.03 : 0.015,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
+      body: IslamicBackground(
+        child: SafeArea(
+          child: ResponsiveCenter(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: ResponsiveLayout.pagePadding(context),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 20),
+                  Text(
+                    l.navSettings,
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                    ),
                   ),
-                  child: Column(
-                    children: [
-                      // Method selection
-                      ListTile(
-                        title: Text(
-                          l.calculationMethod,
-                          style: TextStyle(color: textColor, fontSize: 15),
-                        ),
-                        subtitle: Text(
-                          displayMethod,
-                          style: const TextStyle(
-                            color: Color(0xFF0E4D31),
-                            fontSize: 12,
+                  const SizedBox(height: 24),
+
+                  _buildSectionHeader(context, 'PENGATURAN UMUM'),
+                  const SizedBox(height: 12),
+                  GlassContainer(
+                    blur: 15,
+                    opacity: isDark ? 0.03 : 0.015,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    child: Column(
+                      children: [
+                        // Method selection
+                        ListTile(
+                          title: Text(
+                            l.calculationMethod,
+                            style: TextStyle(color: textColor, fontSize: 15),
+                          ),
+                          subtitle: Text(
+                            displayMethod,
+                            style: const TextStyle(
+                              color: Color(0xFF0E4D31),
+                              fontSize: 12,
+                            ),
+                          ),
+                          trailing:
+                              Icon(Icons.chevron_right, color: textSecondary),
+                          onTap: () => _showCalculationMethodDialog(
+                            context,
+                            ref,
+                            settings.calculationMethod,
                           ),
                         ),
-                        trailing: Icon(
-                          Icons.chevron_right,
-                          color: textSecondary,
-                        ),
-                        onTap: () => _showCalculationMethodDialog(
-                          context,
-                          ref,
-                          settings.calculationMethod,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                // Section 2b: Prayer Time Offsets
-                _buildSectionHeader(context, l.prayerTimeOffsets),
-                const SizedBox(height: 12),
-                GlassContainer(
-                  blur: 15,
-                  opacity: isDark ? 0.03 : 0.015,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  child: Column(
-                    children: [
-                      _buildOffsetTile(
-                        context,
-                        ref,
-                        PrayerOffsetType.subuh,
-                        settings.prayerOffsets['subuh'] ?? 0,
-                        textColor,
-                        textSecondary,
-                      ),
-                      Divider(color: dividerColor, height: 16),
-                      _buildOffsetTile(
-                        context,
-                        ref,
-                        PrayerOffsetType.dzuhur,
-                        settings.prayerOffsets['dzuhur'] ?? 0,
-                        textColor,
-                        textSecondary,
-                      ),
-                      Divider(color: dividerColor, height: 16),
-                      _buildOffsetTile(
-                        context,
-                        ref,
-                        PrayerOffsetType.ashar,
-                        settings.prayerOffsets['ashar'] ?? 0,
-                        textColor,
-                        textSecondary,
-                      ),
-                      Divider(color: dividerColor, height: 16),
-                      _buildOffsetTile(
-                        context,
-                        ref,
-                        PrayerOffsetType.magrib,
-                        settings.prayerOffsets['magrib'] ?? 0,
-                        textColor,
-                        textSecondary,
-                      ),
-                      Divider(color: dividerColor, height: 16),
-                      _buildOffsetTile(
-                        context,
-                        ref,
-                        PrayerOffsetType.isya,
-                        settings.prayerOffsets['isya'] ?? 0,
-                        textColor,
-                        textSecondary,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                // Section 3: Localization & UI
-                _buildSectionHeader(context, l.displayAndLanguage),
-                const SizedBox(height: 12),
-                GlassContainer(
-                  blur: 15,
-                  opacity: isDark ? 0.03 : 0.015,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  child: Column(
-                    children: [
-                      // Language
-                      ListTile(
-                        title: Text(
-                          l.language,
-                          style: TextStyle(color: textColor, fontSize: 15),
-                        ),
-                        subtitle: Text(
-                          displayLang,
-                          style: const TextStyle(
-                            color: Color(0xFF0E4D31),
-                            fontSize: 12,
+                        Divider(color: dividerColor, height: 16),
+                        // Language
+                        ListTile(
+                          title: Text(
+                            l.language,
+                            style: TextStyle(color: textColor, fontSize: 15),
+                          ),
+                          subtitle: Text(
+                            displayLang,
+                            style: const TextStyle(
+                              color: Color(0xFF0E4D31),
+                              fontSize: 12,
+                            ),
+                          ),
+                          trailing:
+                              Icon(Icons.chevron_right, color: textSecondary),
+                          onTap: () => _showLanguageDialog(
+                            context,
+                            ref,
+                            settings.language,
                           ),
                         ),
-                        trailing: Icon(
-                          Icons.chevron_right,
-                          color: textSecondary,
-                        ),
-                        onTap: () => _showLanguageDialog(
-                          context,
-                          ref,
-                          settings.language,
-                        ),
-                      ),
-                      Divider(color: dividerColor, height: 16),
-                      // Theme toggles
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Flexible(
-                              child: Text(
-                                l.appTheme,
-                                style: TextStyle(
-                                  color: textColor,
-                                  fontSize: 15,
+                        Divider(color: dividerColor, height: 16),
+                        // Theme toggles
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  l.appTheme,
+                                  style: TextStyle(
+                                    color: textColor,
+                                    fontSize: 15,
+                                  ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 12),
-                            Row(
-                              children: [
-                                _buildThemeButton(
-                                  context,
-                                  ref,
-                                  ThemeMode.light,
-                                  Icons.light_mode,
-                                  settings.themeMode,
-                                ),
-                                const SizedBox(width: 8),
-                                _buildThemeButton(
-                                  context,
-                                  ref,
-                                  ThemeMode.dark,
-                                  Icons.dark_mode,
-                                  settings.themeMode,
-                                ),
-                              ],
-                            ),
-                          ],
+                              const SizedBox(width: 12),
+                              Row(
+                                children: [
+                                  _buildThemeButton(
+                                    context,
+                                    ref,
+                                    ThemeMode.light,
+                                    Icons.light_mode,
+                                    settings.themeMode,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  _buildThemeButton(
+                                    context,
+                                    ref,
+                                    ThemeMode.dark,
+                                    Icons.dark_mode,
+                                    settings.themeMode,
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 96),
-              ],
+                  const SizedBox(height: 32),
+
+                  _buildSectionHeader(context, 'KOREKSI WAKTU SALAT'),
+                  const SizedBox(height: 12),
+                  GlassContainer(
+                    blur: 15,
+                    opacity: isDark ? 0.03 : 0.015,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    child: Column(
+                      children: [
+                        _buildOffsetTile(
+                          context,
+                          ref,
+                          PrayerOffsetType.subuh,
+                          settings.prayerOffsets['subuh'] ?? 0,
+                          textColor,
+                          textSecondary,
+                        ),
+                        Divider(color: dividerColor, height: 16),
+                        _buildOffsetTile(
+                          context,
+                          ref,
+                          PrayerOffsetType.dzuhur,
+                          settings.prayerOffsets['dzuhur'] ?? 0,
+                          textColor,
+                          textSecondary,
+                        ),
+                        Divider(color: dividerColor, height: 16),
+                        _buildOffsetTile(
+                          context,
+                          ref,
+                          PrayerOffsetType.ashar,
+                          settings.prayerOffsets['ashar'] ?? 0,
+                          textColor,
+                          textSecondary,
+                        ),
+                        Divider(color: dividerColor, height: 16),
+                        _buildOffsetTile(
+                          context,
+                          ref,
+                          PrayerOffsetType.magrib,
+                          settings.prayerOffsets['magrib'] ?? 0,
+                          textColor,
+                          textSecondary,
+                        ),
+                        Divider(color: dividerColor, height: 16),
+                        _buildOffsetTile(
+                          context,
+                          ref,
+                          PrayerOffsetType.isya,
+                          settings.prayerOffsets['isya'] ?? 0,
+                          textColor,
+                          textSecondary,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 96),
+                ],
+              ),
             ),
           ),
         ),
