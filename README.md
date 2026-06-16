@@ -4,49 +4,72 @@
   <img src="assets/images/masjid_nabawi.svg" width="120" alt="Solatify Logo">
 </p>
 <p align="center">
-  <b>Pendamping Ibadah Harian Muslim yang Modern, Presisi, dan Andal</b>
+  <b>Pendamping Ibadah Harian Muslim yang modern, presisi, ringan, dan responsif.</b>
 </p>
 
 ---
 
-**Solatify** adalah aplikasi Flutter berkinerja tinggi yang dirancang khusus untuk memfasilitasi aktivitas ibadah sehari-hari. Dibangun menggunakan prinsip **Clean Architecture (Feature-First)**, aplikasi ini menjamin performa, skalabilitas, dan pengalaman pengguna yang luar biasa.
+**Solatify** adalah aplikasi Flutter untuk membantu aktivitas ibadah harian: jadwal salat, alarm adzan, Al-Qur'an, kiblat, masjid terdekat, konten islami, tracker ibadah, dan pengaturan personal. Aplikasi dibangun dengan pola **Clean Architecture feature-first**, state management Riverpod, penyimpanan lokal Hive, dan fokus pada pengalaman yang stabil di Android maupun iOS.
 
 ## ✨ Fitur Utama
 
-- 🕋 **Jadwal Salat Presisi Tinggi**: Menggunakan pustaka kalkulasi astronomi (`adhan` & `timezone`) dengan dukungan berbagai metode perhitungan internasional (Kemenag, MWL, dll). Waktu salat otomatis menyesuaikan dengan zona waktu lokal secara akurat.
-- 📖 **Al-Qur'an Digital & Dzikir**: Tersedia 114 surah lengkap, asmaul husna, doa harian, dan dzikir pagi-petang. Dilengkapi dengan teks Arab, Latin, terjemahan bahasa Indonesia, serta fitur *Bookmark* (Penanda Terakhir Dibaca).
-- 🧭 **Arah Kiblat *Real-time***: Menggunakan sensor kompas perangkat untuk menunjukkan arah kiblat secara instan dan presisi.
-- 🔔 **Sistem Notifikasi Andal**: Alarm azan dan pengingat waktu salat yang beroperasi secara *offline* menggunakan `flutter_local_notifications`. Bebas duplikasi dan terintegrasi penuh dengan OS.
-- 📈 **Prayer Tracker**: Fitur pencatatan ibadah harian interaktif yang dilengkapi dengan data statistik mingguan untuk membantu menjaga konsistensi ibadah.
-- 🌙 **Tema & UX Harmonis**: Desain antarmuka modern yang menggunakan *Glassmorphism* serta transisi *Light/Dark Mode* yang responsif.
+- 🕋 **Jadwal Salat Akurat** — Kalkulasi waktu salat berbasis `adhan` dan `timezone`, mendukung metode Kemenag dan metode internasional lain, termasuk koreksi manual per waktu salat.
+- 🔔 **Alarm Adzan Otomatis** — Notifikasi lokal waktu salat berjalan offline menggunakan `flutter_local_notifications`, channel Android khusus adzan, timezone lokasi salat, dan scheduling untuk sisa salat hari ini plus Subuh besok.
+- 📖 **Al-Qur'an & Konten Islami** — Surah Al-Qur'an, bookmark/terakhir dibaca, Asmaul Husna, doa harian, dzikir pagi-petang, kalender Hijriah, dan tips islami.
+- 🧭 **Arah Kiblat** — Kompas kiblat berbasis sensor perangkat, dengan fallback UI ketika sensor tidak tersedia.
+- 🕌 **Masjid Terdekat** — Pencarian masjid sekitar, tombol lihat peta, dan rute melalui aplikasi peta/browser perangkat.
+- 📈 **Tracker Ibadah** — Checklist ibadah harian dan statistik mingguan untuk membantu konsistensi ibadah.
+- 🌙 **Tema Responsif** — Light/dark mode, layout adaptif phone/tablet, serta komponen visual yang dioptimalkan agar tetap ringan saat scroll dan navigasi.
 
 ## 🛠 Arsitektur & Teknologi
 
-Solatify dikembangkan dengan standar rekayasa perangkat lunak modern:
+- **Flutter + Dart** untuk aplikasi lintas platform Android dan iOS.
+- **Riverpod** untuk state management yang eksplisit dan testable.
+- **Hive** untuk cache lokal jadwal, pengaturan, tracker, dan data Al-Qur'an.
+- **GoRouter** untuk navigasi deklaratif.
+- **Clean Architecture** per fitur: `data`, `domain`, dan `presentation`.
+- **flutter_local_notifications** untuk notifikasi salat lokal dan alarm adzan.
 
-- **State Management**: [`Riverpod`](https://riverpod.dev/) — Mengelola *state* yang kompleks (termasuk *Optimistic UI Update* pada Tracker) dengan aman dan terprediksi.
-- **Local Storage**: [`Hive`](https://pub.dev/packages/hive) — Database NoSQL yang sangat cepat untuk *caching* jadwal salat, pengaturan, dan rekam jejak pengguna, lengkap dengan sistem *Crash Recovery*.
-- **Routing**: [`GoRouter`](https://pub.dev/packages/go_router) — Navigasi deklaratif untuk transisi halaman yang mulus dan *Deep Linking*.
-- **Desain Pattern**: **Clean Architecture (Data, Domain, Presentation)** — Memisahkan logika bisnis dari antarmuka pengguna untuk mempermudah pemeliharaan (*maintenance*) dan *Test-Driven Development (TDD)*.
+## ⚡ Performa & Responsiveness
 
-## 🚀 Kesiapan Distribusi
+Solatify menggunakan beberapa tuning agar aplikasi tetap ringan:
 
-Aplikasi ini telah melewati audit komprehensif, meliputi:
-- **0 Error Statis**: Mematuhi aturan linting ketat (`flutter analyze`).
-- **100% Test Coverage pada Critical Paths**: Lulus 24 pengujian (Unit & Widget Tests) termasuk *Smoke Testing* dan *Crash Recovery*.
-- **Platform**: Mendukung penuh kompilasi untuk **iOS** maupun **Android**.
+- Konfigurasi performa terpusat di `lib/core/performance/performance_tuning.dart`.
+- Efek `GlassContainer` dibatasi agar visual tetap konsisten tanpa blur berlebihan.
+- Countdown waktu salat memakai tick 1 detik, bukan sub-second rebuild.
+- Audit ulang scheduler notifikasi dibuat lebih hemat, sementara perubahan lokasi/jadwal tetap memicu reschedule langsung.
+- List panjang memakai builder/lazy rendering pada fitur konten utama.
 
-## 💻 Memulai (Getting Started)
+## 🔔 Catatan Notifikasi Android
 
-Jika Anda ingin menjalankan atau mengembangkan Solatify di lingkungan lokal:
+Untuk Android, notifikasi salat memakai channel `Prayer Times Adhan` versi baru (`prayer_times_adhan_channel_v2`) agar perangkat tidak terjebak konfigurasi channel lama. Agar alarm adzan muncul di system tray:
 
-1. **Clone repository ini**
+1. Install build terbaru dan buka aplikasi minimal sekali.
+2. Berikan izin notifikasi (`POST_NOTIFICATIONS`) pada Android 13+.
+3. Aktifkan izin exact alarm jika Android menampilkan pengaturan tersebut.
+4. Pastikan channel `Prayer Times Adhan` aktif di system notification settings.
+5. Tunggu waktu salat berikutnya untuk memverifikasi notifikasi real prayer-time.
+
+## ✅ QA & Kesiapan Build
+
+Status branch terbaru sudah diverifikasi dengan:
+
+- `flutter analyze --no-pub` — no issues.
+- `flutter test --no-pub` — 60/60 tests passed.
+- `flutter build apk --debug` — Android debug APK berhasil dibuat.
+- `flutter build ios --no-codesign` — iOS app berhasil dibuat tanpa codesign.
+
+Dokumen QA tambahan tersedia di `docs/qa/`, termasuk runbook, checklist Android/iOS, performance checklist, dan release signoff.
+
+## 💻 Memulai
+
+1. **Clone repository**
    ```bash
    git clone https://github.com/imransetiadi/solatify.git
    cd solatify
    ```
 
-2. **Unduh dependensi**
+2. **Install dependensi**
    ```bash
    flutter pub get
    ```
@@ -56,13 +79,32 @@ Jika Anda ingin menjalankan atau mengembangkan Solatify di lingkungan lokal:
    flutter run
    ```
 
-## 🧪 Menjalankan Pengujian (Testing)
+## 🧪 Testing
 
-Untuk memastikan integritas kode dan fungsionalitas aplikasi:
+Jalankan test utama:
+
 ```bash
-flutter test
+flutter test --no-pub
+```
+
+Jalankan analyzer:
+
+```bash
+flutter analyze --no-pub
+```
+
+Build Android debug APK:
+
+```bash
+flutter build apk --debug
+```
+
+Build iOS tanpa codesign:
+
+```bash
+flutter build ios --no-codesign
 ```
 
 ## 📜 Lisensi
 
-Proyek ini bersifat tertutup (Proprietary). Hak Cipta dilindungi. 
+Proyek ini bersifat tertutup (Proprietary). Hak cipta dilindungi.

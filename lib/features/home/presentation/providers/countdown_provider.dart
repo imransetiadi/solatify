@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:solatify/core/performance/performance_tuning.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -46,7 +47,7 @@ class CountdownNotifier extends StateNotifier<CountdownState> {
     _timer?.cancel();
     _updateCountdown(); // Run immediately
     _timer = Timer.periodic(
-      const Duration(seconds: 1),
+      PerformanceTuning.countdownTickInterval,
       (_) => _updateCountdown(),
     );
   }

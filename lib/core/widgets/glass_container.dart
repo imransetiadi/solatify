@@ -1,8 +1,9 @@
 import 'dart:ui';
+
 import 'package:flutter/material.dart';
+import 'package:solatify/core/performance/performance_tuning.dart';
 
 class GlassContainer extends StatelessWidget {
-
   const GlassContainer({
     super.key,
     required this.child,
@@ -43,6 +44,9 @@ class GlassContainer extends StatelessWidget {
         (isDark
             ? const Color(0xFFE85D4F).withValues(alpha: 0.42)
             : const Color(0xFFC0392B).withValues(alpha: 0.32));
+    final effectiveBlur = blur
+        .clamp(0, PerformanceTuning.maxGlassBlurSigma)
+        .toDouble();
 
     return Container(
       width: width,
@@ -60,7 +64,10 @@ class GlassContainer extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(borderRadius),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+          filter: ImageFilter.blur(
+            sigmaX: effectiveBlur,
+            sigmaY: effectiveBlur,
+          ),
           child: Container(
             padding: padding ?? const EdgeInsets.all(16),
             decoration: BoxDecoration(
