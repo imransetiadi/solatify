@@ -27,6 +27,12 @@
 - [ ] Status text updates after notification permission changes
 - [ ] `Aktifkan izin notifikasi` opens or requests the platform permission flow when action is needed
 - [ ] `Kirim notifikasi uji` sends a visible test notification when notifications are available
+- [ ] Android: `Kirim notifikasi uji` shows snackbar and visible notification
+- [ ] Android: `Jadwalkan tes 2 menit` shows snackbar and delivers after roughly 2 minutes
+- [ ] Android: next real prayer notification delivery verified or diagnostic logs captured
+- [ ] iOS: `Kirim notifikasi uji` shows snackbar and visible notification
+- [ ] iOS: `Jadwalkan tes 2 menit` shows snackbar and delivers after roughly 2 minutes
+- [ ] iOS: Settings notification buttons never fail silently after tap
 - [ ] Failure states show a SnackBar instead of crashing the Settings screen
 - [ ] Android exact-alarm denial shows the less precise schedule status and still allows a test notification
 
@@ -35,6 +41,8 @@
 - [ ] Main navigation works
 - [ ] Responsive layout checked on phone and tablet
 - [ ] Notification permission flow checked
+- [ ] Mosque `Lihat Peta` opens map/browser or shows failure snackbar
+- [ ] Mosque `Rute` opens directions or shows failure snackbar
 - [ ] Prayer notification delivery verified
 - [ ] No blocking crash or layout bug found
 
@@ -44,6 +52,8 @@
 - [ ] Responsive layout checked on phone and tablet
 - [ ] Notification permission flow checked
 - [ ] Exact alarm flow checked if applicable
+- [ ] Mosque `Lihat Peta` opens map/browser or shows failure snackbar
+- [ ] Mosque `Rute` opens directions or shows failure snackbar
 - [ ] Prayer notification delivery verified
 - [ ] Reboot and reschedule behavior checked
 - [ ] No blocking crash, freeze, or layout bug found
