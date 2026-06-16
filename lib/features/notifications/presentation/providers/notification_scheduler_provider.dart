@@ -106,6 +106,11 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
           notificationId: request.notificationId,
         );
       }
+
+      debugPrint(
+        'Scheduled ${requests.length} prayer notifications for today and tomorrow',
+      );
+      await NotificationService().getPendingNotificationsCount();
     } catch (e) {
       debugPrint('Error scheduling notifications: $e');
     }
@@ -137,7 +142,11 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
         notificationId: notificationId,
       );
 
+      // Mark as scheduled only after successful completion
       _scheduledNotifications.add(notificationKey);
+      debugPrint(
+        'Marked $prayerKey scheduled: ID=$notificationId at $prayerTimeStr',
+      );
     } catch (e) {
       debugPrint('Error scheduling notification for $prayerKey: $e');
     }

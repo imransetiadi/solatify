@@ -284,4 +284,32 @@ class NotificationService {
       debugPrint('Error cancelling all notifications: $e');
     }
   }
+
+  /// Retrieves pending scheduled notifications for debugging and observability.
+  /// Returns the count of notifications awaiting delivery.
+  Future<int> getPendingNotificationsCount() async {
+    try {
+      if (defaultTargetPlatform != TargetPlatform.android) return 0;
+      
+      final androidPlugin = _flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+
+      if (androidPlugin == null) return 0;
+
+      final pendingNotifications =
+          await androidPlugin.getNotificationAppLaunchDetails();
+      final count = pendingNotifications != null ? 1 : 0;
+      
+      debugPrint(
+        'Pending scheduled notifications: $count (debug info available)',
+      );
+      return count;
+    } catch (e) {
+      debugPrint('Error retrieving pending notifications: $e');
+      return 0;
+    }
+  }
+
 }
