@@ -120,6 +120,21 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
         now: now,
       );
 
+      debugPrint('Prayer notification request count: ${requests.length}');
+      for (final request in requests) {
+        debugPrint(
+          'Prayer notification request: prayer=${request.prayerKey}, '
+          'id=${request.notificationId}, target=${request.prayerTime.toIso8601String()}, '
+          'isFuture=${request.prayerTime.isAfter(now)}',
+        );
+      }
+
+      final readiness = await NotificationService().getReadinessStatus();
+      debugPrint(
+        'Notification readiness before prayer scheduling: '
+        '${readiness.status.name} - ${readiness.title}',
+      );
+
       for (final request in requests) {
         await _scheduleNotification(
           prayerKey: request.prayerKey,
@@ -132,7 +147,11 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
       debugPrint(
         'Scheduled ${requests.length} prayer notifications for today and tomorrow',
       );
-      await NotificationService().getPendingNotificationsCount();
+      final pendingIds = await NotificationService()
+          .getPendingNotificationIds();
+      debugPrint(
+        'Pending prayer notification IDs after scheduling: $pendingIds',
+      );
     } catch (e) {
       debugPrint('Error scheduling notifications: $e');
     }
