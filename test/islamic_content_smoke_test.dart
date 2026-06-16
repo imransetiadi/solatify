@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:solatify/core/database/hive_service.dart';
+import 'package:solatify/core/theme/theme.dart';
 import 'package:solatify/features/asmaul_husna/presentation/screens/asmaul_husna_screen.dart';
 import 'package:solatify/features/dhikr/presentation/screens/dhikr_screen.dart';
 import 'package:solatify/features/duas/presentation/screens/duas_screen.dart';
@@ -48,6 +49,27 @@ void main() {
     expect(find.text('Asmaul Husna'), findsOneWidget);
     await tester.enterText(find.byType(TextField), 'Allah');
     await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Asmaul Husna dark mode latin title uses readable accent', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: ThemeMode.dark,
+          home: const AsmaulHusnaScreen(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final title = tester.widget<Text>(find.text('1. Ar Rahman'));
+
+    expect(title.style?.color, AppTheme.redAccentDark);
     expect(tester.takeException(), isNull);
   });
 

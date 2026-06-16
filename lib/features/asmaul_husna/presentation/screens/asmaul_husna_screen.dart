@@ -39,7 +39,9 @@ class _AsmaulHusnaScreenState extends ConsumerState<AsmaulHusnaScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final redAccent = theme.colorScheme.tertiary;
-    final primaryColor = theme.colorScheme.secondary;
+    final primaryColor = isDark
+        ? theme.colorScheme.tertiary
+        : theme.colorScheme.secondary;
     final textColor = theme.colorScheme.onSurface;
     final textColorMuted = isDark
         ? const Color(0xFFB8A898)
