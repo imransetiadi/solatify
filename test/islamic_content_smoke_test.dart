@@ -13,6 +13,8 @@ import 'package:solatify/features/duas/presentation/screens/duas_screen.dart';
 import 'package:solatify/features/hijri_calendar/presentation/screens/hijri_calendar_screen.dart';
 import 'package:solatify/features/islamic_content/presentation/screens/islamic_content_screen.dart';
 import 'package:solatify/features/islamic_tips/presentation/screens/islamic_tips_screen.dart';
+import 'package:solatify/features/prayer_guide/data/datasources/prayer_guide_local_data_source.dart';
+import 'package:solatify/features/prayer_guide/presentation/screens/prayer_guide_screen.dart';
 
 void main() {
   late Directory tempDir;
@@ -98,6 +100,65 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('Content menu renders prayer guide card', (tester) async {
+    await tester.pumpWidget(wrap(const IslamicContentScreen()));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Tuntunan Salat'), findsOneWidget);
+    expect(find.text('Tata cara dan bacaan salat'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Prayer guide screen renders complete reading sections', (
+    tester,
+  ) async {
+    await tester.pumpWidget(wrap(const PrayerGuideScreen()));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Tuntunan Salat Lengkap'), findsOneWidget);
+    expect(find.text('Niat'), findsWidgets);
+    expect(find.byKey(const Key('prayer_guide_arabic_text')), findsWidgets);
+    expect(find.textContaining('Allahu akbar'), findsWidgets);
+    expect(find.textContaining('Allah Maha Besar'), findsWidgets);
+    expect(tester.takeException(), isNull);
+  });
+
+  test('Prayer guide content includes complete practical readings', () {
+    const dataSource = PrayerGuideLocalDataSource();
+    final steps = dataSource.getPrayerSteps();
+    final fatihah = steps.firstWhere(
+      (step) => step.title == 'Al-Fatihah dan Surat Pendek',
+    );
+    final tahiyatAkhir = steps.firstWhere(
+      (step) => step.title == 'Tahiyat Akhir',
+    );
+
+    expect(fatihah.arabicText, contains('اَلْحَمْدُ لِلّٰهِ'));
+    expect(fatihah.latinText, contains('Alhamdu lillahi'));
+    expect(tahiyatAkhir.arabicText, contains('أَشْهَدُ أَنْ لَا إِلٰهَ'));
+    expect(tahiyatAkhir.meaning, contains('Aku bersaksi'));
+    expect(steps.any((step) => step.title == 'Doa Qunut Subuh'), isTrue);
+  });
+
+  testWidgets(
+    'Prayer guide screen does not overflow on compact Android width',
+    (tester) async {
+      tester.view.physicalSize = const Size(360, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(wrap(const PrayerGuideScreen()));
+      await tester.pumpAndSettle();
+
+      await tester.fling(find.byType(ListView), const Offset(0, -700), 1000);
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('prayer_guide_arabic_text')), findsWidgets);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets('Hijri calendar screen renders', (tester) async {
     await tester.pumpWidget(wrap(const HijriCalendarScreen()));
     await tester.pumpAndSettle();
@@ -153,6 +214,7 @@ void main() {
       HijriCalendarScreen(),
       IslamicTipsScreen(),
       DhikrScreen(),
+      PrayerGuideScreen(),
     ]) {
       await tester.pumpWidget(wrap(screen));
       await tester.pumpAndSettle();

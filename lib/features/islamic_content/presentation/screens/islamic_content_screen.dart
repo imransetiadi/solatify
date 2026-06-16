@@ -34,6 +34,12 @@ class IslamicContentScreen extends ConsumerWidget {
       path: '/islamic-content/dhikr',
     ),
     _ContentMenuItem(
+      title: 'Tuntunan Salat',
+      subtitle: 'Tata cara dan bacaan salat',
+      icon: Icons.menu_book_outlined,
+      path: '/islamic-content/prayer-guide',
+    ),
+    _ContentMenuItem(
       title: 'Tips Islami',
       subtitle: 'Nasihat dan amalan ringan',
       icon: Icons.lightbulb_outline,

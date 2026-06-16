@@ -19,13 +19,18 @@ class DhikrScreen extends ConsumerWidget {
     final primaryColor = isDark
         ? const Color(0xFFC78A4C)
         : const Color(0xFF0E4D31);
+    final appBarColor = Theme.of(
+      context,
+    ).colorScheme.surface.withValues(alpha: isDark ? 0.96 : 0.94);
 
     return DefaultTabController(
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
+          backgroundColor: appBarColor,
+          surfaceTintColor: Colors.transparent,
+          elevation: 2,
+          shadowColor: Colors.black.withValues(alpha: 0.12),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             color: textColor,
@@ -46,7 +51,6 @@ class DhikrScreen extends ConsumerWidget {
             ],
           ),
         ),
-        extendBodyBehindAppBar: true,
         body: const IslamicBackground(
           child: TabBarView(
             children: <Widget>[
@@ -79,18 +83,17 @@ class _DhikrListView extends ConsumerWidget {
 
     return ResponsiveCenter(
       child: ListView.builder(
-        padding: ResponsiveLayout.pagePadding(context).copyWith(
-          top: kToolbarHeight + MediaQuery.paddingOf(context).top + 48,
-          bottom: 96,
-        ),
+        padding: ResponsiveLayout.pagePadding(
+          context,
+        ).copyWith(top: 16, bottom: 96),
         itemCount: dhikrList.length,
         itemBuilder: (context, index) {
           final dhikr = dhikrList[index];
           return GlassContainer(
-            margin: const EdgeInsets.only(bottom: 12),
+            margin: const EdgeInsets.only(bottom: 14),
             borderRadius: 16,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -129,7 +132,7 @@ class _DhikrListView extends ConsumerWidget {
                         ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 14),
                   Container(
                     key: const Key('dhikr_arabic_text_block'),
                     width: double.infinity,
@@ -157,7 +160,7 @@ class _DhikrListView extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 14),
                   Text(
                     dhikr.latinText,
                     style: TextStyle(
@@ -167,7 +170,7 @@ class _DhikrListView extends ConsumerWidget {
                       height: 1.55,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
                   Text(
                     dhikr.meaning,
                     style: TextStyle(
