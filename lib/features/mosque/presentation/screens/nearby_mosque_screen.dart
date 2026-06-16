@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
@@ -11,135 +12,9 @@ import 'package:solatify/core/utils/location_service.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
+import 'package:solatify/features/mosque/data/mosque_search_utils.dart';
 import 'package:solatify/features/prayer_schedule/presentation/location_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-
-class MosqueItem {
-  const MosqueItem({
-    required this.id,
-    required this.name,
-    required this.address,
-    required this.latitude,
-    required this.longitude,
-    required this.distanceInMeters,
-    required this.sourceType,
-  });
-
-  final String id;
-  final String name;
-  final String address;
-  final double latitude;
-  final double longitude;
-  final double distanceInMeters;
-  final String sourceType;
-}
-
-String buildMosqueOverpassQuery({
-  required int radiusMeters,
-  required double latitude,
-  required double longitude,
-}) {
-  return '''
-[out:json][timeout:12];
-(
-  node["amenity"="mosque"](around:$radiusMeters,$latitude,$longitude);
-  way["amenity"="mosque"](around:$radiusMeters,$latitude,$longitude);
-  relation["amenity"="mosque"](around:$radiusMeters,$latitude,$longitude);
-  node["amenity"="place_of_worship"]["religion"="muslim"](around:$radiusMeters,$latitude,$longitude);
-  way["amenity"="place_of_worship"]["religion"="muslim"](around:$radiusMeters,$latitude,$longitude);
-  relation["amenity"="place_of_worship"]["religion"="muslim"](around:$radiusMeters,$latitude,$longitude);
-  node["building"="mosque"](around:$radiusMeters,$latitude,$longitude);
-  way["building"="mosque"](around:$radiusMeters,$latitude,$longitude);
-  relation["building"="mosque"](around:$radiusMeters,$latitude,$longitude);
-);
-out body center;
-''';
-}
-
-List<MosqueItem> parseMosqueOverpassElements({
-  required Map<String, dynamic> data,
-  required double originLatitude,
-  required double originLongitude,
-}) {
-  final elements = data['elements'];
-  if (elements is! List) return const [];
-
-  final results = <MosqueItem>[];
-
-  for (final element in elements) {
-    if (element is! Map<String, dynamic>) continue;
-
-    final center = element['center'];
-    final latitudeValue =
-        element['lat'] ??
-        (center is Map<String, dynamic> ? center['lat'] : null);
-    final longitudeValue =
-        element['lon'] ??
-        (center is Map<String, dynamic> ? center['lon'] : null);
-
-    if (latitudeValue is! num || longitudeValue is! num) continue;
-
-    final latitude = latitudeValue.toDouble();
-    final longitude = longitudeValue.toDouble();
-    final tags = element['tags'];
-    final name = tags is Map<String, dynamic>
-        ? tags['name'] ?? tags['name:id'] ?? 'Masjid Tanpa Nama'
-        : 'Masjid Tanpa Nama';
-    final address = tags is Map<String, dynamic>
-        ? tags['addr:full'] ??
-              tags['addr:street'] ??
-              tags['addr:place'] ??
-              tags['addr:city'] ??
-              'Alamat tidak diketahui'
-        : 'Alamat tidak diketahui';
-    final id = element['id']?.toString();
-
-    if (id == null) continue;
-
-    results.add(
-      MosqueItem(
-        id: id,
-        name: name.toString(),
-        address: address.toString(),
-        latitude: latitude,
-        longitude: longitude,
-        distanceInMeters: calculateMosqueDistance(
-          originLatitude,
-          originLongitude,
-          latitude,
-          longitude,
-        ),
-        sourceType: element['type']?.toString().toUpperCase() ?? 'NODE',
-      ),
-    );
-  }
-
-  results.sort((a, b) => a.distanceInMeters.compareTo(b.distanceInMeters));
-  return results;
-}
-
-double calculateMosqueDistance(
-  double lat1,
-  double lon1,
-  double lat2,
-  double lon2,
-) {
-  const earthRadiusMeters = 6371000.0;
-  final phi1 = lat1 * math.pi / 180;
-  final phi2 = lat2 * math.pi / 180;
-  final deltaPhi = (lat2 - lat1) * math.pi / 180;
-  final deltaLambda = (lon2 - lon1) * math.pi / 180;
-
-  final a =
-      math.sin(deltaPhi / 2) * math.sin(deltaPhi / 2) +
-      math.cos(phi1) *
-          math.cos(phi2) *
-          math.sin(deltaLambda / 2) *
-          math.sin(deltaLambda / 2);
-  final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
-
-  return earthRadiusMeters * c;
-}
 
 class NearbyMosqueScreen extends ConsumerStatefulWidget {
   const NearbyMosqueScreen({super.key});
@@ -157,6 +32,7 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen> {
     'https://overpass.kumi.systems/api/interpreter',
     'https://overpass.openstreetmap.ru/api/interpreter',
   ];
+  static final Map<String, List<MosqueItem>> _mosqueMemoryCache = {};
 
   List<MosqueItem> _mosques = const [];
   bool _isLoading = false;
@@ -189,6 +65,11 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen> {
       final location = ref.read(locationProvider);
       final latitude = position?.latitude ?? location.latitude;
       final longitude = position?.longitude ?? location.longitude;
+      final cacheKey = buildMosqueCacheKey(
+        latitude: latitude,
+        longitude: longitude,
+        radiusMeters: _searchRadiusMeters,
+      );
 
       if (position != null) {
         final details = await LocationService.getCityCountry(
@@ -211,10 +92,22 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen> {
           ? 'Menggunakan lokasi GPS saat ini.'
           : _buildFallbackLocationMessage(serviceEnabled, permission);
 
+      final cachedMosques = _mosqueMemoryCache[cacheKey];
+      if (cachedMosques != null && mounted) {
+        setState(() {
+          _gpsLatitude = latitude;
+          _gpsLongitude = longitude;
+          _locationStatusMessage = '$locationStatusMessage Memuat pembaruan...';
+          _mosques = cachedMosques;
+          _errorMessage = null;
+        });
+      }
+
       final mosques = await _fetchMosquesFromOverpass(
         latitude: latitude,
         longitude: longitude,
       );
+      _mosqueMemoryCache[cacheKey] = mosques;
 
       if (!mounted) return;
 
@@ -370,19 +263,27 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen> {
   }
 
   Future<void> _openInMap(MosqueItem mosque) async {
-    final uri = Uri.https('www.google.com', '/maps/search/', {
-      'api': '1',
-      'query': '${mosque.latitude},${mosque.longitude}',
-    });
+    final uri = buildMosqueMapUri(
+      latitude: mosque.latitude,
+      longitude: mosque.longitude,
+      platform: _currentMapPlatform(),
+    );
     await _launchMapUri(uri);
   }
 
   Future<void> _openRoute(MosqueItem mosque) async {
-    final uri = Uri.https('www.google.com', '/maps/dir/', {
-      'api': '1',
-      'destination': '${mosque.latitude},${mosque.longitude}',
-    });
+    final uri = buildMosqueRouteUri(
+      latitude: mosque.latitude,
+      longitude: mosque.longitude,
+      platform: _currentMapPlatform(),
+    );
     await _launchMapUri(uri);
+  }
+
+  MosqueMapPlatform _currentMapPlatform() {
+    return defaultTargetPlatform == TargetPlatform.iOS
+        ? MosqueMapPlatform.ios
+        : MosqueMapPlatform.android;
   }
 
   @override
@@ -472,10 +373,18 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen> {
                   mutedColor: mutedColor,
                 ),
                 const SizedBox(height: 16),
+                if (_isLoading && _mosques.isNotEmpty) ...[
+                  LinearProgressIndicator(
+                    minHeight: 2,
+                    color: primaryColor,
+                    backgroundColor: primaryColor.withValues(alpha: 0.12),
+                  ),
+                  const SizedBox(height: 12),
+                ],
 
                 // Main Mosque List
                 Expanded(
-                  child: _isLoading
+                  child: _isLoading && _mosques.isEmpty
                       ? Center(
                           child: CircularProgressIndicator(
                             valueColor: AlwaysStoppedAnimation<Color>(
