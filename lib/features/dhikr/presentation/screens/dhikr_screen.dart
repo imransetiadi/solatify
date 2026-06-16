@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:solatify/core/theme/theme.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
@@ -68,13 +69,13 @@ class _DhikrListView extends ConsumerWidget {
     final dhikrList = ref.watch(
       isMorning ? morningDhikrProvider : eveningDhikrProvider,
     );
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final theme = Theme.of(context);
-    final redAccent = theme.colorScheme.tertiary;
+    final primaryColor = AppTheme.readableAccent(context);
     final textColor = theme.colorScheme.onSurface;
-    final secondaryText = isDark
-        ? const Color(0xFFB8A898)
-        : const Color(0xFF6A5B51);
+    final secondaryText = theme.brightness == Brightness.dark
+        ? AppTheme.darkModeTextSecondary
+        : AppTheme.lightModeTextSecondary;
+    final surfaceTint = theme.colorScheme.surfaceContainerHighest;
 
     return ResponsiveCenter(
       child: ListView.builder(
@@ -93,17 +94,18 @@ class _DhikrListView extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 8,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
-                      Expanded(
-                        child: Text(
-                          dhikr.title,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            color: textColor,
-                          ),
+                      Text(
+                        dhikr.title,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          height: 1.25,
+                          color: textColor,
                         ),
                       ),
                       if (dhikr.count > 1)
@@ -113,13 +115,13 @@ class _DhikrListView extends ConsumerWidget {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: redAccent.withValues(alpha: 0.1),
+                            color: primaryColor.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
                             'Dibaca ${dhikr.count}x',
                             style: TextStyle(
-                              color: redAccent,
+                              color: primaryColor,
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
                             ),
@@ -128,14 +130,32 @@ class _DhikrListView extends ConsumerWidget {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  Text(
-                    dhikr.arabicText,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      height: 1.8,
-                      fontFamily: 'Kufi',
+                  Container(
+                    key: const Key('dhikr_arabic_text_block'),
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 14,
                     ),
-                    textAlign: TextAlign.right,
+                    decoration: BoxDecoration(
+                      color: primaryColor.withValues(alpha: 0.07),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: primaryColor.withValues(alpha: 0.12),
+                      ),
+                    ),
+                    child: Text(
+                      dhikr.arabicText,
+                      textAlign: TextAlign.right,
+                      textDirection: TextDirection.rtl,
+                      softWrap: true,
+                      style: TextStyle(
+                        color: textColor,
+                        fontSize: 23,
+                        height: 1.9,
+                        fontFamily: 'Kufi',
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 12),
                   Text(
@@ -144,6 +164,7 @@ class _DhikrListView extends ConsumerWidget {
                       fontStyle: FontStyle.italic,
                       color: secondaryText,
                       fontSize: 14,
+                      height: 1.55,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -160,17 +181,18 @@ class _DhikrListView extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.blue.withValues(alpha: 0.05),
+                        color: surfaceTint.withValues(alpha: 0.30),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: Colors.blue.withValues(alpha: 0.2),
+                          color: primaryColor.withValues(alpha: 0.18),
                         ),
                       ),
                       child: Text(
                         dhikr.note,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
-                          color: Colors.blueGrey,
+                          height: 1.45,
+                          color: secondaryText,
                         ),
                       ),
                     ),

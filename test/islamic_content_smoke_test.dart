@@ -124,6 +124,28 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('Dhikr screen does not overflow on compact Android width', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(wrap(const DhikrScreen()));
+    await tester.pumpAndSettle();
+
+    await tester.fling(find.byType(ListView), const Offset(0, -500), 1000);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Dzikir Petang'));
+    await tester.pumpAndSettle();
+    await tester.fling(find.byType(ListView), const Offset(0, -500), 1000);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('dhikr_arabic_text_block')), findsWidgets);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('content sub screens show explicit back button', (tester) async {
     for (final screen in const [
       AsmaulHusnaScreen(),
