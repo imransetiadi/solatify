@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:solatify/core/database/hive_service.dart';
+import 'package:solatify/core/theme/theme.dart';
 import 'package:solatify/features/hijri_calendar/presentation/screens/hijri_calendar_screen.dart';
 import 'package:solatify/features/mosque/presentation/screens/nearby_mosque_screen.dart';
 import 'package:solatify/features/qibla/presentation/screens/qibla_screen.dart';
@@ -40,6 +41,17 @@ void main() {
     return ProviderScope(child: MaterialApp(home: child));
   }
 
+  Widget wrapDark(Widget child) {
+    return ProviderScope(
+      child: MaterialApp(
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: ThemeMode.dark,
+        home: child,
+      ),
+    );
+  }
+
   testWidgets('Qibla screen renders', (tester) async {
     await tester.pumpWidget(wrap(const QiblaScreen()));
 
@@ -47,6 +59,17 @@ void main() {
 
     expect(find.text('Arah Kiblat'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Dark mode key routed screens render without contrast errors', (
+    tester,
+  ) async {
+    for (final screen in const [QiblaScreen(), SettingsScreen()]) {
+      await tester.pumpWidget(wrapDark(screen));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+    }
   });
 
   test('Home screen source no longer renders tracker checklist', () {

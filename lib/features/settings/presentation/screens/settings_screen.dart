@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:solatify/core/localization/app_localizations.dart';
+import 'package:solatify/core/theme/theme.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
@@ -204,7 +205,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final textMuted = isDarkTheme
         ? const Color(0xFFB8A898)
         : const Color(0xFF6A5B51);
-    final primaryColor = Theme.of(context).colorScheme.secondary;
+    final primaryColor = AppTheme.readableAccent(context);
 
     showDialog<void>(
       context: context,
@@ -331,6 +332,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final dialogBg = isDark ? const Color(0xFF2A1B12) : Colors.white;
     final textColor = isDark ? Colors.white : const Color(0xFF241A12);
+    final accentColor = AppTheme.readableAccent(context);
 
     final methods = {
       'Kemenag': 'Kemenag RI',
@@ -360,7 +362,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     currentMethod == entry.key
                         ? Icons.radio_button_checked
                         : Icons.radio_button_off,
-                    color: const Color(0xFF0E4D31),
+                    color: accentColor,
                   ),
                   onTap: () {
                     ref
@@ -386,6 +388,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final dialogBg = isDark ? const Color(0xFF2A1B12) : Colors.white;
     final textColor = isDark ? Colors.white : const Color(0xFF241A12);
+    final accentColor = AppTheme.readableAccent(context);
 
     final langs = {'id': 'Bahasa Indonesia', 'en': 'English'};
 
@@ -407,7 +410,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   currentLang == entry.key
                       ? Icons.radio_button_checked
                       : Icons.radio_button_off,
-                  color: const Color(0xFF0E4D31),
+                  color: accentColor,
                 ),
                 onTap: () {
                   ref.read(settingsProvider.notifier).updateLanguage(entry.key);
@@ -434,6 +437,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final textSecondary = isDark
         ? const Color(0xFFB8A898)
         : const Color(0xFFAFA19A);
+    final accentColor = AppTheme.readableAccent(context);
     final dividerColor = isDark
         ? Colors.white.withValues(alpha: 0.1)
         : Colors.black.withValues(alpha: 0.05);
@@ -478,10 +482,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           ),
                           subtitle: Text(
                             displayMethod,
-                            style: const TextStyle(
-                              color: Color(0xFF0E4D31),
-                              fontSize: 12,
-                            ),
+                            style: TextStyle(color: accentColor, fontSize: 12),
                           ),
                           trailing: Icon(
                             Icons.chevron_right,
@@ -502,10 +503,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           ),
                           subtitle: Text(
                             displayLang,
-                            style: const TextStyle(
-                              color: Color(0xFF0E4D31),
-                              fontSize: 12,
-                            ),
+                            style: TextStyle(color: accentColor, fontSize: 12),
                           ),
                           trailing: Icon(
                             Icons.chevron_right,
@@ -714,9 +712,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     Color dividerColor,
     bool isDark,
   ) {
-    final primaryColor = isDark
-        ? const Color(0xFFC78A4C)
-        : const Color(0xFF0E4D31);
+    final primaryColor = AppTheme.readableAccent(context);
 
     return GlassContainer(
       blur: 15,
@@ -824,10 +820,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     Color textSecondary,
   ) {
     final l = AppLocalizations.of(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primaryColor = isDark
-        ? const Color(0xFFC78A4C)
-        : const Color(0xFF0E4D31);
+    final primaryColor = AppTheme.readableAccent(context);
 
     return ListTile(
       title: Text(

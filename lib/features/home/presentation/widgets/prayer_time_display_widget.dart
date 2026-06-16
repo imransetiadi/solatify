@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:solatify/core/theme/theme.dart';
 import '../providers/improved_countdown_provider.dart';
 
 class PrayerTimeDisplayWidget extends ConsumerWidget {
@@ -10,7 +11,7 @@ class PrayerTimeDisplayWidget extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final countdown = ref.watch(improvedCountdownProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primary = Theme.of(context).colorScheme.secondary;
+    final primary = AppTheme.readableAccent(context);
 
     if (!countdown.isAccurate) {
       return _buildLoadingState(isDark);

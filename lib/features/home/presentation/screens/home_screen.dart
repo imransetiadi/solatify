@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
+import 'package:solatify/core/theme/theme.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
@@ -19,7 +20,7 @@ class HomeScreen extends ConsumerWidget {
     final countdown = ref.watch(countdownProvider);
     final prayerList = ref.watch(prayerListProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primary = Theme.of(context).colorScheme.secondary;
+    final primary = AppTheme.readableAccent(context);
     final redLine = Theme.of(context).colorScheme.tertiary;
     final textColor = isDark
         ? const Color(0xFFF3FBF6)

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/theme/theme.dart';
 import '../../../../core/widgets/glass_container.dart';
 import '../../../../core/widgets/responsive_layout.dart';
 import '../../domain/models/quran_models.dart';
 import '../quran_provider.dart';
 
 class SurahDetailScreen extends ConsumerStatefulWidget {
-
   const SurahDetailScreen({
     super.key,
     required this.surahId,
@@ -28,6 +28,7 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
   Color get _textColor => Theme.of(context).brightness == Brightness.dark
       ? Colors.white
       : const Color(0xFF241A12);
+  Color get _accentColor => AppTheme.readableAccent(context);
   Color get _redAccent => Theme.of(context).colorScheme.tertiary;
   Color get _textMuted => Theme.of(context).brightness == Brightness.dark
       ? const Color(0xFFC8B8A8)
@@ -168,7 +169,7 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
                       const SizedBox(height: 24),
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF0E4D31),
+                          backgroundColor: _accentColor,
                         ),
                         onPressed: () =>
                             ref.refresh(surahDetailProvider(widget.surahId)),
@@ -355,12 +356,12 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
               color: isLastRead
-                  ? const Color(0xFF0E4D31).withValues(alpha: 0.12)
+                  ? _accentColor.withValues(alpha: 0.12)
                   : _textColor.withValues(alpha: 0.02),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: isLastRead
-                    ? const Color(0xFF0E4D31).withValues(alpha: 0.3)
+                    ? _accentColor.withValues(alpha: 0.3)
                     : _cardBorderColor,
               ),
             ),
@@ -372,12 +373,12 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
                   height: 32,
                   decoration: BoxDecoration(
                     color: isLastRead
-                        ? const Color(0xFF0E4D31)
+                        ? _accentColor
                         : _redAccent.withValues(alpha: 0.12),
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: isLastRead
-                          ? const Color(0xFF0E4D31)
+                          ? _accentColor
                           : _redAccent.withValues(alpha: 0.45),
                       width: 1,
                     ),
@@ -401,7 +402,7 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF0E4D31),
+                      color: _accentColor,
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: const Text(
@@ -446,7 +447,7 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
                 IconButton(
                   icon: Icon(
                     isLastRead ? Icons.bookmark : Icons.bookmark_border,
-                    color: const Color(0xFF0E4D31),
+                    color: _accentColor,
                     size: 20,
                   ),
                   tooltip: 'Tandai Terakhir Baca',
@@ -459,7 +460,7 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
                         content: Text(
                           'Terakhir baca ditandai ke Surah ${surah.name} [Ayat ${verse.number}]',
                         ),
-                        backgroundColor: const Color(0xFF0E4D31),
+                        backgroundColor: _accentColor,
                         duration: const Duration(seconds: 2),
                       ),
                     );
@@ -614,9 +615,7 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
               value: progressPercent,
               minHeight: 3,
               backgroundColor: Colors.white10,
-              valueColor: const AlwaysStoppedAnimation<Color>(
-                Color(0xFF0E4D31),
-              ),
+              valueColor: AlwaysStoppedAnimation<Color>(_accentColor),
             ),
           ),
         ],
