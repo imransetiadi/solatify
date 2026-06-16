@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import '../../../../../core/widgets/islamic/islamic_decorations.dart';
-import '../../../../../core/widgets/responsive_layout.dart';
-import '../providers/asmaul_husna_provider.dart';
+import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
+import 'package:solatify/core/widgets/responsive_layout.dart';
+import 'package:solatify/features/asmaul_husna/presentation/providers/asmaul_husna_provider.dart';
 
 class AsmaulHusnaScreen extends ConsumerStatefulWidget {
   const AsmaulHusnaScreen({super.key});
@@ -97,7 +96,9 @@ class _AsmaulHusnaScreenState extends ConsumerState<AsmaulHusnaScreen> {
                   child: asmaulHusnaAsync.when(
                     data: (allAsmaulHusna) {
                       final filteredList = allAsmaulHusna.where((name) {
-                        return name.latinName.toLowerCase().contains(_searchQuery) ||
+                        return name.latinName.toLowerCase().contains(
+                              _searchQuery,
+                            ) ||
                             name.meaning.toLowerCase().contains(_searchQuery) ||
                             name.arabicName.contains(_searchQuery);
                       }).toList();
@@ -152,9 +153,15 @@ class _AsmaulHusnaScreenState extends ConsumerState<AsmaulHusnaScreen> {
                               ),
                               children: [
                                 Padding(
-                                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                                  padding: const EdgeInsets.fromLTRB(
+                                    16,
+                                    0,
+                                    16,
+                                    16,
+                                  ),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         name.meaning,
@@ -181,9 +188,8 @@ class _AsmaulHusnaScreenState extends ConsumerState<AsmaulHusnaScreen> {
                         },
                       );
                     },
-                    loading: () => const Center(
-                      child: CircularProgressIndicator(),
-                    ),
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
                     error: (error, stackTrace) => Center(
                       child: Text(
                         'Gagal memuat data Asmaul Husna',

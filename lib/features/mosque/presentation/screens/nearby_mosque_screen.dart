@@ -5,11 +5,10 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
+import 'package:solatify/core/utils/location_service.dart';
+import 'package:solatify/core/widgets/responsive_layout.dart';
+import 'package:solatify/features/prayer_schedule/presentation/location_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-
-import '../../../../core/utils/location_service.dart';
-import '../../../../core/widgets/responsive_layout.dart';
-import '../../../prayer_schedule/presentation/location_provider.dart';
 
 class MosqueItem {
   const MosqueItem({

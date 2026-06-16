@@ -61,13 +61,13 @@ class HiveService {
     if (Hive.isBoxOpen(name)) return;
 
     try {
-      await Hive.openBox(name);
+      await Hive.openBox<dynamic>(name);
     } catch (e) {
       debugPrint('Error opening box "$name": $e. Attempting recovery...');
       try {
         // Delete corrupted box and recreate
         await Hive.deleteBoxFromDisk(name);
-        await Hive.openBox(name);
+        await Hive.openBox<dynamic>(name);
         debugPrint('Box "$name" recovered successfully.');
       } catch (e2) {
         debugPrint('Failed to recover box "$name": $e2');
@@ -76,21 +76,21 @@ class HiveService {
   }
 
   // Generic helpers — now safe against uninitialized state
-  static Box getBox(String name) {
+  static Box<dynamic> getBox(String name) {
     if (!Hive.isBoxOpen(name)) {
       // Return a fallback: try to get it, but if it fails, we handle gracefully
       throw HiveError(
         'Box "$name" is not open. Call HiveService.ensureBoxesOpen() first.',
       );
     }
-    return Hive.box(name);
+    return Hive.box<dynamic>(name);
   }
 
   /// Safe version of getBox that returns null if the box is not open.
-  static Box? tryGetBox(String name) {
+  static Box<dynamic>? tryGetBox(String name) {
     if (!Hive.isBoxOpen(name)) return null;
     try {
-      return Hive.box(name);
+      return Hive.box<dynamic>(name);
     } catch (e) {
       debugPrint('Error accessing box "$name": $e');
       return null;
@@ -98,7 +98,7 @@ class HiveService {
   }
 
   // Keep internal reference for backward compat
-  static Box? _tryGetBox(String name) => tryGetBox(name);
+  static Box<dynamic>? _tryGetBox(String name) => tryGetBox(name);
 
   // Settings helpers
   static Future<void> saveSetting(String key, dynamic value) async {
@@ -194,7 +194,7 @@ class HiveService {
   }
 
   static Map<String, int> getPrayerOffsets() {
-    final data = getSetting('prayer_offsets', defaultValue: {});
+    final data = getSetting('prayer_offsets', defaultValue: <String, int>{});
 
     final result = {
       'subuh': 0,
