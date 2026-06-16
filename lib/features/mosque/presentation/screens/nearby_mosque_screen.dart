@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
+import 'package:solatify/core/theme/theme.dart';
 import 'package:solatify/core/utils/location_service.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
@@ -388,9 +389,7 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final primaryColor = isDark
-        ? const Color(0xFFC78A4C)
-        : const Color(0xFF0E4D31);
+    final primaryColor = AppTheme.readableAccent(context);
     final textColor = isDark
         ? const Color(0xFFF3FBF6)
         : const Color(0xFF241A12);
@@ -477,10 +476,10 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen> {
                 // Main Mosque List
                 Expanded(
                   child: _isLoading
-                      ? const Center(
+                      ? Center(
                           child: CircularProgressIndicator(
                             valueColor: AlwaysStoppedAnimation<Color>(
-                              Color(0xFF0E4D31),
+                              primaryColor,
                             ),
                           ),
                         )

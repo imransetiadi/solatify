@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_compass_v2/flutter_compass_v2.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:solatify/core/theme/theme.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
@@ -39,6 +40,7 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
         ? const Color(0xFF999999)
         : const Color(0xFFAFA19A);
     final textHint = isDark ? const Color(0xFF666666) : const Color(0xFF9A8A7D);
+    final accentColor = AppTheme.readableAccent(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -64,7 +66,8 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
               final qiblaRelativeAngle = (qiblaAngle - heading + 360) % 360;
 
               // Check if user is pointing exactly towards Mecca (tolerance: +/- 3 degrees)
-              final isAligned = qiblaRelativeAngle <= 2 || qiblaRelativeAngle >= 358;
+              final isAligned =
+                  qiblaRelativeAngle <= 2 || qiblaRelativeAngle >= 358;
 
               if (isAligned && !_wasAligned) {
                 HapticFeedback.heavyImpact();
@@ -95,9 +98,9 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(
+                                Icon(
                                   Icons.my_location,
-                                  color: Color(0xFF0E4D31),
+                                  color: accentColor,
                                   size: 18,
                                 ),
                                 const SizedBox(width: 8),
@@ -141,19 +144,19 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
                           horizontal: 24,
                         ),
                         decoration: BoxDecoration(
-                          color: isAligned
-                              ? const Color(0xFF0E4D31)
-                              : Colors.transparent,
+                          color: isAligned ? accentColor : Colors.transparent,
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                             color: isAligned
-                                ? const Color(0xFF0E4D31)
+                                ? accentColor
                                 : textHint.withValues(alpha: 0.4),
                             width: 1.5,
                           ),
                         ),
                         child: Text(
-                          isAligned ? 'KIBLAT TERARAH 🕋' : 'Putar Perangkat Anda',
+                          isAligned
+                              ? 'KIBLAT TERARAH 🕋'
+                              : 'Putar Perangkat Anda',
                           style: TextStyle(
                             color: isAligned ? Colors.white : textSecondary,
                             fontWeight: FontWeight.bold,
@@ -196,7 +199,7 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
                                   height: 24,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    color: const Color(0xFF0E4D31),
+                                    color: accentColor,
                                     border: Border.all(
                                       color: Colors.white,
                                       width: 2.5,
@@ -234,7 +237,8 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
                       ),
                       const SizedBox(height: 12),
 
-                      if (!hasSensor) _buildSimulationPanel(heading, qiblaAngle),
+                      if (!hasSensor)
+                        _buildSimulationPanel(heading, qiblaAngle),
                     ],
                   ),
                 ),
@@ -251,6 +255,7 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
     final textSecondary = isDark
         ? const Color(0xFFC8B8A8)
         : const Color(0xFFAFA19A);
+    final accentColor = AppTheme.readableAccent(context);
 
     return Column(
       children: [
@@ -267,7 +272,7 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
           min: 0,
           max: 360,
           value: currentVal,
-          activeColor: const Color(0xFF0E4D31),
+          activeColor: accentColor,
           onChanged: (val) {
             setState(() {
               _simulatedHeading = val;

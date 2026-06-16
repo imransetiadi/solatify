@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:solatify/core/theme/theme.dart';
 import 'package:solatify/core/utils/location_service.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
@@ -58,6 +59,7 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
             final dBorderColor = isDarkTheme
                 ? Colors.white.withValues(alpha: 0.2)
                 : Colors.black12;
+            final dialogAccentColor = AppTheme.readableAccent(context);
 
             final dialogWidth = (MediaQuery.sizeOf(context).width - 48).clamp(
               320.0,
@@ -84,9 +86,7 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderSide: const BorderSide(
-                            color: Color(0xFF0E4D31),
-                          ),
+                          borderSide: BorderSide(color: dialogAccentColor),
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
@@ -111,10 +111,10 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
                               city.country,
                               style: TextStyle(color: dTextSecondary),
                             ),
-                            trailing: const Icon(
+                            trailing: Icon(
                               Icons.arrow_forward_ios,
                               size: 14,
-                              color: Color(0xFF0E4D31),
+                              color: dialogAccentColor,
                             ),
                             onTap: () {
                               ref
@@ -236,9 +236,9 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
                           Expanded(
                             child: Row(
                               children: [
-                                const Icon(
+                                Icon(
                                   Icons.location_on,
-                                  color: Color(0xFF0E4D31),
+                                  color: AppTheme.readableAccent(context),
                                   size: 20,
                                 ),
                                 const SizedBox(width: 8),

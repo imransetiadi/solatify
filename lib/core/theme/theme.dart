@@ -18,6 +18,13 @@ class AppTheme {
   static const Color textDark = Color(0xFF241A12);
   static const Color textMuted = Color(0xFF5D4E47);
 
+  static Color readableAccent(BuildContext context) {
+    final theme = Theme.of(context);
+    return theme.brightness == Brightness.dark
+        ? theme.colorScheme.tertiary
+        : theme.colorScheme.secondary;
+  }
+
   // Text color tokens untuk reusable di komponen
   static const Color darkModeText = Colors.white;
   static const Color darkModeTextSecondary = Color(0xFFB8A898); // white87-like

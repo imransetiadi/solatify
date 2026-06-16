@@ -1,11 +1,14 @@
 import 'dart:io';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:solatify/core/theme/theme.dart';
 import 'package:solatify/features/quran/domain/models/quran_models.dart';
 import 'package:solatify/features/quran/presentation/quran_provider.dart';
+import 'package:solatify/features/quran/presentation/screens/quran_home_screen.dart';
 
 void main() {
   late Directory tempDir;
@@ -199,5 +202,24 @@ void main() {
         [5, 9],
       ]);
     });
+  });
+
+  testWidgets('Quran home dark mode search accent is readable', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: ThemeMode.dark,
+          home: const QuranHomeScreen(),
+        ),
+      ),
+    );
+
+    await tester.pump();
+
+    final searchIcon = tester.widget<Icon>(find.byIcon(Icons.search));
+    expect(searchIcon.color, AppTheme.redAccentDark);
+    expect(tester.takeException(), isNull);
   });
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:solatify/core/theme/theme.dart';
 
 class IslamicGeometricPattern extends StatelessWidget {
-
   const IslamicGeometricPattern({
     super.key,
     this.opacity = 0.05,
@@ -31,7 +31,6 @@ class IslamicGeometricPattern extends StatelessWidget {
 }
 
 class _GeometricPainter extends CustomPainter {
-
   _GeometricPainter(this.color, this.strokeWidth);
   final Color color;
   final double strokeWidth;
@@ -81,7 +80,6 @@ class _GeometricPainter extends CustomPainter {
 }
 
 class IslamicBackground extends StatelessWidget {
-
   const IslamicBackground({
     super.key,
     required this.child,
@@ -130,16 +128,13 @@ class IslamicBackground extends StatelessWidget {
 }
 
 class IslamicDivider extends StatelessWidget {
-
   const IslamicDivider({super.key, this.color, this.width = 100});
   final Color? color;
   final double width;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final dividerColor =
-        color ?? theme.colorScheme.secondary; // Use the new Islamic Green
+    final dividerColor = color ?? AppTheme.readableAccent(context);
 
     return Center(
       child: SizedBox(
@@ -160,7 +155,6 @@ class IslamicDivider extends StatelessWidget {
 }
 
 class IslamicHeaderDecoration extends StatelessWidget {
-
   const IslamicHeaderDecoration({
     super.key,
     required this.title,
@@ -173,7 +167,7 @@ class IslamicHeaderDecoration extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final primary = theme.primaryColor;
+    final primary = AppTheme.readableAccent(context);
 
     return Column(
       children: [
@@ -183,7 +177,7 @@ class IslamicHeaderDecoration extends StatelessWidget {
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : theme.colorScheme.secondary,
+            color: isDark ? Colors.white : AppTheme.readableAccent(context),
             letterSpacing: 1.2,
           ),
         ),

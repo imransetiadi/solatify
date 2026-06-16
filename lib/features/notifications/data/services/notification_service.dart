@@ -74,7 +74,7 @@ class NotificationService {
   }
   static final NotificationService _instance = NotificationService._internal();
 
-  static const String _prayerChannelId = 'prayer_times_adhan_channel_v1';
+  static const String _prayerChannelId = 'prayer_times_adhan_channel_v2';
   static const String _diagnosticChannelId = 'solatify_diagnostic_channel_v2';
 
   final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin =
@@ -326,6 +326,7 @@ class NotificationService {
     required String location,
     required String prayerTime,
     required DateTime notificationTime,
+    required String timezoneName,
     required int notificationId,
   }) async {
     try {
@@ -360,8 +361,11 @@ class NotificationService {
         iOS: iosDetails,
       );
 
-      final localTimezone = tz.local;
-      final scheduledDate = tz.TZDateTime.from(notificationTime, localTimezone);
+      final prayerLocation = tz.getLocation(timezoneName);
+      final scheduledDate = tz.TZDateTime.from(
+        notificationTime,
+        prayerLocation,
+      );
 
       await _flutterLocalNotificationsPlugin.zonedSchedule(
         notificationId,
@@ -374,7 +378,10 @@ class NotificationService {
             UILocalNotificationDateInterpretation.absoluteTime,
         payload: prayerKey,
       );
-      debugPrint('Prayer notification scheduled for $notificationTime: $title');
+      debugPrint(
+        'Prayer notification scheduled for $notificationTime '
+        'timezone=$timezoneName: $title',
+      );
     } catch (e, stack) {
       debugPrint('Error scheduling prayer notification: $e\n$stack');
       rethrow;

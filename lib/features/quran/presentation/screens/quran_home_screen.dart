@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:solatify/core/theme/theme.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
@@ -32,6 +33,7 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
   Color get _cardBorderColor => Theme.of(context).brightness == Brightness.dark
       ? Colors.white.withValues(alpha: 0.08)
       : Colors.black.withValues(alpha: 0.08);
+  Color get _accentColor => AppTheme.readableAccent(context);
 
   @override
   void initState() {
@@ -119,9 +121,9 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                                 color: _textHint,
                                 fontSize: 14,
                               ),
-                              prefixIcon: const Icon(
+                              prefixIcon: Icon(
                                 Icons.search,
-                                color: Color(0xFF0E4D31),
+                                color: _accentColor,
                               ),
                               suffixIcon: _searchController.text.isNotEmpty
                                   ? IconButton(
@@ -153,8 +155,8 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               focusedBorder: OutlineInputBorder(
-                                borderSide: const BorderSide(
-                                  color: Color(0xFF0E4D31),
+                                borderSide: BorderSide(
+                                  color: _accentColor,
                                   width: 1.5,
                                 ),
                                 borderRadius: BorderRadius.circular(16),
@@ -245,10 +247,10 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Terakhir Dibaca',
                       style: TextStyle(
-                        color: Color(0xFF0E4D31),
+                        color: _accentColor,
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 1.0,
@@ -284,8 +286,8 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
 
   Widget _buildSurahListTab(AsyncValue<List<Surah>> searchListAsync) {
     return searchListAsync.when(
-      loading: () => const Center(
-        child: CircularProgressIndicator(color: Color(0xFF0E4D31)),
+      loading: () => Center(
+        child: CircularProgressIndicator(color: _accentColor),
       ),
       error: (err, stack) => Center(
         child: Padding(
@@ -312,7 +314,7 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
               const SizedBox(height: 24),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0E4D31),
+                  backgroundColor: _accentColor,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -358,8 +360,8 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
     final listAsync = ref.watch(surahListProvider);
 
     return listAsync.when(
-      loading: () => const Center(
-        child: CircularProgressIndicator(color: Color(0xFF0E4D31)),
+      loading: () => Center(
+        child: CircularProgressIndicator(color: _accentColor),
       ),
       error: (err, stack) => Center(
         child: Text(
@@ -471,8 +473,8 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                           const SizedBox(height: 2),
                           Text(
                             'Ayat $verseNum',
-                            style: const TextStyle(
-                              color: Color(0xFF0E4D31),
+                            style: TextStyle(
+                              color: _accentColor,
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
                             ),
@@ -544,8 +546,8 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                 child: Center(
                   child: Text(
                     surah.number.toString(),
-                    style: const TextStyle(
-                      color: Color(0xFF0E4D31),
+                    style: TextStyle(
+                      color: _accentColor,
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
                       fontFamily: 'Outfit',
@@ -623,9 +625,9 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                   shape: BoxShape.circle,
                   color: Color(0xFFE8F5E9),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.chevron_right,
-                  color: Color(0xFF0E4D31),
+                  color: _accentColor,
                   size: 20,
                 ),
               ),
