@@ -21,6 +21,8 @@ void main() {
               return true;
             case 'requestExactAlarmsPermission':
               return false;
+            case 'areNotificationsEnabled':
+              return true;
             case 'pendingNotificationRequests':
               return [
                 <String, dynamic>{
@@ -37,6 +39,8 @@ void main() {
                 },
               ];
             case 'zonedSchedule':
+              return null;
+            case 'show':
               return null;
             default:
               return null;
@@ -103,5 +107,24 @@ void main() {
     expect(readiness.title, 'Jadwal mungkin tidak tepat');
     expect(readiness.needsPermissionAction, isTrue);
     expect(readiness.canSendTestNotification, isTrue);
+  });
+
+  test('getReadinessStatus returns inexact scheduling when exact alarm is denied', () async {
+    await service.init();
+
+    final readiness = await service.getReadinessStatus();
+
+    expect(readiness.status, NotificationReadinessStatus.inexactScheduling);
+    expect(readiness.title, 'Jadwal mungkin tidak tepat');
+  });
+
+  test('showTestNotification sends an immediate notification', () async {
+    await service.init();
+
+    await service.showTestNotification();
+
+    final showCall = capturedMethods.lastWhere((call) => call.method == 'show');
+    expect(showCall.arguments['id'], 9001);
+    expect(showCall.arguments['title'], 'Tes Notifikasi Solatify');
   });
 }

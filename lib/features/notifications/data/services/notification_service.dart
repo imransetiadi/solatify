@@ -171,6 +171,27 @@ class NotificationService {
     );
   }
 
+  Future<bool> _areNotificationsEnabled() async {
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      final androidImplementation = _flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+      return await androidImplementation?.areNotificationsEnabled() ?? true;
+    }
+
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      final iosImplementation = _flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin
+          >();
+      final permissions = await iosImplementation?.checkPermissions();
+      return permissions?.isEnabled ?? true;
+    }
+
+    return true;
+  }
+
   AndroidScheduleMode _androidScheduleMode() {
     if (_canUseExactAlarms) {
       return AndroidScheduleMode.exactAllowWhileIdle;
@@ -340,6 +361,71 @@ class NotificationService {
       debugPrint('Prayer notification scheduled for $notificationTime: $title');
     } catch (e, stack) {
       debugPrint('Error scheduling prayer notification: $e\n$stack');
+    }
+  }
+
+  Future<NotificationReadiness> getReadinessStatus() async {
+    try {
+      await _ensureInitialized();
+      final notificationsEnabled = await _areNotificationsEnabled();
+
+      if (!notificationsEnabled) {
+        return NotificationReadiness.needsNotificationPermission();
+      }
+
+      if (defaultTargetPlatform == TargetPlatform.android &&
+          !_canUseExactAlarms) {
+        return NotificationReadiness.inexactScheduling();
+      }
+
+      return NotificationReadiness.ready();
+    } catch (e) {
+      debugPrint('Error checking notification readiness: $e');
+      return NotificationReadiness.unknown();
+    }
+  }
+
+  Future<void> showTestNotification() async {
+    try {
+      await _ensureInitialized();
+
+      const AndroidNotificationDetails androidDetails =
+          AndroidNotificationDetails(
+            'prayer_times_adhan_channel_v1',
+            'Prayer Times Adhan',
+            channelDescription: 'Adhan notifications for prayer times',
+            importance: Importance.max,
+            priority: Priority.high,
+            enableVibration: true,
+            playSound: true,
+            sound: RawResourceAndroidNotificationSound('adhan'),
+            enableLights: true,
+            icon: '@mipmap/ic_launcher',
+          );
+
+      const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+        sound: 'adhan.mp3',
+      );
+
+      const NotificationDetails notificationDetails = NotificationDetails(
+        android: androidDetails,
+        iOS: iosDetails,
+      );
+
+      await _flutterLocalNotificationsPlugin.show(
+        9001,
+        'Tes Notifikasi Solatify',
+        'Jika notifikasi ini muncul, pengingat salat siap digunakan.',
+        notificationDetails,
+        payload: 'test_notification',
+      );
+      debugPrint('Test notification sent');
+    } catch (e, stack) {
+      debugPrint('Error showing test notification: $e\n$stack');
+      rethrow;
     }
   }
 
