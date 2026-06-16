@@ -9,6 +9,7 @@ import 'package:solatify/core/database/hive_service.dart';
 import 'package:solatify/core/theme/theme.dart';
 import 'package:solatify/features/hijri_calendar/presentation/screens/hijri_calendar_screen.dart';
 import 'package:solatify/features/mosque/presentation/screens/nearby_mosque_screen.dart';
+import 'package:solatify/features/prayer_guide/presentation/screens/prayer_guide_screen.dart';
 import 'package:solatify/features/qibla/presentation/screens/qibla_screen.dart';
 import 'package:solatify/features/settings/presentation/screens/settings_screen.dart';
 import 'package:solatify/features/tracker/presentation/screens/tracker_screen.dart';
@@ -120,6 +121,15 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('Hijriah'), findsWidgets);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Prayer guide screen renders', (tester) async {
+    await tester.pumpWidget(wrap(const PrayerGuideScreen()));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Tuntunan Salat Lengkap'), findsOneWidget);
+    expect(find.textContaining('Takbiratul Ihram'), findsWidgets);
     expect(tester.takeException(), isNull);
   });
 }

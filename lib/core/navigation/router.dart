@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:solatify/features/prayer_guide/presentation/screens/prayer_guide_screen.dart';
 
 import '../../features/asmaul_husna/presentation/screens/asmaul_husna_screen.dart';
 import '../../features/dhikr/presentation/screens/dhikr_screen.dart';
@@ -141,6 +142,15 @@ final goRouter = GoRouter(
           path: '/islamic-content/dhikr',
           pageBuilder: (context, state) => CustomTransitionPage(
             child: const DhikrScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) =>
+                    FadeTransition(opacity: animation, child: child),
+          ),
+        ),
+        GoRoute(
+          path: '/islamic-content/prayer-guide',
+          pageBuilder: (context, state) => CustomTransitionPage(
+            child: const PrayerGuideScreen(),
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) =>
                     FadeTransition(opacity: animation, child: child),
