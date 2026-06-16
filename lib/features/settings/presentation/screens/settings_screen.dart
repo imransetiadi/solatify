@@ -5,6 +5,7 @@ import 'package:solatify/core/localization/app_localizations.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
+import 'package:solatify/features/notifications/data/services/notification_service.dart';
 import 'package:solatify/features/settings/presentation/providers/settings_provider.dart';
 
 enum PrayerOffsetType { subuh, dzuhur, ashar, magrib, isya }
@@ -41,8 +42,69 @@ extension PrayerOffsetTypeExtension on PrayerOffsetType {
   }
 }
 
-class SettingsScreen extends ConsumerWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
+
+  @override
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  final NotificationService _notificationService = NotificationService();
+  late final ValueNotifier<NotificationReadiness> _notificationReadiness;
+
+  @override
+  void initState() {
+    super.initState();
+    _notificationReadiness = ValueNotifier<NotificationReadiness>(
+      NotificationReadiness.unknown(),
+    );
+    _refreshNotificationReadiness();
+  }
+
+  @override
+  void dispose() {
+    _notificationReadiness.dispose();
+    super.dispose();
+  }
+
+  Future<void> _refreshNotificationReadiness() async {
+    final readiness = await _notificationService.getReadinessStatus();
+    if (!mounted) return;
+    _notificationReadiness.value = readiness;
+  }
+
+  Future<void> _requestNotificationPermissions() async {
+    try {
+      await _notificationService.requestAndroidPermissions();
+      await _refreshNotificationReadiness();
+    } catch (e) {
+      debugPrint('Error requesting notification permissions: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Izin notifikasi belum dapat diperbarui.'),
+        ),
+      );
+    }
+  }
+
+  Future<void> _sendTestNotification() async {
+    try {
+      await _notificationService.showTestNotification();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Notifikasi uji dikirim.')),
+      );
+      await _refreshNotificationReadiness();
+    } catch (e) {
+      debugPrint('Error sending test notification from settings: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Notifikasi uji belum dapat dikirim.')),
+      );
+    }
+  }
 
   void _showPrayerOffsetDialog(
     BuildContext context,
@@ -277,7 +339,7 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final settings = ref.watch(settingsProvider);
     final l = AppLocalizations.of(context);
 
@@ -419,6 +481,23 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 32),
 
+                  _buildSectionHeader(context, 'NOTIFIKASI'),
+                  const SizedBox(height: 12),
+                  ValueListenableBuilder<NotificationReadiness>(
+                    valueListenable: _notificationReadiness,
+                    builder: (context, readiness, _) {
+                      return _buildNotificationSection(
+                        context,
+                        readiness,
+                        textColor,
+                        textSecondary,
+                        dividerColor,
+                        isDark,
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 32),
+
                   _buildSectionHeader(context, 'KOREKSI WAKTU SALAT'),
                   const SizedBox(height: 12),
                   GlassContainer(
@@ -540,6 +619,77 @@ class SettingsScreen extends ConsumerWidget {
           ),
         ),
         child: Icon(icon, color: iconColor, size: 16),
+      ),
+    );
+  }
+
+  Widget _buildNotificationSection(
+    BuildContext context,
+    NotificationReadiness readiness,
+    Color textColor,
+    Color textSecondary,
+    Color dividerColor,
+    bool isDark,
+  ) {
+    final primaryColor = isDark
+        ? const Color(0xFFC78A4C)
+        : const Color(0xFF0E4D31);
+
+    return GlassContainer(
+      blur: 15,
+      opacity: isDark ? 0.03 : 0.015,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        children: [
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: Icon(
+              readiness.status == NotificationReadinessStatus.ready
+                  ? Icons.notifications_active
+                  : Icons.notifications_none,
+              color: primaryColor,
+            ),
+            title: Text(
+              readiness.title,
+              style: TextStyle(color: textColor, fontSize: 15),
+            ),
+            subtitle: Text(
+              readiness.message,
+              style: TextStyle(color: textSecondary, fontSize: 12),
+            ),
+            trailing: IconButton(
+              tooltip: 'Periksa ulang notifikasi',
+              icon: Icon(Icons.refresh, color: textSecondary),
+              onPressed: _refreshNotificationReadiness,
+            ),
+          ),
+          Divider(color: dividerColor, height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: readiness.needsPermissionAction
+                      ? _requestNotificationPermissions
+                      : null,
+                  child: const Text('Aktifkan izin notifikasi'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: readiness.canSendTestNotification
+                      ? _sendTestNotification
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Kirim notifikasi uji'),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

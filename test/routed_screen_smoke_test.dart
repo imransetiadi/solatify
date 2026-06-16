@@ -71,6 +71,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('Pengaturan'), findsWidgets);
+    expect(find.text('NOTIFIKASI'), findsOneWidget);
+    expect(find.text('Kirim notifikasi uji'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
