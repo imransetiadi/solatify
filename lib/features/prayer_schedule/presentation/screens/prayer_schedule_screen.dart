@@ -51,10 +51,10 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
                 : const Color(0xFF241A12);
             final dTextSecondary = isDarkTheme
                 ? const Color(0xFFB8A898)
-                : const Color(0xFF5D4E47);
+                : const Color(0xFFAFA19A);
             final dTextHint = isDarkTheme
                 ? const Color(0xFFAFA19A)
-                : const Color(0xFF5D4E47);
+                : const Color(0xFFAFA19A);
             final dBorderColor = isDarkTheme
                 ? Colors.white.withValues(alpha: 0.2)
                 : Colors.black12;
@@ -203,10 +203,10 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
     final textColor = isDark ? Colors.white : const Color(0xFF241A12);
     final textSecondary = isDark
         ? const Color(0xFFC8B8A8)
-        : const Color(0xFF5D4E47);
+        : const Color(0xFFAFA19A);
     final textMuted = isDark
         ? const Color(0xFFB8A898)
-        : const Color(0xFF5D4E47);
+        : const Color(0xFFAFA19A);
     final dividerColor = isDark
         ? Colors.white.withValues(alpha: 0.1)
         : Colors.black.withValues(alpha: 0.05);

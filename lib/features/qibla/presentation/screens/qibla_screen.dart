@@ -34,10 +34,10 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
     final textColor = isDark ? Colors.white : const Color(0xFF241A12);
     final textSecondary = isDark
         ? const Color(0xFFB8A898)
-        : const Color(0xFF5D4E47);
+        : const Color(0xFFAFA19A);
     final textMuted = isDark
         ? const Color(0xFF999999)
-        : const Color(0xFF5D4E47);
+        : const Color(0xFFAFA19A);
     final textHint = isDark ? const Color(0xFF666666) : const Color(0xFF9A8A7D);
 
     return Scaffold(
@@ -250,7 +250,7 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textSecondary = isDark
         ? const Color(0xFFC8B8A8)
-        : const Color(0xFF5D4E47);
+        : const Color(0xFFAFA19A);
 
     return Column(
       children: [
@@ -369,7 +369,7 @@ class _CompassDialPainter extends CustomPainter {
               ? (isDark ? Colors.white : const Color(0xFF241A12))
               : (isDark
                     ? const Color(0xFFC8B8A8)
-                    : const Color(0xFF5D4E47)), // Black for North
+                    : const Color(0xFFAFA19A)), // Black for North
           fontSize: 16,
           fontWeight: FontWeight.bold,
         ),

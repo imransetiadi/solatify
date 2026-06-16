@@ -56,7 +56,7 @@ class SettingsScreen extends ConsumerWidget {
     final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final dialogBg = isDarkTheme ? const Color(0xFF2A1B12) : Colors.white;
     final textColor = isDarkTheme ? Colors.white : const Color(0xFF241A12);
-    final textMuted = isDarkTheme ? Colors.white : const Color(0xFF5D4E47);
+    final textMuted = isDarkTheme ? Colors.white : const Color(0xFFAFA19A);
     final primaryColor = isDarkTheme
         ? const Color(0xFFC78A4C)
         : const Color(0xFF0E4D31);
@@ -289,7 +289,7 @@ class SettingsScreen extends ConsumerWidget {
     final textColor = isDark ? Colors.white : const Color(0xFF241A12);
     final textSecondary = isDark
         ? const Color(0xFFB8A898)
-        : const Color(0xFF5D4E47);
+        : const Color(0xFFAFA19A);
     final dividerColor = isDark
         ? Colors.white.withValues(alpha: 0.1)
         : Colors.black.withValues(alpha: 0.05);
@@ -488,7 +488,7 @@ class SettingsScreen extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textSecondary = isDark
         ? const Color(0xFFB8A898)
-        : const Color(0xFF5D4E47);
+        : const Color(0xFFAFA19A);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Text(
@@ -522,7 +522,7 @@ class SettingsScreen extends ConsumerWidget {
         : Colors.black.withValues(alpha: 0.08);
     final iconColor = isSelected
         ? Colors.black
-        : (isDark ? const Color(0xFFC8B8A8) : const Color(0xFF5D4E47));
+        : (isDark ? const Color(0xFFC8B8A8) : const Color(0xFFAFA19A));
     return GestureDetector(
       onTap: () => ref.read(settingsProvider.notifier).updateTheme(mode),
       child: AnimatedContainer(

@@ -47,7 +47,7 @@ class _DuasScreenState extends ConsumerState<DuasScreen> {
         : const Color(0xFF241A12);
     final textColorMuted = isDark
         ? const Color(0xFFC8B8A8)
-        : const Color(0xFF5D4E47);
+        : const Color(0xFFAFA19A);
     final borderColor = isDark
         ? Colors.white.withValues(alpha: 0.2)
         : Colors.black12;

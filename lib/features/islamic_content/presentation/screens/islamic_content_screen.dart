@@ -50,7 +50,7 @@ class IslamicContentScreen extends ConsumerWidget {
         : const Color(0xFF241A12);
     final mutedColor = isDark
         ? const Color(0xFFC8B8A8)
-        : const Color(0xFF5D4E47);
+        : const Color(0xFFAFA19A);
     final redAccent = theme.colorScheme.tertiary;
     final surfaceColor = isDark ? const Color(0xFF241A14) : Colors.white;
     final randomTip = ref.watch(randomTipProvider);

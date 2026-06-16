@@ -24,7 +24,7 @@ class HomeScreen extends ConsumerWidget {
     final primary = Theme.of(context).colorScheme.secondary;
     final redLine = Theme.of(context).colorScheme.tertiary;
     final textColor = isDark ? const Color(0xFFF3FBF6) : const Color(0xFF241A12);
-    final mutedColor = isDark ? const Color(0xFFE0D4C4) : const Color(0xFF5D4E47);
+    final mutedColor = isDark ? const Color(0xFFE0D4C4) : const Color(0xFFAFA19A);
     final brightGreen = isDark ? const Color(0xFF4CAF50) : const Color(0xFF0E4D31);
 
     return Scaffold(
@@ -192,12 +192,7 @@ class HomeScreen extends ConsumerWidget {
                 ),
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      ResponsiveLayout.pagePadding(context).left,
-                      0,
-                      ResponsiveLayout.pagePadding(context).right,
-                      12,
-                    ),
+                    padding: ResponsiveLayout.pagePadding(context).copyWith(top: 0, bottom: 12),
                     child: Text(
                       'Jadwal Salat',
                       style: TextStyle(
@@ -209,9 +204,7 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 ),
                 SliverPadding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: ResponsiveLayout.pagePadding(context).horizontal / 2,
-                  ),
+                  padding: EdgeInsets.symmetric(horizontal: ResponsiveLayout.pagePadding(context).left),
                   sliver: prayerList.isEmpty
                       ? const SliverToBoxAdapter(
                           child: Padding(
