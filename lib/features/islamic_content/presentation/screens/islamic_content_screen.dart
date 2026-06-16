@@ -112,8 +112,8 @@ class IslamicContentScreen extends ConsumerWidget {
                 builder: (context, constraints) {
                   final crossAxisCount = constraints.maxWidth >= 720 ? 3 : 2;
                   final cardHeight = constraints.maxWidth < 380
-                      ? 170.0
-                      : 156.0;
+                      ? 120.0
+                      : 110.0;
 
                   return GridView.builder(
                     shrinkWrap: true,
@@ -121,8 +121,8 @@ class IslamicContentScreen extends ConsumerWidget {
                     itemCount: _menuItems.length,
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: crossAxisCount,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 10,
                       mainAxisExtent: cardHeight,
                     ),
                     itemBuilder: (context, index) {
@@ -274,18 +274,18 @@ class _ContentMenuCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         onTap: () => context.go(item.path),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 42,
-                height: 42,
+                width: 36,
+                height: 36,
                 decoration: BoxDecoration(
                   color: primaryColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(item.icon, color: primaryColor, size: 23),
+                child: Icon(item.icon, color: primaryColor, size: 20),
               ),
               const Spacer(),
               Text(
