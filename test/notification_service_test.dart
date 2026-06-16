@@ -133,7 +133,39 @@ void main() {
     await service.showTestNotification();
 
     final showCall = capturedMethods.lastWhere((call) => call.method == 'show');
-    expect(showCall.arguments['id'], 9001);
+    expect(showCall.arguments['id'], isNot(9001));
+    expect(showCall.arguments['id'], isA<int>());
     expect(showCall.arguments['title'], 'Tes Notifikasi Solatify');
+    expect(
+      showCall.arguments['platformSpecifics']['channelId'],
+      'solatify_diagnostic_channel_v2',
+    );
   });
+
+  test('getPendingNotificationIds reports platform pending IDs', () async {
+    final ids = await service.getPendingNotificationIds();
+
+    expect(ids, [1, 2]);
+    expect(capturedMethods.last.method, 'pendingNotificationRequests');
+  });
+
+  test(
+    'scheduleDiagnosticNotification schedules a near-future notification',
+    () async {
+      await service.init();
+
+      final scheduledAt = DateTime.now().add(const Duration(minutes: 2));
+      await service.scheduleDiagnosticNotification(scheduledAt: scheduledAt);
+
+      final zonedSchedule = capturedMethods.lastWhere(
+        (call) => call.method == 'zonedSchedule',
+      );
+      expect(zonedSchedule.arguments['id'], 9002);
+      expect(
+        zonedSchedule.arguments['title'],
+        'Tes Jadwal Notifikasi Solatify',
+      );
+      expect(zonedSchedule.arguments['body'], contains('terjadwal'));
+    },
+  );
 }

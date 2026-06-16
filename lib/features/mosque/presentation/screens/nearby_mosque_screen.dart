@@ -346,22 +346,42 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen> {
     throw Exception('Gagal memuat data masjid dari $endpoint');
   }
 
-  void _openInMap(MosqueItem mosque) async {
-    final url =
-        'https://www.google.com/maps/search/?api=1&query=${mosque.latitude},${mosque.longitude}';
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+  Future<void> _launchMapUri(Uri uri) async {
+    try {
+      final launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+      if (launched) return;
+
+      debugPrint('Map launch returned false for $uri');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Tidak dapat membuka aplikasi peta.')),
+      );
+    } catch (e) {
+      debugPrint('Error launching map URL $uri: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Tidak dapat membuka aplikasi peta.')),
+      );
     }
   }
 
-  void _openRoute(MosqueItem mosque) async {
-    final url =
-        'https://www.google.com/maps/dir/?api=1&destination=${mosque.latitude},${mosque.longitude}';
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
+  Future<void> _openInMap(MosqueItem mosque) async {
+    final uri = Uri.https('www.google.com', '/maps/search/', {
+      'api': '1',
+      'query': '${mosque.latitude},${mosque.longitude}',
+    });
+    await _launchMapUri(uri);
+  }
+
+  Future<void> _openRoute(MosqueItem mosque) async {
+    final uri = Uri.https('www.google.com', '/maps/dir/', {
+      'api': '1',
+      'destination': '${mosque.latitude},${mosque.longitude}',
+    });
+    await _launchMapUri(uri);
   }
 
   @override

@@ -74,6 +74,9 @@ class NotificationService {
   }
   static final NotificationService _instance = NotificationService._internal();
 
+  static const String _prayerChannelId = 'prayer_times_adhan_channel_v1';
+  static const String _diagnosticChannelId = 'solatify_diagnostic_channel_v2';
+
   final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
@@ -129,8 +132,8 @@ class NotificationService {
   Future<void> _createNotificationChannel() async {
     if (defaultTargetPlatform != TargetPlatform.android) return;
 
-    const AndroidNotificationChannel channel = AndroidNotificationChannel(
-      'prayer_times_adhan_channel_v1',
+    const AndroidNotificationChannel prayerChannel = AndroidNotificationChannel(
+      _prayerChannelId,
       'Prayer Times Adhan',
       description: 'Adhan notifications for prayer times',
       importance: Importance.max,
@@ -140,13 +143,26 @@ class NotificationService {
       enableLights: true,
     );
 
+    const AndroidNotificationChannel diagnosticChannel =
+        AndroidNotificationChannel(
+          _diagnosticChannelId,
+          'Solatify Diagnostic',
+          description: 'Diagnostic test notifications for Solatify',
+          importance: Importance.max,
+          playSound: true,
+          enableVibration: true,
+          enableLights: true,
+        );
+
     final androidPlugin = _flutterLocalNotificationsPlugin
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
         >();
 
-    await androidPlugin?.createNotificationChannel(channel);
-    debugPrint('Notification channel created: prayer_times_adhan_channel_v1');
+    await androidPlugin?.createNotificationChannel(prayerChannel);
+    await androidPlugin?.createNotificationChannel(diagnosticChannel);
+    debugPrint('Notification channel created: $_prayerChannelId');
+    debugPrint('Notification channel created: $_diagnosticChannelId');
   }
 
   Future<void> requestAndroidPermissions() async {
@@ -268,7 +284,7 @@ class NotificationService {
 
       const AndroidNotificationDetails androidDetails =
           AndroidNotificationDetails(
-            'prayer_times_adhan_channel_v1',
+            _prayerChannelId,
             'Prayer Times Adhan',
             channelDescription: 'Adhan notifications for prayer times',
             importance: Importance.max,
@@ -320,7 +336,7 @@ class NotificationService {
 
       const AndroidNotificationDetails androidDetails =
           AndroidNotificationDetails(
-            'prayer_times_adhan_channel_v1',
+            _prayerChannelId,
             'Prayer Times Adhan',
             channelDescription: 'Adhan notifications for prayer times',
             importance: Importance.max,
@@ -361,6 +377,7 @@ class NotificationService {
       debugPrint('Prayer notification scheduled for $notificationTime: $title');
     } catch (e, stack) {
       debugPrint('Error scheduling prayer notification: $e\n$stack');
+      rethrow;
     }
   }
 
@@ -389,16 +406,19 @@ class NotificationService {
     try {
       await _ensureInitialized();
 
+      final notificationId = DateTime.now().millisecondsSinceEpoch.remainder(
+        1000000,
+      );
+
       const AndroidNotificationDetails androidDetails =
           AndroidNotificationDetails(
-            'prayer_times_adhan_channel_v1',
-            'Prayer Times Adhan',
-            channelDescription: 'Adhan notifications for prayer times',
+            _diagnosticChannelId,
+            'Solatify Diagnostic',
+            channelDescription: 'Diagnostic test notifications for Solatify',
             importance: Importance.max,
             priority: Priority.high,
             enableVibration: true,
             playSound: true,
-            sound: RawResourceAndroidNotificationSound('adhan'),
             enableLights: true,
             icon: '@mipmap/ic_launcher',
           );
@@ -407,7 +427,6 @@ class NotificationService {
         presentAlert: true,
         presentBadge: true,
         presentSound: true,
-        sound: 'adhan.mp3',
       );
 
       const NotificationDetails notificationDetails = NotificationDetails(
@@ -416,15 +435,68 @@ class NotificationService {
       );
 
       await _flutterLocalNotificationsPlugin.show(
-        9001,
+        notificationId,
         'Tes Notifikasi Solatify',
         'Jika notifikasi ini muncul, pengingat salat siap digunakan.',
         notificationDetails,
         payload: 'test_notification',
       );
-      debugPrint('Test notification sent');
+      debugPrint(
+        'Test notification sent: id=$notificationId channel=$_diagnosticChannelId',
+      );
     } catch (e, stack) {
       debugPrint('Error showing test notification: $e\n$stack');
+      rethrow;
+    }
+  }
+
+  Future<void> scheduleDiagnosticNotification({DateTime? scheduledAt}) async {
+    try {
+      await _ensureInitialized();
+
+      final targetTime =
+          scheduledAt ?? DateTime.now().add(const Duration(minutes: 2));
+
+      const AndroidNotificationDetails androidDetails =
+          AndroidNotificationDetails(
+            _diagnosticChannelId,
+            'Solatify Diagnostic',
+            channelDescription: 'Diagnostic test notifications for Solatify',
+            importance: Importance.max,
+            priority: Priority.high,
+            enableVibration: true,
+            playSound: true,
+            enableLights: true,
+            icon: '@mipmap/ic_launcher',
+          );
+
+      const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      );
+
+      const NotificationDetails notificationDetails = NotificationDetails(
+        android: androidDetails,
+        iOS: iosDetails,
+      );
+
+      final scheduledDate = tz.TZDateTime.from(targetTime, tz.local);
+
+      await _flutterLocalNotificationsPlugin.zonedSchedule(
+        9002,
+        'Tes Jadwal Notifikasi Solatify',
+        'Jika notifikasi terjadwal ini muncul, jadwal pengingat siap digunakan.',
+        scheduledDate,
+        notificationDetails,
+        androidScheduleMode: _androidScheduleMode(),
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        payload: 'scheduled_test_notification',
+      );
+      debugPrint('Diagnostic scheduled notification set for $targetTime');
+    } catch (e, stack) {
+      debugPrint('Error scheduling diagnostic notification: $e\n$stack');
       rethrow;
     }
   }
@@ -460,6 +532,20 @@ class NotificationService {
     } catch (e) {
       debugPrint('Error retrieving pending notifications: $e');
       return 0;
+    }
+  }
+
+  Future<List<int>> getPendingNotificationIds() async {
+    try {
+      final pendingNotifications = await _flutterLocalNotificationsPlugin
+          .pendingNotificationRequests();
+      final ids = pendingNotifications.map((request) => request.id).toList();
+
+      debugPrint('Pending scheduled notification IDs: $ids');
+      return ids;
+    } catch (e) {
+      debugPrint('Error retrieving pending notification IDs: $e');
+      return const [];
     }
   }
 }

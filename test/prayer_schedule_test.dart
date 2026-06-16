@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:solatify/core/theme/theme.dart';
 import 'package:solatify/core/utils/location_service.dart';
 import 'package:solatify/features/prayer_schedule/presentation/screens/prayer_schedule_screen.dart';
 
@@ -60,6 +61,38 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Bekasi'), findsWidgets);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('dark mode selected date uses dark accent color', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: ThemeMode.dark,
+          home: const PrayerScheduleScreen(),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    final tomorrow = DateTime.now().add(const Duration(days: 1)).day.toString();
+    await tester.tap(find.text(tomorrow).first);
+    await tester.pumpAndSettle();
+
+    final selectedDateCards = tester
+        .widgetList<AnimatedContainer>(find.byType(AnimatedContainer))
+        .where((widget) {
+          final decoration = widget.decoration;
+          return decoration is BoxDecoration &&
+              decoration.color == AppTheme.redAccentDark;
+        })
+        .toList();
+
+    expect(selectedDateCards, isNotEmpty);
     expect(tester.takeException(), isNull);
   });
 

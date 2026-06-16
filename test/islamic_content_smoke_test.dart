@@ -6,9 +6,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:solatify/core/database/hive_service.dart';
+import 'package:solatify/core/theme/theme.dart';
 import 'package:solatify/features/asmaul_husna/presentation/screens/asmaul_husna_screen.dart';
 import 'package:solatify/features/dhikr/presentation/screens/dhikr_screen.dart';
 import 'package:solatify/features/duas/presentation/screens/duas_screen.dart';
+import 'package:solatify/features/hijri_calendar/presentation/screens/hijri_calendar_screen.dart';
+import 'package:solatify/features/islamic_content/presentation/screens/islamic_content_screen.dart';
 import 'package:solatify/features/islamic_tips/presentation/screens/islamic_tips_screen.dart';
 
 void main() {
@@ -36,9 +39,7 @@ void main() {
   });
 
   Widget wrap(Widget child) {
-    return ProviderScope(
-      child: MaterialApp(home: child),
-    );
+    return ProviderScope(child: MaterialApp(home: child));
   }
 
   testWidgets('Asmaul Husna screen renders and search works', (tester) async {
@@ -51,11 +52,57 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('Asmaul Husna dark mode latin title uses readable accent', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: ThemeMode.dark,
+          home: const AsmaulHusnaScreen(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final title = tester.widget<Text>(find.text('1. Ar Rahman'));
+
+    expect(title.style?.color, AppTheme.redAccentDark);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('Duas screen renders', (tester) async {
     await tester.pumpWidget(wrap(const DuasScreen()));
     await tester.pumpAndSettle();
 
     expect(find.textContaining('Doa'), findsWidgets);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Content menu cards do not overflow on compact Android width', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(720, 1280);
+    tester.view.devicePixelRatio = 2;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(wrap(const IslamicContentScreen()));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Doa Harian'), findsOneWidget);
+    expect(find.text('Kalender Hijriah'), findsOneWidget);
+    expect(find.text('Tips Islami'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Hijri calendar screen renders', (tester) async {
+    await tester.pumpWidget(wrap(const HijriCalendarScreen()));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Hijriah'), findsWidgets);
     expect(tester.takeException(), isNull);
   });
 
@@ -75,5 +122,21 @@ void main() {
     await tester.tap(find.text('Dzikir Petang'));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('content sub screens show explicit back button', (tester) async {
+    for (final screen in const [
+      AsmaulHusnaScreen(),
+      DuasScreen(),
+      HijriCalendarScreen(),
+      IslamicTipsScreen(),
+      DhikrScreen(),
+    ]) {
+      await tester.pumpWidget(wrap(screen));
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.arrow_back), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    }
   });
 }

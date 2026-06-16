@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
 import 'package:solatify/features/asmaul_husna/presentation/providers/asmaul_husna_provider.dart';
@@ -38,7 +39,9 @@ class _AsmaulHusnaScreenState extends ConsumerState<AsmaulHusnaScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final redAccent = theme.colorScheme.tertiary;
-    final primaryColor = theme.colorScheme.secondary;
+    final primaryColor = isDark
+        ? theme.colorScheme.tertiary
+        : theme.colorScheme.secondary;
     final textColor = theme.colorScheme.onSurface;
     final textColorMuted = isDark
         ? const Color(0xFFB8A898)
@@ -51,6 +54,10 @@ class _AsmaulHusnaScreenState extends ConsumerState<AsmaulHusnaScreen> {
         backgroundColor: Colors.transparent,
         foregroundColor: textColor,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go('/islamic-content'),
+        ),
         title: const Text(
           'Asmaul Husna',
           style: TextStyle(fontWeight: FontWeight.bold),

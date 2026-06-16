@@ -164,12 +164,11 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
     // Horizontal date strip: yesterday, today, and next 5 days
     final today = DateTime.now();
     final List<DateTime> dateStrip = List.generate(7, (index) {
-      return today.subtract(const Duration(days: 1)).add(
-            Duration(days: index),
-          );
+      return today.subtract(const Duration(days: 1)).add(Duration(days: index));
     });
 
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : const Color(0xFF241A12);
     final textSecondary = isDark
         ? const Color(0xFFC8B8A8)
@@ -180,6 +179,10 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
     final dividerColor = isDark
         ? Colors.white.withValues(alpha: 0.1)
         : Colors.black.withValues(alpha: 0.05);
+    final selectedDateColor = isDark
+        ? theme.colorScheme.tertiary
+        : theme.colorScheme.secondary;
+    final selectedDateTextColor = theme.colorScheme.onTertiary;
 
     return Scaffold(
       body: IslamicBackground(
@@ -288,12 +291,15 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
                     margin: const EdgeInsets.symmetric(vertical: 12),
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
-                      padding: ResponsiveLayout.pagePadding(context).copyWith(top: 0, bottom: 0),
+                      padding: ResponsiveLayout.pagePadding(
+                        context,
+                      ).copyWith(top: 0, bottom: 0),
                       itemCount: dateStrip.length,
                       itemBuilder: (context, index) {
                         final date = dateStrip[index];
                         final isSelected =
-                            _getFormatDate(date) == _getFormatDate(_selectedDate);
+                            _getFormatDate(date) ==
+                            _getFormatDate(_selectedDate);
                         final isToday =
                             _getFormatDate(date) == _getFormatDate(today);
 
@@ -312,23 +318,26 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
                             margin: const EdgeInsets.symmetric(horizontal: 6),
                             decoration: BoxDecoration(
                               color: isSelected
-                                  ? const Color(0xFF0E4D31)
+                                  ? selectedDateColor
                                   : isToday
-                                      ? const Color(0xFF0E4D31)
-                                          .withValues(alpha: 0.15)
-                                      : (isDark
-                                          ? Colors.white.withValues(alpha: 0.02)
-                                          : Colors.black.withValues(alpha: 0.02)),
+                                  ? selectedDateColor.withValues(alpha: 0.18)
+                                  : (isDark
+                                        ? theme.colorScheme.surface.withValues(
+                                            alpha: 0.72,
+                                          )
+                                        : Colors.black.withValues(alpha: 0.02)),
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
                                 color: isSelected
-                                    ? const Color(0xFF0E4D31)
+                                    ? selectedDateColor
                                     : isToday
-                                        ? const Color(0xFF0E4D31)
-                                            .withValues(alpha: 0.3)
-                                        : (isDark
-                                            ? Colors.white.withValues(alpha: 0.06)
-                                            : Colors.black.withValues(alpha: 0.06)),
+                                    ? selectedDateColor.withValues(alpha: 0.45)
+                                    : (isDark
+                                          ? theme.colorScheme.outline
+                                                .withValues(alpha: 0.55)
+                                          : Colors.black.withValues(
+                                              alpha: 0.06,
+                                            )),
                                 width: 1.2,
                               ),
                             ),
@@ -341,7 +350,7 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
                                     color: isSelected
-                                        ? Colors.white
+                                        ? selectedDateTextColor
                                         : textSecondary,
                                   ),
                                 ),
@@ -351,7 +360,9 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
-                                    color: isSelected ? Colors.white : textColor,
+                                    color: isSelected
+                                        ? selectedDateTextColor
+                                        : textColor,
                                   ),
                                 ),
                               ],
