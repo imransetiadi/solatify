@@ -33,6 +33,113 @@ class MosqueItem {
   final String sourceType;
 }
 
+String buildMosqueOverpassQuery({
+  required int radiusMeters,
+  required double latitude,
+  required double longitude,
+}) {
+  return '''
+[out:json][timeout:12];
+(
+  node["amenity"="mosque"](around:$radiusMeters,$latitude,$longitude);
+  way["amenity"="mosque"](around:$radiusMeters,$latitude,$longitude);
+  relation["amenity"="mosque"](around:$radiusMeters,$latitude,$longitude);
+  node["amenity"="place_of_worship"]["religion"="muslim"](around:$radiusMeters,$latitude,$longitude);
+  way["amenity"="place_of_worship"]["religion"="muslim"](around:$radiusMeters,$latitude,$longitude);
+  relation["amenity"="place_of_worship"]["religion"="muslim"](around:$radiusMeters,$latitude,$longitude);
+  node["building"="mosque"](around:$radiusMeters,$latitude,$longitude);
+  way["building"="mosque"](around:$radiusMeters,$latitude,$longitude);
+  relation["building"="mosque"](around:$radiusMeters,$latitude,$longitude);
+);
+out body center;
+''';
+}
+
+List<MosqueItem> parseMosqueOverpassElements({
+  required Map<String, dynamic> data,
+  required double originLatitude,
+  required double originLongitude,
+}) {
+  final elements = data['elements'];
+  if (elements is! List) return const [];
+
+  final results = <MosqueItem>[];
+
+  for (final element in elements) {
+    if (element is! Map<String, dynamic>) continue;
+
+    final center = element['center'];
+    final latitudeValue =
+        element['lat'] ??
+        (center is Map<String, dynamic> ? center['lat'] : null);
+    final longitudeValue =
+        element['lon'] ??
+        (center is Map<String, dynamic> ? center['lon'] : null);
+
+    if (latitudeValue is! num || longitudeValue is! num) continue;
+
+    final latitude = latitudeValue.toDouble();
+    final longitude = longitudeValue.toDouble();
+    final tags = element['tags'];
+    final name = tags is Map<String, dynamic>
+        ? tags['name'] ?? tags['name:id'] ?? 'Masjid Tanpa Nama'
+        : 'Masjid Tanpa Nama';
+    final address = tags is Map<String, dynamic>
+        ? tags['addr:full'] ??
+              tags['addr:street'] ??
+              tags['addr:place'] ??
+              tags['addr:city'] ??
+              'Alamat tidak diketahui'
+        : 'Alamat tidak diketahui';
+    final id = element['id']?.toString();
+
+    if (id == null) continue;
+
+    results.add(
+      MosqueItem(
+        id: id,
+        name: name.toString(),
+        address: address.toString(),
+        latitude: latitude,
+        longitude: longitude,
+        distanceInMeters: calculateMosqueDistance(
+          originLatitude,
+          originLongitude,
+          latitude,
+          longitude,
+        ),
+        sourceType: element['type']?.toString().toUpperCase() ?? 'NODE',
+      ),
+    );
+  }
+
+  results.sort((a, b) => a.distanceInMeters.compareTo(b.distanceInMeters));
+  return results;
+}
+
+double calculateMosqueDistance(
+  double lat1,
+  double lon1,
+  double lat2,
+  double lon2,
+) {
+  const earthRadiusMeters = 6371000.0;
+  final phi1 = lat1 * math.pi / 180;
+  final phi2 = lat2 * math.pi / 180;
+  final deltaPhi = (lat2 - lat1) * math.pi / 180;
+  final deltaLambda = (lon2 - lon1) * math.pi / 180;
+
+  final a =
+      math.sin(deltaPhi / 2) * math.sin(deltaPhi / 2) +
+      math.cos(phi1) *
+          math.cos(phi2) *
+          math.sin(deltaLambda / 2) *
+          math.sin(deltaLambda / 2);
+  final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+
+  return earthRadiusMeters * c;
+}
+
 class NearbyMosqueScreen extends ConsumerStatefulWidget {
   const NearbyMosqueScreen({super.key});
 
@@ -205,95 +312,38 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen> {
     required double latitude,
     required double longitude,
   }) async {
-    final query =
-        '''
-[out:json][timeout:${_requestTimeout.inSeconds}];
-(
-  node["amenity"="mosque"](around:$radiusMeters,$latitude,$longitude);
-  way["amenity"="mosque"](around:$radiusMeters,$latitude,$longitude);
-  relation["amenity"="mosque"](around:$radiusMeters,$latitude,$longitude);
-);
-out center tags;
-''';
+    final query = buildMosqueOverpassQuery(
+      radiusMeters: radiusMeters,
+      latitude: latitude,
+      longitude: longitude,
+    );
     final response = await http
-        .post(Uri.parse(endpoint), body: {'data': query})
+        .post(
+          Uri.parse(endpoint),
+          headers: const {
+            'Accept': 'application/json',
+            'User-Agent': 'Solatify/1.0 mosque-search',
+          },
+          body: {'data': query},
+        )
         .timeout(_requestTimeout);
 
     if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final List<dynamic> elements = data['elements'] ?? [];
-      final List<MosqueItem> results = [];
-
-      for (final element in elements) {
-        if (element is! Map<String, dynamic>) continue;
-
-        final center = element['center'];
-        final latitudeValue =
-            element['lat'] ??
-            (center is Map<String, dynamic> ? center['lat'] : null);
-        final longitudeValue =
-            element['lon'] ??
-            (center is Map<String, dynamic> ? center['lon'] : null);
-
-        if (latitudeValue is! num || longitudeValue is! num) continue;
-
-        final lat = latitudeValue.toDouble();
-        final lon = longitudeValue.toDouble();
-        final tags = element['tags'];
-        final String name = tags is Map<String, dynamic>
-            ? tags['name'] ?? 'Masjid Tanpa Nama'
-            : 'Masjid Tanpa Nama';
-        final String address = tags is Map<String, dynamic>
-            ? tags['addr:full'] ??
-                  tags['addr:street'] ??
-                  tags['addr:place'] ??
-                  'Alamat tidak diketahui'
-            : 'Alamat tidak diketahui';
-
-        final distance = _calculateDistance(latitude, longitude, lat, lon);
-
-        results.add(
-          MosqueItem(
-            id: element['id'].toString(),
-            name: name,
-            address: address,
-            latitude: lat,
-            longitude: lon,
-            distanceInMeters: distance,
-            sourceType: element['type']?.toString().toUpperCase() ?? 'NODE',
-          ),
-        );
+      final decoded = jsonDecode(response.body);
+      if (decoded is! Map<String, dynamic>) {
+        throw const FormatException('Format respons Overpass tidak valid.');
       }
-
-      // Sort by distance (closest first)
-      results.sort((a, b) => a.distanceInMeters.compareTo(b.distanceInMeters));
-      return results;
-    } else {
-      throw Exception('Gagal memuat data masjid dari $endpoint');
+      return parseMosqueOverpassElements(
+        data: decoded,
+        originLatitude: latitude,
+        originLongitude: longitude,
+      );
     }
-  }
 
-  double _calculateDistance(
-    double lat1,
-    double lon1,
-    double lat2,
-    double lon2,
-  ) {
-    const r = 6371000.0; // Earth radius in meters
-    final phi1 = lat1 * math.pi / 180;
-    final phi2 = lat2 * math.pi / 180;
-    final deltaPhi = (lat2 - lat1) * math.pi / 180;
-    final deltaLambda = (lon2 - lon1) * math.pi / 180;
-
-    final a =
-        math.sin(deltaPhi / 2) * math.sin(deltaPhi / 2) +
-        math.cos(phi1) *
-            math.cos(phi2) *
-            math.sin(deltaLambda / 2) *
-            math.sin(deltaLambda / 2);
-    final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
-
-    return r * c;
+    debugPrint(
+      'Overpass mosque search failed at $endpoint with status ${response.statusCode}: ${response.body.substring(0, math.min(response.body.length, 160))}',
+    );
+    throw Exception('Gagal memuat data masjid dari $endpoint');
   }
 
   void _openInMap(MosqueItem mosque) async {
