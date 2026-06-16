@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:solatify/features/settings/presentation/providers/settings_provider.dart';
 
 import '../../../../core/widgets/responsive_layout.dart';
+import '../../../../core/widgets/glass_container.dart';
 
 class GetStartedScreen extends ConsumerStatefulWidget {
   const GetStartedScreen({super.key});
@@ -205,9 +206,15 @@ class GetStartedPageView extends StatelessWidget {
         ? const Color(0xFFC8B8A8)
         : const Color(0xFF5D4E47);
 
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: GlassContainer(
+        padding: const EdgeInsets.all(32),
+        borderRadius: 32,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
         Icon(page.icon, size: 80, color: page.color),
         const SizedBox(height: 30),
         Text(
@@ -229,6 +236,8 @@ class GetStartedPageView extends StatelessWidget {
           ),
         ),
       ],
+        ),
+      ),
     );
   }
 }
