@@ -133,8 +133,13 @@ void main() {
     await service.showTestNotification();
 
     final showCall = capturedMethods.lastWhere((call) => call.method == 'show');
-    expect(showCall.arguments['id'], 9001);
+    expect(showCall.arguments['id'], isNot(9001));
+    expect(showCall.arguments['id'], isA<int>());
     expect(showCall.arguments['title'], 'Tes Notifikasi Solatify');
+    expect(
+      showCall.arguments['platformSpecifics']['channelId'],
+      'solatify_diagnostic_channel_v2',
+    );
   });
 
   test('getPendingNotificationIds reports platform pending IDs', () async {

@@ -17,6 +17,7 @@ import '../../features/qibla/presentation/screens/qibla_screen.dart';
 import '../../features/quran/presentation/screens/quran_home_screen.dart';
 import '../../features/quran/presentation/screens/surah_detail_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
+import '../../features/tracker/presentation/screens/tracker_screen.dart';
 import '../localization/app_localizations.dart';
 import '../widgets/responsive_layout.dart';
 
@@ -66,63 +67,120 @@ final goRouter = GoRouter(
       routes: [
         GoRoute(
           path: '/home',
-          pageBuilder: (context, state) =>
-              CustomTransitionPage(child: const HomeScreen(), transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child)),
+          pageBuilder: (context, state) => CustomTransitionPage(
+            child: const HomeScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) =>
+                    FadeTransition(opacity: animation, child: child),
+          ),
         ),
         GoRoute(
           path: '/schedule',
-          pageBuilder: (context, state) =>
-              CustomTransitionPage(child: const PrayerScheduleScreen(), transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child)),
+          pageBuilder: (context, state) => CustomTransitionPage(
+            child: const PrayerScheduleScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) =>
+                    FadeTransition(opacity: animation, child: child),
+          ),
         ),
         GoRoute(
           path: '/quran',
-          pageBuilder: (context, state) =>
-              CustomTransitionPage(child: const QuranHomeScreen(), transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child)),
+          pageBuilder: (context, state) => CustomTransitionPage(
+            child: const QuranHomeScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) =>
+                    FadeTransition(opacity: animation, child: child),
+          ),
         ),
         GoRoute(
           path: '/islamic-content',
-          pageBuilder: (context, state) =>
-              CustomTransitionPage(child: const IslamicContentScreen(), transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child)),
+          pageBuilder: (context, state) => CustomTransitionPage(
+            child: const IslamicContentScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) =>
+                    FadeTransition(opacity: animation, child: child),
+          ),
         ),
         GoRoute(
           path: '/islamic-content/asmaul-husna',
-          pageBuilder: (context, state) =>
-              CustomTransitionPage(child: const AsmaulHusnaScreen(), transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child)),
+          pageBuilder: (context, state) => CustomTransitionPage(
+            child: const AsmaulHusnaScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) =>
+                    FadeTransition(opacity: animation, child: child),
+          ),
         ),
         GoRoute(
           path: '/islamic-content/duas',
-          pageBuilder: (context, state) =>
-              CustomTransitionPage(child: const DuasScreen(), transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child)),
+          pageBuilder: (context, state) => CustomTransitionPage(
+            child: const DuasScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) =>
+                    FadeTransition(opacity: animation, child: child),
+          ),
         ),
         GoRoute(
           path: '/islamic-content/hijri-calendar',
-          pageBuilder: (context, state) =>
-              CustomTransitionPage(child: const HijriCalendarScreen(), transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child)),
+          pageBuilder: (context, state) => CustomTransitionPage(
+            child: const HijriCalendarScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) =>
+                    FadeTransition(opacity: animation, child: child),
+          ),
         ),
         GoRoute(
           path: '/islamic-content/tips',
-          pageBuilder: (context, state) =>
-              CustomTransitionPage(child: const IslamicTipsScreen(), transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child)),
+          pageBuilder: (context, state) => CustomTransitionPage(
+            child: const IslamicTipsScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) =>
+                    FadeTransition(opacity: animation, child: child),
+          ),
         ),
         GoRoute(
           path: '/islamic-content/dhikr',
-          pageBuilder: (context, state) =>
-              CustomTransitionPage(child: const DhikrScreen(), transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child)),
+          pageBuilder: (context, state) => CustomTransitionPage(
+            child: const DhikrScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) =>
+                    FadeTransition(opacity: animation, child: child),
+          ),
         ),
         GoRoute(
           path: '/qibla',
-          pageBuilder: (context, state) =>
-              CustomTransitionPage(child: const QiblaScreen(), transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child)),
+          pageBuilder: (context, state) => CustomTransitionPage(
+            child: const QiblaScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) =>
+                    FadeTransition(opacity: animation, child: child),
+          ),
         ),
         GoRoute(
           path: '/mosque',
-          pageBuilder: (context, state) =>
-              CustomTransitionPage(child: const NearbyMosqueScreen(), transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child)),
+          pageBuilder: (context, state) => CustomTransitionPage(
+            child: const NearbyMosqueScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) =>
+                    FadeTransition(opacity: animation, child: child),
+          ),
+        ),
+        GoRoute(
+          path: '/tracker',
+          pageBuilder: (context, state) => CustomTransitionPage(
+            child: const TrackerScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) =>
+                    FadeTransition(opacity: animation, child: child),
+          ),
         ),
         GoRoute(
           path: '/settings',
-          pageBuilder: (context, state) =>
-              CustomTransitionPage(child: const SettingsScreen(), transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child)),
+          pageBuilder: (context, state) => CustomTransitionPage(
+            child: const SettingsScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) =>
+                    FadeTransition(opacity: animation, child: child),
+          ),
         ),
       ],
     ),
@@ -190,6 +248,12 @@ class MainLayoutScreen extends StatelessWidget {
     _MainDestination(Icons.explore_outlined, Icons.explore, 'Kiblat', '/qibla'),
     _MainDestination(Icons.map_outlined, Icons.map, 'Masjid', '/mosque'),
     _MainDestination(
+      Icons.check_circle_outline,
+      Icons.check_circle,
+      'Tracker Ibadah',
+      '/tracker',
+    ),
+    _MainDestination(
       Icons.settings_outlined,
       Icons.settings,
       'Pengaturan',
@@ -205,6 +269,7 @@ class MainLayoutScreen extends StatelessWidget {
     if (location.startsWith('/islamic-content')) return 3;
     if (location.startsWith('/qibla')) return 4;
     if (location.startsWith('/mosque')) return 5;
+    if (location.startsWith('/tracker')) return 0;
     if (location.startsWith('/settings')) return 6;
     return 0;
   }
@@ -215,6 +280,7 @@ class MainLayoutScreen extends StatelessWidget {
     if (location.startsWith('/schedule')) return 1;
     if (location.startsWith('/quran')) return 2;
     if (location.startsWith('/islamic-content')) return 3;
+    if (location.startsWith('/tracker')) return 4;
     return 4;
   }
 
@@ -377,6 +443,8 @@ class MainLayoutScreen extends StatelessWidget {
         return l.navQibla;
       case '/mosque':
         return l.navMosque;
+      case '/tracker':
+        return destination.label;
       case '/settings':
         return l.navSettings;
       case '/more':

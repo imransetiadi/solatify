@@ -10,6 +10,7 @@ import 'package:solatify/features/hijri_calendar/presentation/screens/hijri_cale
 import 'package:solatify/features/mosque/presentation/screens/nearby_mosque_screen.dart';
 import 'package:solatify/features/qibla/presentation/screens/qibla_screen.dart';
 import 'package:solatify/features/settings/presentation/screens/settings_screen.dart';
+import 'package:solatify/features/tracker/presentation/screens/tracker_screen.dart';
 
 void main() {
   late Directory tempDir;
@@ -45,6 +46,25 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Arah Kiblat'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  test('Home screen source no longer renders tracker checklist', () {
+    final source = File(
+      'lib/features/home/presentation/screens/home_screen.dart',
+    ).readAsStringSync();
+
+    expect(source, isNot(contains('Ceklis Ibadah Hari Ini')));
+    expect(source, isNot(contains('trackerProvider')));
+  });
+
+  testWidgets('Tracker screen renders worship checklist', (tester) async {
+    await tester.pumpWidget(wrap(const TrackerScreen()));
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('Tracker Ibadah'), findsOneWidget);
+    expect(find.text('Ceklis Ibadah Hari Ini'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
