@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:adhan/adhan.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_compass_v2/flutter_compass_v2.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
@@ -18,6 +19,7 @@ class QiblaScreen extends ConsumerStatefulWidget {
 
 class _QiblaScreenState extends ConsumerState<QiblaScreen> {
   double _simulatedHeading = 0.0;
+  bool _wasAligned = false;
 
   @override
   Widget build(BuildContext context) {
@@ -55,8 +57,14 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
             final qiblaRelativeAngle = (qiblaAngle - heading + 360) % 360;
 
             // Check if user is pointing exactly towards Mecca (tolerance: +/- 3 degrees)
-            final isAligned =
-                qiblaRelativeAngle <= 3 || qiblaRelativeAngle >= 357;
+            final isAligned = qiblaRelativeAngle <= 2 || qiblaRelativeAngle >= 358;
+
+            if (isAligned && !_wasAligned) {
+              HapticFeedback.heavyImpact();
+              _wasAligned = true;
+            } else if (!isAligned && _wasAligned) {
+              _wasAligned = false;
+            }
 
             return SingleChildScrollView(
               physics: const BouncingScrollPhysics(),

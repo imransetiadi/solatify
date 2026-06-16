@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
+import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/features/duas/domain/entities/dua.dart';
 import 'package:solatify/features/duas/presentation/providers/duas_provider.dart';
 
@@ -178,13 +179,9 @@ class _DuaCardState extends State<_DuaCard> {
   @override
   Widget build(BuildContext context) {
     final redAccent = Theme.of(context).colorScheme.tertiary;
-    return Material(
-      color: widget.surfaceColor,
-      elevation: 1,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
-        side: BorderSide(color: redAccent.withValues(alpha: 0.30), width: 1),
-      ),
+    return GlassContainer(
+      borderRadius: 18,
+      padding: EdgeInsets.zero,
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
         onTap: () => setState(() => _isExpanded = !_isExpanded),

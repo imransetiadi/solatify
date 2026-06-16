@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/widgets/islamic/islamic_decorations.dart';
 import '../../../../core/widgets/responsive_layout.dart';
+import '../../../../core/widgets/glass_container.dart';
 import '../providers/dhikr_provider.dart';
 
 class DhikrScreen extends ConsumerWidget {
@@ -86,16 +87,9 @@ class _DhikrListView extends ConsumerWidget {
         itemCount: dhikrList.length,
         itemBuilder: (context, index) {
           final dhikr = dhikrList[index];
-          return Card(
-            color: cardBg,
+          return GlassContainer(
             margin: const EdgeInsets.only(bottom: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-              side: BorderSide(
-                color: redAccent.withValues(alpha: 0.30),
-                width: 1,
-              ),
-            ),
+            borderRadius: 16,
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(

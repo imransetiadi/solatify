@@ -67,62 +67,62 @@ final goRouter = GoRouter(
         GoRoute(
           path: '/home',
           pageBuilder: (context, state) =>
-              const NoTransitionPage(child: HomeScreen()),
+              CustomTransitionPage(child: const HomeScreen(), transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child)),
         ),
         GoRoute(
           path: '/schedule',
           pageBuilder: (context, state) =>
-              const NoTransitionPage(child: PrayerScheduleScreen()),
+              CustomTransitionPage(child: const PrayerScheduleScreen(), transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child)),
         ),
         GoRoute(
           path: '/quran',
           pageBuilder: (context, state) =>
-              const NoTransitionPage(child: QuranHomeScreen()),
+              CustomTransitionPage(child: const QuranHomeScreen(), transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child)),
         ),
         GoRoute(
           path: '/islamic-content',
           pageBuilder: (context, state) =>
-              const NoTransitionPage(child: IslamicContentScreen()),
+              CustomTransitionPage(child: const IslamicContentScreen(), transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child)),
         ),
         GoRoute(
           path: '/islamic-content/asmaul-husna',
           pageBuilder: (context, state) =>
-              const NoTransitionPage(child: AsmaulHusnaScreen()),
+              CustomTransitionPage(child: const AsmaulHusnaScreen(), transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child)),
         ),
         GoRoute(
           path: '/islamic-content/duas',
           pageBuilder: (context, state) =>
-              const NoTransitionPage(child: DuasScreen()),
+              CustomTransitionPage(child: const DuasScreen(), transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child)),
         ),
         GoRoute(
           path: '/islamic-content/hijri-calendar',
           pageBuilder: (context, state) =>
-              const NoTransitionPage(child: HijriCalendarScreen()),
+              CustomTransitionPage(child: const HijriCalendarScreen(), transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child)),
         ),
         GoRoute(
           path: '/islamic-content/tips',
           pageBuilder: (context, state) =>
-              const NoTransitionPage(child: IslamicTipsScreen()),
+              CustomTransitionPage(child: const IslamicTipsScreen(), transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child)),
         ),
         GoRoute(
           path: '/islamic-content/dhikr',
           pageBuilder: (context, state) =>
-              const NoTransitionPage(child: DhikrScreen()),
+              CustomTransitionPage(child: const DhikrScreen(), transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child)),
         ),
         GoRoute(
           path: '/qibla',
           pageBuilder: (context, state) =>
-              const NoTransitionPage(child: QiblaScreen()),
+              CustomTransitionPage(child: const QiblaScreen(), transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child)),
         ),
         GoRoute(
           path: '/mosque',
           pageBuilder: (context, state) =>
-              const NoTransitionPage(child: NearbyMosqueScreen()),
+              CustomTransitionPage(child: const NearbyMosqueScreen(), transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child)),
         ),
         GoRoute(
           path: '/settings',
           pageBuilder: (context, state) =>
-              const NoTransitionPage(child: SettingsScreen()),
+              CustomTransitionPage(child: const SettingsScreen(), transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child)),
         ),
       ],
     ),

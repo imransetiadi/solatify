@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:solatify/core/utils/location_service.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
+import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/features/prayer_schedule/presentation/location_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -611,11 +612,9 @@ class _StatusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      color: cardColor,
+    return GlassContainer(
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      borderRadius: 18,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -678,11 +677,9 @@ class _MosqueCard extends StatelessWidget {
         ? '${mosque.distanceInMeters.round()} m'
         : '${distanceKm.toStringAsFixed(1)} km';
 
-    return Card(
-      elevation: 0,
-      color: cardColor,
+    return GlassContainer(
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      borderRadius: 18,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
