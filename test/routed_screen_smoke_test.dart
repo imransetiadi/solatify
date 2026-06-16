@@ -82,6 +82,16 @@ void main() {
     expect(source, isNot(contains('trackerProvider')));
   });
 
+  test('Home screen source renders prayer countdown card', () {
+    final source = File(
+      'lib/features/home/presentation/screens/home_screen.dart',
+    ).readAsStringSync();
+
+    expect(source, contains('_PrayerCountdownCard'));
+    expect(source, contains('Sisa waktu'));
+    expect(source, contains('Menuju'));
+  });
+
   testWidgets('Tracker screen renders worship checklist', (tester) async {
     await tester.pumpWidget(wrap(const TrackerScreen()));
 

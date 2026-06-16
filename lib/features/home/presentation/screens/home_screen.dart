@@ -126,7 +126,22 @@ class HomeScreen extends ConsumerWidget {
                   child: Padding(
                     padding: ResponsiveLayout.pagePadding(
                       context,
-                    ).copyWith(top: 24, bottom: 12),
+                    ).copyWith(top: 22, bottom: 4),
+                    child: _PrayerCountdownCard(
+                      countdown: countdown,
+                      primaryColor: primary,
+                      accentColor: redLine,
+                      textColor: textColor,
+                      mutedColor: mutedColor,
+                      isDark: isDark,
+                    ),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: ResponsiveLayout.pagePadding(
+                      context,
+                    ).copyWith(top: 18, bottom: 12),
                     child: Text(
                       'Jadwal Salat',
                       style: TextStyle(
@@ -231,6 +246,128 @@ class HomeScreen extends ConsumerWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _PrayerCountdownCard extends StatelessWidget {
+  const _PrayerCountdownCard({
+    required this.countdown,
+    required this.primaryColor,
+    required this.accentColor,
+    required this.textColor,
+    required this.mutedColor,
+    required this.isDark,
+  });
+
+  final CountdownState countdown;
+  final Color primaryColor;
+  final Color accentColor;
+  final Color textColor;
+  final Color mutedColor;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final isWaitingForSchedule = countdown.nextPrayerKey.isEmpty;
+
+    return GlassContainer(
+      blur: 15,
+      opacity: isDark ? 0.06 : 0.035,
+      borderColor: accentColor.withValues(alpha: isDark ? 0.45 : 0.28),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: primaryColor.withValues(alpha: 0.13),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: primaryColor.withValues(alpha: 0.22),
+                  ),
+                ),
+                child: Icon(
+                  Icons.timer_outlined,
+                  color: primaryColor,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isWaitingForSchedule
+                          ? 'Menyiapkan jadwal salat'
+                          : 'Menuju ${countdown.nextPrayerName}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: textColor,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      isWaitingForSchedule
+                          ? 'Countdown akan muncul setelah jadwal siap'
+                          : 'Saat ini waktu ${countdown.activePrayerName}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: mutedColor, fontSize: 12.5),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: accentColor.withValues(alpha: isDark ? 0.12 : 0.08),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: accentColor.withValues(alpha: 0.18)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Sisa waktu',
+                  style: TextStyle(
+                    color: mutedColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    countdown.formattedTime,
+                    style: TextStyle(
+                      color: accentColor,
+                      fontSize: 38,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.2,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
