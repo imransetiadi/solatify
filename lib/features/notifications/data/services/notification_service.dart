@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -222,6 +223,17 @@ class NotificationService {
     return AndroidScheduleMode.inexactAllowWhileIdle;
   }
 
+  bool _isExactAlarmPermissionError(Object error) {
+    if (error is! PlatformException) return false;
+
+    final code = error.code.toLowerCase();
+    final message = error.message?.toLowerCase() ?? '';
+    return code.contains('exact') ||
+        code.contains('alarm') ||
+        message.contains('exact alarm') ||
+        message.contains('schedule_exact_alarm');
+  }
+
   /// Ensures init() has been called before any notification operation.
   Future<void> _ensureInitialized() async {
     if (!_initialized) {
@@ -386,17 +398,42 @@ class NotificationService {
         prayerLocation,
       );
 
-      await _flutterLocalNotificationsPlugin.zonedSchedule(
-        notificationId,
-        title,
-        body,
-        scheduledDate,
-        notificationDetails,
-        androidScheduleMode: _androidScheduleMode(),
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
-        payload: prayerKey,
-      );
+      final scheduleMode = _androidScheduleMode();
+      try {
+        await _flutterLocalNotificationsPlugin.zonedSchedule(
+          notificationId,
+          title,
+          body,
+          scheduledDate,
+          notificationDetails,
+          androidScheduleMode: scheduleMode,
+          uiLocalNotificationDateInterpretation:
+              UILocalNotificationDateInterpretation.absoluteTime,
+          payload: prayerKey,
+        );
+      } catch (e) {
+        if (scheduleMode != AndroidScheduleMode.exactAllowWhileIdle ||
+            !_isExactAlarmPermissionError(e)) {
+          rethrow;
+        }
+
+        _canUseExactAlarms = false;
+        debugPrint(
+          'Exact alarm scheduling failed; retrying prayer notification '
+          'with inexact scheduling: $e',
+        );
+        await _flutterLocalNotificationsPlugin.zonedSchedule(
+          notificationId,
+          title,
+          body,
+          scheduledDate,
+          notificationDetails,
+          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+          uiLocalNotificationDateInterpretation:
+              UILocalNotificationDateInterpretation.absoluteTime,
+          payload: prayerKey,
+        );
+      }
       debugPrint(
         'Prayer notification scheduled for $notificationTime '
         'timezone=$timezoneName: $title',

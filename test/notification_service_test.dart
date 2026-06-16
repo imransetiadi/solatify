@@ -155,6 +155,54 @@ void main() {
     },
   );
 
+  test(
+    'retries prayer scheduling inexactly when exact scheduling is rejected',
+    () async {
+      var zonedScheduleAttempts = 0;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (MethodCall call) async {
+            capturedMethods.add(call);
+            switch (call.method) {
+              case 'initialize':
+              case 'createNotificationChannel':
+              case 'requestNotificationsPermission':
+                return true;
+              case 'requestExactAlarmsPermission':
+              case 'canScheduleExactNotifications':
+              case 'areNotificationsEnabled':
+                return true;
+              case 'zonedSchedule':
+                zonedScheduleAttempts++;
+                if (zonedScheduleAttempts == 1) {
+                  throw PlatformException(
+                    code: 'exact_alarms_not_permitted',
+                    message: 'Exact alarms are not permitted',
+                  );
+                }
+                return null;
+              default:
+                return null;
+            }
+          });
+
+      await service.init();
+      await service.schedulePrayerNotification(
+        prayerKey: 'magrib',
+        location: 'Jakarta, Indonesia',
+        prayerTime: '18:00',
+        notificationTime: DateTime.now().add(const Duration(minutes: 10)),
+        timezoneName: 'Asia/Jakarta',
+        notificationId: 1004,
+      );
+
+      final scheduleModes = capturedMethods
+          .where((call) => call.method == 'zonedSchedule')
+          .map((call) => call.arguments['platformSpecifics']['scheduleMode'])
+          .toList();
+      expect(scheduleModes, ['exactAllowWhileIdle', 'inexactAllowWhileIdle']);
+    },
+  );
+
   test('Android manifest declares exact alarm permissions', () {
     final manifest = File(
       'android/app/src/main/AndroidManifest.xml',
