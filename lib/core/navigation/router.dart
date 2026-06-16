@@ -130,7 +130,6 @@ final goRouter = GoRouter(
 );
 
 class MainLayoutScreen extends StatelessWidget {
-
   const MainLayoutScreen({super.key, required this.child});
   final Widget child;
 
@@ -234,7 +233,7 @@ class MainLayoutScreen extends StatelessWidget {
 
   void _showMoreMenu(BuildContext context) {
     final l = AppLocalizations.of(context);
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
       builder: (context) {
