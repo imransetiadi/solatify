@@ -51,9 +51,10 @@ void main() {
   testWidgets('Mosque screen renders', (tester) async {
     await tester.pumpWidget(wrap(const NearbyMosqueScreen()));
 
-    await tester.pumpAndSettle();
+    await tester.pump();
 
     expect(find.textContaining('Masjid'), findsWidgets);
+    expect(find.text('Peta Area'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
