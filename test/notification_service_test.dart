@@ -278,11 +278,6 @@ void main() {
 
     expect(manifest, contains('.notifications.PrayerAlarmReceiver'));
     expect(manifest, contains('.notifications.PrayerAlarmBootReceiver'));
-    expect(manifest, contains('.notifications.AdhanPlaybackService'));
-    expect(
-      manifest,
-      contains('android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK'),
-    );
     expect(manifest, contains('android.intent.action.BOOT_COMPLETED'));
     expect(manifest, contains('android.intent.action.MY_PACKAGE_REPLACED'));
   });

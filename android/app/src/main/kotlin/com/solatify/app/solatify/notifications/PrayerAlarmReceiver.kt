@@ -49,35 +49,8 @@ class PrayerAlarmReceiver : BroadcastReceiver() {
             .build()
 
         NotificationManagerCompat.from(context).notify(id, notification)
-        startAdhanPlaybackService(context, id, prayerKey, title, body)
         PrayerAlarmScheduler(context).cancel(id)
         Log.d(TAG, "Displayed prayer notification id=$id prayer=$prayerKey")
-    }
-
-    private fun startAdhanPlaybackService(
-        context: Context,
-        id: Int,
-        prayerKey: String,
-        title: String,
-        body: String,
-    ) {
-        val serviceIntent = Intent(context, AdhanPlaybackService::class.java).apply {
-            action = AdhanPlaybackService.ACTION_PLAY_ADHAN
-            putExtra(PrayerAlarmScheduler.EXTRA_ID, id)
-            putExtra(PrayerAlarmScheduler.EXTRA_PRAYER_KEY, prayerKey)
-            putExtra(PrayerAlarmScheduler.EXTRA_TITLE, title)
-            putExtra(PrayerAlarmScheduler.EXTRA_BODY, body)
-        }
-
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(serviceIntent)
-            } else {
-                context.startService(serviceIntent)
-            }
-        } catch (exception: Exception) {
-            Log.e(TAG, "Unable to start adhan playback service", exception)
-        }
     }
 
     companion object {
