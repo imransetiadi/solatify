@@ -58,7 +58,7 @@ class PrayerAlarmReceiver : BroadcastReceiver() {
     }
 }
 
-const val CHANNEL_ID = "prayer_times_adhan_channel_v4"
+const val CHANNEL_ID = "prayer_times_adhan_channel_v5"
 
 fun ensureNotificationChannel(context: Context) {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
@@ -84,5 +84,5 @@ fun ensureNotificationChannel(context: Context) {
 }
 
 fun adhanSoundUri(context: Context): Uri {
-    return Uri.parse("android.resource://${context.packageName}/${R.raw.adhan}")
+    return Uri.parse("android.resource://${context.packageName}/raw/adhan")
 }
