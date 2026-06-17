@@ -307,6 +307,21 @@ void main() {
     expect(service, contains('stopSelf()'));
   });
 
+  test('iOS prayer notifications use bundled caf adhan sound', () {
+    final notificationService = File(
+      'lib/features/notifications/data/services/notification_service.dart',
+    ).readAsStringSync();
+    final xcodeProject = File(
+      'ios/Runner.xcodeproj/project.pbxproj',
+    ).readAsStringSync();
+    final adhanSound = File('ios/Runner/adhan.caf');
+
+    expect(notificationService, contains("sound: 'adhan.caf'"));
+    expect(xcodeProject, contains('adhan.caf in Resources'));
+    expect(adhanSound.existsSync(), isTrue);
+    expect(adhanSound.lengthSync(), greaterThan(0));
+  });
+
   test('reports pending notification count from the platform API', () async {
     final count = await service.getPendingNotificationsCount();
 

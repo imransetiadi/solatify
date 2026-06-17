@@ -412,7 +412,7 @@ class NotificationService {
         presentAlert: true,
         presentBadge: true,
         presentSound: true,
-        sound: 'adhan.mp3', // Requires manual Xcode import
+        sound: 'adhan.caf',
       );
 
       const NotificationDetails notificationDetails = NotificationDetails(
@@ -491,7 +491,7 @@ class NotificationService {
         presentAlert: true,
         presentBadge: true,
         presentSound: true,
-        sound: 'adhan.mp3', // Requires manual Xcode import
+        sound: 'adhan.caf',
       );
 
       const NotificationDetails notificationDetails = NotificationDetails(
