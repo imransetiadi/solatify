@@ -14,6 +14,7 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.solatify.app.solatify.R
+import com.solatify.app.solatify.service.AdhanPlaybackService
 
 class PrayerAlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -49,8 +50,22 @@ class PrayerAlarmReceiver : BroadcastReceiver() {
             .build()
 
         NotificationManagerCompat.from(context).notify(id, notification)
+        startAdhanPlayback(context)
         PrayerAlarmScheduler(context).cancel(id)
         Log.d(TAG, "Displayed prayer notification id=$id prayer=$prayerKey")
+    }
+
+    private fun startAdhanPlayback(context: Context) {
+        val serviceIntent = Intent(context, AdhanPlaybackService::class.java)
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(serviceIntent)
+            } else {
+                context.startService(serviceIntent)
+            }
+        } catch (exception: Exception) {
+            Log.e(TAG, "Unable to start adhan playback service", exception)
+        }
     }
 
     companion object {
@@ -58,7 +73,7 @@ class PrayerAlarmReceiver : BroadcastReceiver() {
     }
 }
 
-const val CHANNEL_ID = "prayer_times_adhan_channel_v3"
+const val CHANNEL_ID = "prayer_times_adhan_channel_v7"
 
 fun ensureNotificationChannel(context: Context) {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
@@ -84,5 +99,5 @@ fun ensureNotificationChannel(context: Context) {
 }
 
 fun adhanSoundUri(context: Context): Uri {
-    return Uri.parse("android.resource://${context.packageName}/${R.raw.adhan}")
+    return Uri.parse("android.resource://${context.packageName}/raw/adhan")
 }

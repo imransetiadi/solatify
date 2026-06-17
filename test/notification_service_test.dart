@@ -282,6 +282,31 @@ void main() {
     expect(manifest, contains('android.intent.action.MY_PACKAGE_REPLACED'));
   });
 
+  test('Android manifest declares adhan playback foreground service', () {
+    final manifest = File(
+      'android/app/src/main/AndroidManifest.xml',
+    ).readAsStringSync();
+
+    expect(manifest, contains('android.permission.FOREGROUND_SERVICE'));
+    expect(
+      manifest,
+      contains('android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK'),
+    );
+    expect(manifest, contains('.service.AdhanPlaybackService'));
+    expect(manifest, contains('android:foregroundServiceType="mediaPlayback"'));
+  });
+
+  test('Adhan playback notification declares stop action', () {
+    final service = File(
+      'android/app/src/main/kotlin/com/solatify/app/solatify/service/AdhanPlaybackService.kt',
+    ).readAsStringSync();
+
+    expect(service, contains('ACTION_STOP_ADHAN'));
+    expect(service, contains('.addAction'));
+    expect(service, contains('"Berhenti"'));
+    expect(service, contains('stopSelf()'));
+  });
+
   test('reports pending notification count from the platform API', () async {
     final count = await service.getPendingNotificationsCount();
 
