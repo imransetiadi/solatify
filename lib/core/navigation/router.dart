@@ -22,7 +22,7 @@ import '../../features/tracker/presentation/screens/tracker_screen.dart';
 import '../localization/app_localizations.dart';
 import '../widgets/responsive_layout.dart';
 
-final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>(
   debugLabel: 'root',
 );
 final GlobalKey<NavigatorState> _shellNavigatorKey = GlobalKey<NavigatorState>(
@@ -31,7 +31,7 @@ final GlobalKey<NavigatorState> _shellNavigatorKey = GlobalKey<NavigatorState>(
 
 final goRouter = GoRouter(
   initialLocation: '/splash',
-  navigatorKey: _rootNavigatorKey,
+  navigatorKey: rootNavigatorKey,
   debugLogDiagnostics: false,
   routes: [
     GoRoute(path: '/splash', builder: (context, state) => const SplashScreen()),
@@ -46,7 +46,7 @@ final goRouter = GoRouter(
     // Full screen route for reading a Surah
     GoRoute(
       path: '/quran/surah/:id',
-      parentNavigatorKey: _rootNavigatorKey,
+      parentNavigatorKey: rootNavigatorKey,
       builder: (context, state) {
         final idStr = state.pathParameters['id'] ?? '1';
         final surahId = int.tryParse(idStr) ?? 1;

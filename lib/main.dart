@@ -10,6 +10,7 @@ import 'package:solatify/core/database/hive_service.dart';
 import 'package:solatify/core/localization/app_localizations.dart';
 import 'package:solatify/core/navigation/router.dart';
 import 'package:solatify/core/theme/theme.dart';
+import 'package:solatify/features/notifications/data/services/notification_service.dart';
 import 'package:solatify/features/notifications/presentation/providers/notification_scheduler_provider.dart';
 import 'package:solatify/features/settings/presentation/providers/settings_provider.dart';
 
@@ -174,11 +175,84 @@ class _SolatifyAppState extends ConsumerState<SolatifyApp>
           data: mediaQuery.copyWith(
             textScaler: TextScaler.linear(clampedScale),
           ),
-          child: child ?? const SizedBox.shrink(),
+          child: ExactAlarmPromptGate(child: child ?? const SizedBox.shrink()),
         );
       },
     );
   }
+}
+
+class ExactAlarmPromptGate extends StatefulWidget {
+  const ExactAlarmPromptGate({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  State<ExactAlarmPromptGate> createState() => _ExactAlarmPromptGateState();
+}
+
+class _ExactAlarmPromptGateState extends State<ExactAlarmPromptGate> {
+  bool _exactAlarmPromptShown = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _maybeShowExactAlarmPrompt();
+    });
+  }
+
+  Future<void> _maybeShowExactAlarmPrompt() async {
+    if (_exactAlarmPromptShown ||
+        defaultTargetPlatform != TargetPlatform.android) {
+      return;
+    }
+
+    try {
+      final readiness = await NotificationService().getReadinessStatus();
+      if (!mounted ||
+          _exactAlarmPromptShown ||
+          readiness.status != NotificationReadinessStatus.inexactScheduling) {
+        return;
+      }
+
+      final navigatorContext = rootNavigatorKey.currentContext;
+      if (navigatorContext == null) return;
+      if (!navigatorContext.mounted) return;
+
+      _exactAlarmPromptShown = true;
+      await showDialog<void>(
+        context: navigatorContext,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('Aktifkan Alarm Tepat Waktu'),
+            content: const Text(
+              'Agar notifikasi waktu salat muncul tepat saat masuk waktu, '
+              'aktifkan izin Alarms & reminders / Alarm tepat waktu untuk Solatify.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Nanti'),
+              ),
+              FilledButton(
+                onPressed: () async {
+                  Navigator.of(context).pop();
+                  await NotificationService().requestAndroidPermissions();
+                },
+                child: const Text('Aktifkan'),
+              ),
+            ],
+          );
+        },
+      );
+    } catch (e) {
+      debugPrint('Error showing exact alarm prompt: $e');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
 
 class SolatifyScrollBehavior extends MaterialScrollBehavior {
