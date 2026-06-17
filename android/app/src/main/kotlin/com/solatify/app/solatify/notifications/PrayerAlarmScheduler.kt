@@ -28,13 +28,13 @@ class PrayerAlarmScheduler(private val context: Context) {
 
         ensureNotificationChannel(context)
         val pendingIntent = buildPendingIntent(alarm, PendingIntent.FLAG_UPDATE_CURRENT)
+        val showIntent = buildShowIntent(alarm)
 
         try {
             if (canScheduleExactAlarms()) {
-                alarmManager.setExactAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    alarm.scheduledAtMillis,
-                    pendingIntent
+                alarmManager.setAlarmClock(
+                    AlarmManager.AlarmClockInfo(alarm.scheduledAtMillis, showIntent),
+                    pendingIntent,
                 )
             } else {
                 alarmManager.setAndAllowWhileIdle(
@@ -101,6 +101,18 @@ class PrayerAlarmScheduler(private val context: Context) {
         return PendingIntent.getBroadcast(context, id, intent, flags or immutableFlag())
     }
 
+    private fun buildShowIntent(alarm: PrayerAlarm): PendingIntent {
+        val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
+            ?: Intent().setPackage(context.packageName)
+        launchIntent.putExtra(EXTRA_PRAYER_KEY, alarm.prayerKey)
+        return PendingIntent.getActivity(
+            context,
+            alarm.id + SHOW_INTENT_OFFSET,
+            launchIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or immutableFlag(),
+        )
+    }
+
     private fun storeAlarm(alarm: PrayerAlarm) {
         val alarms = getStoredAlarms()
             .filterNot { it.id == alarm.id }
@@ -147,6 +159,7 @@ class PrayerAlarmScheduler(private val context: Context) {
         private const val TAG = "PrayerAlarmScheduler"
         private const val PREFS_NAME = "solatify_prayer_alarms"
         private const val KEY_ALARMS = "alarms"
+        private const val SHOW_INTENT_OFFSET = 100000
         const val ACTION_PRAYER_ALARM = "com.solatify.app.solatify.PRAYER_ALARM"
         const val EXTRA_ID = "id"
         const val EXTRA_PRAYER_KEY = "prayerKey"

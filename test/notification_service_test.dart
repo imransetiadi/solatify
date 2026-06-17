@@ -64,6 +64,8 @@ void main() {
         ) async {
           capturedNativeAlarmMethods.add(call);
           if (call.method == 'getPendingPrayerAlarmIds') return <int>[];
+          if (call.method == 'isIgnoringBatteryOptimizations') return true;
+          if (call.method == 'openBatteryOptimizationSettings') return true;
           return false;
         });
   });
@@ -263,6 +265,10 @@ void main() {
 
     expect(manifest, contains('android.permission.SCHEDULE_EXACT_ALARM'));
     expect(manifest, contains('android.permission.USE_EXACT_ALARM'));
+    expect(
+      manifest,
+      contains('android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS'),
+    );
   });
 
   test('Android manifest declares native prayer alarm receivers', () {

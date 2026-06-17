@@ -76,6 +76,8 @@ void main() {
               return <Map<String, dynamic>>[];
             case 'zonedSchedule':
               return null;
+            case 'isIgnoringBatteryOptimizations':
+              return true;
             default:
               return null;
           }

@@ -196,6 +196,7 @@ class ExactAlarmPromptGate extends StatefulWidget {
 
 class _ExactAlarmPromptGateState extends State<ExactAlarmPromptGate> {
   bool _exactAlarmPromptShown = false;
+  bool _batteryOptimizationPromptShown = false;
 
   @override
   void initState() {
@@ -216,6 +217,7 @@ class _ExactAlarmPromptGateState extends State<ExactAlarmPromptGate> {
       if (!mounted ||
           _exactAlarmPromptShown ||
           readiness.status != NotificationReadinessStatus.inexactScheduling) {
+        await _maybeShowBatteryOptimizationPrompt();
         return;
       }
 
@@ -253,8 +255,57 @@ class _ExactAlarmPromptGateState extends State<ExactAlarmPromptGate> {
           );
         },
       );
+      await _maybeShowBatteryOptimizationPrompt();
     } catch (e) {
       debugPrint('Error showing exact alarm prompt: $e');
+    }
+  }
+
+  Future<void> _maybeShowBatteryOptimizationPrompt() async {
+    if (_batteryOptimizationPromptShown ||
+        defaultTargetPlatform != TargetPlatform.android) {
+      return;
+    }
+
+    try {
+      final isUnrestricted = await NotificationService()
+          .isIgnoringAndroidBatteryOptimizations();
+      if (!mounted || _batteryOptimizationPromptShown || isUnrestricted) {
+        return;
+      }
+
+      final navigatorContext = rootNavigatorKey.currentContext;
+      if (navigatorContext == null || !navigatorContext.mounted) return;
+
+      _batteryOptimizationPromptShown = true;
+      await showDialog<void>(
+        context: navigatorContext,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('Izinkan Berjalan di Latar Belakang'),
+            content: const Text(
+              'Agar adzan tetap muncul saat aplikasi ditutup, atur battery usage '
+              'Solatify ke Unrestricted / Tidak dibatasi.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Nanti'),
+              ),
+              FilledButton(
+                onPressed: () async {
+                  Navigator.of(context).pop();
+                  await NotificationService()
+                      .openAndroidBatteryOptimizationSettings();
+                },
+                child: const Text('Buka Pengaturan'),
+              ),
+            ],
+          );
+        },
+      );
+    } catch (e) {
+      debugPrint('Error showing battery optimization prompt: $e');
     }
   }
 

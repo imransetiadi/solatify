@@ -138,6 +138,34 @@ class NotificationService {
     }
   }
 
+  Future<bool> isIgnoringAndroidBatteryOptimizations() async {
+    if (defaultTargetPlatform != TargetPlatform.android) return true;
+
+    try {
+      return await _androidPrayerAlarmChannel.invokeMethod<bool>(
+            'isIgnoringBatteryOptimizations',
+          ) ??
+          true;
+    } catch (e) {
+      debugPrint('Error checking Android battery optimization status: $e');
+      return true;
+    }
+  }
+
+  Future<bool> openAndroidBatteryOptimizationSettings() async {
+    if (defaultTargetPlatform != TargetPlatform.android) return false;
+
+    try {
+      return await _androidPrayerAlarmChannel.invokeMethod<bool>(
+            'openBatteryOptimizationSettings',
+          ) ??
+          false;
+    } catch (e) {
+      debugPrint('Error opening Android battery optimization settings: $e');
+      return false;
+    }
+  }
+
   Future<void> init() async {
     if (_initialized) return;
 
