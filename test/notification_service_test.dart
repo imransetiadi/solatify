@@ -320,6 +320,7 @@ void main() {
     expect(xcodeProject, contains('adhan.caf in Resources'));
     expect(adhanSound.existsSync(), isTrue);
     expect(adhanSound.lengthSync(), greaterThan(0));
+    expect(adhanSound.lengthSync(), lessThan(1000 * 1000));
   });
 
   test('reports pending notification count from the platform API', () async {
