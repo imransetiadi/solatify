@@ -55,6 +55,9 @@ class AppLocalizations {
   String get offsetNegativeHint => isEnglish
       ? 'Use negative values to make it earlier.'
       : 'Gunakan nilai minus untuk memajukan waktu.';
+  String get prayerOffsetLimitHint => isEnglish
+      ? 'Allowed range: -60 to +60 minutes.'
+      : 'Batas input: -60 sampai +60 menit.';
   String get generalSettings =>
       isEnglish ? 'GENERAL SETTINGS' : 'PENGATURAN UMUM';
   String get prayerTimeCorrection =>
@@ -113,6 +116,33 @@ class AppLocalizations {
       ? 'So adhan can still appear when the app is closed, set Solatify battery usage to Unrestricted.'
       : 'Agar adzan tetap muncul saat aplikasi ditutup, atur battery usage Solatify ke Unrestricted / Tidak dibatasi.';
   String get openSettings => isEnglish ? 'Open Settings' : 'Buka Pengaturan';
+  String get automaticAdhanNotifications =>
+      isEnglish ? 'Automatic adhan notifications' : 'Notifikasi adzan otomatis';
+  String get automaticAdhanNotificationsDescription => isEnglish
+      ? 'Play adhan automatically at prayer time.'
+      : 'Putar adzan otomatis saat masuk waktu salat.';
+  String get notificationPermissionError => isEnglish
+      ? 'Notification permission could not be opened.'
+      : 'Izin notifikasi belum bisa dibuka.';
+  String get notificationPermissionSettingsHint => isEnglish
+      ? 'Adjust Solatify notification permission from this Android settings page.'
+      : 'Atur izin notifikasi Solatify dari halaman pengaturan Android ini.';
+  String get notificationReliability =>
+      isEnglish ? 'NOTIFICATION RELIABILITY' : 'KEANDALAN NOTIFIKASI';
+  String get forceStopWarningTitle =>
+      isEnglish ? 'Force stop limitation' : 'Batasan paksa berhenti';
+  String get forceStopWarningMessage => isEnglish
+      ? 'Android blocks all alarms after Force Stop. Reopen Solatify once to schedule prayer notifications again.'
+      : 'Android memblokir semua alarm setelah aplikasi di-Paksa Berhenti. Buka Solatify sekali lagi untuk menjadwalkan notifikasi salat.';
+  String get iosNotificationReliabilityMessage => isEnglish
+      ? 'iOS can deliver scheduled prayer notifications when permission is enabled. If notifications stop appearing, reopen Solatify and check iOS notification settings.'
+      : 'iOS dapat mengirim notifikasi salat terjadwal saat izin aktif. Jika notifikasi berhenti muncul, buka Solatify lagi dan cek pengaturan notifikasi iOS.';
+  String get openNotificationPermission =>
+      isEnglish ? 'Notification permission' : 'Izin notifikasi';
+  String get openExactAlarmPermission =>
+      isEnglish ? 'Exact alarm permission' : 'Izin alarm tepat waktu';
+  String get openBatterySettings =>
+      isEnglish ? 'Battery unrestricted' : 'Baterai tidak dibatasi';
   String setPrayerOffset(String prayerName) => isEnglish
       ? 'Set $prayerName Time Offset'
       : 'Atur Ofset Waktu $prayerName';

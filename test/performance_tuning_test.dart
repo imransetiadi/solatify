@@ -23,5 +23,21 @@ void main() {
         const Duration(minutes: 15),
       );
     });
+
+    test('keeps route transitions fast and subtle', () {
+      expect(
+        PerformanceTuning.routeTransitionDuration,
+        lessThanOrEqualTo(const Duration(milliseconds: 240)),
+      );
+      expect(
+        PerformanceTuning.routeReverseTransitionDuration,
+        lessThanOrEqualTo(const Duration(milliseconds: 180)),
+      );
+      expect(PerformanceTuning.routeTransitionYOffset, lessThanOrEqualTo(0.02));
+      expect(
+        PerformanceTuning.routeTransitionScaleBegin,
+        greaterThanOrEqualTo(0.99),
+      );
+    });
   });
 }

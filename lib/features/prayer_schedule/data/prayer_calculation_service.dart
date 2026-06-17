@@ -14,7 +14,15 @@ class _PrayerCalcCache {
     String timezoneName,
     Map<String, int>? offsets,
   ) {
-    final offsetStr = offsets != null ? offsets.toString() : 'no_offset';
+    final offsetStr = offsets == null
+        ? 'no_offset'
+        : [
+            'subuh',
+            'dzuhur',
+            'ashar',
+            'magrib',
+            'isya',
+          ].map((key) => '$key=${offsets[key] ?? 0}').join(',');
     return '$lat:$lng:${date.year}-${date.month}-${date.day}:$method:$timezoneName:$offsetStr';
   }
 

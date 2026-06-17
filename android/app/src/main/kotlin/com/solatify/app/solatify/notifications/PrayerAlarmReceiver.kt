@@ -1,6 +1,7 @@
 package com.solatify.app.solatify.notifications
 
 import android.Manifest
+import android.app.PendingIntent
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.BroadcastReceiver
@@ -43,6 +44,7 @@ class PrayerAlarmReceiver : BroadcastReceiver() {
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setAutoCancel(true)
+            .setContentIntent(buildContentIntent(context, id, prayerKey))
             .setSound(adhanSoundUri(context))
             .setVibrate(longArrayOf(0, 700, 300, 700))
             .setOnlyAlertOnce(false)
@@ -68,12 +70,25 @@ class PrayerAlarmReceiver : BroadcastReceiver() {
         }
     }
 
+    private fun buildContentIntent(context: Context, id: Int, prayerKey: String): PendingIntent {
+        val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
+            ?: Intent().setPackage(context.packageName)
+        launchIntent.putExtra("route", "/schedule")
+        launchIntent.putExtra("prayerKey", prayerKey)
+        launchIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+
+        val flags = PendingIntent.FLAG_UPDATE_CURRENT or
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
+        return PendingIntent.getActivity(context, id + CONTENT_INTENT_OFFSET, launchIntent, flags)
+    }
+
     companion object {
         private const val TAG = "PrayerAlarmReceiver"
+        private const val CONTENT_INTENT_OFFSET = 200000
     }
 }
 
-const val CHANNEL_ID = "prayer_times_adhan_channel_v7"
+const val CHANNEL_ID = "prayer_times_adhan_channel"
 
 fun ensureNotificationChannel(context: Context) {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return

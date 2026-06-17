@@ -22,7 +22,7 @@ class _GetStartedScreenState extends ConsumerState<GetStartedScreen> {
       title: 'Selamat Datang di Solatify',
       description: 'Aplikasi komprehensif untuk ibadah dan pengetahuan Islami',
       icon: Icons.mosque,
-      color: const Color(0xFF0E4D31),
+      color: const Color(0xFFC94B3D),
     ),
     GetStartedPage(
       title: 'Jadwal Sholat Akurat',
@@ -36,7 +36,7 @@ class _GetStartedScreenState extends ConsumerState<GetStartedScreen> {
       description:
           'Baca Al-Qur\'an 114 surah dengan terjemahan, bookmark, dan akses offline',
       icon: Icons.menu_book,
-      color: const Color(0xFF0E4D31),
+      color: const Color(0xFFC94B3D),
     ),
     GetStartedPage(
       title: 'Asmaul Husna & Doa',
@@ -50,7 +50,7 @@ class _GetStartedScreenState extends ConsumerState<GetStartedScreen> {
       description:
           'Pantau event Islam penting dan tanggal-tanggal bersejarah dalam Islam',
       icon: Icons.calendar_month,
-      color: const Color(0xFF0E4D31),
+      color: const Color(0xFFC94B3D),
     ),
     GetStartedPage(
       title: 'Arah Kiblat & Masjid',
@@ -70,7 +70,7 @@ class _GetStartedScreenState extends ConsumerState<GetStartedScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isDark ? const Color(0xFF082E1D) : const Color(0xFFF3FBF6);
+    final bgColor = isDark ? const Color(0xFF160F0A) : const Color(0xFFFFF7ED);
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -178,7 +178,6 @@ class _GetStartedScreenState extends ConsumerState<GetStartedScreen> {
 }
 
 class GetStartedPage {
-
   GetStartedPage({
     required this.title,
     required this.description,
@@ -192,7 +191,6 @@ class GetStartedPage {
 }
 
 class GetStartedPageView extends StatelessWidget {
-
   const GetStartedPageView({required this.page, super.key});
   final GetStartedPage page;
 
@@ -200,7 +198,7 @@ class GetStartedPageView extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark
-        ? const Color(0xFFF3FBF6)
+        ? const Color(0xFFFFF7ED)
         : const Color(0xFF241A12);
     final textMuted = isDark
         ? const Color(0xFFC8B8A8)
@@ -215,27 +213,27 @@ class GetStartedPageView extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-        Icon(page.icon, size: 80, color: page.color),
-        const SizedBox(height: 30),
-        Text(
-          page.title,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-            color: textColor,
-          ),
-        ),
-        const SizedBox(height: 16),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 30),
-          child: Text(
-            page.description,
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 16, color: textMuted, height: 1.6),
-          ),
-        ),
-      ],
+            Icon(page.icon, size: 80, color: page.color),
+            const SizedBox(height: 30),
+            Text(
+              page.title,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: textColor,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 30),
+              child: Text(
+                page.description,
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 16, color: textMuted, height: 1.6),
+              ),
+            ),
+          ],
         ),
       ),
     );

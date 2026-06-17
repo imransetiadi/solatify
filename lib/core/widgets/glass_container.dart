@@ -7,8 +7,8 @@ class GlassContainer extends StatelessWidget {
   const GlassContainer({
     super.key,
     required this.child,
-    this.blur = 15.0,
-    this.opacity = 0.08,
+    this.blur = 0.0,
+    this.opacity = 0.0,
     this.borderRadius = 24.0,
     this.borderColor,
     this.fillColor,
@@ -34,16 +34,13 @@ class GlassContainer extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     final defaultFill =
-        fillColor ??
-        (isDark
-            ? const Color(0xFF241A14).withValues(alpha: 0.84)
-            : Colors.white.withValues(alpha: 0.92));
+        fillColor ?? (isDark ? const Color(0xFF123724) : Colors.white);
 
     final defaultBorder =
         borderColor ??
         (isDark
-            ? const Color(0xFFE85D4F).withValues(alpha: 0.42)
-            : const Color(0xFFC0392B).withValues(alpha: 0.32));
+            ? const Color(0xFFE85D4F).withValues(alpha: 0.10)
+            : const Color(0xFFC0392B).withValues(alpha: 0.08));
     final effectiveBlur = blur
         .clamp(0, PerformanceTuning.maxGlassBlurSigma)
         .toDouble();
@@ -52,33 +49,60 @@ class GlassContainer extends StatelessWidget {
       width: width,
       height: height,
       margin: margin,
-      decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.06),
-            blurRadius: isDark ? 24 : 18,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
+      decoration: const BoxDecoration(),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(borderRadius),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(
-            sigmaX: effectiveBlur,
-            sigmaY: effectiveBlur,
-          ),
-          child: Container(
-            padding: padding ?? const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: defaultFill,
-              borderRadius: BorderRadius.circular(borderRadius),
-              border: Border.all(color: defaultBorder, width: 1.2),
-            ),
-            child: Material(type: MaterialType.transparency, child: child),
-          ),
-        ),
+        child: effectiveBlur > 0
+            ? BackdropFilter(
+                filter: ImageFilter.blur(
+                  sigmaX: effectiveBlur,
+                  sigmaY: effectiveBlur,
+                ),
+                child: _GlassBody(
+                  padding: padding,
+                  borderRadius: borderRadius,
+                  fill: defaultFill,
+                  border: defaultBorder,
+                  child: child,
+                ),
+              )
+            : _GlassBody(
+                padding: padding,
+                borderRadius: borderRadius,
+                fill: defaultFill,
+                border: defaultBorder,
+                child: child,
+              ),
       ),
+    );
+  }
+}
+
+class _GlassBody extends StatelessWidget {
+  const _GlassBody({
+    required this.child,
+    required this.borderRadius,
+    required this.fill,
+    required this.border,
+    this.padding,
+  });
+
+  final Widget child;
+  final double borderRadius;
+  final Color fill;
+  final Color border;
+  final EdgeInsetsGeometry? padding;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: padding ?? const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: fill,
+        borderRadius: BorderRadius.circular(borderRadius),
+        border: Border.all(color: border),
+      ),
+      child: Material(type: MaterialType.transparency, child: child),
     );
   }
 }

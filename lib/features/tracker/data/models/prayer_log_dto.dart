@@ -1,16 +1,10 @@
 import '../../domain/entities/prayer_log_entity.dart';
 
 class PrayerLogDto extends PrayerLogEntity {
-  const PrayerLogDto({
-    required super.date,
-    required super.prayers,
-  });
+  const PrayerLogDto({required super.date, required super.prayers});
 
   factory PrayerLogDto.fromEntity(PrayerLogEntity entity) {
-    return PrayerLogDto(
-      date: entity.date,
-      prayers: entity.prayers,
-    );
+    return PrayerLogDto(date: entity.date, prayers: entity.prayers);
   }
 
   factory PrayerLogDto.fromJson(Map<String, dynamic> json) {
@@ -21,9 +15,6 @@ class PrayerLogDto extends PrayerLogEntity {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'date': date.toIso8601String(),
-      'prayers': prayers,
-    };
+    return {'date': date.toIso8601String(), 'prayers': prayers};
   }
 }

@@ -9,7 +9,10 @@ class PrayerTimesLocalDataSourceImpl implements PrayerTimesLocalDataSource {
   const PrayerTimesLocalDataSourceImpl();
 
   @override
-  Future<void> cacheSchedule(String dateKey, Map<String, String> cacheData) async {
+  Future<void> cacheSchedule(
+    String dateKey,
+    Map<String, String> cacheData,
+  ) async {
     await HiveService.cachePrayerSchedules(dateKey, cacheData);
   }
 

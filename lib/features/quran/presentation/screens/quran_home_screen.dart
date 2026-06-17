@@ -6,6 +6,7 @@ import 'package:solatify/core/theme/theme.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
+import 'package:solatify/core/widgets/solatify_design_tokens.dart';
 import '../../domain/models/quran_models.dart';
 import '../quran_provider.dart';
 
@@ -34,6 +35,12 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
       ? Colors.white.withValues(alpha: 0.08)
       : Colors.black.withValues(alpha: 0.08);
   Color get _accentColor => AppTheme.readableAccent(context);
+  Color get _tileAccentBg => Theme.of(context).brightness == Brightness.dark
+      ? AppTheme.redAccentDark.withValues(alpha: 0.14)
+      : AppTheme.redAccent.withValues(alpha: 0.10);
+  Color get _tileAccentBorder => Theme.of(context).brightness == Brightness.dark
+      ? AppTheme.redAccentDark.withValues(alpha: 0.30)
+      : AppTheme.redAccent.withValues(alpha: 0.22);
 
   @override
   void initState() {
@@ -62,8 +69,8 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
         backgroundColor: appBarColor,
         foregroundColor: _textColor,
         surfaceTintColor: Colors.transparent,
-        elevation: 2,
-        shadowColor: Colors.black.withValues(alpha: 0.12),
+        elevation: 0,
+        shadowColor: Colors.transparent,
         title: const Text(
           'Al-Qur\'an',
           style: TextStyle(fontWeight: FontWeight.bold),
@@ -78,63 +85,17 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                 return [
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: ResponsiveLayout.pagePadding(
-                        context,
-                      ).copyWith(top: 20, bottom: 10),
+                      padding: ResponsiveLayout.pagePadding(context).copyWith(
+                        top: ResponsiveLayout.pageTopGap,
+                        bottom: ResponsiveLayout.itemGap,
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Header title
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.menu_book,
-                                color: _textColor,
-                                size: 28,
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Text(
-                                  'Al-Qur\'an',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    color: _textColor,
-                                    fontSize: 26,
-                                    fontWeight: FontWeight.bold,
-                                    fontFamily: 'Outfit',
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            'Baca dan renungkan firman Allah SWT',
-                            style: TextStyle(
-                              color: _textSecondary,
-                              fontSize: 14,
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-
-                          // Floating Search Bar
-                          Container(
-                            decoration: BoxDecoration(
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(
-                                    alpha:
-                                        Theme.of(context).brightness ==
-                                            Brightness.dark
-                                        ? 0.3
-                                        : 0.05,
-                                  ),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
+                          GlassContainer(
+                            borderRadius: SolatifyRadius.md,
+                            padding: EdgeInsets.zero,
+                            borderColor: _accentColor.withValues(alpha: 0.12),
                             child: TextField(
                               controller: _searchController,
                               style: TextStyle(color: _textColor),
@@ -143,7 +104,7 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                                     'Cari nama Surah, arti, atau nomor...',
                                 hintStyle: TextStyle(
                                   color: _textHint,
-                                  fontSize: 14,
+                                  fontSize: SolatifyType.body,
                                 ),
                                 prefixIcon: Icon(
                                   Icons.search,
@@ -178,14 +139,14 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                                   borderSide: BorderSide(
                                     color: _cardBorderColor,
                                   ),
-                                  borderRadius: BorderRadius.circular(16),
+                                  borderRadius: BorderRadius.circular(22),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderSide: BorderSide(
                                     color: _accentColor,
                                     width: 1.5,
                                   ),
-                                  borderRadius: BorderRadius.circular(16),
+                                  borderRadius: BorderRadius.circular(22),
                                 ),
                               ),
                               onChanged: (val) {
@@ -226,7 +187,7 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                           unselectedLabelColor: _textSecondary,
                           labelStyle: const TextStyle(
                             fontWeight: FontWeight.bold,
-                            fontSize: 15,
+                            fontSize: SolatifyType.body,
                           ),
                           tabs: const [
                             Tab(text: 'Daftar Surah'),
@@ -265,7 +226,6 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
           );
         },
         child: GlassContainer(
-          blur: 10,
           opacity: 0.04,
           padding: const EdgeInsets.all(16),
           child: Row(
@@ -280,7 +240,7 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                       'Terakhir Dibaca',
                       style: TextStyle(
                         color: _accentColor,
-                        fontSize: 12,
+                        fontSize: SolatifyType.caption,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 1.0,
                       ),
@@ -290,13 +250,16 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                       'Surah ${state.lastReadSurahName}',
                       style: TextStyle(
                         color: _textColor,
-                        fontSize: 16,
+                        fontSize: SolatifyType.cardTitle,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     Text(
                       'Ayat ${state.lastReadVerse}',
-                      style: TextStyle(color: _textSecondary, fontSize: 13),
+                      style: TextStyle(
+                        color: _textSecondary,
+                        fontSize: SolatifyType.caption,
+                      ),
                     ),
                   ],
                 ),
@@ -304,7 +267,7 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
               Icon(
                 Icons.arrow_forward_ios,
                 color: _textSecondary.withValues(alpha: 0.5),
-                size: 16,
+                size: SolatifyIconSize.inline,
               ),
             ],
           ),
@@ -329,7 +292,7 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                 'Gagal Memuat Al-Qur\'an',
                 style: TextStyle(
                   color: _textColor,
-                  fontSize: 18,
+                  fontSize: SolatifyType.sectionTitle,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -337,15 +300,18 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
               Text(
                 err.toString().replaceAll('Exception:', ''),
                 textAlign: TextAlign.center,
-                style: TextStyle(color: _textSecondary, fontSize: 14),
+                style: TextStyle(
+                  color: _textSecondary,
+                  fontSize: SolatifyType.body,
+                ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: ResponsiveLayout.sectionGap),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _accentColor,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(24),
                   ),
                 ),
                 onPressed: () => ref.refresh(surahListProvider),
@@ -363,7 +329,10 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
           return Center(
             child: Text(
               'Surah tidak ditemukan.',
-              style: TextStyle(color: _textSecondary, fontSize: 15),
+              style: TextStyle(
+                color: _textSecondary,
+                fontSize: SolatifyType.body,
+              ),
             ),
           );
         }
@@ -410,7 +379,7 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                     'Belum Ada Penanda',
                     style: TextStyle(
                       color: _textColor,
-                      fontSize: 16,
+                      fontSize: SolatifyType.cardTitle,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -418,7 +387,10 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                   Text(
                     'Ayat yang Anda tandai atau simpan akan muncul di tab ini.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: _textSecondary, fontSize: 14),
+                    style: TextStyle(
+                      color: _textSecondary,
+                      fontSize: SolatifyType.body,
+                    ),
                   ),
                 ],
               ),
@@ -456,7 +428,6 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
             return Container(
               margin: const EdgeInsets.only(bottom: 12),
               child: GlassContainer(
-                blur: 10,
                 opacity: 0.02,
                 padding: const EdgeInsets.all(14),
                 child: Row(
@@ -465,11 +436,9 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: const Color(0xFF241A12).withValues(alpha: 0.1),
-                        border: Border.all(
-                          color: const Color(0xFF241A12).withValues(alpha: 0.3),
-                        ),
+                        color: _tileAccentBg,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: _tileAccentBorder, width: 1),
                       ),
                       child: Center(
                         child: Text(
@@ -477,7 +446,7 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                           style: TextStyle(
                             color: _textColor,
                             fontWeight: FontWeight.bold,
-                            fontSize: 13,
+                            fontSize: SolatifyType.caption,
                           ),
                         ),
                       ),
@@ -492,7 +461,7 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                             style: TextStyle(
                               color: _textColor,
                               fontWeight: FontWeight.bold,
-                              fontSize: 15,
+                              fontSize: SolatifyType.body,
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -500,7 +469,7 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                             'Ayat $verseNum',
                             style: TextStyle(
                               color: _accentColor,
-                              fontSize: 12,
+                              fontSize: SolatifyType.caption,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -513,7 +482,7 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                           icon: Icon(
                             Icons.bookmark_remove,
                             color: _textColor,
-                            size: 20,
+                            size: SolatifyIconSize.cardIcon,
                           ),
                           onPressed: () {
                             ref
@@ -522,10 +491,22 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                           },
                         ),
                         IconButton(
-                          icon: Icon(
-                            Icons.arrow_forward_ios,
-                            color: _textSecondary.withValues(alpha: 0.5),
-                            size: 14,
+                          icon: Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: _tileAccentBg,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: _tileAccentBorder,
+                                width: 1,
+                              ),
+                            ),
+                            child: Icon(
+                              Icons.chevron_right,
+                              color: _accentColor,
+                              size: SolatifyIconSize.cardIcon,
+                            ),
                           ),
                           onPressed: () {
                             context.push(
@@ -553,29 +534,27 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
           context.push('/quran/surah/${surah.number}');
         },
         child: GlassContainer(
-          blur: 10,
           opacity: 0.92,
-          borderRadius: 18,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          borderRadius: SolatifyRadius.md,
+          padding: ResponsiveLayout.listCardPadding,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Container(
-                width: 44,
-                height: 44,
+                width: 42,
+                height: 42,
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: const Color(0xFFE8F5E9),
-                  border: Border.all(color: const Color(0xFFCFE7D5), width: 1),
+                  color: _tileAccentBg,
+                  borderRadius: SolatifyRadius.icon,
+                  border: Border.all(color: _tileAccentBorder, width: 1),
                 ),
                 child: Center(
                   child: Text(
                     surah.number.toString(),
                     style: TextStyle(
                       color: _accentColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                      fontFamily: 'Outfit',
+                      fontWeight: FontWeight.w700,
+                      fontSize: SolatifyType.body,
                     ),
                   ),
                 ),
@@ -593,9 +572,8 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: _textColor,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'Outfit',
+                        fontSize: SolatifyType.cardTitle,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -605,7 +583,7 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: _textSecondary,
-                        fontSize: 13,
+                        fontSize: SolatifyType.caption,
                         height: 1.25,
                       ),
                     ),
@@ -617,8 +595,8 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                           surah.revelation.toUpperCase(),
                           style: TextStyle(
                             color: _textSecondary,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
+                            fontSize: SolatifyType.eyebrow,
+                            fontWeight: FontWeight.w700,
                             letterSpacing: 0.6,
                           ),
                         ),
@@ -633,8 +611,8 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                           '${surah.numberOfVerses} AYAT',
                           style: TextStyle(
                             color: _textSecondary,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
+                            fontSize: SolatifyType.eyebrow,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ],
@@ -644,13 +622,18 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
               ),
               const SizedBox(width: 12),
               Container(
-                width: 32,
-                height: 32,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Color(0xFFE8F5E9),
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: _tileAccentBg,
+                  borderRadius: SolatifyRadius.icon,
+                  border: Border.all(color: _tileAccentBorder, width: 1),
                 ),
-                child: Icon(Icons.chevron_right, color: _accentColor, size: 20),
+                child: Icon(
+                  Icons.chevron_right,
+                  color: _accentColor,
+                  size: SolatifyIconSize.cardIcon,
+                ),
               ),
             ],
           ),

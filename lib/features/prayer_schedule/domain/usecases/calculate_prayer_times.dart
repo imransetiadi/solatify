@@ -16,7 +16,8 @@ class CalculatePrayerTimes {
     required Map<String, int> offsets,
   }) async {
     try {
-      final dateKey = _getDateKey(DateTime.now());
+      final now = DateTime.now();
+      final dateKey = _getDateKey(now);
       final timezoneName = PrayerTimezoneService.inferTimezoneName(
         latitude: latitude,
         longitude: longitude,
@@ -26,7 +27,7 @@ class CalculatePrayerTimes {
       final today = PrayerCalculationService.calculatePrayerTimes(
         latitude: latitude,
         longitude: longitude,
-        date: DateTime.now(),
+        date: now,
         method: method,
         timezoneName: timezoneName,
         offsets: offsets,
@@ -35,7 +36,7 @@ class CalculatePrayerTimes {
       final tomorrow = PrayerCalculationService.calculatePrayerTimes(
         latitude: latitude,
         longitude: longitude,
-        date: DateTime.now().add(const Duration(days: 1)),
+        date: now.add(const Duration(days: 1)),
         method: method,
         timezoneName: timezoneName,
         offsets: offsets,

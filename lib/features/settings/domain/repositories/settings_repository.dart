@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../entities/settings_state.dart';
+import 'package:solatify/features/settings/domain/entities/settings_state.dart';
 
 abstract class SettingsRepository {
   SettingsState getSettings();
@@ -8,4 +8,5 @@ abstract class SettingsRepository {
   Future<void> updateCalculationMethod(String method);
   Future<void> completeOnboarding();
   Future<void> updatePrayerOffsets(Map<String, int> offsets);
+  Future<void> updateAdhanNotificationsEnabled(bool enabled);
 }

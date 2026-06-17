@@ -50,8 +50,8 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
         title: const Text('Arah Kiblat'),
         backgroundColor: appBarColor,
         surfaceTintColor: Colors.transparent,
-        elevation: 2,
-        shadowColor: Colors.black.withValues(alpha: 0.12),
+        elevation: 0,
+        shadowColor: Colors.transparent,
       ),
       body: IslamicBackground(
         child: StreamBuilder<CompassEvent>(
@@ -89,7 +89,6 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
                   children: [
                     // Location Status Card
                     GlassContainer(
-                      blur: 15,
                       opacity: isDark ? 0.03 : 0.015,
                       padding: const EdgeInsets.all(16),
                       child: Wrap(
@@ -148,7 +147,7 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
                       ),
                       decoration: BoxDecoration(
                         color: isAligned ? accentColor : Colors.transparent,
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(24),
                         border: Border.all(
                           color: isAligned
                               ? accentColor
@@ -207,13 +206,6 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
                                     color: Colors.white,
                                     width: 2.5,
                                   ),
-                                  boxShadow: const [
-                                    BoxShadow(
-                                      color: Colors.black26,
-                                      blurRadius: 6,
-                                      offset: Offset(0, 3),
-                                    ),
-                                  ],
                                 ),
                               ),
                             ],

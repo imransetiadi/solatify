@@ -24,7 +24,7 @@ Future<void> showManualLocationDialog({
           final bgColor = isDark ? const Color(0xFF2A1B12) : Colors.white;
           final accent = isDark
               ? const Color(0xFFC78A4C)
-              : const Color(0xFF0E4D31);
+              : const Color(0xFFC94B3D);
           final cities = LocationService.defaultCities.where((city) {
             final query = searchQuery.toLowerCase().trim();
             if (query.isEmpty) return true;
@@ -57,14 +57,14 @@ Future<void> showManualLocationDialog({
                       filled: true,
                       fillColor: isDark
                           ? Colors.white.withValues(alpha: 0.05)
-                          : const Color(0xFFF3FBF6),
+                          : const Color(0xFFFFF7ED),
                       enabledBorder: OutlineInputBorder(
                         borderSide: BorderSide(color: borderColor),
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(24),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderSide: BorderSide(color: accent, width: 1.4),
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(24),
                       ),
                     ),
                     onChanged: (value) =>
@@ -120,7 +120,7 @@ Future<void> showManualLocationDialog({
                                           'Lokasi diubah ke ${city.name}, ${city.country}',
                                         ),
                                         backgroundColor: const Color(
-                                          0xFF0E4D31,
+                                          0xFFC94B3D,
                                         ),
                                       ),
                                     );

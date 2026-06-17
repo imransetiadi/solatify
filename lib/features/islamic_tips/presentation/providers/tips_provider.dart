@@ -7,7 +7,9 @@ import 'package:solatify/features/islamic_tips/domain/repositories/islamic_tip_r
 import 'package:solatify/features/islamic_tips/domain/usecases/get_islamic_tips.dart';
 
 // Data Source Provider
-final islamicTipLocalDataSourceProvider = Provider<IslamicTipLocalDataSource>((ref) {
+final islamicTipLocalDataSourceProvider = Provider<IslamicTipLocalDataSource>((
+  ref,
+) {
   return const IslamicTipLocalDataSourceImpl();
 });
 

@@ -77,21 +77,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         shape: BoxShape.circle,
                         color: isDark ? const Color(0xFF1E150F) : Colors.white,
                         border: Border.all(
-                          color: primaryColor.withValues(alpha: isDark ? 0.6 : 0.3),
+                          color: primaryColor.withValues(
+                            alpha: isDark ? 0.6 : 0.3,
+                          ),
                           width: 1.5,
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: primaryColor.withValues(alpha: isDark ? 0.35 : 0.22),
-                            blurRadius: 36,
-                            spreadRadius: 4,
-                          ),
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: isDark ? 0.5 : 0.1),
-                            blurRadius: 12,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
                       ),
                       child: SvgPicture.asset(
                         'assets/images/masjid_nabawi.svg',
@@ -109,7 +99,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                           fontSize: 36,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 4.0,
-                          fontFamily: 'Outfit',
                         ),
                       ),
                     ),
@@ -121,7 +110,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         color: subtitleColor,
                         fontSize: 16,
                         letterSpacing: 1.0,
-                        fontFamily: 'Outfit',
                       ),
                     ),
                     const SizedBox(height: 48),
@@ -131,7 +119,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          Color(0xFF0E4D31),
+                          Color(0xFFC94B3D),
                         ),
                       ),
                     ),

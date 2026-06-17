@@ -16,9 +16,9 @@ class HijriCalendarScreen extends ConsumerWidget {
     final redAccent = theme.colorScheme.tertiary;
     final primaryColor = isDark
         ? const Color(0xFFC78A4C)
-        : const Color(0xFF0E4D31);
+        : const Color(0xFFC94B3D);
     final textColor = isDark
-        ? const Color(0xFFF3FBF6)
+        ? const Color(0xFFFFF7ED)
         : const Color(0xFF241A12);
     final textColorMuted = isDark
         ? const Color(0xFFC8B8A8)
@@ -35,8 +35,8 @@ class HijriCalendarScreen extends ConsumerWidget {
         backgroundColor: appBarColor,
         foregroundColor: textColor,
         surfaceTintColor: Colors.transparent,
-        elevation: 2,
-        shadowColor: Colors.black.withValues(alpha: 0.12),
+        elevation: 0,
+        shadowColor: Colors.transparent,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/islamic-content'),
@@ -94,7 +94,7 @@ class HijriCalendarScreen extends ConsumerWidget {
                             margin: const EdgeInsets.symmetric(vertical: 8),
                             color: cardBg,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(24),
                               side: BorderSide(
                                 color: redAccent.withValues(alpha: 0.30),
                                 width: 1,
@@ -124,7 +124,6 @@ class HijriCalendarScreen extends ConsumerWidget {
                                         style: TextStyle(
                                           fontSize: 18,
                                           color: primaryColor,
-                                          fontFamily: 'Kufi',
                                         ),
                                       ),
                                     ],

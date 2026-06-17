@@ -90,13 +90,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                           borderSide: const BorderSide(
                             color: Color(0xFFCFE7D5),
                           ),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(20),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderSide: const BorderSide(
-                            color: Color(0xFF0E4D31),
+                            color: Color(0xFFC94B3D),
                           ),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(20),
                         ),
                       ),
                       onChanged: (val) {
@@ -123,7 +123,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                             trailing: const Icon(
                               Icons.arrow_forward_ios,
                               size: 14,
-                              color: Color(0xFF0E4D31),
+                              color: Color(0xFFC94B3D),
                             ),
                             onTap: () {
                               ref
@@ -135,7 +135,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                   content: Text(
                                     'Lokasi diatur ke ${city.name}, ${city.country}',
                                   ),
-                                  backgroundColor: const Color(0xFF0E4D31),
+                                  backgroundColor: const Color(0xFFC94B3D),
                                 ),
                               );
                               _nextPage();
@@ -173,7 +173,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Lokasi terdeteksi: ${loc.city}, ${loc.country}'),
-            backgroundColor: const Color(0xFF0E4D31),
+            backgroundColor: const Color(0xFFC94B3D),
           ),
         );
         _nextPage();
@@ -237,7 +237,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 3.0,
-                              fontFamily: 'Outfit',
                             ),
                           ),
                         ],
@@ -301,7 +300,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                 height: 8,
                                 decoration: BoxDecoration(
                                   color: _currentPage == index
-                                      ? const Color(0xFF0E4D31)
+                                      ? const Color(0xFFC94B3D)
                                       : const Color(0xFFCFE7D5),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
@@ -337,7 +336,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                     child: const Text(
                                       'LANJUT',
                                       style: TextStyle(
-                                        color: Color(0xFF0E4D31),
+                                        color: Color(0xFFC94B3D),
                                         fontWeight: FontWeight.bold,
                                         letterSpacing: 1.2,
                                       ),
@@ -362,9 +361,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     return _OnboardingSlideFrame(
       child: Center(
         child: GlassContainer(
-          blur: 20,
           opacity: 0.92,
-          borderRadius: 20,
+          borderRadius: 24,
           width: double.infinity,
           padding: const EdgeInsets.all(32),
           child: Column(
@@ -407,9 +405,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     return _OnboardingSlideFrame(
       child: Center(
         child: GlassContainer(
-          blur: 20,
           opacity: 0.92,
-          borderRadius: 20,
+          borderRadius: 24,
           width: double.infinity,
           padding: const EdgeInsets.all(28),
           child: Column(
@@ -418,7 +415,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               const Icon(
                 Icons.location_on_outlined,
                 size: 72,
-                color: Color(0xFF0E4D31),
+                color: Color(0xFFC94B3D),
               ),
               const SizedBox(height: 24),
               Text(
@@ -447,11 +444,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 // GPS Button
                 ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0E4D31),
+                    backgroundColor: const Color(0xFFC94B3D),
                     foregroundColor: Colors.white,
                     minimumSize: const Size(double.infinity, 50),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(22),
                     ),
                   ),
                   onPressed: _detectLocationAutomatically,
@@ -465,11 +462,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 // Manual Button
                 OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFF0E4D31),
+                    foregroundColor: const Color(0xFFC94B3D),
                     minimumSize: const Size(double.infinity, 50),
                     side: const BorderSide(color: Color(0xFFCFE7D5)),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(22),
                     ),
                   ),
                   onPressed: _showManualCityDialog,
@@ -492,9 +489,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     return _OnboardingSlideFrame(
       child: Center(
         child: GlassContainer(
-          blur: 20,
           opacity: 0.92,
-          borderRadius: 20,
+          borderRadius: 24,
           width: double.infinity,
           padding: const EdgeInsets.all(28),
           child: Column(
@@ -532,7 +528,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   foregroundColor: Colors.white,
                   minimumSize: const Size(double.infinity, 50),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(22),
                   ),
                 ),
                 onPressed: _nextPage,
@@ -562,9 +558,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     return _OnboardingSlideFrame(
       child: Center(
         child: GlassContainer(
-          blur: 20,
           opacity: 0.92,
-          borderRadius: 20,
+          borderRadius: 24,
           width: double.infinity,
           padding: const EdgeInsets.all(28),
           child: Column(
@@ -573,7 +568,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               const Icon(
                 Icons.check_circle,
                 size: 80,
-                color: Color(0xFF0E4D31),
+                color: Color(0xFFC94B3D),
               ),
               const SizedBox(height: 24),
               Text(
@@ -590,8 +585,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE8F5E9),
-                  borderRadius: BorderRadius.circular(16),
+                  color: const Color(0xFFF7EADC),
+                  borderRadius: BorderRadius.circular(22),
                   border: Border.all(color: const Color(0xFFCFE7D5)),
                 ),
                 child: Column(
@@ -611,7 +606,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     _buildSummaryRow(
                       'Metode Kalkulasi:',
                       'Kemenag RI',
-                      const Color(0xFF0E4D31),
+                      const Color(0xFFC94B3D),
                     ),
                   ],
                 ),
@@ -620,11 +615,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0E4D31),
+                  backgroundColor: const Color(0xFFC94B3D),
                   foregroundColor: Colors.white,
                   minimumSize: const Size(double.infinity, 52),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(22),
                   ),
                 ),
                 onPressed: _finishOnboarding,

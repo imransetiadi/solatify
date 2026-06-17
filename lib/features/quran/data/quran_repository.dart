@@ -4,7 +4,6 @@ import '../../../core/database/hive_service.dart';
 import '../domain/models/quran_models.dart';
 
 class QuranRepository {
-
   QuranRepository({http.Client? client}) : _client = client ?? http.Client();
   final http.Client _client;
 

@@ -17,21 +17,24 @@ const List<IslamicTipDto> _tipsData = [
   IslamicTipDto(
     id: 1,
     title: 'Keutamaan Shalat Dhuha',
-    content: 'Shalat Dhuha adalah sedekah bagi setiap persendian tubuh manusia.',
+    content:
+        'Shalat Dhuha adalah sedekah bagi setiap persendian tubuh manusia.',
     reference: 'HR. Muslim',
     category: 'Ibadah',
   ),
   IslamicTipDto(
     id: 2,
     title: 'Adab Berdoa',
-    content: 'Mulailah doa dengan memuji Allah dan bersholawat kepada Nabi Muhammad SAW.',
+    content:
+        'Mulailah doa dengan memuji Allah dan bersholawat kepada Nabi Muhammad SAW.',
     reference: 'HR. At-Tirmidzi',
     category: 'Doa',
   ),
   IslamicTipDto(
     id: 3,
     title: 'Menahan Amarah',
-    content: 'Orang kuat adalah orang yang mampu mengendalikan dirinya ketika marah.',
+    content:
+        'Orang kuat adalah orang yang mampu mengendalikan dirinya ketika marah.',
     reference: 'HR. Bukhari',
     category: 'Akhlaq',
   ),
@@ -45,14 +48,16 @@ const List<IslamicTipDto> _tipsData = [
   IslamicTipDto(
     id: 5,
     title: 'Sedekah Tersembunyi',
-    content: 'Sedekah tersembunyi menjaga keikhlasan dan menguatkan hubungan dengan Allah.',
+    content:
+        'Sedekah tersembunyi menjaga keikhlasan dan menguatkan hubungan dengan Allah.',
     reference: 'HR. Bukhari & Muslim',
     category: 'Amal',
   ),
   IslamicTipDto(
     id: 6,
     title: 'Pentingnya Shalat Malam',
-    content: 'Shalat malam adalah kebiasaan orang saleh dan sarana mendekat kepada Allah.',
+    content:
+        'Shalat malam adalah kebiasaan orang saleh dan sarana mendekat kepada Allah.',
     reference: 'HR. Muslim',
     category: 'Ibadah',
   ),
@@ -66,14 +71,16 @@ const List<IslamicTipDto> _tipsData = [
   IslamicTipDto(
     id: 8,
     title: 'Puasa Sunnah',
-    content: 'Puasa sunnah melatih kesabaran, keikhlasan, dan pengendalian diri.',
+    content:
+        'Puasa sunnah melatih kesabaran, keikhlasan, dan pengendalian diri.',
     reference: 'HR. Muslim',
     category: 'Ibadah',
   ),
   IslamicTipDto(
     id: 9,
     title: 'Adab Berbicara',
-    content: 'Ucapkan perkataan baik atau pilih diam bila tidak membawa manfaat.',
+    content:
+        'Ucapkan perkataan baik atau pilih diam bila tidak membawa manfaat.',
     reference: 'HR. Bukhari & Muslim',
     category: 'Akhlaq',
   ),
@@ -87,7 +94,8 @@ const List<IslamicTipDto> _tipsData = [
   IslamicTipDto(
     id: 11,
     title: 'Menjaga Pandangan',
-    content: 'Menjaga pandangan membantu menjaga hati dari hal yang melemahkan iman.',
+    content:
+        'Menjaga pandangan membantu menjaga hati dari hal yang melemahkan iman.',
     reference: 'HR. Ahmad',
     category: 'Akhlaq',
   ),
@@ -101,7 +109,8 @@ const List<IslamicTipDto> _tipsData = [
   IslamicTipDto(
     id: 13,
     title: 'Waktu Mustajab',
-    content: 'Berdoalah pada sepertiga malam terakhir, saat hujan, dan antara adzan-iqamah.',
+    content:
+        'Berdoalah pada sepertiga malam terakhir, saat hujan, dan antara adzan-iqamah.',
     reference: 'HR. At-Tirmidzi',
     category: 'Doa',
   ),
@@ -115,7 +124,8 @@ const List<IslamicTipDto> _tipsData = [
   IslamicTipDto(
     id: 15,
     title: 'Sabar Dalam Cobaan',
-    content: 'Bersama kesulitan ada kemudahan, dan Allah tidak membebani di luar kemampuan.',
+    content:
+        'Bersama kesulitan ada kemudahan, dan Allah tidak membebani di luar kemampuan.',
     reference: 'QS. Al-Insyirah: 5-6',
     category: 'Akhlaq',
   ),
@@ -129,21 +139,24 @@ const List<IslamicTipDto> _tipsData = [
   IslamicTipDto(
     id: 17,
     title: 'Menjaga Kebersihan',
-    content: 'Kebersihan diri dan lingkungan adalah bagian penting dari akhlaq seorang Muslim.',
+    content:
+        'Kebersihan diri dan lingkungan adalah bagian penting dari akhlaq seorang Muslim.',
     reference: 'HR. Muslim',
     category: 'Akhlaq',
   ),
   IslamicTipDto(
     id: 18,
     title: 'Istighfar',
-    content: 'Perbanyak istighfar untuk membersihkan hati dan membuka pintu rezeki.',
+    content:
+        'Perbanyak istighfar untuk membersihkan hati dan membuka pintu rezeki.',
     reference: 'HR. Abu Dawud',
     category: 'Dzikir',
   ),
   IslamicTipDto(
     id: 19,
     title: 'Husnuzan',
-    content: 'Berprasangka baik kepada Allah membuat hati lebih tenang dalam ujian.',
+    content:
+        'Berprasangka baik kepada Allah membuat hati lebih tenang dalam ujian.',
     reference: 'QS. Al-Hujurat: 12',
     category: 'Akhlaq',
   ),
@@ -164,7 +177,8 @@ const List<IslamicTipDto> _tipsData = [
   IslamicTipDto(
     id: 22,
     title: 'Bersyukur',
-    content: 'Syukur membuat nikmat terasa cukup and mengundang tambahan kebaikan.',
+    content:
+        'Syukur membuat nikmat terasa cukup and mengundang tambahan kebaikan.',
     reference: 'QS. Ibrahim: 7',
     category: 'Akhlaq',
   ),
@@ -178,21 +192,24 @@ const List<IslamicTipDto> _tipsData = [
   IslamicTipDto(
     id: 24,
     title: 'Silaturahim',
-    content: 'Silaturahim menguatkan keluarga, melapangkan rezeki, dan mempererat umat.',
+    content:
+        'Silaturahim menguatkan keluarga, melapangkan rezeki, dan mempererat umat.',
     reference: 'HR. Bukhari & Muslim',
     category: 'Amal',
   ),
   IslamicTipDto(
     id: 25,
     title: 'Surat Al-Kahfi',
-    content: 'Bacalah Al-Kahfi pada hari Jumat sebagai pengingat dan cahaya kebaikan.',
+    content:
+        'Bacalah Al-Kahfi pada hari Jumat sebagai pengingat dan cahaya kebaikan.',
     reference: 'HR. Al-Hakim',
     category: 'Al-Quran',
   ),
   IslamicTipDto(
     id: 26,
     title: 'Wudhu Sebelum Tidur',
-    content: 'Tidur dalam keadaan suci membantu menutup hari dengan dzikir dan ketenangan.',
+    content:
+        'Tidur dalam keadaan suci membantu menutup hari dengan dzikir dan ketenangan.',
     reference: 'HR. Ibnu Hibban',
     category: 'Ibadah',
   ),
@@ -213,14 +230,16 @@ const List<IslamicTipDto> _tipsData = [
   IslamicTipDto(
     id: 29,
     title: 'Amanah',
-    content: 'Tunaikan amanah sekecil apa pun karena amanah adalah bagian dari iman.',
+    content:
+        'Tunaikan amanah sekecil apa pun karena amanah adalah bagian dari iman.',
     reference: 'HR. Ahmad',
     category: 'Akhlaq',
   ),
   IslamicTipDto(
     id: 30,
     title: 'Niat Ikhlas',
-    content: 'Perbaiki niat sebelum beramal agar usaha kecil bernilai besar di sisi Allah.',
+    content:
+        'Perbaiki niat sebelum beramal agar usaha kecil bernilai besar di sisi Allah.',
     reference: 'HR. Bukhari & Muslim',
     category: 'Amal',
   ),

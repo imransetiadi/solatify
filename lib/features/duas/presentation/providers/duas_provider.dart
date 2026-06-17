@@ -29,7 +29,10 @@ final duasProvider = FutureProvider<List<Dua>>((ref) async {
 });
 
 // Category-filtered Provider
-final duasByCategoryProvider = Provider.family<AsyncValue<List<Dua>>, String>((ref, category) {
+final duasByCategoryProvider = Provider.family<AsyncValue<List<Dua>>, String>((
+  ref,
+  category,
+) {
   final duasAsync = ref.watch(duasProvider);
   return duasAsync.whenData((allDuas) {
     return allDuas.where((dua) => dua.category == category).toList();

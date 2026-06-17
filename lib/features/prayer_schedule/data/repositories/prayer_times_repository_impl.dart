@@ -7,7 +7,10 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
   final PrayerTimesLocalDataSource localDataSource;
 
   @override
-  Future<void> cacheSchedule(String dateKey, Map<String, DateTime> times) async {
+  Future<void> cacheSchedule(
+    String dateKey,
+    Map<String, DateTime> times,
+  ) async {
     final Map<String, String> cacheData = {};
     times.forEach((key, value) {
       cacheData[key] = value.toIso8601String();
@@ -19,7 +22,7 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
   Future<Map<String, DateTime>?> getCachedSchedule(String dateKey) async {
     final data = await localDataSource.getCachedSchedule(dateKey);
     if (data == null) return null;
-    
+
     final Map<String, DateTime> times = {};
     data.forEach((key, value) {
       if (value is String) {

@@ -1,5 +1,4 @@
 class Surah {
-
   Surah({
     required this.number,
     required this.name,
@@ -111,7 +110,6 @@ class Surah {
 }
 
 class Verse {
-
   Verse({
     required this.number,
     required this.arabic,

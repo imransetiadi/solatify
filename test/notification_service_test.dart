@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:solatify/features/notifications/data/services/notification_service.dart';
@@ -71,11 +72,32 @@ void main() {
   });
 
   tearDown(() async {
+    debugDefaultTargetPlatformOverride = null;
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, null);
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(androidPrayerAlarmChannel, null);
   });
+
+  test(
+    'initializes without requesting Android notification permission',
+    () async {
+      await service.init();
+
+      expect(
+        capturedMethods.where(
+          (call) => call.method == 'requestNotificationsPermission',
+        ),
+        isEmpty,
+      );
+      expect(
+        capturedMethods.where(
+          (call) => call.method == 'requestExactAlarmsPermission',
+        ),
+        isEmpty,
+      );
+    },
+  );
 
   test('falls back to inexact scheduling when exact alarm is denied', () async {
     await service.init();
@@ -125,9 +147,56 @@ void main() {
     );
     expect(
       zonedSchedule.arguments['platformSpecifics']['channelId'],
-      'prayer_times_adhan_channel_v2',
+      'prayer_times_adhan_channel',
     );
   });
+
+  test(
+    'can skip repeated exact-alarm capability refresh while batching',
+    () async {
+      await service.init();
+
+      await service.schedulePrayerNotification(
+        prayerKey: 'ashar',
+        location: 'Jakarta, Indonesia',
+        prayerTime: '15:20',
+        notificationTime: DateTime.now().add(const Duration(minutes: 10)),
+        timezoneName: 'Asia/Jakarta',
+        notificationId: 1003,
+        refreshExactAlarmCapability: false,
+      );
+
+      expect(
+        capturedMethods.where(
+          (call) => call.method == 'canScheduleExactNotifications',
+        ),
+        isEmpty,
+      );
+      expect(
+        capturedMethods.where((call) => call.method == 'zonedSchedule'),
+        hasLength(1),
+      );
+    },
+  );
+
+  test(
+    'uses one prayer adhan notification channel across Flutter and native Android',
+    () {
+      final notificationService = File(
+        'lib/features/notifications/data/services/notification_service.dart',
+      ).readAsStringSync();
+      final receiver = File(
+        'android/app/src/main/kotlin/com/solatify/app/solatify/notifications/PrayerAlarmReceiver.kt',
+      ).readAsStringSync();
+
+      expect(
+        notificationService,
+        contains("_prayerChannelId = 'prayer_times_adhan_channel'"),
+      );
+      expect(receiver, contains('CHANNEL_ID = "prayer_times_adhan_channel"'));
+      expect(notificationService, contains('deleteNotificationChannel'));
+    },
+  );
 
   test(
     'uses native Android alarm scheduler for prayer notifications',
@@ -163,6 +232,10 @@ void main() {
       expect(
         capturedMethods.where((call) => call.method == 'zonedSchedule'),
         isEmpty,
+      );
+      expect(
+        capturedMethods.where((call) => call.method == 'cancel'),
+        hasLength(1),
       );
     },
   );
@@ -258,13 +331,13 @@ void main() {
     },
   );
 
-  test('Android manifest declares exact alarm permissions', () {
+  test('Android manifest declares one exact alarm permission', () {
     final manifest = File(
       'android/app/src/main/AndroidManifest.xml',
     ).readAsStringSync();
 
     expect(manifest, contains('android.permission.SCHEDULE_EXACT_ALARM'));
-    expect(manifest, contains('android.permission.USE_EXACT_ALARM'));
+    expect(manifest, isNot(contains('android.permission.USE_EXACT_ALARM')));
     expect(
       manifest,
       contains('android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS'),
@@ -294,6 +367,78 @@ void main() {
     );
     expect(manifest, contains('.service.AdhanPlaybackService'));
     expect(manifest, contains('android:foregroundServiceType="mediaPlayback"'));
+  });
+
+  test('Android host can open app notification settings', () {
+    final mainActivity = File(
+      'android/app/src/main/kotlin/com/solatify/app/solatify/MainActivity.kt',
+    ).readAsStringSync();
+    final notificationService = File(
+      'lib/features/notifications/data/services/notification_service.dart',
+    ).readAsStringSync();
+
+    expect(mainActivity, contains('openNotificationSettings'));
+    expect(mainActivity, contains('Settings.ACTION_APP_NOTIFICATION_SETTINGS'));
+    expect(notificationService, contains('openAndroidNotificationSettings'));
+  });
+
+  test('settings notification toggle only opens Android settings', () {
+    final settingsScreen = File(
+      'lib/features/settings/presentation/screens/settings_screen.dart',
+    ).readAsStringSync();
+
+    expect(settingsScreen, contains('openPlatformNotificationSettings'));
+    expect(settingsScreen, isNot(contains('requestAndroidPermissions')));
+  });
+
+  test('settings exposes notification reliability shortcuts', () {
+    final settingsScreen = File(
+      'lib/features/settings/presentation/screens/settings_screen.dart',
+    ).readAsStringSync();
+    final notificationService = File(
+      'lib/features/notifications/data/services/notification_service.dart',
+    ).readAsStringSync();
+
+    expect(settingsScreen, contains('notificationReliability'));
+    expect(settingsScreen, contains('forceStopWarningMessage'));
+    expect(settingsScreen, contains('openPlatformNotificationSettings'));
+    expect(settingsScreen, contains('openAndroidExactAlarmSettings'));
+    expect(settingsScreen, contains('openAndroidBatteryOptimizationSettings'));
+    expect(notificationService, contains('openAndroidExactAlarmSettings'));
+  });
+
+  test('iOS notification permission is manual from settings', () {
+    final notificationService = File(
+      'lib/features/notifications/data/services/notification_service.dart',
+    ).readAsStringSync();
+    final appDelegate = File('ios/Runner/AppDelegate.swift').readAsStringSync();
+
+    expect(notificationService, contains('requestAlertPermission: false'));
+    expect(
+      notificationService,
+      isNot(contains('requestPermissions(alert: true')),
+    );
+    expect(notificationService, contains('openIosNotificationSettings'));
+    expect(appDelegate, contains('registerIosSettingsChannel'));
+    expect(
+      appDelegate,
+      contains('registrar(forPlugin: "SolatifyIosSettings")'),
+    );
+    expect(appDelegate, contains('openNotificationSettings'));
+    expect(appDelegate, contains('UIApplication.openSettingsURLString'));
+  });
+
+  test('prayer notification tap opens Solatify schedule screen', () {
+    final notificationService = File(
+      'lib/features/notifications/data/services/notification_service.dart',
+    ).readAsStringSync();
+    final receiver = File(
+      'android/app/src/main/kotlin/com/solatify/app/solatify/notifications/PrayerAlarmReceiver.kt',
+    ).readAsStringSync();
+
+    expect(notificationService, contains("goRouter.go('/schedule')"));
+    expect(receiver, contains('.setContentIntent('));
+    expect(receiver, contains('buildContentIntent'));
   });
 
   test('Adhan playback notification declares stop action', () {
@@ -331,6 +476,30 @@ void main() {
     expect(count, 2);
     expect(capturedMethods.last.method, 'pendingNotificationRequests');
   });
+
+  test(
+    'cancels stale prayer notifications on native Android and plugin',
+    () async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+
+      await service.cancelNotification(1004);
+
+      expect(
+        capturedNativeAlarmMethods.any(
+          (call) =>
+              call.method == 'cancelPrayerAlarm' &&
+              call.arguments['id'] == 1004,
+        ),
+        isTrue,
+      );
+      expect(
+        capturedMethods.any(
+          (call) => call.method == 'cancel' && call.arguments['id'] == 1004,
+        ),
+        isTrue,
+      );
+    },
+  );
 
   test('reports ready readiness when permissions are available', () async {
     final readiness = NotificationReadiness.ready();

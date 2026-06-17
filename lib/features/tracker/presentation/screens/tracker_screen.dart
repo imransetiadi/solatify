@@ -13,14 +13,14 @@ class TrackerScreen extends ConsumerWidget {
     final trackerAsync = ref.watch(trackerProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark
-        ? const Color(0xFFF3FBF6)
+        ? const Color(0xFFFFF7ED)
         : const Color(0xFF241A12);
     final mutedColor = isDark
         ? const Color(0xFFE0D4C4)
         : const Color(0xFFAFA19A);
     final brightGreen = isDark
         ? const Color(0xFF4CAF50)
-        : const Color(0xFF0E4D31);
+        : const Color(0xFFC94B3D);
     final appBarColor = Theme.of(
       context,
     ).colorScheme.surface.withValues(alpha: isDark ? 0.96 : 0.94);
@@ -30,8 +30,8 @@ class TrackerScreen extends ConsumerWidget {
         backgroundColor: appBarColor,
         foregroundColor: textColor,
         surfaceTintColor: Colors.transparent,
-        elevation: 2,
-        shadowColor: Colors.black.withValues(alpha: 0.12),
+        elevation: 0,
+        shadowColor: Colors.transparent,
         title: const Text(
           'Tracker Ibadah',
           style: TextStyle(fontWeight: FontWeight.bold),
@@ -47,7 +47,6 @@ class TrackerScreen extends ConsumerWidget {
             ).copyWith(top: 16, bottom: 96),
             child: trackerAsync.when(
               data: (log) => GlassContainer(
-                blur: 15,
                 opacity: 0.05,
                 padding: const EdgeInsets.all(18),
                 child: Column(
@@ -76,7 +75,7 @@ class TrackerScreen extends ConsumerWidget {
                           onTap: () => ref
                               .read(trackerProvider.notifier)
                               .togglePrayer(prayer),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(20),
                           child: Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 14,
@@ -86,7 +85,7 @@ class TrackerScreen extends ConsumerWidget {
                               color: isDone
                                   ? brightGreen.withValues(alpha: 0.15)
                                   : Colors.transparent,
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(20),
                               border: Border.all(
                                 color: isDone
                                     ? brightGreen
@@ -126,7 +125,6 @@ class TrackerScreen extends ConsumerWidget {
               ),
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (_, _) => GlassContainer(
-                blur: 15,
                 opacity: 0.05,
                 padding: const EdgeInsets.all(18),
                 child: Text(

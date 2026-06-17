@@ -6,7 +6,9 @@ import 'package:solatify/features/prayer_schedule/domain/entities/location_entit
 import 'package:solatify/features/prayer_schedule/domain/repositories/location_repository.dart';
 import 'package:solatify/features/prayer_schedule/domain/usecases/update_location.dart';
 
-final locationLocalDataSourceProvider = Provider<LocationLocalDataSource>((ref) {
+final locationLocalDataSourceProvider = Provider<LocationLocalDataSource>((
+  ref,
+) {
   return const LocationLocalDataSourceImpl();
 });
 
@@ -22,13 +24,15 @@ final updateLocationUseCaseProvider = Provider<UpdateLocation>((ref) {
 
 class LocationNotifier extends StateNotifier<LocationEntity> {
   LocationNotifier(this._repository, this._updateLocation)
-      : super(const LocationEntity(
+    : super(
+        const LocationEntity(
           latitude: -6.2088,
           longitude: 106.8456,
           city: 'Jakarta',
           country: 'Indonesia',
           isLoading: true,
-        )) {
+        ),
+      ) {
     _init();
   }
 
@@ -47,10 +51,7 @@ class LocationNotifier extends StateNotifier<LocationEntity> {
       state = newLocation.copyWith(isLoading: false);
       return true;
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
       return false;
     }
   }
@@ -74,8 +75,9 @@ class LocationNotifier extends StateNotifier<LocationEntity> {
   }
 }
 
-final locationProvider = StateNotifierProvider<LocationNotifier, LocationEntity>((ref) {
-  final repository = ref.watch(locationRepositoryProvider);
-  final updateLocation = ref.watch(updateLocationUseCaseProvider);
-  return LocationNotifier(repository, updateLocation);
-});
+final locationProvider =
+    StateNotifierProvider<LocationNotifier, LocationEntity>((ref) {
+      final repository = ref.watch(locationRepositoryProvider);
+      final updateLocation = ref.watch(updateLocationUseCaseProvider);
+      return LocationNotifier(repository, updateLocation);
+    });

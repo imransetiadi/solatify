@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:solatify/core/localization/app_localizations.dart';
+import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
+import 'package:solatify/core/widgets/solatify_design_tokens.dart';
 import 'package:solatify/features/islamic_tips/presentation/providers/tips_provider.dart';
 
 class IslamicContentScreen extends ConsumerWidget {
@@ -12,37 +14,31 @@ class IslamicContentScreen extends ConsumerWidget {
   static const _menuItems = [
     _ContentMenuItem(
       title: 'Asmaul Husna',
-      subtitle: '99 nama indah Allah',
       icon: Icons.font_download_outlined,
       path: '/islamic-content/asmaul-husna',
     ),
     _ContentMenuItem(
       title: 'Doa Harian',
-      subtitle: 'Kumpulan doa sehari-hari',
       icon: Icons.volunteer_activism_outlined,
       path: '/islamic-content/duas',
     ),
     _ContentMenuItem(
       title: 'Kalender Hijriah',
-      subtitle: 'Tanggal dan peristiwa Islam',
       icon: Icons.calendar_month_outlined,
       path: '/islamic-content/hijri-calendar',
     ),
     _ContentMenuItem(
       title: 'Dzikir',
-      subtitle: 'Dzikir pagi dan petang',
       icon: Icons.wb_twilight_outlined,
       path: '/islamic-content/dhikr',
     ),
     _ContentMenuItem(
       title: 'Tuntunan Salat',
-      subtitle: 'Tata cara dan bacaan salat',
       icon: Icons.menu_book_outlined,
       path: '/islamic-content/prayer-guide',
     ),
     _ContentMenuItem(
       title: 'Tips Islami',
-      subtitle: 'Nasihat dan amalan ringan',
       icon: Icons.lightbulb_outline,
       path: '/islamic-content/tips',
     ),
@@ -67,8 +63,8 @@ class IslamicContentScreen extends ConsumerWidget {
         backgroundColor: appBarColor,
         foregroundColor: textColor,
         surfaceTintColor: Colors.transparent,
-        elevation: 2,
-        shadowColor: Colors.black.withValues(alpha: 0.12),
+        elevation: 0,
+        shadowColor: Colors.transparent,
         title: Text(
           l.islamicContent,
           style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
@@ -78,21 +74,11 @@ class IslamicContentScreen extends ConsumerWidget {
       body: IslamicBackground(
         child: ResponsiveCenter(
           child: ListView(
-            padding: ResponsiveLayout.pagePadding(
-              context,
-            ).copyWith(top: 16, bottom: 96),
+            padding: ResponsiveLayout.pagePadding(context).copyWith(
+              top: ResponsiveLayout.pageTopGap,
+              bottom: ResponsiveLayout.bottomSafeGap,
+            ),
             children: [
-              IslamicHeaderDecoration(
-                title: l.spiritualExplore,
-                subtitle: l.spiritualExploreSubtitle,
-              ),
-              const SizedBox(height: 12),
-              _SectionTitle(
-                icon: Icons.auto_awesome,
-                title: l.dailyTip,
-                color: redAccent,
-              ),
-              const SizedBox(height: 12),
               randomTip.when(
                 data: (tip) => _DailyTipCard(
                   seeAllLabel: l.seeAllTips,
@@ -108,18 +94,18 @@ class IslamicContentScreen extends ConsumerWidget {
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (e, _) => Text('${l.failedToLoadTip}: $e'),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: ResponsiveLayout.sectionGap),
               _SectionTitle(
-                icon: Icons.grid_view_rounded,
+                icon: Icons.apps_rounded,
                 title: l.contentMenu,
                 color: redAccent,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: ResponsiveLayout.itemGap),
               LayoutBuilder(
                 builder: (context, constraints) {
                   // Keep the grid evenly spaced with fixed columns on all widths.
                   final crossAxisCount = constraints.maxWidth >= 720 ? 3 : 2;
-                  final spacing = 12.0;
+                  const spacing = 14.0;
                   final cardWidth =
                       (constraints.maxWidth -
                           (spacing * (crossAxisCount - 1))) /
@@ -133,7 +119,7 @@ class IslamicContentScreen extends ConsumerWidget {
                       return SizedBox(
                         width: cardWidth,
                         child: SizedBox(
-                          height: 148,
+                          height: 104,
                           child: _ContentMenuCard(
                             item: item,
                             surfaceColor: surfaceColor,
@@ -147,6 +133,7 @@ class IslamicContentScreen extends ConsumerWidget {
                   );
                 },
               ),
+              const SizedBox(height: ResponsiveLayout.sectionGap),
             ],
           ),
         ),
@@ -159,37 +146,31 @@ class IslamicContentScreen extends ConsumerWidget {
     return const [
       _ContentMenuItem(
         title: 'Asmaul Husna',
-        subtitle: '99 beautiful names of Allah',
         icon: Icons.font_download_outlined,
         path: '/islamic-content/asmaul-husna',
       ),
       _ContentMenuItem(
         title: 'Daily Duas',
-        subtitle: 'A collection of daily duas',
         icon: Icons.volunteer_activism_outlined,
         path: '/islamic-content/duas',
       ),
       _ContentMenuItem(
         title: 'Hijri Calendar',
-        subtitle: 'Islamic dates and events',
         icon: Icons.calendar_month_outlined,
         path: '/islamic-content/hijri-calendar',
       ),
       _ContentMenuItem(
         title: 'Dhikr',
-        subtitle: 'Morning and evening dhikr',
         icon: Icons.wb_twilight_outlined,
         path: '/islamic-content/dhikr',
       ),
       _ContentMenuItem(
         title: 'Prayer Guide',
-        subtitle: 'Prayer steps and recitations',
         icon: Icons.menu_book_outlined,
         path: '/islamic-content/prayer-guide',
       ),
       _ContentMenuItem(
         title: 'Islamic Tips',
-        subtitle: 'Advice and light daily deeds',
         icon: Icons.lightbulb_outline,
         path: '/islamic-content/tips',
       ),
@@ -213,13 +194,13 @@ class _SectionTitle extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, color: color, size: 20),
+        Icon(icon, color: color, size: SolatifyIconSize.cardIcon),
         const SizedBox(width: 8),
         Text(
           title,
           style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
+            fontSize: SolatifyType.sectionTitle,
+            fontWeight: FontWeight.w700,
             color: color,
           ),
         ),
@@ -253,49 +234,47 @@ class _DailyTipCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      color: surfaceColor,
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-                color: textColor,
+    return GlassContainer(
+      borderRadius: SolatifyRadius.md,
+      borderColor: primaryColor.withValues(alpha: 0.10),
+      fillColor: surfaceColor.withValues(alpha: 0.96),
+      padding: ResponsiveLayout.listCardPadding,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: SolatifyType.cardTitle,
+              color: textColor,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            content,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: SolatifyType.body,
+              height: 1.45,
+              color: mutedColor,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              onPressed: onTap,
+              icon: const Icon(
+                Icons.arrow_forward,
+                size: SolatifyIconSize.inline,
               ),
+              label: Text(seeAllLabel),
+              style: TextButton.styleFrom(foregroundColor: primaryColor),
             ),
-            const SizedBox(height: 8),
-            Text(
-              content,
-              style: TextStyle(fontSize: 14, height: 1.45, color: mutedColor),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'Ref: $reference',
-              style: TextStyle(
-                fontStyle: FontStyle.italic,
-                color: mutedColor,
-                fontSize: 12,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton.icon(
-                onPressed: onTap,
-                icon: const Icon(Icons.arrow_forward, size: 16),
-                label: Text(seeAllLabel),
-                style: TextButton.styleFrom(foregroundColor: primaryColor),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -318,47 +297,44 @@ class _ContentMenuCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: surfaceColor,
-      elevation: 1,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
-        side: BorderSide(color: primaryColor.withValues(alpha: 0.30), width: 1),
-      ),
+    return GlassContainer(
+      borderRadius: SolatifyRadius.md,
+      borderColor: primaryColor.withValues(alpha: 0.10),
+      fillColor: surfaceColor.withValues(alpha: 0.96),
+      padding: EdgeInsets.zero,
       child: InkWell(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: SolatifyRadius.compactCard,
         onTap: () => context.go(item.path),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          padding: ResponsiveLayout.listCardPadding,
+          child: Row(
             children: [
               Container(
-                width: 36,
-                height: 36,
+                width: SolatifyIconSize.cardBox,
+                height: SolatifyIconSize.cardBox,
                 decoration: BoxDecoration(
-                  color: primaryColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
+                  color: primaryColor,
+                  borderRadius: SolatifyRadius.icon,
                 ),
-                child: Icon(item.icon, color: primaryColor, size: 20),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                item.title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: textColor,
+                child: Icon(
+                  item.icon,
+                  color: Colors.white,
+                  size: SolatifyIconSize.cardIcon,
                 ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                item.subtitle,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 12, height: 1.25, color: mutedColor),
+              const SizedBox(width: SolatifySpacing.sm),
+              Expanded(
+                child: Text(
+                  item.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: SolatifyType.body,
+                    height: 1.2,
+                    fontWeight: FontWeight.w700,
+                    color: textColor,
+                  ),
+                ),
               ),
             ],
           ),
@@ -371,13 +347,11 @@ class _ContentMenuCard extends StatelessWidget {
 class _ContentMenuItem {
   const _ContentMenuItem({
     required this.title,
-    required this.subtitle,
     required this.icon,
     required this.path,
   });
 
   final String title;
-  final String subtitle;
   final IconData icon;
   final String path;
 }

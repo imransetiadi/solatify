@@ -137,9 +137,12 @@ class _SolatifyAppState extends ConsumerState<SolatifyApp>
     if (state == AppLifecycleState.resumed) {
       // Re-ensure Hive boxes are open and stable when app resumes
       _reopenHiveBoxes();
-      ref
-          .read(notificationSchedulerProvider.notifier)
-          .refreshSchedules(force: true);
+      _syncAdhanNotificationPermission().then((_) {
+        if (!mounted) return;
+        ref
+            .read(notificationSchedulerProvider.notifier)
+            .refreshSchedules(force: true);
+      });
     }
   }
 
@@ -148,6 +151,28 @@ class _SolatifyAppState extends ConsumerState<SolatifyApp>
       await HiveService.ensureBoxesOpen();
     } catch (e) {
       debugPrint('Error reopening Hive boxes on resume: $e');
+    }
+  }
+
+  Future<void> _syncAdhanNotificationPermission() async {
+    try {
+      final settings = ref.read(settingsProvider);
+      if (!settings.adhanNotificationsEnabled) return;
+
+      final readiness = await NotificationService().getReadinessStatus();
+      final notificationsAllowed =
+          readiness.status !=
+          NotificationReadinessStatus.needsNotificationPermission;
+      await ref
+          .read(settingsProvider.notifier)
+          .syncAdhanNotificationsWithPermission(notificationsAllowed);
+      if (!notificationsAllowed) {
+        await ref
+            .read(notificationSchedulerProvider.notifier)
+            .cancelAllNotifications();
+      }
+    } catch (e) {
+      debugPrint('Error syncing adhan notification permission: $e');
     }
   }
 
@@ -183,135 +208,11 @@ class _SolatifyAppState extends ConsumerState<SolatifyApp>
           data: mediaQuery.copyWith(
             textScaler: TextScaler.linear(clampedScale),
           ),
-          child: ExactAlarmPromptGate(child: child ?? const SizedBox.shrink()),
+          child: child ?? const SizedBox.shrink(),
         );
       },
     );
   }
-}
-
-class ExactAlarmPromptGate extends StatefulWidget {
-  const ExactAlarmPromptGate({super.key, required this.child});
-
-  final Widget child;
-
-  @override
-  State<ExactAlarmPromptGate> createState() => _ExactAlarmPromptGateState();
-}
-
-class _ExactAlarmPromptGateState extends State<ExactAlarmPromptGate> {
-  bool _exactAlarmPromptShown = false;
-  bool _batteryOptimizationPromptShown = false;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _maybeShowExactAlarmPrompt();
-    });
-  }
-
-  Future<void> _maybeShowExactAlarmPrompt() async {
-    if (_exactAlarmPromptShown ||
-        defaultTargetPlatform != TargetPlatform.android) {
-      return;
-    }
-
-    try {
-      final readiness = await NotificationService().getReadinessStatus();
-      if (!mounted ||
-          _exactAlarmPromptShown ||
-          readiness.status != NotificationReadinessStatus.inexactScheduling) {
-        await _maybeShowBatteryOptimizationPrompt();
-        return;
-      }
-
-      final navigatorContext = rootNavigatorKey.currentContext;
-      if (navigatorContext == null) return;
-      if (!navigatorContext.mounted) return;
-
-      _exactAlarmPromptShown = true;
-      await showDialog<void>(
-        context: navigatorContext,
-        builder: (context) {
-          final l = AppLocalizations.of(context);
-          return AlertDialog(
-            title: Text(l.exactAlarmTitle),
-            content: Text(l.exactAlarmMessage),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text(l.later),
-              ),
-              FilledButton(
-                onPressed: () async {
-                  final container = ProviderScope.containerOf(context);
-                  Navigator.of(context).pop();
-                  await NotificationService().requestAndroidPermissions();
-                  container
-                      .read(notificationSchedulerProvider.notifier)
-                      .refreshSchedules(force: true);
-                },
-                child: Text(l.enable),
-              ),
-            ],
-          );
-        },
-      );
-      await _maybeShowBatteryOptimizationPrompt();
-    } catch (e) {
-      debugPrint('Error showing exact alarm prompt: $e');
-    }
-  }
-
-  Future<void> _maybeShowBatteryOptimizationPrompt() async {
-    if (_batteryOptimizationPromptShown ||
-        defaultTargetPlatform != TargetPlatform.android) {
-      return;
-    }
-
-    try {
-      final isUnrestricted = await NotificationService()
-          .isIgnoringAndroidBatteryOptimizations();
-      if (!mounted || _batteryOptimizationPromptShown || isUnrestricted) {
-        return;
-      }
-
-      final navigatorContext = rootNavigatorKey.currentContext;
-      if (navigatorContext == null || !navigatorContext.mounted) return;
-
-      _batteryOptimizationPromptShown = true;
-      await showDialog<void>(
-        context: navigatorContext,
-        builder: (context) {
-          final l = AppLocalizations.of(context);
-          return AlertDialog(
-            title: Text(l.backgroundPermissionTitle),
-            content: Text(l.backgroundPermissionMessage),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text(l.later),
-              ),
-              FilledButton(
-                onPressed: () async {
-                  Navigator.of(context).pop();
-                  await NotificationService()
-                      .openAndroidBatteryOptimizationSettings();
-                },
-                child: Text(l.openSettings),
-              ),
-            ],
-          );
-        },
-      );
-    } catch (e) {
-      debugPrint('Error showing battery optimization prompt: $e');
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) => widget.child;
 }
 
 class SolatifyScrollBehavior extends MaterialScrollBehavior {

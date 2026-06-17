@@ -33,7 +33,7 @@ class PrayerTimeDisplayWidget extends ConsumerWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1A1A1A) : const Color(0xFFF5F1E8),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(22),
       ),
       child: const Center(
         child: SizedBox(
@@ -56,7 +56,7 @@ class PrayerTimeDisplayWidget extends ConsumerWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1A1A1A) : const Color(0xFFF5F1E8),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(color: primary.withValues(alpha: 0.3), width: 1),
       ),
       child: Column(
@@ -75,7 +75,6 @@ class PrayerTimeDisplayWidget extends ConsumerWidget {
               fontSize: 48,
               fontWeight: FontWeight.bold,
               color: primary,
-              fontFamily: 'Courier',
             ),
           ),
           const SizedBox(height: 8),

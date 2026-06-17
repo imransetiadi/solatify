@@ -22,7 +22,8 @@ final List<HijriEventDto> _hijriEventsData = [
     hijriYear: 1447,
     hijriMonth: 1,
     hijriDay: 10,
-    description: 'Hari ke-10 Muharram adalah hari bersejarah dalam Islam. Musa as. dan pengikutnya diselamatkan dari Firaun pada hari ini.',
+    description:
+        'Hari ke-10 Muharram adalah hari bersejarah dalam Islam. Musa as. dan pengikutnya diselamatkan dari Firaun pada hari ini.',
     isImportant: true,
   ),
   HijriEventDto(
@@ -33,7 +34,8 @@ final List<HijriEventDto> _hijriEventsData = [
     hijriYear: 1447,
     hijriMonth: 3,
     hijriDay: 12,
-    description: 'Perayaan kelahiran Nabi Muhammad SAW, didahului dengan ceramah-ceramah Islami dan sholawat.',
+    description:
+        'Perayaan kelahiran Nabi Muhammad SAW, didahului dengan ceramah-ceramah Islami dan sholawat.',
     isImportant: true,
   ),
   HijriEventDto(
@@ -44,7 +46,8 @@ final List<HijriEventDto> _hijriEventsData = [
     hijriYear: 1447,
     hijriMonth: 9,
     hijriDay: 1,
-    description: 'Bulan suci Ramadhan, bulan puasa dan ibadah yang sangat utama dalam Islam.',
+    description:
+        'Bulan suci Ramadhan, bulan puasa dan ibadah yang sangat utama dalam Islam.',
     isImportant: true,
   ),
   HijriEventDto(
@@ -55,7 +58,8 @@ final List<HijriEventDto> _hijriEventsData = [
     hijriYear: 1447,
     hijriMonth: 10,
     hijriDay: 1,
-    description: 'Perayaan akhir bulan Ramadhan dengan sholat Id dan berkumpul bersama keluarga.',
+    description:
+        'Perayaan akhir bulan Ramadhan dengan sholat Id dan berkumpul bersama keluarga.',
     isImportant: true,
   ),
   HijriEventDto(
@@ -66,7 +70,8 @@ final List<HijriEventDto> _hijriEventsData = [
     hijriYear: 1447,
     hijriMonth: 12,
     hijriDay: 10,
-    description: 'Hari pesta korban untuk memperingati kesediaan Nabi Ibrahim menyembelih anaknya.',
+    description:
+        'Hari pesta korban untuk memperingati kesediaan Nabi Ibrahim menyembelih anaknya.',
     isImportant: true,
   ),
   HijriEventDto(
@@ -77,7 +82,8 @@ final List<HijriEventDto> _hijriEventsData = [
     hijriYear: 1448,
     hijriMonth: 1,
     hijriDay: 1,
-    description: 'Pergantian tahun Hijriah, peringatan dari hijrah Nabi Muhammad dari Makkah ke Madinah.',
+    description:
+        'Pergantian tahun Hijriah, peringatan dari hijrah Nabi Muhammad dari Makkah ke Madinah.',
     isImportant: true,
   ),
   HijriEventDto(
@@ -88,7 +94,8 @@ final List<HijriEventDto> _hijriEventsData = [
     hijriYear: 1447,
     hijriMonth: 7,
     hijriDay: 27,
-    description: 'Peristiwa perjalanan malam Nabi Muhammad dari Masjidil Haram ke Masjidil Aqsa dan naik ke langit.',
+    description:
+        'Peristiwa perjalanan malam Nabi Muhammad dari Masjidil Haram ke Masjidil Aqsa dan naik ke langit.',
     isImportant: true,
   ),
   HijriEventDto(
@@ -99,7 +106,8 @@ final List<HijriEventDto> _hijriEventsData = [
     hijriYear: 1447,
     hijriMonth: 9,
     hijriDay: 27,
-    description: 'Malam yang mulia ketika Al-Quran pertama kali diturunkan kepada Nabi Muhammad SAW.',
+    description:
+        'Malam yang mulia ketika Al-Quran pertama kali diturunkan kepada Nabi Muhammad SAW.',
     isImportant: true,
   ),
 ];

@@ -42,9 +42,9 @@ class _DuasScreenState extends ConsumerState<DuasScreen> {
     final isDark = theme.brightness == Brightness.dark;
     final primaryColor = isDark
         ? const Color(0xFFC78A4C)
-        : const Color(0xFF0E4D31);
+        : const Color(0xFFC94B3D);
     final textColor = isDark
-        ? const Color(0xFFF3FBF6)
+        ? const Color(0xFFFFF7ED)
         : const Color(0xFF241A12);
     final textColorMuted = isDark
         ? const Color(0xFFC8B8A8)
@@ -59,14 +59,14 @@ class _DuasScreenState extends ConsumerState<DuasScreen> {
 
     return Scaffold(
       backgroundColor: isDark
-          ? const Color(0xFF082E1D)
-          : const Color(0xFFF3FBF6),
+          ? const Color(0xFF160F0A)
+          : const Color(0xFFFFF7ED),
       appBar: AppBar(
         backgroundColor: appBarColor,
         foregroundColor: textColor,
         surfaceTintColor: Colors.transparent,
-        elevation: 2,
-        shadowColor: Colors.black.withValues(alpha: 0.12),
+        elevation: 0,
+        shadowColor: Colors.transparent,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/islamic-content'),
@@ -92,11 +92,11 @@ class _DuasScreenState extends ConsumerState<DuasScreen> {
                     prefixIcon: Icon(Icons.search, color: textColorMuted),
                     enabledBorder: OutlineInputBorder(
                       borderSide: BorderSide(color: borderColor),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(24),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderSide: BorderSide(color: primaryColor),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(24),
                     ),
                     filled: true,
                     fillColor: cardBg,
@@ -189,11 +189,11 @@ class _DuaCardState extends State<_DuaCard> {
     final redAccent = Theme.of(context).colorScheme.tertiary;
     final surfaceColor = Theme.of(context).colorScheme.surface;
     return GlassContainer(
-      borderRadius: 18,
+      borderRadius: 24,
       padding: EdgeInsets.zero,
       fillColor: surfaceColor,
       child: InkWell(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(24),
         onTap: () => setState(() => _isExpanded = !_isExpanded),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),

@@ -7,6 +7,7 @@ import 'package:solatify/core/theme/theme.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
+import 'package:solatify/core/widgets/solatify_design_tokens.dart';
 import 'package:solatify/features/prayer_schedule/presentation/location_provider.dart';
 import 'package:solatify/features/prayer_schedule/presentation/prayer_times_provider.dart';
 import 'package:solatify/features/prayer_schedule/presentation/widgets/manual_location_dialog.dart';
@@ -19,13 +20,20 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
     final location = ref.watch(locationProvider);
-    final countdown = ref.watch(countdownProvider);
+    final countdownMarkers = ref.watch(
+      countdownProvider.select(
+        (state) => (
+          nextPrayerKey: state.nextPrayerKey,
+          activePrayerName: state.activePrayerName,
+        ),
+      ),
+    );
     final prayerList = ref.watch(prayerListProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primary = AppTheme.readableAccent(context);
     final redLine = Theme.of(context).colorScheme.tertiary;
     final textColor = isDark
-        ? const Color(0xFFF3FBF6)
+        ? const Color(0xFFFFF7ED)
         : const Color(0xFF241A12);
     final mutedColor = isDark
         ? const Color(0xFFE0D4C4)
@@ -43,23 +51,23 @@ class HomeScreen extends ConsumerWidget {
                   child: Padding(
                     padding: ResponsiveLayout.pagePadding(
                       context,
-                    ).copyWith(top: 20),
+                    ).copyWith(top: ResponsiveLayout.pageTopGap),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(10),
+                          padding: const EdgeInsets.all(9),
                           decoration: BoxDecoration(
-                            color: primary.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(20),
+                            color: primary.withValues(alpha: 0.10),
+                            borderRadius: SolatifyRadius.compactCard,
                             border: Border.all(
-                              color: primary.withValues(alpha: 0.25),
+                              color: primary.withValues(alpha: 0.16),
                             ),
                           ),
                           child: SvgPicture.asset(
                             'assets/images/masjid_nabawi.svg',
-                            width: 36,
-                            height: 36,
+                            width: 34,
+                            height: 34,
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -71,7 +79,7 @@ class HomeScreen extends ConsumerWidget {
                                 l.greeting,
                                 style: TextStyle(
                                   color: mutedColor,
-                                  fontSize: 13,
+                                  fontSize: SolatifyType.caption,
                                 ),
                               ),
                               const SizedBox(height: 4),
@@ -79,9 +87,9 @@ class HomeScreen extends ConsumerWidget {
                                 'Solatify',
                                 style: TextStyle(
                                   color: textColor,
-                                  fontSize: 26,
+                                  fontSize: SolatifyType.heroTitle,
                                   fontWeight: FontWeight.w800,
-                                  letterSpacing: 0.4,
+                                  letterSpacing: -0.1,
                                 ),
                               ),
                               const SizedBox(height: 4),
@@ -94,7 +102,7 @@ class HomeScreen extends ConsumerWidget {
                                     '${location.city}, ${location.country}',
                                     style: TextStyle(
                                       color: mutedColor,
-                                      fontSize: 13,
+                                      fontSize: SolatifyType.caption,
                                     ),
                                   ),
                                   InkWell(
@@ -110,7 +118,7 @@ class HomeScreen extends ConsumerWidget {
                                       ),
                                       child: Icon(
                                         Icons.edit_location_alt_outlined,
-                                        size: 14,
+                                        size: SolatifyIconSize.inline,
                                         color: primary,
                                       ),
                                     ),
@@ -129,13 +137,18 @@ class HomeScreen extends ConsumerWidget {
                     padding: ResponsiveLayout.pagePadding(
                       context,
                     ).copyWith(top: 22, bottom: 4),
-                    child: _PrayerCountdownCard(
-                      countdown: countdown,
-                      primaryColor: primary,
-                      accentColor: redLine,
-                      textColor: textColor,
-                      mutedColor: mutedColor,
-                      isDark: isDark,
+                    child: Consumer(
+                      builder: (context, ref, _) {
+                        final countdown = ref.watch(countdownProvider);
+                        return _PrayerCountdownCard(
+                          countdown: countdown,
+                          primaryColor: primary,
+                          accentColor: redLine,
+                          textColor: textColor,
+                          mutedColor: mutedColor,
+                          isDark: isDark,
+                        );
+                      },
                     ),
                   ),
                 ),
@@ -148,8 +161,8 @@ class HomeScreen extends ConsumerWidget {
                       l.prayerSchedule,
                       style: TextStyle(
                         color: textColor,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                        fontSize: SolatifyType.sectionTitle,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
@@ -171,9 +184,10 @@ class HomeScreen extends ConsumerWidget {
                             index,
                           ) {
                             final item = prayerList[index];
-                            final isNext = countdown.nextPrayerKey == item.key;
+                            final isNext =
+                                countdownMarkers.nextPrayerKey == item.key;
                             final isActive =
-                                countdown.activePrayerName == item.name;
+                                countdownMarkers.activePrayerName == item.name;
                             final formattedTime = DateFormat(
                               'HH:mm',
                             ).format(item.time);
@@ -181,7 +195,6 @@ class HomeScreen extends ConsumerWidget {
                             return Padding(
                               padding: const EdgeInsets.only(bottom: 12),
                               child: GlassContainer(
-                                blur: 15,
                                 opacity: isActive ? 0.08 : 0.03,
                                 borderColor: isActive || isNext
                                     ? redLine.withValues(
@@ -219,7 +232,7 @@ class HomeScreen extends ConsumerWidget {
                                               color: isActive
                                                   ? redLine
                                                   : textColor,
-                                              fontSize: 16,
+                                              fontSize: SolatifyType.cardTitle,
                                               fontWeight: isActive
                                                   ? FontWeight.bold
                                                   : FontWeight.w600,
@@ -230,7 +243,7 @@ class HomeScreen extends ConsumerWidget {
                                             formattedTime,
                                             style: TextStyle(
                                               color: mutedColor,
-                                              fontSize: 13,
+                                              fontSize: SolatifyType.caption,
                                             ),
                                           ),
                                         ],
@@ -276,7 +289,6 @@ class _PrayerCountdownCard extends StatelessWidget {
     final isWaitingForSchedule = countdown.nextPrayerKey.isEmpty;
 
     return GlassContainer(
-      blur: 15,
       opacity: isDark ? 0.06 : 0.035,
       borderColor: accentColor.withValues(alpha: isDark ? 0.45 : 0.28),
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
@@ -286,11 +298,11 @@ class _PrayerCountdownCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                width: 42,
-                height: 42,
+                width: SolatifyIconSize.cardBox,
+                height: SolatifyIconSize.cardBox,
                 decoration: BoxDecoration(
                   color: primaryColor.withValues(alpha: 0.13),
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: SolatifyRadius.compactCard,
                   border: Border.all(
                     color: primaryColor.withValues(alpha: 0.22),
                   ),
@@ -298,7 +310,7 @@ class _PrayerCountdownCard extends StatelessWidget {
                 child: Icon(
                   Icons.timer_outlined,
                   color: primaryColor,
-                  size: 22,
+                  size: SolatifyIconSize.cardIcon,
                 ),
               ),
               const SizedBox(width: 12),
@@ -316,7 +328,7 @@ class _PrayerCountdownCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: textColor,
-                        fontSize: 16,
+                        fontSize: SolatifyType.cardTitle,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -329,7 +341,10 @@ class _PrayerCountdownCard extends StatelessWidget {
                             ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: mutedColor, fontSize: 12.5),
+                      style: TextStyle(
+                        color: mutedColor,
+                        fontSize: SolatifyType.caption,
+                      ),
                     ),
                   ],
                 ),
@@ -342,7 +357,7 @@ class _PrayerCountdownCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
               color: accentColor.withValues(alpha: isDark ? 0.12 : 0.08),
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: SolatifyRadius.compactCard,
               border: Border.all(color: accentColor.withValues(alpha: 0.18)),
             ),
             child: Column(
@@ -352,7 +367,7 @@ class _PrayerCountdownCard extends StatelessWidget {
                   l.remainingTime,
                   style: TextStyle(
                     color: mutedColor,
-                    fontSize: 12,
+                    fontSize: SolatifyType.caption,
                     fontWeight: FontWeight.w600,
                   ),
                 ),

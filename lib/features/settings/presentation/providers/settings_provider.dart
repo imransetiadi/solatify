@@ -6,7 +6,9 @@ import 'package:solatify/features/settings/domain/entities/settings_state.dart';
 import 'package:solatify/features/settings/domain/repositories/settings_repository.dart';
 
 // Data Source Provider
-final settingsLocalDataSourceProvider = Provider<SettingsLocalDataSource>((ref) {
+final settingsLocalDataSourceProvider = Provider<SettingsLocalDataSource>((
+  ref,
+) {
   return const SettingsLocalDataSourceImpl();
 });
 
@@ -49,10 +51,26 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     await _repository.updatePrayerOffsets(newOffsets);
     state = state.copyWith(prayerOffsets: newOffsets);
   }
+
+  Future<void> updateAdhanNotificationsEnabled(bool enabled) async {
+    await _repository.updateAdhanNotificationsEnabled(enabled);
+    state = state.copyWith(adhanNotificationsEnabled: enabled);
+  }
+
+  Future<void> syncAdhanNotificationsWithPermission(
+    bool notificationsAllowed,
+  ) async {
+    if (!state.adhanNotificationsEnabled || notificationsAllowed) return;
+
+    await _repository.updateAdhanNotificationsEnabled(false);
+    state = state.copyWith(adhanNotificationsEnabled: false);
+  }
 }
 
 // Provider
-final settingsProvider = StateNotifierProvider<SettingsNotifier, SettingsState>((ref) {
-  final repository = ref.watch(settingsRepositoryProvider);
-  return SettingsNotifier(repository);
-});
+final settingsProvider = StateNotifierProvider<SettingsNotifier, SettingsState>(
+  (ref) {
+    final repository = ref.watch(settingsRepositoryProvider);
+    return SettingsNotifier(repository);
+  },
+);
