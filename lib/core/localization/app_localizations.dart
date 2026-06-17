@@ -52,9 +52,91 @@ class AppLocalizations {
   String get adjustOffsetHint => isEnglish
       ? 'Add or subtract minutes from the standard time.'
       : 'Tambahkan atau kurangi menit dari waktu standar.';
+  String get offsetNegativeHint => isEnglish
+      ? 'Use negative values to make it earlier.'
+      : 'Gunakan nilai minus untuk memajukan waktu.';
+  String get generalSettings =>
+      isEnglish ? 'GENERAL SETTINGS' : 'PENGATURAN UMUM';
+  String get prayerTimeCorrection =>
+      isEnglish ? 'PRAYER TIME CORRECTION' : 'KOREKSI WAKTU SALAT';
+  String get changeLocation => isEnglish ? 'Change Location' : 'Ubah Lokasi';
+  String get searchCity => isEnglish ? 'Search City...' : 'Cari Kota...';
+  String get prayerSchedule => isEnglish ? 'Prayer Schedule' : 'Jadwal Salat';
+  String get greeting => isEnglish ? 'Peace be upon you' : 'Assalamu’alaikum';
+  String get preparingPrayerSchedule =>
+      isEnglish ? 'Preparing prayer schedule' : 'Menyiapkan jadwal salat';
+  String headingToPrayer(String prayerName) =>
+      isEnglish ? 'Heading to $prayerName' : 'Menuju $prayerName';
+  String get countdownWaiting => isEnglish
+      ? 'Countdown will appear after the schedule is ready'
+      : 'Countdown akan muncul setelah jadwal siap';
+  String currentPrayerTime(String prayerName) => isEnglish
+      ? 'Current prayer time: $prayerName'
+      : 'Saat ini waktu $prayerName';
+  String get remainingTime => isEnglish ? 'Remaining time' : 'Sisa waktu';
+  String prayerTimeLabel(String prayerName) =>
+      isEnglish ? '$prayerName time' : 'Waktu $prayerName';
+  String activePrayerInProgress(String prayerName) => isEnglish
+      ? '$prayerName prayer is in progress'
+      : 'Salat $prayerName sedang berlangsung';
+  String get islamicContent => isEnglish ? 'Islamic Content' : 'Konten Islami';
+  String get spiritualExplore =>
+      isEnglish ? 'Explore Spirituality' : 'Jelajahi Spiritual';
+  String get spiritualExploreSubtitle => isEnglish
+      ? 'Knowledge, duas, dhikr, and daily deeds'
+      : 'Ilmu, doa, dzikir, dan amalan harian';
+  String get dailyTip => isEnglish ? 'Daily Tip' : 'Tip Harian';
+  String get contentMenu => isEnglish ? 'Content Menu' : 'Menu Konten';
+  String get failedToLoadTip =>
+      isEnglish ? 'Failed to load tip' : 'Gagal memuat tip';
+  String get seeAllTips => isEnglish ? 'See All Tips' : 'Lihat Semua Tips';
+  String get morningEveningDhikr =>
+      isEnglish ? 'Morning & Evening Dhikr' : 'Dzikir Pagi & Petang';
+  String get morningDhikr => isEnglish ? 'Morning Dhikr' : 'Dzikir Pagi';
+  String get eveningDhikr => isEnglish ? 'Evening Dhikr' : 'Dzikir Petang';
+  String get appErrorTitle =>
+      isEnglish ? 'Something went wrong' : 'Terjadi sedikit kendala';
+  String get appErrorMessage => isEnglish
+      ? 'Please try again or reopen the app.'
+      : 'Silakan coba lagi atau buka ulang aplikasi.';
+  String get exactAlarmTitle =>
+      isEnglish ? 'Enable Exact Alarms' : 'Aktifkan Alarm Tepat Waktu';
+  String get exactAlarmMessage => isEnglish
+      ? 'To show prayer notifications exactly on time, enable Alarms & reminders / Exact alarms for Solatify.'
+      : 'Agar notifikasi waktu salat muncul tepat saat masuk waktu, aktifkan izin Alarms & reminders / Alarm tepat waktu untuk Solatify.';
+  String get later => isEnglish ? 'Later' : 'Nanti';
+  String get enable => isEnglish ? 'Enable' : 'Aktifkan';
+  String get backgroundPermissionTitle => isEnglish
+      ? 'Allow Background Running'
+      : 'Izinkan Berjalan di Latar Belakang';
+  String get backgroundPermissionMessage => isEnglish
+      ? 'So adhan can still appear when the app is closed, set Solatify battery usage to Unrestricted.'
+      : 'Agar adzan tetap muncul saat aplikasi ditutup, atur battery usage Solatify ke Unrestricted / Tidak dibatasi.';
+  String get openSettings => isEnglish ? 'Open Settings' : 'Buka Pengaturan';
   String setPrayerOffset(String prayerName) => isEnglish
       ? 'Set $prayerName Time Offset'
       : 'Atur Ofset Waktu $prayerName';
+
+  String prayerName(String keyOrName) {
+    switch (keyOrName.toLowerCase()) {
+      case 'subuh':
+        return isEnglish ? 'Fajr' : 'Subuh';
+      case 'dzuhur':
+      case 'dhuhr':
+        return isEnglish ? 'Dhuhr' : 'Dzuhur';
+      case 'ashar':
+      case 'asr':
+        return isEnglish ? 'Asr' : 'Ashar';
+      case 'magrib':
+      case 'maghrib':
+        return isEnglish ? 'Maghrib' : 'Magrib';
+      case 'isya':
+      case 'isha':
+        return isEnglish ? 'Isha' : 'Isya';
+      default:
+        return keyOrName;
+    }
+  }
 
   String get indonesiaLanguage => 'Bahasa Indonesia';
   String get englishLanguage => 'English';

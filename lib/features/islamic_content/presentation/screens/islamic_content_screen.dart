@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:solatify/core/localization/app_localizations.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
 import 'package:solatify/features/islamic_tips/presentation/providers/tips_provider.dart';
@@ -49,6 +50,7 @@ class IslamicContentScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final textColor = theme.colorScheme.onSurface;
@@ -68,7 +70,7 @@ class IslamicContentScreen extends ConsumerWidget {
         elevation: 2,
         shadowColor: Colors.black.withValues(alpha: 0.12),
         title: Text(
-          'Konten Islami',
+          l.islamicContent,
           style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
@@ -80,19 +82,20 @@ class IslamicContentScreen extends ConsumerWidget {
               context,
             ).copyWith(top: 16, bottom: 96),
             children: [
-              const IslamicHeaderDecoration(
-                title: 'Jelajahi Spiritual',
-                subtitle: 'Ilmu, doa, dzikir, dan amalan harian',
+              IslamicHeaderDecoration(
+                title: l.spiritualExplore,
+                subtitle: l.spiritualExploreSubtitle,
               ),
               const SizedBox(height: 12),
               _SectionTitle(
                 icon: Icons.auto_awesome,
-                title: 'Tip Harian',
+                title: l.dailyTip,
                 color: redAccent,
               ),
               const SizedBox(height: 12),
               randomTip.when(
                 data: (tip) => _DailyTipCard(
+                  seeAllLabel: l.seeAllTips,
                   title: tip.title,
                   content: tip.content,
                   reference: tip.reference,
@@ -103,12 +106,12 @@ class IslamicContentScreen extends ConsumerWidget {
                   onTap: () => context.go('/islamic-content/tips'),
                 ),
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) => Text('Gagal memuat tip: $e'),
+                error: (e, _) => Text('${l.failedToLoadTip}: $e'),
               ),
               const SizedBox(height: 20),
               _SectionTitle(
                 icon: Icons.grid_view_rounded,
-                title: 'Menu Konten',
+                title: l.contentMenu,
                 color: redAccent,
               ),
               const SizedBox(height: 12),
@@ -126,7 +129,7 @@ class IslamicContentScreen extends ConsumerWidget {
                     alignment: WrapAlignment.center,
                     spacing: spacing,
                     runSpacing: spacing,
-                    children: _menuItems.map((item) {
+                    children: _localizedMenuItems(l).map((item) {
                       return SizedBox(
                         width: cardWidth,
                         child: SizedBox(
@@ -149,6 +152,48 @@ class IslamicContentScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  static List<_ContentMenuItem> _localizedMenuItems(AppLocalizations l) {
+    if (!l.isEnglish) return _menuItems;
+    return const [
+      _ContentMenuItem(
+        title: 'Asmaul Husna',
+        subtitle: '99 beautiful names of Allah',
+        icon: Icons.font_download_outlined,
+        path: '/islamic-content/asmaul-husna',
+      ),
+      _ContentMenuItem(
+        title: 'Daily Duas',
+        subtitle: 'A collection of daily duas',
+        icon: Icons.volunteer_activism_outlined,
+        path: '/islamic-content/duas',
+      ),
+      _ContentMenuItem(
+        title: 'Hijri Calendar',
+        subtitle: 'Islamic dates and events',
+        icon: Icons.calendar_month_outlined,
+        path: '/islamic-content/hijri-calendar',
+      ),
+      _ContentMenuItem(
+        title: 'Dhikr',
+        subtitle: 'Morning and evening dhikr',
+        icon: Icons.wb_twilight_outlined,
+        path: '/islamic-content/dhikr',
+      ),
+      _ContentMenuItem(
+        title: 'Prayer Guide',
+        subtitle: 'Prayer steps and recitations',
+        icon: Icons.menu_book_outlined,
+        path: '/islamic-content/prayer-guide',
+      ),
+      _ContentMenuItem(
+        title: 'Islamic Tips',
+        subtitle: 'Advice and light daily deeds',
+        icon: Icons.lightbulb_outline,
+        path: '/islamic-content/tips',
+      ),
+    ];
   }
 }
 
@@ -185,6 +230,7 @@ class _SectionTitle extends StatelessWidget {
 
 class _DailyTipCard extends StatelessWidget {
   const _DailyTipCard({
+    required this.seeAllLabel,
     required this.title,
     required this.content,
     required this.reference,
@@ -195,6 +241,7 @@ class _DailyTipCard extends StatelessWidget {
     required this.onTap,
   });
 
+  final String seeAllLabel;
   final String title;
   final String content;
   final String reference;
@@ -243,7 +290,7 @@ class _DailyTipCard extends StatelessWidget {
               child: TextButton.icon(
                 onPressed: onTap,
                 icon: const Icon(Icons.arrow_forward, size: 16),
-                label: const Text('Lihat Semua Tips'),
+                label: Text(seeAllLabel),
                 style: TextButton.styleFrom(foregroundColor: primaryColor),
               ),
             ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
+import 'package:solatify/core/localization/app_localizations.dart';
 import 'package:solatify/core/theme/theme.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
@@ -16,6 +17,7 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     final location = ref.watch(locationProvider);
     final countdown = ref.watch(countdownProvider);
     final prayerList = ref.watch(prayerListProvider);
@@ -66,7 +68,7 @@ class HomeScreen extends ConsumerWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Assalamu’alaikum',
+                                l.greeting,
                                 style: TextStyle(
                                   color: mutedColor,
                                   fontSize: 13,
@@ -143,7 +145,7 @@ class HomeScreen extends ConsumerWidget {
                       context,
                     ).copyWith(top: 18, bottom: 12),
                     child: Text(
-                      'Jadwal Salat',
+                      l.prayerSchedule,
                       style: TextStyle(
                         color: textColor,
                         fontSize: 18,
@@ -270,6 +272,7 @@ class _PrayerCountdownCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final isWaitingForSchedule = countdown.nextPrayerKey.isEmpty;
 
     return GlassContainer(
@@ -305,8 +308,10 @@ class _PrayerCountdownCard extends StatelessWidget {
                   children: [
                     Text(
                       isWaitingForSchedule
-                          ? 'Menyiapkan jadwal salat'
-                          : 'Menuju ${countdown.nextPrayerName}',
+                          ? l.preparingPrayerSchedule
+                          : l.headingToPrayer(
+                              l.prayerName(countdown.nextPrayerName),
+                            ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -318,8 +323,10 @@ class _PrayerCountdownCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       isWaitingForSchedule
-                          ? 'Countdown akan muncul setelah jadwal siap'
-                          : 'Saat ini waktu ${countdown.activePrayerName}',
+                          ? l.countdownWaiting
+                          : l.currentPrayerTime(
+                              l.prayerName(countdown.activePrayerName),
+                            ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(color: mutedColor, fontSize: 12.5),
@@ -342,7 +349,7 @@ class _PrayerCountdownCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Sisa waktu',
+                  l.remainingTime,
                   style: TextStyle(
                     color: mutedColor,
                     fontSize: 12,

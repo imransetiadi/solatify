@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:solatify/core/localization/app_localizations.dart';
 import 'package:solatify/core/theme/theme.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
@@ -13,6 +14,7 @@ class DhikrScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l = AppLocalizations.of(context);
     final textColor = isDark
         ? const Color(0xFFF3FBF6)
         : const Color(0xFF241A12);
@@ -37,7 +39,7 @@ class DhikrScreen extends ConsumerWidget {
             onPressed: () => context.go('/islamic-content'),
           ),
           title: Text(
-            'Dzikir Pagi & Petang',
+            l.morningEveningDhikr,
             style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
           ),
           centerTitle: true,
@@ -45,9 +47,9 @@ class DhikrScreen extends ConsumerWidget {
             labelColor: primaryColor,
             unselectedLabelColor: textColor.withValues(alpha: 0.6),
             indicatorColor: primaryColor,
-            tabs: const [
-              Tab(text: 'Dzikir Pagi'),
-              Tab(text: 'Dzikir Petang'),
+            tabs: [
+              Tab(text: l.morningDhikr),
+              Tab(text: l.eveningDhikr),
             ],
           ),
         ),
