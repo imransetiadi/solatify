@@ -77,12 +77,66 @@ class NotificationService {
 
   static const String _prayerChannelId = 'prayer_times_adhan_channel_v2';
   static const String _diagnosticChannelId = 'solatify_diagnostic_channel_v2';
+  static const MethodChannel _androidPrayerAlarmChannel = MethodChannel(
+    'solatify/android_prayer_alarms',
+  );
 
   final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
   bool _initialized = false;
   bool _canUseExactAlarms = true;
+
+  Future<bool> scheduleAndroidPrayerAlarm({
+    required String prayerKey,
+    required String title,
+    required String body,
+    required DateTime scheduledAt,
+    required int notificationId,
+  }) async {
+    if (defaultTargetPlatform != TargetPlatform.android) return false;
+
+    try {
+      final scheduled = await _androidPrayerAlarmChannel
+          .invokeMethod<bool>('schedulePrayerAlarm', <String, Object?>{
+            'id': notificationId,
+            'prayerKey': prayerKey,
+            'title': title,
+            'body': body,
+            'scheduledAtMillis': scheduledAt.millisecondsSinceEpoch,
+          });
+      return scheduled ?? false;
+    } catch (e, stack) {
+      debugPrint('Error scheduling native Android prayer alarm: $e\n$stack');
+      return false;
+    }
+  }
+
+  Future<void> cancelAllAndroidPrayerAlarms() async {
+    if (defaultTargetPlatform != TargetPlatform.android) return;
+
+    try {
+      await _androidPrayerAlarmChannel.invokeMethod<void>(
+        'cancelAllPrayerAlarms',
+      );
+    } catch (e) {
+      debugPrint('Error cancelling native Android prayer alarms: $e');
+    }
+  }
+
+  Future<List<int>> getPendingAndroidPrayerAlarmIds() async {
+    if (defaultTargetPlatform != TargetPlatform.android) return const [];
+
+    try {
+      final ids = await _androidPrayerAlarmChannel.invokeMethod<List<dynamic>>(
+        'getPendingPrayerAlarmIds',
+      );
+      return ids?.whereType<int>().toList(growable: false) ?? const [];
+    } catch (e) {
+      debugPrint('Error reading native Android prayer alarm IDs: $e');
+      return const [];
+    }
+  }
 
   Future<void> init() async {
     if (_initialized) return;
@@ -366,6 +420,31 @@ class NotificationService {
       final title = getNotificationTitle(prayerKey, location);
       final body = getNotificationMessage(prayerKey, location, prayerTime);
 
+      if (defaultTargetPlatform == TargetPlatform.android) {
+        final prayerLocation = tz.getLocation(timezoneName);
+        final scheduledDate = tz.TZDateTime.from(
+          notificationTime,
+          prayerLocation,
+        );
+        final scheduledNatively = await scheduleAndroidPrayerAlarm(
+          prayerKey: prayerKey,
+          title: title,
+          body: body,
+          scheduledAt: scheduledDate,
+          notificationId: notificationId,
+        );
+        if (scheduledNatively) {
+          debugPrint(
+            'Native Android prayer alarm scheduled for $notificationTime '
+            'timezone=$timezoneName: $title',
+          );
+          return;
+        }
+        debugPrint(
+          'Native Android prayer alarm unavailable; falling back to plugin scheduling.',
+        );
+      }
+
       const AndroidNotificationDetails androidDetails =
           AndroidNotificationDetails(
             _prayerChannelId,
@@ -576,6 +655,7 @@ class NotificationService {
 
   Future<void> cancelAllNotifications() async {
     try {
+      await cancelAllAndroidPrayerAlarms();
       await _flutterLocalNotificationsPlugin.cancelAll();
       debugPrint('All notifications cancelled');
     } catch (e) {
@@ -603,7 +683,11 @@ class NotificationService {
     try {
       final pendingNotifications = await _flutterLocalNotificationsPlugin
           .pendingNotificationRequests();
-      final ids = pendingNotifications.map((request) => request.id).toList();
+      final nativeIds = await getPendingAndroidPrayerAlarmIds();
+      final ids = <int>{
+        ...pendingNotifications.map((request) => request.id),
+        ...nativeIds,
+      }.toList()..sort();
 
       debugPrint('Pending scheduled notification IDs: $ids');
       return ids;

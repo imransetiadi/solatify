@@ -132,6 +132,9 @@ class _SolatifyAppState extends ConsumerState<SolatifyApp>
     if (state == AppLifecycleState.resumed) {
       // Re-ensure Hive boxes are open and stable when app resumes
       _reopenHiveBoxes();
+      ref
+          .read(notificationSchedulerProvider.notifier)
+          .refreshSchedules(force: true);
     }
   }
 
@@ -237,8 +240,12 @@ class _ExactAlarmPromptGateState extends State<ExactAlarmPromptGate> {
               ),
               FilledButton(
                 onPressed: () async {
+                  final container = ProviderScope.containerOf(context);
                   Navigator.of(context).pop();
                   await NotificationService().requestAndroidPermissions();
+                  container
+                      .read(notificationSchedulerProvider.notifier)
+                      .refreshSchedules(force: true);
                 },
                 child: const Text('Aktifkan'),
               ),

@@ -2,6 +2,18 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:solatify/features/notifications/presentation/providers/notification_scheduler_provider.dart';
 
 void main() {
+  group('buildPrayerNotificationKey', () {
+    test('keys a prayer notification by prayer and exact target time', () {
+      expect(
+        buildPrayerNotificationKey(
+          prayerKey: 'magrib',
+          prayerTime: DateTime(2026, 6, 17, 18),
+        ),
+        'magrib_2026-06-17T18:00:00.000',
+      );
+    });
+  });
+
   group('buildPrayerNotificationRequests', () {
     test('schedules all remaining prayers when times are ahead', () {
       final now = DateTime(2026, 6, 16, 3);

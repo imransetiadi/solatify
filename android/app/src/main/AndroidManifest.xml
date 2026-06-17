@@ -61,6 +61,21 @@
                 <action android:name="com.dexterous.flutterlocalnotifications.action.NOTIFICATION_DISMISSED" />
             </intent-filter>
         </receiver>
+        <receiver
+            android:name=".notifications.PrayerAlarmReceiver"
+            android:enabled="true"
+            android:exported="false" />
+        <receiver
+            android:name=".notifications.PrayerAlarmBootReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
     </application>
     <queries>
         <intent>
