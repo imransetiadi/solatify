@@ -57,8 +57,8 @@ class _AsmaulHusnaScreenState extends ConsumerState<AsmaulHusnaScreen> {
         backgroundColor: appBarColor,
         foregroundColor: textColor,
         surfaceTintColor: Colors.transparent,
-        elevation: 2,
-        shadowColor: Colors.black.withValues(alpha: 0.12),
+        elevation: 0,
+        shadowColor: Colors.transparent,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/islamic-content'),
@@ -84,11 +84,11 @@ class _AsmaulHusnaScreenState extends ConsumerState<AsmaulHusnaScreen> {
                     prefixIcon: Icon(Icons.search, color: textColorMuted),
                     enabledBorder: OutlineInputBorder(
                       borderSide: BorderSide(color: borderColor),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(24),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderSide: BorderSide(color: primaryColor),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(24),
                     ),
                     filled: true,
                     fillColor: cardBg,
@@ -123,9 +123,9 @@ class _AsmaulHusnaScreenState extends ConsumerState<AsmaulHusnaScreen> {
                           return Card(
                             margin: const EdgeInsets.symmetric(vertical: 6),
                             color: cardBg,
-                            elevation: 2,
+                            elevation: 0,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius: BorderRadius.circular(24),
                               side: BorderSide(
                                 color: redAccent.withValues(alpha: 0.30),
                                 width: 1,
@@ -149,7 +149,6 @@ class _AsmaulHusnaScreenState extends ConsumerState<AsmaulHusnaScreen> {
                               subtitle: Text(
                                 name.arabicName,
                                 style: TextStyle(
-                                  fontFamily: 'Kufi',
                                   fontSize: 22,
                                   color: textColor,
                                 ),

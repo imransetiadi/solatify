@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:solatify/core/navigation/router.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -75,10 +76,17 @@ class NotificationService {
   }
   static final NotificationService _instance = NotificationService._internal();
 
-  static const String _prayerChannelId = 'prayer_times_adhan_channel_v2';
+  static const String _prayerChannelId = 'prayer_times_adhan_channel';
   static const String _diagnosticChannelId = 'solatify_diagnostic_channel_v2';
+  static const List<String> _legacyPrayerChannelIds = [
+    'prayer_times_adhan_channel_v2',
+    'prayer_times_adhan_channel_v7',
+  ];
   static const MethodChannel _androidPrayerAlarmChannel = MethodChannel(
     'solatify/android_prayer_alarms',
+  );
+  static const MethodChannel _iosSettingsChannel = MethodChannel(
+    'solatify/ios_settings',
   );
 
   final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin =
@@ -166,6 +174,56 @@ class NotificationService {
     }
   }
 
+  Future<bool> openAndroidNotificationSettings() async {
+    if (defaultTargetPlatform != TargetPlatform.android) return false;
+
+    try {
+      return await _androidPrayerAlarmChannel.invokeMethod<bool>(
+            'openNotificationSettings',
+          ) ??
+          false;
+    } catch (e) {
+      debugPrint('Error opening Android notification settings: $e');
+      return false;
+    }
+  }
+
+  Future<bool> openIosNotificationSettings() async {
+    if (defaultTargetPlatform != TargetPlatform.iOS) return false;
+
+    try {
+      return await _iosSettingsChannel.invokeMethod<bool>(
+            'openNotificationSettings',
+          ) ??
+          false;
+    } catch (e) {
+      debugPrint('Error opening iOS notification settings: $e');
+      return false;
+    }
+  }
+
+  Future<bool> openPlatformNotificationSettings() async {
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      return openIosNotificationSettings();
+    }
+
+    return openAndroidNotificationSettings();
+  }
+
+  Future<bool> openAndroidExactAlarmSettings() async {
+    if (defaultTargetPlatform != TargetPlatform.android) return false;
+
+    try {
+      return await _androidPrayerAlarmChannel.invokeMethod<bool>(
+            'openExactAlarmSettings',
+          ) ??
+          false;
+    } catch (e) {
+      debugPrint('Error opening Android exact alarm settings: $e');
+      return false;
+    }
+  }
+
   Future<void> init() async {
     if (_initialized) return;
 
@@ -176,9 +234,9 @@ class NotificationService {
 
     const DarwinInitializationSettings iosInitSettings =
         DarwinInitializationSettings(
-          requestAlertPermission: true,
-          requestBadgePermission: true,
-          requestSoundPermission: true,
+          requestAlertPermission: false,
+          requestBadgePermission: false,
+          requestSoundPermission: false,
         );
 
     const InitializationSettings initSettings = InitializationSettings(
@@ -190,6 +248,7 @@ class NotificationService {
       initSettings,
       onDidReceiveNotificationResponse: (NotificationResponse response) {
         debugPrint('Notification tapped with payload: ${response.payload}');
+        _handleNotificationTap(response.payload);
       },
     );
 
@@ -198,18 +257,26 @@ class NotificationService {
     // Create Android notification channel explicitly (Android 8+)
     await _createNotificationChannel();
 
-    // Request permissions for iOS
-    await _flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<
-          IOSFlutterLocalNotificationsPlugin
-        >()
-        ?.requestPermissions(alert: true, badge: true, sound: true);
-
-    // Request Android 13+ POST_NOTIFICATIONS permission
-    await requestAndroidPermissions();
-
     _initialized = true;
     debugPrint('NotificationService fully initialized');
+  }
+
+  void _handleNotificationTap(String? payload) {
+    if (payload == null || payload.isEmpty) return;
+
+    if (_isPrayerNotificationPayload(payload)) {
+      goRouter.go('/schedule');
+    }
+  }
+
+  bool _isPrayerNotificationPayload(String payload) {
+    return const {
+      'subuh',
+      'dzuhur',
+      'ashar',
+      'magrib',
+      'isya',
+    }.contains(payload.toLowerCase());
   }
 
   Future<void> _createNotificationChannel() async {
@@ -242,6 +309,9 @@ class NotificationService {
           AndroidFlutterLocalNotificationsPlugin
         >();
 
+    for (final legacyChannelId in _legacyPrayerChannelIds) {
+      await androidPlugin?.deleteNotificationChannel(legacyChannelId);
+    }
     await androidPlugin?.createNotificationChannel(prayerChannel);
     await androidPlugin?.createNotificationChannel(diagnosticChannel);
     debugPrint('Notification channel created: $_prayerChannelId');
@@ -462,6 +532,7 @@ class NotificationService {
           notificationId: notificationId,
         );
         if (scheduledNatively) {
+          await _flutterLocalNotificationsPlugin.cancel(notificationId);
           debugPrint(
             'Native Android prayer alarm scheduled for $notificationTime '
             'timezone=$timezoneName: $title',

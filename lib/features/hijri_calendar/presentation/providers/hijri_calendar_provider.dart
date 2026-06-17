@@ -6,12 +6,15 @@ import 'package:solatify/features/hijri_calendar/domain/repositories/hijri_calen
 import 'package:solatify/features/hijri_calendar/domain/usecases/get_hijri_events.dart';
 
 // Data Source Provider
-final hijriCalendarLocalDataSourceProvider = Provider<HijriCalendarLocalDataSource>((ref) {
-  return const HijriCalendarLocalDataSourceImpl();
-});
+final hijriCalendarLocalDataSourceProvider =
+    Provider<HijriCalendarLocalDataSource>((ref) {
+      return const HijriCalendarLocalDataSourceImpl();
+    });
 
 // Repository Provider
-final hijriCalendarRepositoryProvider = Provider<HijriCalendarRepository>((ref) {
+final hijriCalendarRepositoryProvider = Provider<HijriCalendarRepository>((
+  ref,
+) {
   final localDataSource = ref.watch(hijriCalendarLocalDataSourceProvider);
   return HijriCalendarRepositoryImpl(localDataSource: localDataSource);
 });
@@ -29,12 +32,15 @@ final hijriEventsProvider = FutureProvider<List<HijriEvent>>((ref) async {
 });
 
 // Derived Provider for upcoming events
-final upcomingHijriEventsProvider = FutureProvider<List<HijriEvent>>((ref) async {
+final upcomingHijriEventsProvider = FutureProvider<List<HijriEvent>>((
+  ref,
+) async {
   final now = DateTime.now();
   final events = await ref.watch(hijriEventsProvider.future);
-  
-  final upcomingEvents = events.where((event) => event.gregorianDate.isAfter(now)).toList()
-    ..sort((a, b) => a.gregorianDate.compareTo(b.gregorianDate));
-    
+
+  final upcomingEvents =
+      events.where((event) => event.gregorianDate.isAfter(now)).toList()
+        ..sort((a, b) => a.gregorianDate.compareTo(b.gregorianDate));
+
   return upcomingEvents;
 });

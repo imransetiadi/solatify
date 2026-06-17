@@ -1,5 +1,4 @@
 class Dhikr {
-
   Dhikr({
     required this.id,
     required this.title,

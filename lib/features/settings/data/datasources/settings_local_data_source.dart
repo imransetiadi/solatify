@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:solatify/core/database/hive_service.dart';
-import '../../domain/entities/settings_state.dart';
+import 'package:solatify/features/settings/domain/entities/settings_state.dart';
 
 abstract class SettingsLocalDataSource {
   SettingsState getSettings();
@@ -9,6 +9,7 @@ abstract class SettingsLocalDataSource {
   Future<void> updateCalculationMethod(String method);
   Future<void> completeOnboarding();
   Future<void> updatePrayerOffsets(Map<String, int> offsets);
+  Future<void> updateAdhanNotificationsEnabled(bool enabled);
 }
 
 class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
@@ -17,15 +18,35 @@ class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
   @override
   SettingsState getSettings() {
     try {
-      final themeStr = HiveService.getSetting('theme', defaultValue: 'light')?.toString() ?? 'light';
-      final rawLang = HiveService.getSetting('language', defaultValue: 'id')?.toString() ?? 'id';
+      final themeStr =
+          HiveService.getSetting('theme', defaultValue: 'light')?.toString() ??
+          'light';
+      final rawLang =
+          HiveService.getSetting('language', defaultValue: 'id')?.toString() ??
+          'id';
       final lang = rawLang == 'en' ? 'en' : 'id';
-      final method = (HiveService.getSetting('calculation_method', defaultValue: 'Kemenag') ?? 'Kemenag').toString();
+      final method =
+          (HiveService.getSetting(
+                    'calculation_method',
+                    defaultValue: 'Kemenag',
+                  ) ??
+                  'Kemenag')
+              .toString();
 
-      final rawOnboarding = HiveService.getSetting('onboarding_completed', defaultValue: false);
+      final rawOnboarding = HiveService.getSetting(
+        'onboarding_completed',
+        defaultValue: false,
+      );
       final onboarding = rawOnboarding is bool ? rawOnboarding : false;
 
       final offsets = HiveService.getPrayerOffsets();
+      final rawAdhanNotificationsEnabled = HiveService.getSetting(
+        'adhan_notifications_enabled',
+        defaultValue: false,
+      );
+      final adhanNotificationsEnabled = rawAdhanNotificationsEnabled is bool
+          ? rawAdhanNotificationsEnabled
+          : false;
 
       ThemeMode themeMode;
       switch (themeStr) {
@@ -45,6 +66,7 @@ class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
         calculationMethod: method,
         onboardingCompleted: onboarding,
         prayerOffsets: offsets,
+        adhanNotificationsEnabled: adhanNotificationsEnabled,
       );
     } catch (e) {
       return const SettingsState(
@@ -59,6 +81,7 @@ class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
           'magrib': 0,
           'isya': 0,
         },
+        adhanNotificationsEnabled: false,
       );
     }
   }
@@ -98,5 +121,10 @@ class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
   @override
   Future<void> updatePrayerOffsets(Map<String, int> offsets) async {
     await HiveService.savePrayerOffsets(offsets);
+  }
+
+  @override
+  Future<void> updateAdhanNotificationsEnabled(bool enabled) async {
+    await HiveService.saveSetting('adhan_notifications_enabled', enabled);
   }
 }

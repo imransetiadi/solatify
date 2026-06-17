@@ -20,14 +20,16 @@ const List<AsmaulHusnaDto> _asmaulHusnaData = [
     latinName: 'Ar Rahman',
     arabicName: 'الرحمن',
     meaning: 'Yang Maha Pengasih',
-    description: 'Allah memiliki kasih sayang yang luas bagi seluruh makhluk-Nya.',
+    description:
+        'Allah memiliki kasih sayang yang luas bagi seluruh makhluk-Nya.',
   ),
   AsmaulHusnaDto(
     number: 2,
     latinName: 'Ar Rahim',
     arabicName: 'الرحيم',
     meaning: 'Yang Maha Penyayang',
-    description: 'Allah memiliki kasih sayang yang khusus bagi orang-orang beriman.',
+    description:
+        'Allah memiliki kasih sayang yang khusus bagi orang-orang beriman.',
   ),
   AsmaulHusnaDto(
     number: 3,
@@ -76,7 +78,8 @@ const List<AsmaulHusnaDto> _asmaulHusnaData = [
     latinName: 'Al Jabbar',
     arabicName: 'الجبار',
     meaning: 'Yang Maha Berkuasa',
-    description: 'Allah memiliki kehendak yang harus dipenuhi oleh makhluk-Nya.',
+    description:
+        'Allah memiliki kehendak yang harus dipenuhi oleh makhluk-Nya.',
   ),
   AsmaulHusnaDto(
     number: 10,
@@ -104,7 +107,8 @@ const List<AsmaulHusnaDto> _asmaulHusnaData = [
     latinName: 'Al Mushawwir',
     arabicName: 'المصور',
     meaning: 'Yang Maha Membentuk Rupa',
-    description: 'Allah memberikan bentuk dan rupa yang berbeda-beda pada makhluk-Nya.',
+    description:
+        'Allah memberikan bentuk dan rupa yang berbeda-beda pada makhluk-Nya.',
   ),
   AsmaulHusnaDto(
     number: 14,
@@ -202,7 +206,8 @@ const List<AsmaulHusnaDto> _asmaulHusnaData = [
     latinName: 'Al Bashiir',
     arabicName: 'البصير',
     meaning: 'Yang Maha Melihat',
-    description: 'Penglihatan Allah meliputi segala yang terlihat maupun tersembunyi.',
+    description:
+        'Penglihatan Allah meliputi segala yang terlihat maupun tersembunyi.',
   ),
   AsmaulHusnaDto(
     number: 28,
@@ -237,7 +242,8 @@ const List<AsmaulHusnaDto> _asmaulHusnaData = [
     latinName: 'Al Haliim',
     arabicName: 'الحليم',
     meaning: 'Yang Maha Penyantun',
-    description: 'Allah tidak terburu-buru menghukum hamba-Nya yang berbuat dosa.',
+    description:
+        'Allah tidak terburu-buru menghukum hamba-Nya yang berbuat dosa.',
   ),
   AsmaulHusnaDto(
     number: 33,
@@ -300,21 +306,24 @@ const List<AsmaulHusnaDto> _asmaulHusnaData = [
     latinName: 'Al Jaliil',
     arabicName: 'الجليل',
     meaning: 'Yang Maha Luhur',
-    description: 'Allah memiliki keindahan, keagungan, dan kesempurnaan mutlak.',
+    description:
+        'Allah memiliki keindahan, keagungan, dan kesempurnaan mutlak.',
   ),
   AsmaulHusnaDto(
     number: 42,
     latinName: 'Al Kariim',
     arabicName: 'الكريم',
     meaning: 'Yang Maha Mulia',
-    description: 'Allah sangat pemurah dalam memberikan anugerah kepada hamba-Nya.',
+    description:
+        'Allah sangat pemurah dalam memberikan anugerah kepada hamba-Nya.',
   ),
   AsmaulHusnaDto(
     number: 43,
     latinName: 'Ar Raqiib',
     arabicName: 'الرقيب',
     meaning: 'Yang Maha Mengawasi',
-    description: 'Allah selalu mengawasi segala gerak-gerik hamba-Nya tanpa henti.',
+    description:
+        'Allah selalu mengawasi segala gerak-gerik hamba-Nya tanpa henti.',
   ),
   AsmaulHusnaDto(
     number: 44,
@@ -328,14 +337,16 @@ const List<AsmaulHusnaDto> _asmaulHusnaData = [
     latinName: "Al Waasi'",
     arabicName: 'الواسع',
     meaning: 'Yang Maha Luas',
-    description: 'Ilmu, kasih sayang, dan rahmat Allah meliputi segala sesuatu.',
+    description:
+        'Ilmu, kasih sayang, dan rahmat Allah meliputi segala sesuatu.',
   ),
   AsmaulHusnaDto(
     number: 46,
     latinName: 'Al Hakiim',
     arabicName: 'الحكيم',
     meaning: 'Yang Maha Bijaksana',
-    description: 'Segala ketetapan dan penciptaan Allah mengandung hikmah mendalam.',
+    description:
+        'Segala ketetapan dan penciptaan Allah mengandung hikmah mendalam.',
   ),
   AsmaulHusnaDto(
     number: 47,
@@ -419,7 +430,8 @@ const List<AsmaulHusnaDto> _asmaulHusnaData = [
     latinName: "Al Mubdi'",
     arabicName: 'المبدئ',
     meaning: 'Yang Maha Memulai',
-    description: 'Allah yang memulai penciptaan makhluk dari tiada menjadi ada.',
+    description:
+        'Allah yang memulai penciptaan makhluk dari tiada menjadi ada.',
   ),
   AsmaulHusnaDto(
     number: 59,
@@ -454,7 +466,8 @@ const List<AsmaulHusnaDto> _asmaulHusnaData = [
     latinName: 'Al Qayyuum',
     arabicName: 'القيوم',
     meaning: 'Yang Maha Mandiri',
-    description: 'Allah berdiri sendiri tanpa memerlukan bantuan dari siapapun.',
+    description:
+        'Allah berdiri sendiri tanpa memerlukan bantuan dari siapapun.',
   ),
   AsmaulHusnaDto(
     number: 64,
@@ -692,7 +705,8 @@ const List<AsmaulHusnaDto> _asmaulHusnaData = [
     latinName: 'Al Waarits',
     arabicName: 'الوارث',
     meaning: 'Yang Maha Pewaris',
-    description: 'Allah adalah pewaris seluruh alam setelah makhluk-Nya binasa.',
+    description:
+        'Allah adalah pewaris seluruh alam setelah makhluk-Nya binasa.',
   ),
   AsmaulHusnaDto(
     number: 98,
@@ -706,6 +720,7 @@ const List<AsmaulHusnaDto> _asmaulHusnaData = [
     latinName: 'As Shabuur',
     arabicName: 'الصبور',
     meaning: 'Yang Maha Sabar',
-    description: 'Allah tidak tergesa-gesa dalam menghukum dan memberikan rahmat.',
+    description:
+        'Allah tidak tergesa-gesa dalam menghukum dan memberikan rahmat.',
   ),
 ];

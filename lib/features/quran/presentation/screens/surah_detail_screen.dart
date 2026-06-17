@@ -255,7 +255,6 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 24),
       child: GlassContainer(
-        blur: 15,
         opacity: Theme.of(context).brightness == Brightness.dark ? 0.05 : 0.03,
         borderColor: _redAccent.withValues(alpha: 0.32),
         padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
@@ -267,7 +266,6 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
                 color: _textColor,
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                fontFamily: 'Outfit',
               ),
             ),
             const SizedBox(height: 4),
@@ -322,7 +320,6 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
                 style: TextStyle(
                   color: _textColor,
                   fontSize: 26,
-                  fontFamily: 'Amiri', // clean arabic font
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -358,7 +355,7 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
               color: isLastRead
                   ? _accentColor.withValues(alpha: 0.12)
                   : _textColor.withValues(alpha: 0.02),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(24),
               border: Border.all(
                 color: isLastRead
                     ? _accentColor.withValues(alpha: 0.3)
@@ -494,7 +491,6 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
               color: _textColor,
               fontSize: 28,
               height: 2.0,
-              fontFamily: 'Amiri', // beautiful standard Arabic font
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -542,7 +538,6 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
         : 0.0;
 
     return GlassContainer(
-      blur: 20,
       opacity: 0.08,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Column(
@@ -578,7 +573,7 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
                     valueColor: AlwaysStoppedAnimation<Color>(
-                      Color(0xFFC0392B),
+                      Color(0xFFC94B3D),
                     ),
                   ),
                 )

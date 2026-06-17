@@ -16,7 +16,11 @@ class UpdateLocation {
   }
 
   Future<LocationEntity> executeWithManual(
-      double lat, double lng, String city, String country) async {
+    double lat,
+    double lng,
+    String city,
+    String country,
+  ) async {
     final location = LocationEntity(
       latitude: lat,
       longitude: lng,

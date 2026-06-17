@@ -292,7 +292,7 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen> {
     final isDark = theme.brightness == Brightness.dark;
     final primaryColor = AppTheme.readableAccent(context);
     final textColor = isDark
-        ? const Color(0xFFF3FBF6)
+        ? const Color(0xFFFFF7ED)
         : const Color(0xFF241A12);
     final mutedColor = isDark
         ? const Color(0xFFC8B8A8)
@@ -307,8 +307,8 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen> {
         backgroundColor: appBarColor,
         foregroundColor: textColor,
         surfaceTintColor: Colors.transparent,
-        elevation: 2,
-        shadowColor: Colors.black.withValues(alpha: 0.12),
+        elevation: 0,
+        shadowColor: Colors.transparent,
         title: const Text(
           'Masjid Terdekat',
           style: TextStyle(fontWeight: FontWeight.bold),
@@ -455,7 +455,7 @@ class _StatusCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GlassContainer(
       margin: const EdgeInsets.only(bottom: 12),
-      borderRadius: 18,
+      borderRadius: 24,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -514,7 +514,7 @@ class _AreaMapCard extends StatelessWidget {
     final visibleMosques = mosques.take(12).toList(growable: false);
 
     return GlassContainer(
-      borderRadius: 18,
+      borderRadius: 24,
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Column(
@@ -548,7 +548,7 @@ class _AreaMapCard extends StatelessWidget {
               height: 150,
               width: double.infinity,
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(24),
                 child: CustomPaint(
                   painter: _AreaMapPainter(
                     latitude: latitude,
@@ -708,7 +708,7 @@ class _MosqueCard extends StatelessWidget {
 
     return GlassContainer(
       margin: const EdgeInsets.only(bottom: 12),
-      borderRadius: 18,
+      borderRadius: 24,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

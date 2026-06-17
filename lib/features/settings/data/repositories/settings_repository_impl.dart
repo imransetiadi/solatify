@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../domain/entities/settings_state.dart';
-import '../../domain/repositories/settings_repository.dart';
-import '../datasources/settings_local_data_source.dart';
+import 'package:solatify/features/settings/data/datasources/settings_local_data_source.dart';
+import 'package:solatify/features/settings/domain/entities/settings_state.dart';
+import 'package:solatify/features/settings/domain/repositories/settings_repository.dart';
 
 class SettingsRepositoryImpl implements SettingsRepository {
   const SettingsRepositoryImpl({required this.localDataSource});
@@ -36,5 +36,10 @@ class SettingsRepositoryImpl implements SettingsRepository {
   @override
   Future<void> updatePrayerOffsets(Map<String, int> offsets) {
     return localDataSource.updatePrayerOffsets(offsets);
+  }
+
+  @override
+  Future<void> updateAdhanNotificationsEnabled(bool enabled) {
+    return localDataSource.updateAdhanNotificationsEnabled(enabled);
   }
 }

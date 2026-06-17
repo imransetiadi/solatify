@@ -13,6 +13,10 @@ class HiveService {
 
   static bool _initialized = false;
   static bool _hiveInitialized = false;
+  static const String _adhanNotificationsEnabledKey =
+      'adhan_notifications_enabled';
+  static const String _manualAdhanNotificationDefaultMigratedKey =
+      'adhan_notifications_manual_default_migrated';
 
   static bool get isInitialized => _initialized;
 
@@ -37,6 +41,7 @@ class HiveService {
       for (final name in _allBoxNames) {
         await _openBoxSafe(name);
       }
+      await ensureManualAdhanNotificationDefault();
       _initialized = true;
     } catch (e) {
       debugPrint('Error ensuring boxes are open: $e');
@@ -52,7 +57,22 @@ class HiveService {
     for (final name in _allBoxNames) {
       await _openBoxSafe(name);
     }
+    await ensureManualAdhanNotificationDefault();
     _initialized = true;
+  }
+
+  static Future<void> ensureManualAdhanNotificationDefault() async {
+    final box = _tryGetBox(settingsBoxName);
+    if (box == null) return;
+
+    final migrated = box.get(
+      _manualAdhanNotificationDefaultMigratedKey,
+      defaultValue: false,
+    );
+    if (migrated == true) return;
+
+    await box.put(_adhanNotificationsEnabledKey, false);
+    await box.put(_manualAdhanNotificationDefaultMigratedKey, true);
   }
 
   /// Opens a box safely. If the box is corrupted (common after force-close),

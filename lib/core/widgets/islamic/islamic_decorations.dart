@@ -83,7 +83,7 @@ class IslamicBackground extends StatelessWidget {
   const IslamicBackground({
     super.key,
     required this.child,
-    this.showPattern = true,
+    this.showPattern = false,
   });
   final Widget child;
   final bool showPattern;
@@ -91,33 +91,19 @@ class IslamicBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primaryColor = Theme.of(context).colorScheme.secondary;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isDark
-              ? [
-                  const Color(0xFF082E1D), // Very dark green
-                  const Color(0xFF0E4D31), // Islamic Green
-                  const Color(0xFF153B27),
-                ]
-              : [
-                  const Color(0xFFF3FBF6), // Very light green tint
-                  const Color(0xFFE8F5E9),
-                  const Color(0xFFF1F8E9),
-                ],
-        ),
+        color: isDark ? const Color(0xFF082E1D) : const Color(0xFFF3FBF6),
       ),
       child: Stack(
         children: [
           if (showPattern)
             Positioned.fill(
               child: IslamicGeometricPattern(
-                color: isDark ? Colors.white : primaryColor,
-                opacity: isDark ? 0.04 : 0.06,
+                color: isDark ? Colors.white : colorScheme.secondary,
+                opacity: isDark ? 0.015 : 0.02,
               ),
             ),
           child,

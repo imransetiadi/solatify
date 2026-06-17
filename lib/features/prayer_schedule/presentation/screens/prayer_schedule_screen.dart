@@ -7,6 +7,8 @@ import 'package:solatify/core/utils/location_service.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
+import 'package:solatify/core/widgets/solatify_design_tokens.dart';
+import 'package:solatify/core/widgets/solatify_hero_card.dart';
 import 'package:solatify/features/settings/presentation/providers/settings_provider.dart';
 
 import '../../data/prayer_calculation_service.dart';
@@ -88,11 +90,11 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
                         prefixIcon: Icon(Icons.search, color: dTextSecondary),
                         enabledBorder: OutlineInputBorder(
                           borderSide: BorderSide(color: dBorderColor),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(24),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderSide: BorderSide(color: dialogAccentColor),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(24),
                         ),
                       ),
                       onChanged: (val) {
@@ -118,7 +120,7 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
                             ),
                             trailing: Icon(
                               Icons.arrow_forward_ios,
-                              size: 14,
+                              size: SolatifyIconSize.inline,
                               color: dialogAccentColor,
                             ),
                             onTap: () {
@@ -197,94 +199,29 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
             child: CustomScrollView(
               physics: const BouncingScrollPhysics(),
               slivers: [
-                // Header Title with Location selector
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: ResponsiveLayout.pagePadding(
-                      context,
-                    ).copyWith(top: 16, bottom: 8),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            l.prayerSchedule,
-                            style: TextStyle(
-                              fontSize: 26,
-                              fontWeight: FontWeight.bold,
-                              color: textColor,
-                            ),
-                          ),
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.edit_location, color: textSecondary),
-                          onPressed: () => _showManualCityDialog(),
-                        ),
-                      ],
+                    padding: ResponsiveLayout.pagePadding(context).copyWith(
+                      top: ResponsiveLayout.pageTopGap,
+                      bottom: ResponsiveLayout.itemGap,
                     ),
-                  ),
-                ),
-
-                // Location Details Banner Card
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: ResponsiveLayout.pagePadding(
-                      context,
-                    ).copyWith(top: 8, bottom: 8),
-                    child: GlassContainer(
-                      blur: 15,
-                      opacity: isDark ? 0.03 : 0.015,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.location_on,
-                                  color: AppTheme.readableAccent(context),
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 8),
-                                Flexible(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        location.city,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: textColor,
-                                        ),
-                                      ),
-                                      Text(
-                                        'Metode: ${settings.calculationMethod}',
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          color: textSecondary,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          TextButton.icon(
-                            style: TextButton.styleFrom(
-                              foregroundColor: textColor,
-                              textStyle: const TextStyle(fontSize: 12),
-                            ),
-                            icon: const Icon(Icons.edit, size: 14),
-                            label: const Text('Ubah'),
-                            onPressed: _showManualCityDialog,
-                          ),
-                        ],
+                    child: SolatifyHeroCard(
+                      eyebrow: l.prayerSchedule,
+                      title: l.prayerSchedule,
+                      subtitle:
+                          '$displayDate • ${location.city}, ${location.country} • ${settings.calculationMethod}',
+                      icon: Icons.access_time_filled_rounded,
+                      trailing: TextButton.icon(
+                        style: TextButton.styleFrom(
+                          foregroundColor: theme.colorScheme.tertiary,
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        icon: const Icon(
+                          Icons.edit_location_alt_outlined,
+                          size: SolatifyIconSize.inline,
+                        ),
+                        label: const Text('Ubah'),
+                        onPressed: _showManualCityDialog,
                       ),
                     ),
                   ),
@@ -294,7 +231,9 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
                 SliverToBoxAdapter(
                   child: Container(
                     height: 84,
-                    margin: const EdgeInsets.symmetric(vertical: 12),
+                    margin: const EdgeInsets.symmetric(
+                      vertical: ResponsiveLayout.itemGap,
+                    ),
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
                       padding: ResponsiveLayout.pagePadding(
@@ -332,7 +271,7 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
                                             alpha: 0.72,
                                           )
                                         : Colors.black.withValues(alpha: 0.02)),
-                              borderRadius: BorderRadius.circular(16),
+                              borderRadius: BorderRadius.circular(22),
                               border: Border.all(
                                 color: isSelected
                                     ? selectedDateColor
@@ -353,7 +292,7 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
                                 Text(
                                   dayName,
                                   style: TextStyle(
-                                    fontSize: 10,
+                                    fontSize: SolatifyType.eyebrow,
                                     fontWeight: FontWeight.bold,
                                     color: isSelected
                                         ? selectedDateTextColor
@@ -364,7 +303,7 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
                                 Text(
                                   dayNum,
                                   style: TextStyle(
-                                    fontSize: 18,
+                                    fontSize: SolatifyType.sectionTitle,
                                     fontWeight: FontWeight.bold,
                                     color: isSelected
                                         ? selectedDateTextColor
@@ -383,12 +322,17 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
                 // Selected Date Indicator
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: ResponsiveLayout.pagePadding(
-                      context,
-                    ).copyWith(top: 8, bottom: 8),
+                    padding: ResponsiveLayout.pagePadding(context).copyWith(
+                      top: ResponsiveLayout.itemGap,
+                      bottom: ResponsiveLayout.itemGap,
+                    ),
                     child: Row(
                       children: [
-                        Icon(Icons.today, color: textSecondary, size: 16),
+                        Icon(
+                          Icons.today,
+                          color: textSecondary,
+                          size: SolatifyIconSize.inline,
+                        ),
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
@@ -398,7 +342,7 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
                             style: TextStyle(
                               color: textMuted,
                               fontWeight: FontWeight.w600,
-                              fontSize: 14,
+                              fontSize: SolatifyType.body,
                             ),
                           ),
                         ),
@@ -410,13 +354,14 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
                 // Prayer times checklist card
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: ResponsiveLayout.pagePadding(
-                      context,
-                    ).copyWith(top: 8, bottom: 96),
+                    padding: ResponsiveLayout.pagePadding(context).copyWith(
+                      top: ResponsiveLayout.itemGap,
+                      bottom: ResponsiveLayout.bottomSafeGap,
+                    ),
                     child: GlassContainer(
-                      blur: 20,
                       opacity: isDark ? 0.04 : 0.02,
-                      padding: const EdgeInsets.all(24),
+                      borderRadius: 24,
+                      padding: ResponsiveLayout.cardPadding,
                       child: Column(
                         children: [
                           _buildPrayerTimeRow(
@@ -473,12 +418,16 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
         children: [
           Row(
             children: [
-              Icon(icon, color: const Color(0xFF9A6A3A), size: 20),
+              Icon(
+                icon,
+                color: const Color(0xFF9A6A3A),
+                size: SolatifyIconSize.cardIcon,
+              ),
               const SizedBox(width: 16),
               Text(
                 name,
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: SolatifyType.cardTitle,
                   fontWeight: FontWeight.w600,
                   color: textColor,
                 ),
@@ -488,7 +437,7 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
           Text(
             formattedTime,
             style: TextStyle(
-              fontSize: 18,
+              fontSize: SolatifyType.sectionTitle,
               fontWeight: FontWeight.bold,
               color: textColor,
               letterSpacing: 0.5,

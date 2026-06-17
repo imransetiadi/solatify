@@ -27,9 +27,9 @@ class AppTheme {
 
   // Text color tokens untuk reusable di komponen
   static const Color darkModeText = Colors.white;
-  static const Color darkModeTextSecondary = Color(0xFFB8A898); // white87-like
-  static const Color darkModeTextTertiary = Color(0xFF999999); // white70-like
-  static const Color darkModeTextHint = Color(0xFF666666); // white54-like
+  static const Color darkModeTextSecondary = Color(0xFFB8A898);
+  static const Color darkModeTextTertiary = Color(0xFF999999);
+  static const Color darkModeTextHint = Color(0xFF666666);
 
   static const Color lightModeText = Color(0xFF241A12);
   static const Color lightModeTextSecondary = Color(
@@ -63,26 +63,25 @@ class AppTheme {
       ),
       focusColor: redAccentDark,
       highlightColor: redAccentDark.withValues(alpha: 0.08),
-      fontFamily: 'Outfit',
       appBarTheme: const AppBarTheme(
         backgroundColor: darkBg,
         elevation: 0,
         centerTitle: true,
         titleTextStyle: TextStyle(
           color: textLight,
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 0.5,
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.1,
         ),
         iconTheme: IconThemeData(color: textLight),
       ),
       cardTheme: CardThemeData(
         color: darkCard,
-        elevation: 2,
+        elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(20),
           side: BorderSide(
-            color: redAccentDark.withValues(alpha: 0.45),
+            color: redAccentDark.withValues(alpha: 0.12),
             width: 1,
           ),
         ),
@@ -93,7 +92,7 @@ class AppTheme {
         unselectedItemColor: Color(0xFFA99786),
         showUnselectedLabels: true,
         type: BottomNavigationBarType.fixed,
-        elevation: 16,
+        elevation: 0,
       ),
       navigationRailTheme: const NavigationRailThemeData(
         backgroundColor: darkBg,
@@ -108,7 +107,7 @@ class AppTheme {
           color: Color(0xFFA99786),
           fontSize: 12,
         ),
-        indicatorColor: Color(0x26E85D4F),
+        indicatorColor: Color(0x1AE85D4F),
       ),
       tabBarTheme: const TabBarThemeData(
         indicatorColor: redAccentDark,
@@ -145,21 +144,21 @@ class AppTheme {
         filled: true,
         fillColor: darkCard,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(18),
           borderSide: const BorderSide(color: darkSurface),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(18),
           borderSide: const BorderSide(color: darkSurface),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(18),
           borderSide: const BorderSide(color: redAccentDark, width: 1.5),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: brown,
+          backgroundColor: redAccentDark,
           foregroundColor: const Color(0xFFFFFBF7),
           shape: _smallShape,
           minimumSize: const Size(48, 44),
@@ -229,25 +228,24 @@ class AppTheme {
       ),
       focusColor: redAccent,
       highlightColor: redAccent.withValues(alpha: 0.08),
-      fontFamily: 'Outfit',
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
         titleTextStyle: TextStyle(
           color: textDark,
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 0.5,
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.1,
         ),
         iconTheme: IconThemeData(color: textDark),
       ),
       cardTheme: CardThemeData(
         color: lightCard,
-        elevation: 2,
+        elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
-          side: BorderSide(color: redAccent.withValues(alpha: 0.35), width: 1),
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: redAccent.withValues(alpha: 0.10), width: 1),
         ),
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
@@ -256,7 +254,7 @@ class AppTheme {
         unselectedItemColor: textMuted,
         showUnselectedLabels: true,
         type: BottomNavigationBarType.fixed,
-        elevation: 8,
+        elevation: 0,
       ),
       navigationRailTheme: const NavigationRailThemeData(
         backgroundColor: lightBg,
@@ -268,7 +266,7 @@ class AppTheme {
         ),
         unselectedIconTheme: IconThemeData(color: textMuted),
         unselectedLabelTextStyle: TextStyle(color: textMuted, fontSize: 12),
-        indicatorColor: Color(0x26C0392B),
+        indicatorColor: Color(0x1AC0392B),
       ),
       tabBarTheme: const TabBarThemeData(
         indicatorColor: redAccent,
@@ -303,21 +301,21 @@ class AppTheme {
         filled: true,
         fillColor: lightCard,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(18),
           borderSide: const BorderSide(color: lightBorder),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(18),
           borderSide: const BorderSide(color: lightBorder),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(18),
           borderSide: const BorderSide(color: redAccent, width: 1.5),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: brown,
+          backgroundColor: redAccent,
           foregroundColor: Colors.white,
           shape: _smallShape,
           minimumSize: const Size(48, 44),

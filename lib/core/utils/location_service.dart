@@ -2,7 +2,6 @@ import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 
 class OfflineCity {
-
   const OfflineCity({
     required this.name,
     required this.country,

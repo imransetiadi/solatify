@@ -8,7 +8,7 @@ class GetWeeklyStats {
 
   Future<WeeklyStatsEntity> execute(DateTime endDate) async {
     final logs = await repository.getWeeklyLogs(endDate);
-    
+
     final prayers = ['subuh', 'dzuhur', 'ashar', 'magrib', 'isya'];
     final rates = <String, double>{};
     int totalDone = 0;
@@ -19,9 +19,6 @@ class GetWeeklyStats {
       totalDone += doneCount;
     }
 
-    return WeeklyStatsEntity(
-      completionRates: rates,
-      totalDone: totalDone,
-    );
+    return WeeklyStatsEntity(completionRates: rates, totalDone: totalDone);
   }
 }

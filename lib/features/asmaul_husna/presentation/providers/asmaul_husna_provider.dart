@@ -6,9 +6,11 @@ import 'package:solatify/features/asmaul_husna/domain/repositories/asmaul_husna_
 import 'package:solatify/features/asmaul_husna/domain/usecases/get_asmaul_husna.dart';
 
 // Data Source Provider
-final asmaulHusnaLocalDataSourceProvider = Provider<AsmaulHusnaLocalDataSource>((ref) {
-  return const AsmaulHusnaLocalDataSourceImpl();
-});
+final asmaulHusnaLocalDataSourceProvider = Provider<AsmaulHusnaLocalDataSource>(
+  (ref) {
+    return const AsmaulHusnaLocalDataSourceImpl();
+  },
+);
 
 // Repository Provider
 final asmaulHusnaRepositoryProvider = Provider<AsmaulHusnaRepository>((ref) {

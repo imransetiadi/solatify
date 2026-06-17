@@ -15,9 +15,9 @@ class IslamicTipsScreen extends ConsumerWidget {
     final redAccent = theme.colorScheme.tertiary;
     final primaryColor = isDark
         ? const Color(0xFFC78A4C)
-        : const Color(0xFF0E4D31);
+        : const Color(0xFFC94B3D);
     final textColor = isDark
-        ? const Color(0xFFF3FBF6)
+        ? const Color(0xFFFFF7ED)
         : const Color(0xFF241A12);
     final cardBg = isDark ? const Color(0xFF241A14) : Colors.white;
     final appBarColor = Theme.of(
@@ -31,8 +31,8 @@ class IslamicTipsScreen extends ConsumerWidget {
         backgroundColor: appBarColor,
         foregroundColor: textColor,
         surfaceTintColor: Colors.transparent,
-        elevation: 2,
-        shadowColor: Colors.black.withValues(alpha: 0.12),
+        elevation: 0,
+        shadowColor: Colors.transparent,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/islamic-content'),
@@ -60,9 +60,9 @@ class IslamicTipsScreen extends ConsumerWidget {
                     return Card(
                       margin: const EdgeInsets.symmetric(vertical: 8),
                       color: cardBg,
-                      elevation: 2,
+                      elevation: 0,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(24),
                         side: BorderSide(
                           color: redAccent.withValues(alpha: 0.30),
                           width: 1,

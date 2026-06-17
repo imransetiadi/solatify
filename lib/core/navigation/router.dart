@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:solatify/core/widgets/solatify_design_tokens.dart';
 import 'package:solatify/features/prayer_guide/presentation/screens/prayer_guide_screen.dart';
 
 import '../../features/asmaul_husna/presentation/screens/asmaul_husna_screen.dart';
@@ -309,26 +310,79 @@ class MainLayoutScreen extends StatelessWidget {
 
   void _showMoreMenu(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
+      backgroundColor: theme.colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
       builder: (context) {
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            padding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: _moreDestinations.map((destination) {
-                return ListTile(
-                  leading: Icon(destination.icon),
-                  title: Text(_labelForDestination(l, destination)),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    Navigator.pop(context);
-                    GoRouter.of(context).go(destination.path);
-                  },
-                );
-              }).toList(),
+              children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(4, 0, 4, 10),
+                    child: Text(
+                      l.navMore,
+                      style: TextStyle(
+                        color: theme.colorScheme.onSurface,
+                        fontSize: SolatifyType.sectionTitle,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ),
+                ..._moreDestinations.map((destination) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Material(
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.05)
+                          : Colors.black.withValues(alpha: 0.03),
+                      borderRadius: SolatifyRadius.compactCard,
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 2,
+                        ),
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: SolatifyRadius.compactCard,
+                        ),
+                        leading: Icon(
+                          destination.icon,
+                          color: theme.colorScheme.tertiary,
+                        ),
+                        title: Text(
+                          _labelForDestination(l, destination),
+                          style: TextStyle(
+                            color: theme.colorScheme.onSurface,
+                            fontSize: SolatifyType.body,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        trailing: Icon(
+                          Icons.chevron_right_rounded,
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.55,
+                          ),
+                        ),
+                        onTap: () {
+                          Navigator.pop(context);
+                          GoRouter.of(context).go(destination.path);
+                        },
+                      ),
+                    ),
+                  );
+                }),
+              ],
             ),
           ),
         );
@@ -388,9 +442,9 @@ class MainLayoutScreen extends StatelessWidget {
     // both small and large phones.
     final width = MediaQuery.sizeOf(context).width;
     final scale = (width / 390).clamp(0.88, 1.12);
-    final iconSize = 23.0 * scale;
-    final selectedIconSize = 25.0 * scale;
-    final barHeight = (64.0 * scale).clamp(58.0, 74.0);
+    final iconSize = 22.0 * scale;
+    final selectedIconSize = 24.0 * scale;
+    final barHeight = (64.0 * scale).clamp(60.0, 72.0);
     // Show every label when there is room; collapse to selected-only on
     // narrow devices so the 5 items stay evenly proportioned.
     final labelBehavior = width < 360
@@ -400,22 +454,15 @@ class MainLayoutScreen extends StatelessWidget {
     return Scaffold(
       body: child,
       bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.08),
-              blurRadius: 18,
-              offset: const Offset(0, -6),
-            ),
-          ],
-        ),
+        decoration: const BoxDecoration(),
         child: NavigationBar(
           selectedIndex: _calculateMobileSelectedIndex(context),
           onDestinationSelected: (index) => _onMobileItemTapped(index, context),
           height: barHeight,
           labelBehavior: labelBehavior,
           backgroundColor: theme.colorScheme.surface,
-          indicatorColor: theme.colorScheme.tertiary.withValues(alpha: 0.14),
+          elevation: 0,
+          indicatorColor: theme.colorScheme.tertiary.withValues(alpha: 0.10),
           destinations: _mobileDestinations.map((destination) {
             return NavigationDestination(
               icon: Icon(

@@ -10,6 +10,8 @@ import 'package:solatify/features/prayer_schedule/domain/entities/location_entit
 import 'package:solatify/features/prayer_schedule/domain/entities/prayer_times_state_entity.dart';
 import 'package:solatify/features/prayer_schedule/presentation/location_provider.dart';
 import 'package:solatify/features/prayer_schedule/presentation/prayer_times_provider.dart';
+import 'package:solatify/features/settings/domain/entities/settings_state.dart';
+import 'package:solatify/features/settings/presentation/providers/settings_provider.dart';
 
 class PrayerNotificationRequest {
   const PrayerNotificationRequest({
@@ -75,6 +77,9 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
   final Set<String> _scheduledNotifications = {};
   ProviderSubscription<PrayerTimesStateEntity>? _prayerTimesSubscription;
   ProviderSubscription<LocationEntity>? _locationSubscription;
+  ProviderSubscription<SettingsState>? _settingsSubscription;
+  bool _schedulingInProgress = false;
+  bool _rescheduleRequested = false;
 
   Future<void> refreshSchedules({bool force = false}) async {
     if (force) {
@@ -88,6 +93,7 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
       await NotificationService().init();
       _prayerTimesSubscription?.close();
       _locationSubscription?.close();
+      _settingsSubscription?.close();
       _prayerTimesSubscription = _ref.listen<PrayerTimesStateEntity>(
         prayerTimesProvider,
         (previous, next) {
@@ -102,6 +108,22 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
       ) {
         if (mounted) {
           _scheduleAllNotifications();
+        }
+      });
+      _settingsSubscription = _ref.listen<SettingsState>(settingsProvider, (
+        previous,
+        next,
+      ) {
+        if (!mounted ||
+            previous?.adhanNotificationsEnabled ==
+                next.adhanNotificationsEnabled) {
+          return;
+        }
+
+        if (next.adhanNotificationsEnabled) {
+          refreshSchedules(force: true);
+        } else {
+          cancelAllNotifications();
         }
       });
       _scheduleAllNotifications();
@@ -119,9 +141,30 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
   }
 
   Future<void> _scheduleAllNotifications() async {
+    if (_schedulingInProgress) {
+      _rescheduleRequested = true;
+      return;
+    }
+
+    _schedulingInProgress = true;
     try {
       final timesState = _ref.read(prayerTimesProvider);
       final location = _ref.read(locationProvider);
+      final settings = _ref.read(settingsProvider);
+
+      if (!settings.adhanNotificationsEnabled) {
+        await NotificationService().cancelAllNotifications();
+        _scheduledNotifications.clear();
+        return;
+      }
+
+      final readiness = await NotificationService().getReadinessStatus();
+      if (readiness.status ==
+          NotificationReadinessStatus.needsNotificationPermission) {
+        await NotificationService().cancelAllNotifications();
+        _scheduledNotifications.clear();
+        return;
+      }
 
       final today = timesState.todayTimes;
       final tomorrow = timesState.tomorrowTimes;
@@ -151,7 +194,6 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
         );
       }
 
-      final readiness = await NotificationService().getReadinessStatus();
       debugPrint(
         'Notification readiness before prayer scheduling: '
         '${readiness.status.name} - ${readiness.title}',
@@ -177,6 +219,12 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
       );
     } catch (e) {
       debugPrint('Error scheduling notifications: $e');
+    } finally {
+      _schedulingInProgress = false;
+      if (_rescheduleRequested && mounted) {
+        _rescheduleRequested = false;
+        await _scheduleAllNotifications();
+      }
     }
   }
 
@@ -197,6 +245,7 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
       if (_scheduledNotifications.contains(notificationKey)) {
         return;
       }
+      _scheduledNotifications.add(notificationKey);
 
       final timeFormatter = DateFormat('HH:mm');
       final prayerTimeStr = timeFormatter.format(prayerTime);
@@ -211,12 +260,16 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
         notificationId: notificationId,
       );
 
-      // Mark as scheduled only after successful completion
-      _scheduledNotifications.add(notificationKey);
       debugPrint(
         'Marked $prayerKey scheduled: ID=$notificationId at $prayerTimeStr',
       );
     } catch (e) {
+      _scheduledNotifications.remove(
+        buildPrayerNotificationKey(
+          prayerKey: prayerKey,
+          prayerTime: prayerTime,
+        ),
+      );
       debugPrint('Error scheduling notification for $prayerKey: $e');
     }
   }
@@ -248,6 +301,7 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
     _schedulingTimer?.cancel();
     _prayerTimesSubscription?.close();
     _locationSubscription?.close();
+    _settingsSubscription?.close();
     super.dispose();
   }
 }

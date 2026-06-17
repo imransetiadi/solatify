@@ -32,8 +32,8 @@ class PrayerGuideScreen extends ConsumerWidget {
         backgroundColor: appBarColor,
         foregroundColor: textColor,
         surfaceTintColor: Colors.transparent,
-        elevation: 2,
-        shadowColor: Colors.black.withValues(alpha: 0.12),
+        elevation: 0,
+        shadowColor: Colors.transparent,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/islamic-content'),
@@ -475,7 +475,7 @@ class _ArabicTextBlock extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       decoration: BoxDecoration(
         color: primaryColor.withValues(alpha: 0.07),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(color: primaryColor.withValues(alpha: 0.12)),
       ),
       child: Text(
@@ -483,12 +483,7 @@ class _ArabicTextBlock extends StatelessWidget {
         textAlign: TextAlign.right,
         textDirection: TextDirection.rtl,
         softWrap: true,
-        style: TextStyle(
-          color: textColor,
-          fontSize: 23,
-          height: 1.9,
-          fontFamily: 'Kufi',
-        ),
+        style: TextStyle(color: textColor, fontSize: 23, height: 1.9),
       ),
     );
   }
@@ -511,7 +506,7 @@ class _NoteBox extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(color: color.withValues(alpha: 0.16)),
       ),
       child: Text(

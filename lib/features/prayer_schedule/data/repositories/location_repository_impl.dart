@@ -48,7 +48,8 @@ class LocationRepositoryImpl implements LocationRepository {
   Future<LocationEntity?> getCurrentLocation() async {
     final pos = await LocationService.getCurrentPosition().timeout(
       const Duration(seconds: 15),
-      onTimeout: () => throw 'GPS Timeout: Lokasi gagal dideteksi dalam 15 detik.',
+      onTimeout: () =>
+          throw 'GPS Timeout: Lokasi gagal dideteksi dalam 15 detik.',
     );
 
     if (pos != null) {

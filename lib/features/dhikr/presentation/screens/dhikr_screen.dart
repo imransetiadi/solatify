@@ -16,11 +16,11 @@ class DhikrScreen extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final l = AppLocalizations.of(context);
     final textColor = isDark
-        ? const Color(0xFFF3FBF6)
+        ? const Color(0xFFFFF7ED)
         : const Color(0xFF241A12);
     final primaryColor = isDark
         ? const Color(0xFFC78A4C)
-        : const Color(0xFF0E4D31);
+        : const Color(0xFFC94B3D);
     final appBarColor = Theme.of(
       context,
     ).colorScheme.surface.withValues(alpha: isDark ? 0.96 : 0.94);
@@ -31,8 +31,8 @@ class DhikrScreen extends ConsumerWidget {
         appBar: AppBar(
           backgroundColor: appBarColor,
           surfaceTintColor: Colors.transparent,
-          elevation: 2,
-          shadowColor: Colors.black.withValues(alpha: 0.12),
+          elevation: 0,
+          shadowColor: Colors.transparent,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             color: textColor,
@@ -93,7 +93,7 @@ class _DhikrListView extends ConsumerWidget {
           final dhikr = dhikrList[index];
           return GlassContainer(
             margin: const EdgeInsets.only(bottom: 14),
-            borderRadius: 16,
+            borderRadius: 24,
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
               child: Column(
@@ -121,7 +121,7 @@ class _DhikrListView extends ConsumerWidget {
                           ),
                           decoration: BoxDecoration(
                             color: primaryColor.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(24),
                           ),
                           child: Text(
                             'Dibaca ${dhikr.count}x',
@@ -144,7 +144,7 @@ class _DhikrListView extends ConsumerWidget {
                     ),
                     decoration: BoxDecoration(
                       color: primaryColor.withValues(alpha: 0.07),
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(24),
                       border: Border.all(
                         color: primaryColor.withValues(alpha: 0.12),
                       ),
@@ -158,7 +158,6 @@ class _DhikrListView extends ConsumerWidget {
                         color: textColor,
                         fontSize: 23,
                         height: 1.9,
-                        fontFamily: 'Kufi',
                       ),
                     ),
                   ),

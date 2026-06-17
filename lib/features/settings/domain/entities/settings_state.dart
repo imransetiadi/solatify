@@ -7,6 +7,7 @@ class SettingsState {
     required this.calculationMethod,
     required this.onboardingCompleted,
     required this.prayerOffsets,
+    required this.adhanNotificationsEnabled,
   });
 
   final ThemeMode themeMode;
@@ -14,6 +15,7 @@ class SettingsState {
   final String calculationMethod;
   final bool onboardingCompleted;
   final Map<String, int> prayerOffsets;
+  final bool adhanNotificationsEnabled;
 
   SettingsState copyWith({
     ThemeMode? themeMode,
@@ -21,6 +23,7 @@ class SettingsState {
     String? calculationMethod,
     bool? onboardingCompleted,
     Map<String, int>? prayerOffsets,
+    bool? adhanNotificationsEnabled,
   }) {
     return SettingsState(
       themeMode: themeMode ?? this.themeMode,
@@ -28,6 +31,8 @@ class SettingsState {
       calculationMethod: calculationMethod ?? this.calculationMethod,
       onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
       prayerOffsets: prayerOffsets ?? this.prayerOffsets,
+      adhanNotificationsEnabled:
+          adhanNotificationsEnabled ?? this.adhanNotificationsEnabled,
     );
   }
 }
