@@ -412,6 +412,7 @@ class NotificationService {
         presentAlert: true,
         presentBadge: true,
         presentSound: true,
+        sound: 'adhan_short.caf',
       );
 
       const NotificationDetails notificationDetails = NotificationDetails(
@@ -490,6 +491,7 @@ class NotificationService {
         presentAlert: true,
         presentBadge: true,
         presentSound: true,
+        sound: 'adhan_short.caf',
       );
 
       const NotificationDetails notificationDetails = NotificationDetails(
