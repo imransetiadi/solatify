@@ -3,6 +3,7 @@ package com.solatify.app.solatify.service
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
@@ -20,6 +21,12 @@ class AdhanPlaybackService : Service() {
     private var previousAlarmVolume: Int? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (intent?.action == ACTION_STOP_ADHAN) {
+            releasePlayer()
+            stopSelf()
+            return START_NOT_STICKY
+        }
+
         startForeground(PLAYBACK_NOTIFICATION_ID, buildPlaybackNotification())
         playAdhan()
         return START_NOT_STICKY
@@ -91,6 +98,16 @@ class AdhanPlaybackService : Service() {
 
     private fun buildPlaybackNotification(): Notification {
         ensurePlaybackChannel()
+        val stopIntent = Intent(this, AdhanPlaybackService::class.java).apply {
+            action = ACTION_STOP_ADHAN
+        }
+        val stopPendingIntent = PendingIntent.getService(
+            this,
+            STOP_REQUEST_CODE,
+            stopIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or immutableFlag(),
+        )
+
         return NotificationCompat.Builder(this, PLAYBACK_CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle("Solatify")
@@ -99,7 +116,12 @@ class AdhanPlaybackService : Service() {
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
             .setOngoing(true)
             .setSilent(true)
+            .addAction(R.mipmap.ic_launcher, "Berhenti", stopPendingIntent)
             .build()
+    }
+
+    private fun immutableFlag(): Int {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
     }
 
     private fun ensurePlaybackChannel() {
@@ -119,7 +141,9 @@ class AdhanPlaybackService : Service() {
 
     companion object {
         private const val TAG = "AdhanPlaybackService"
+        private const val ACTION_STOP_ADHAN = "com.solatify.app.solatify.STOP_ADHAN"
         private const val PLAYBACK_CHANNEL_ID = "adhan_playback_service_channel"
         private const val PLAYBACK_NOTIFICATION_ID = 99001
+        private const val STOP_REQUEST_CODE = 99002
     }
 }

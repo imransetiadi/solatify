@@ -296,6 +296,17 @@ void main() {
     expect(manifest, contains('android:foregroundServiceType="mediaPlayback"'));
   });
 
+  test('Adhan playback notification declares stop action', () {
+    final service = File(
+      'android/app/src/main/kotlin/com/solatify/app/solatify/service/AdhanPlaybackService.kt',
+    ).readAsStringSync();
+
+    expect(service, contains('ACTION_STOP_ADHAN'));
+    expect(service, contains('.addAction'));
+    expect(service, contains('"Berhenti"'));
+    expect(service, contains('stopSelf()'));
+  });
+
   test('reports pending notification count from the platform API', () async {
     final count = await service.getPendingNotificationsCount();
 
