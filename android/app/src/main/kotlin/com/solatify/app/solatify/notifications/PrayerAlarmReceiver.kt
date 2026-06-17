@@ -58,7 +58,7 @@ class PrayerAlarmReceiver : BroadcastReceiver() {
     }
 }
 
-const val CHANNEL_ID = "prayer_times_adhan_channel_v5"
+const val CHANNEL_ID = "prayer_times_adhan_channel_v7"
 
 fun ensureNotificationChannel(context: Context) {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
