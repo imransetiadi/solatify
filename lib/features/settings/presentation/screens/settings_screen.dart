@@ -8,7 +8,6 @@ import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
 import 'package:solatify/core/widgets/solatify_design_tokens.dart';
-import 'package:solatify/core/widgets/solatify_hero_card.dart';
 import 'package:solatify/features/notifications/data/services/notification_service.dart';
 import 'package:solatify/features/notifications/presentation/providers/notification_scheduler_provider.dart';
 import 'package:solatify/features/settings/presentation/providers/settings_provider.dart';
@@ -396,15 +395,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SolatifyHeroCard(
-                    eyebrow: l.navSettings,
-                    title: l.navSettings,
-                    subtitle:
-                        'Atur metode jadwal, bahasa, tema, notifikasi, dan koreksi waktu salat dari satu tempat.',
-                    icon: Icons.tune_rounded,
+                  Text(
+                    l.navSettings,
+                    style: TextStyle(
+                      color: textColor,
+                      fontSize: SolatifyType.pageTitle,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
-                  const SizedBox(height: ResponsiveLayout.sectionGap),
-
+                  const SizedBox(height: ResponsiveLayout.itemGap),
                   _buildSectionHeader(context, l.generalSettings),
                   const SizedBox(height: ResponsiveLayout.itemGap),
                   GlassContainer(

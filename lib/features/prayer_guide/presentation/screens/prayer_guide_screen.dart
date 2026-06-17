@@ -52,11 +52,6 @@ class PrayerGuideScreen extends ConsumerWidget {
               context,
             ).copyWith(top: 16, bottom: 96),
             children: [
-              const IslamicHeaderDecoration(
-                title: 'Tuntunan Salat Lengkap',
-                subtitle: 'Urutan gerakan, bacaan, dan makna ringkas',
-              ),
-              const SizedBox(height: 18),
               _OpeningReadingCard(
                 primaryColor: primaryColor,
                 textColor: textColor,

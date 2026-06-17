@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:solatify/features/notifications/data/services/notification_service.dart';
@@ -71,6 +72,7 @@ void main() {
   });
 
   tearDown(() async {
+    debugDefaultTargetPlatformOverride = null;
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, null);
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -148,6 +150,34 @@ void main() {
       'prayer_times_adhan_channel',
     );
   });
+
+  test(
+    'can skip repeated exact-alarm capability refresh while batching',
+    () async {
+      await service.init();
+
+      await service.schedulePrayerNotification(
+        prayerKey: 'ashar',
+        location: 'Jakarta, Indonesia',
+        prayerTime: '15:20',
+        notificationTime: DateTime.now().add(const Duration(minutes: 10)),
+        timezoneName: 'Asia/Jakarta',
+        notificationId: 1003,
+        refreshExactAlarmCapability: false,
+      );
+
+      expect(
+        capturedMethods.where(
+          (call) => call.method == 'canScheduleExactNotifications',
+        ),
+        isEmpty,
+      );
+      expect(
+        capturedMethods.where((call) => call.method == 'zonedSchedule'),
+        hasLength(1),
+      );
+    },
+  );
 
   test(
     'uses one prayer adhan notification channel across Flutter and native Android',
@@ -446,6 +476,30 @@ void main() {
     expect(count, 2);
     expect(capturedMethods.last.method, 'pendingNotificationRequests');
   });
+
+  test(
+    'cancels stale prayer notifications on native Android and plugin',
+    () async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+
+      await service.cancelNotification(1004);
+
+      expect(
+        capturedNativeAlarmMethods.any(
+          (call) =>
+              call.method == 'cancelPrayerAlarm' &&
+              call.arguments['id'] == 1004,
+        ),
+        isTrue,
+      );
+      expect(
+        capturedMethods.any(
+          (call) => call.method == 'cancel' && call.arguments['id'] == 1004,
+        ),
+        isTrue,
+      );
+    },
+  );
 
   test('reports ready readiness when permissions are available', () async {
     final readiness = NotificationReadiness.ready();

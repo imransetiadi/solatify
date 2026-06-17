@@ -94,6 +94,7 @@ void main() {
     await tester.pumpWidget(wrap(const IslamicContentScreen()));
     await tester.pumpAndSettle();
 
+    expect(find.text('Konten Islami'), findsOneWidget);
     expect(find.text('Doa Harian'), findsOneWidget);
     expect(find.text('Kalender Hijriah'), findsOneWidget);
     expect(find.text('Tips Islami'), findsOneWidget);
@@ -105,7 +106,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Tuntunan Salat'), findsOneWidget);
-    expect(find.text('Tata cara dan bacaan salat'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -115,7 +115,7 @@ void main() {
     await tester.pumpWidget(wrap(const PrayerGuideScreen()));
     await tester.pumpAndSettle();
 
-    expect(find.text('Tuntunan Salat Lengkap'), findsOneWidget);
+    expect(find.text('Tuntunan Salat'), findsOneWidget);
     expect(find.text('Niat'), findsWidgets);
     expect(find.byKey(const Key('prayer_guide_arabic_text')), findsWidgets);
     expect(find.textContaining('Allahu akbar'), findsWidgets);

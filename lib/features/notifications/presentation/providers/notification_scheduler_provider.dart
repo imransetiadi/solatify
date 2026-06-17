@@ -25,6 +25,18 @@ class PrayerNotificationRequest {
   final int notificationId;
 }
 
+class PrayerNotificationSyncPlan {
+  const PrayerNotificationSyncPlan({
+    required this.requestsToSchedule,
+    required this.notificationIdsToCancel,
+    required this.desiredKeysById,
+  });
+
+  final List<PrayerNotificationRequest> requestsToSchedule;
+  final List<int> notificationIdsToCancel;
+  final Map<int, String> desiredKeysById;
+}
+
 String buildPrayerNotificationKey({
   required String prayerKey,
   required DateTime prayerTime,
@@ -68,13 +80,46 @@ List<PrayerNotificationRequest> buildPrayerNotificationRequests({
   return requests;
 }
 
+PrayerNotificationSyncPlan buildPrayerNotificationSyncPlan({
+  required Map<int, String> activeKeysById,
+  required List<PrayerNotificationRequest> requests,
+}) {
+  final desiredKeysById = <int, String>{
+    for (final request in requests)
+      request.notificationId: buildPrayerNotificationKey(
+        prayerKey: request.prayerKey,
+        prayerTime: request.prayerTime,
+      ),
+  };
+
+  final notificationIdsToCancel =
+      activeKeysById.entries
+          .where((entry) => desiredKeysById[entry.key] != entry.value)
+          .map((entry) => entry.key)
+          .toList(growable: false)
+        ..sort();
+
+  final requestsToSchedule = requests
+      .where((request) {
+        final key = desiredKeysById[request.notificationId];
+        return activeKeysById[request.notificationId] != key;
+      })
+      .toList(growable: false);
+
+  return PrayerNotificationSyncPlan(
+    requestsToSchedule: requestsToSchedule,
+    notificationIdsToCancel: notificationIdsToCancel,
+    desiredKeysById: desiredKeysById,
+  );
+}
+
 class NotificationSchedulerNotifier extends StateNotifier<void> {
   NotificationSchedulerNotifier(this._ref) : super(null) {
     _initializeNotifications();
   }
   final Ref _ref;
   Timer? _schedulingTimer;
-  final Set<String> _scheduledNotifications = {};
+  final Map<int, String> _scheduledNotificationKeysById = {};
   ProviderSubscription<PrayerTimesStateEntity>? _prayerTimesSubscription;
   ProviderSubscription<LocationEntity>? _locationSubscription;
   ProviderSubscription<SettingsState>? _settingsSubscription;
@@ -83,7 +128,7 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
 
   Future<void> refreshSchedules({bool force = false}) async {
     if (force) {
-      _scheduledNotifications.clear();
+      _scheduledNotificationKeysById.clear();
     }
     await _scheduleAllNotifications();
   }
@@ -154,7 +199,7 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
 
       if (!settings.adhanNotificationsEnabled) {
         await NotificationService().cancelAllNotifications();
-        _scheduledNotifications.clear();
+        _scheduledNotificationKeysById.clear();
         return;
       }
 
@@ -162,7 +207,7 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
       if (readiness.status ==
           NotificationReadinessStatus.needsNotificationPermission) {
         await NotificationService().cancelAllNotifications();
-        _scheduledNotifications.clear();
+        _scheduledNotificationKeysById.clear();
         return;
       }
 
@@ -185,21 +230,36 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
         now: now,
       );
 
-      debugPrint('Prayer notification request count: ${requests.length}');
-      for (final request in requests) {
+      final plan = buildPrayerNotificationSyncPlan(
+        activeKeysById: _scheduledNotificationKeysById,
+        requests: requests,
+      );
+
+      if (plan.requestsToSchedule.isEmpty &&
+          plan.notificationIdsToCancel.isEmpty) {
         debugPrint(
-          'Prayer notification request: prayer=${request.prayerKey}, '
-          'id=${request.notificationId}, target=${request.prayerTime.toIso8601String()}, '
-          'timezone=$timezoneName, isFuture=${request.prayerTime.isAfter(now)}',
+          'Prayer notification schedule unchanged; skipping platform calls.',
         );
+        return;
       }
+
+      debugPrint(
+        'Prayer notification sync: desired=${requests.length}, '
+        'schedule=${plan.requestsToSchedule.length}, '
+        'cancel=${plan.notificationIdsToCancel.length}',
+      );
 
       debugPrint(
         'Notification readiness before prayer scheduling: '
         '${readiness.status.name} - ${readiness.title}',
       );
 
-      for (final request in requests) {
+      for (final notificationId in plan.notificationIdsToCancel) {
+        await NotificationService().cancelNotification(notificationId);
+        _scheduledNotificationKeysById.remove(notificationId);
+      }
+
+      for (final request in plan.requestsToSchedule) {
         await _scheduleNotification(
           prayerKey: request.prayerKey,
           prayerTime: request.prayerTime,
@@ -209,13 +269,12 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
         );
       }
 
+      _scheduledNotificationKeysById
+        ..clear()
+        ..addAll(plan.desiredKeysById);
+
       debugPrint(
-        'Scheduled ${requests.length} prayer notifications for today and tomorrow',
-      );
-      final pendingIds = await NotificationService()
-          .getPendingNotificationIds();
-      debugPrint(
-        'Pending prayer notification IDs after scheduling: $pendingIds',
+        'Synced ${plan.desiredKeysById.length} prayer notifications for today and tomorrow',
       );
     } catch (e) {
       debugPrint('Error scheduling notifications: $e');
@@ -236,17 +295,6 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
     required int notificationId,
   }) async {
     try {
-      final notificationKey = buildPrayerNotificationKey(
-        prayerKey: prayerKey,
-        prayerTime: prayerTime,
-      );
-
-      // Avoid scheduling duplicate notifications
-      if (_scheduledNotifications.contains(notificationKey)) {
-        return;
-      }
-      _scheduledNotifications.add(notificationKey);
-
       final timeFormatter = DateFormat('HH:mm');
       final prayerTimeStr = timeFormatter.format(prayerTime);
 
@@ -258,19 +306,15 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
         notificationTime: prayerTime,
         timezoneName: timezoneName,
         notificationId: notificationId,
+        refreshExactAlarmCapability: false,
       );
 
       debugPrint(
         'Marked $prayerKey scheduled: ID=$notificationId at $prayerTimeStr',
       );
     } catch (e) {
-      _scheduledNotifications.remove(
-        buildPrayerNotificationKey(
-          prayerKey: prayerKey,
-          prayerTime: prayerTime,
-        ),
-      );
       debugPrint('Error scheduling notification for $prayerKey: $e');
+      rethrow;
     }
   }
 
@@ -289,7 +333,7 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
   Future<void> cancelAllNotifications() async {
     try {
       await NotificationService().cancelAllNotifications();
-      _scheduledNotifications.clear();
+      _scheduledNotificationKeysById.clear();
       _schedulingTimer?.cancel();
     } catch (e) {
       debugPrint('Error cancelling notifications: $e');

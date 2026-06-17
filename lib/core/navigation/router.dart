@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:solatify/core/performance/performance_tuning.dart';
 import 'package:solatify/core/widgets/solatify_design_tokens.dart';
 import 'package:solatify/features/prayer_guide/presentation/screens/prayer_guide_screen.dart';
 
@@ -30,6 +31,41 @@ final GlobalKey<NavigatorState> _shellNavigatorKey = GlobalKey<NavigatorState>(
   debugLabel: 'shell',
 );
 
+CustomTransitionPage<void> _buildSeamlessPage(
+  GoRouterState state,
+  Widget child,
+) {
+  return CustomTransitionPage<void>(
+    key: state.pageKey,
+    transitionDuration: PerformanceTuning.routeTransitionDuration,
+    reverseTransitionDuration: PerformanceTuning.routeReverseTransitionDuration,
+    child: child,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      final curvedAnimation = CurvedAnimation(
+        parent: animation,
+        curve: Curves.easeOutCubic,
+        reverseCurve: Curves.easeInCubic,
+      );
+      final offsetAnimation = Tween<Offset>(
+        begin: const Offset(0, PerformanceTuning.routeTransitionYOffset),
+        end: Offset.zero,
+      ).animate(curvedAnimation);
+      final scaleAnimation = Tween<double>(
+        begin: PerformanceTuning.routeTransitionScaleBegin,
+        end: 1,
+      ).animate(curvedAnimation);
+
+      return FadeTransition(
+        opacity: curvedAnimation,
+        child: SlideTransition(
+          position: offsetAnimation,
+          child: ScaleTransition(scale: scaleAnimation, child: child),
+        ),
+      );
+    },
+  );
+}
+
 final goRouter = GoRouter(
   initialLocation: '/splash',
   navigatorKey: rootNavigatorKey,
@@ -44,20 +80,19 @@ final goRouter = GoRouter(
       path: '/onboarding',
       builder: (context, state) => const OnboardingScreen(),
     ),
-    // Full screen route for reading a Surah
     GoRoute(
       path: '/quran/surah/:id',
       parentNavigatorKey: rootNavigatorKey,
-      builder: (context, state) {
+      pageBuilder: (context, state) {
         final idStr = state.pathParameters['id'] ?? '1';
         final surahId = int.tryParse(idStr) ?? 1;
 
         final scrollToStr = state.uri.queryParameters['scroll_to'];
         final scrollTo = scrollToStr != null ? int.tryParse(scrollToStr) : null;
 
-        return SurahDetailScreen(
-          surahId: surahId,
-          initialScrollVerse: scrollTo,
+        return _buildSeamlessPage(
+          state,
+          SurahDetailScreen(surahId: surahId, initialScrollVerse: scrollTo),
         );
       },
     ),
@@ -69,129 +104,73 @@ final goRouter = GoRouter(
       routes: [
         GoRoute(
           path: '/home',
-          pageBuilder: (context, state) => CustomTransitionPage(
-            child: const HomeScreen(),
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) =>
-                    FadeTransition(opacity: animation, child: child),
-          ),
+          pageBuilder: (context, state) =>
+              _buildSeamlessPage(state, const HomeScreen()),
         ),
         GoRoute(
           path: '/schedule',
-          pageBuilder: (context, state) => CustomTransitionPage(
-            child: const PrayerScheduleScreen(),
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) =>
-                    FadeTransition(opacity: animation, child: child),
-          ),
+          pageBuilder: (context, state) =>
+              _buildSeamlessPage(state, const PrayerScheduleScreen()),
         ),
         GoRoute(
           path: '/quran',
-          pageBuilder: (context, state) => CustomTransitionPage(
-            child: const QuranHomeScreen(),
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) =>
-                    FadeTransition(opacity: animation, child: child),
-          ),
+          pageBuilder: (context, state) =>
+              _buildSeamlessPage(state, const QuranHomeScreen()),
         ),
         GoRoute(
           path: '/islamic-content',
-          pageBuilder: (context, state) => CustomTransitionPage(
-            child: const IslamicContentScreen(),
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) =>
-                    FadeTransition(opacity: animation, child: child),
-          ),
+          pageBuilder: (context, state) =>
+              _buildSeamlessPage(state, const IslamicContentScreen()),
         ),
         GoRoute(
           path: '/islamic-content/asmaul-husna',
-          pageBuilder: (context, state) => CustomTransitionPage(
-            child: const AsmaulHusnaScreen(),
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) =>
-                    FadeTransition(opacity: animation, child: child),
-          ),
+          pageBuilder: (context, state) =>
+              _buildSeamlessPage(state, const AsmaulHusnaScreen()),
         ),
         GoRoute(
           path: '/islamic-content/duas',
-          pageBuilder: (context, state) => CustomTransitionPage(
-            child: const DuasScreen(),
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) =>
-                    FadeTransition(opacity: animation, child: child),
-          ),
+          pageBuilder: (context, state) =>
+              _buildSeamlessPage(state, const DuasScreen()),
         ),
         GoRoute(
           path: '/islamic-content/hijri-calendar',
-          pageBuilder: (context, state) => CustomTransitionPage(
-            child: const HijriCalendarScreen(),
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) =>
-                    FadeTransition(opacity: animation, child: child),
-          ),
+          pageBuilder: (context, state) =>
+              _buildSeamlessPage(state, const HijriCalendarScreen()),
         ),
         GoRoute(
           path: '/islamic-content/tips',
-          pageBuilder: (context, state) => CustomTransitionPage(
-            child: const IslamicTipsScreen(),
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) =>
-                    FadeTransition(opacity: animation, child: child),
-          ),
+          pageBuilder: (context, state) =>
+              _buildSeamlessPage(state, const IslamicTipsScreen()),
         ),
         GoRoute(
           path: '/islamic-content/dhikr',
-          pageBuilder: (context, state) => CustomTransitionPage(
-            child: const DhikrScreen(),
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) =>
-                    FadeTransition(opacity: animation, child: child),
-          ),
+          pageBuilder: (context, state) =>
+              _buildSeamlessPage(state, const DhikrScreen()),
         ),
         GoRoute(
           path: '/islamic-content/prayer-guide',
-          pageBuilder: (context, state) => CustomTransitionPage(
-            child: const PrayerGuideScreen(),
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) =>
-                    FadeTransition(opacity: animation, child: child),
-          ),
+          pageBuilder: (context, state) =>
+              _buildSeamlessPage(state, const PrayerGuideScreen()),
         ),
         GoRoute(
           path: '/qibla',
-          pageBuilder: (context, state) => CustomTransitionPage(
-            child: const QiblaScreen(),
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) =>
-                    FadeTransition(opacity: animation, child: child),
-          ),
+          pageBuilder: (context, state) =>
+              _buildSeamlessPage(state, const QiblaScreen()),
         ),
         GoRoute(
           path: '/mosque',
-          pageBuilder: (context, state) => CustomTransitionPage(
-            child: const NearbyMosqueScreen(),
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) =>
-                    FadeTransition(opacity: animation, child: child),
-          ),
+          pageBuilder: (context, state) =>
+              _buildSeamlessPage(state, const NearbyMosqueScreen()),
         ),
         GoRoute(
           path: '/tracker',
-          pageBuilder: (context, state) => CustomTransitionPage(
-            child: const TrackerScreen(),
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) =>
-                    FadeTransition(opacity: animation, child: child),
-          ),
+          pageBuilder: (context, state) =>
+              _buildSeamlessPage(state, const TrackerScreen()),
         ),
         GoRoute(
           path: '/settings',
-          pageBuilder: (context, state) => CustomTransitionPage(
-            child: const SettingsScreen(),
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) =>
-                    FadeTransition(opacity: animation, child: child),
-          ),
+          pageBuilder: (context, state) =>
+              _buildSeamlessPage(state, const SettingsScreen()),
         ),
       ],
     ),

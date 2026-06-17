@@ -132,6 +132,18 @@ class NotificationService {
     }
   }
 
+  Future<void> cancelAndroidPrayerAlarm(int notificationId) async {
+    if (defaultTargetPlatform != TargetPlatform.android) return;
+
+    try {
+      await _androidPrayerAlarmChannel.invokeMethod<void>('cancelPrayerAlarm', {
+        'id': notificationId,
+      });
+    } catch (e) {
+      debugPrint('Error cancelling native Android prayer alarm: $e');
+    }
+  }
+
   Future<List<int>> getPendingAndroidPrayerAlarmIds() async {
     if (defaultTargetPlatform != TargetPlatform.android) return const [];
 
@@ -510,10 +522,13 @@ class NotificationService {
     required DateTime notificationTime,
     required String timezoneName,
     required int notificationId,
+    bool refreshExactAlarmCapability = true,
   }) async {
     try {
       await _ensureInitialized();
-      await _refreshExactAlarmCapability();
+      if (refreshExactAlarmCapability) {
+        await _refreshExactAlarmCapability();
+      }
 
       final title = getNotificationTitle(prayerKey, location);
       final body = getNotificationMessage(prayerKey, location, prayerTime);
@@ -745,6 +760,7 @@ class NotificationService {
 
   Future<void> cancelNotification(int notificationId) async {
     try {
+      await cancelAndroidPrayerAlarm(notificationId);
       await _flutterLocalNotificationsPlugin.cancel(notificationId);
       debugPrint('Notification $notificationId cancelled');
     } catch (e) {

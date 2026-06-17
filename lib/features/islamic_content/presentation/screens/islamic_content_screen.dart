@@ -6,7 +6,6 @@ import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
 import 'package:solatify/core/widgets/solatify_design_tokens.dart';
-import 'package:solatify/core/widgets/solatify_hero_card.dart';
 import 'package:solatify/features/islamic_tips/presentation/providers/tips_provider.dart';
 
 class IslamicContentScreen extends ConsumerWidget {
@@ -15,37 +14,31 @@ class IslamicContentScreen extends ConsumerWidget {
   static const _menuItems = [
     _ContentMenuItem(
       title: 'Asmaul Husna',
-      subtitle: '99 nama indah Allah',
       icon: Icons.font_download_outlined,
       path: '/islamic-content/asmaul-husna',
     ),
     _ContentMenuItem(
       title: 'Doa Harian',
-      subtitle: 'Kumpulan doa sehari-hari',
       icon: Icons.volunteer_activism_outlined,
       path: '/islamic-content/duas',
     ),
     _ContentMenuItem(
       title: 'Kalender Hijriah',
-      subtitle: 'Tanggal dan peristiwa Islam',
       icon: Icons.calendar_month_outlined,
       path: '/islamic-content/hijri-calendar',
     ),
     _ContentMenuItem(
       title: 'Dzikir',
-      subtitle: 'Dzikir pagi dan petang',
       icon: Icons.wb_twilight_outlined,
       path: '/islamic-content/dhikr',
     ),
     _ContentMenuItem(
       title: 'Tuntunan Salat',
-      subtitle: 'Tata cara dan bacaan salat',
       icon: Icons.menu_book_outlined,
       path: '/islamic-content/prayer-guide',
     ),
     _ContentMenuItem(
       title: 'Tips Islami',
-      subtitle: 'Nasihat dan amalan ringan',
       icon: Icons.lightbulb_outline,
       path: '/islamic-content/tips',
     ),
@@ -86,15 +79,6 @@ class IslamicContentScreen extends ConsumerWidget {
               bottom: ResponsiveLayout.bottomSafeGap,
             ),
             children: [
-              SolatifyHeroCard(
-                eyebrow: l.isEnglish ? 'Daily Companion' : 'Ruang Ibadah',
-                title: l.isEnglish ? 'Islamic Content' : 'Konten Islami',
-                subtitle: l.isEnglish
-                    ? 'Duas, dhikr, prayer guide, Hijri calendar, and short reminders for your day.'
-                    : 'Doa, dzikir, tuntunan salat, kalender Hijriah, dan pengingat ringan untuk harimu.',
-                icon: Icons.mosque_outlined,
-              ),
-              const SizedBox(height: ResponsiveLayout.itemGap),
               randomTip.when(
                 data: (tip) => _DailyTipCard(
                   seeAllLabel: l.seeAllTips,
@@ -135,7 +119,7 @@ class IslamicContentScreen extends ConsumerWidget {
                       return SizedBox(
                         width: cardWidth,
                         child: SizedBox(
-                          height: 150,
+                          height: 104,
                           child: _ContentMenuCard(
                             item: item,
                             surfaceColor: surfaceColor,
@@ -162,37 +146,31 @@ class IslamicContentScreen extends ConsumerWidget {
     return const [
       _ContentMenuItem(
         title: 'Asmaul Husna',
-        subtitle: '99 beautiful names of Allah',
         icon: Icons.font_download_outlined,
         path: '/islamic-content/asmaul-husna',
       ),
       _ContentMenuItem(
         title: 'Daily Duas',
-        subtitle: 'A collection of daily duas',
         icon: Icons.volunteer_activism_outlined,
         path: '/islamic-content/duas',
       ),
       _ContentMenuItem(
         title: 'Hijri Calendar',
-        subtitle: 'Islamic dates and events',
         icon: Icons.calendar_month_outlined,
         path: '/islamic-content/hijri-calendar',
       ),
       _ContentMenuItem(
         title: 'Dhikr',
-        subtitle: 'Morning and evening dhikr',
         icon: Icons.wb_twilight_outlined,
         path: '/islamic-content/dhikr',
       ),
       _ContentMenuItem(
         title: 'Prayer Guide',
-        subtitle: 'Prayer steps and recitations',
         icon: Icons.menu_book_outlined,
         path: '/islamic-content/prayer-guide',
       ),
       _ContentMenuItem(
         title: 'Islamic Tips',
-        subtitle: 'Advice and light daily deeds',
         icon: Icons.lightbulb_outline,
         path: '/islamic-content/tips',
       ),
@@ -329,8 +307,7 @@ class _ContentMenuCard extends StatelessWidget {
         onTap: () => context.go(item.path),
         child: Padding(
           padding: ResponsiveLayout.listCardPadding,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Row(
             children: [
               Container(
                 width: SolatifyIconSize.cardBox,
@@ -345,26 +322,18 @@ class _ContentMenuCard extends StatelessWidget {
                   size: SolatifyIconSize.cardIcon,
                 ),
               ),
-              const Spacer(),
-              Text(
-                item.title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: SolatifyType.body,
-                  fontWeight: FontWeight.w700,
-                  color: textColor,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                item.subtitle,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: SolatifyType.caption,
-                  height: 1.25,
-                  color: mutedColor,
+              const SizedBox(width: SolatifySpacing.sm),
+              Expanded(
+                child: Text(
+                  item.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: SolatifyType.body,
+                    height: 1.2,
+                    fontWeight: FontWeight.w700,
+                    color: textColor,
+                  ),
                 ),
               ),
             ],
@@ -378,13 +347,11 @@ class _ContentMenuCard extends StatelessWidget {
 class _ContentMenuItem {
   const _ContentMenuItem({
     required this.title,
-    required this.subtitle,
     required this.icon,
     required this.path,
   });
 
   final String title;
-  final String subtitle;
   final IconData icon;
   final String path;
 }

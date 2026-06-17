@@ -93,62 +93,6 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           GlassContainer(
-                            borderRadius: SolatifyRadius.lg,
-                            borderColor: _accentColor.withValues(alpha: 0.12),
-                            padding: SolatifySpacing.compactCard,
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: SolatifyIconSize.cardBox,
-                                  height: SolatifyIconSize.cardBox,
-                                  decoration: BoxDecoration(
-                                    borderRadius: SolatifyRadius.icon,
-                                    color: _accentColor,
-                                  ),
-                                  child: const Icon(
-                                    Icons.menu_book_rounded,
-                                    color: Colors.white,
-                                    size: SolatifyIconSize.heroIcon,
-                                  ),
-                                ),
-                                const SizedBox(width: 14),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        'AL-QUR\'AN',
-                                        style: TextStyle(
-                                          color: _accentColor,
-                                          fontSize: SolatifyType.eyebrow,
-                                          fontWeight: FontWeight.w700,
-                                          letterSpacing: 0.8,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 3),
-                                      Text(
-                                        'Baca Al-Qur\'an',
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          color: _textColor,
-                                          fontSize: SolatifyType.pageTitle,
-                                          height: 1.12,
-                                          fontWeight: FontWeight.w800,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: ResponsiveLayout.itemGap),
-
-                          // Floating Search Bar
-                          GlassContainer(
                             borderRadius: SolatifyRadius.md,
                             padding: EdgeInsets.zero,
                             borderColor: _accentColor.withValues(alpha: 0.12),

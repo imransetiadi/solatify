@@ -134,4 +134,85 @@ void main() {
       expect(requests.map((request) => request.notificationId), [1003, 1005]);
     });
   });
+
+  group('buildPrayerNotificationSyncPlan', () {
+    test(
+      'skips scheduling and cancellation when request keys are unchanged',
+      () {
+        final prayerTime = DateTime(2026, 6, 16, 18);
+        final existingKey = buildPrayerNotificationKey(
+          prayerKey: 'magrib',
+          prayerTime: prayerTime,
+        );
+
+        final plan = buildPrayerNotificationSyncPlan(
+          activeKeysById: {1004: existingKey},
+          requests: [
+            PrayerNotificationRequest(
+              prayerKey: 'magrib',
+              prayerTime: prayerTime,
+              notificationId: 1004,
+            ),
+          ],
+        );
+
+        expect(plan.requestsToSchedule, isEmpty);
+        expect(plan.notificationIdsToCancel, isEmpty);
+        expect(plan.desiredKeysById, {1004: existingKey});
+      },
+    );
+
+    test('cancels stale reused ids before scheduling updated prayer times', () {
+      final oldTime = DateTime(2026, 6, 16, 18);
+      final newTime = DateTime(2026, 6, 16, 18, 5);
+
+      final plan = buildPrayerNotificationSyncPlan(
+        activeKeysById: {
+          1004: buildPrayerNotificationKey(
+            prayerKey: 'magrib',
+            prayerTime: oldTime,
+          ),
+        },
+        requests: [
+          PrayerNotificationRequest(
+            prayerKey: 'magrib',
+            prayerTime: newTime,
+            notificationId: 1004,
+          ),
+        ],
+      );
+
+      expect(plan.notificationIdsToCancel, [1004]);
+      expect(plan.requestsToSchedule.single.prayerTime, newTime);
+      expect(
+        plan.desiredKeysById[1004],
+        buildPrayerNotificationKey(prayerKey: 'magrib', prayerTime: newTime),
+      );
+    });
+
+    test('cancels ids that are no longer in the future request window', () {
+      final oldSubuh = DateTime(2026, 6, 16, 4, 30);
+      final tomorrowSubuh = DateTime(2026, 6, 17, 4, 31);
+
+      final plan = buildPrayerNotificationSyncPlan(
+        activeKeysById: {
+          1001: buildPrayerNotificationKey(
+            prayerKey: 'subuh',
+            prayerTime: oldSubuh,
+          ),
+        },
+        requests: [
+          PrayerNotificationRequest(
+            prayerKey: 'subuh',
+            prayerTime: tomorrowSubuh,
+            notificationId: 2001,
+          ),
+        ],
+      );
+
+      expect(plan.notificationIdsToCancel, [1001]);
+      expect(plan.requestsToSchedule.single.notificationId, 2001);
+      expect(plan.desiredKeysById.keys, [2001]);
+    });
+  });
 }

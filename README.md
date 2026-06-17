@@ -14,7 +14,7 @@
 ## ✨ Fitur Utama
 
 - 🕋 **Jadwal Salat Akurat** — Kalkulasi waktu salat berbasis `adhan` dan `timezone`, mendukung metode Kemenag dan metode internasional lain, termasuk koreksi manual per waktu salat.
-- 🔔 **Alarm Adzan Otomatis** — Notifikasi lokal waktu salat berjalan offline menggunakan `flutter_local_notifications`, channel Android khusus adzan, timezone lokasi salat, dan scheduling untuk sisa salat hari ini plus Subuh besok.
+- 🔔 **Alarm Adzan Otomatis** — Notifikasi lokal waktu salat berjalan offline menggunakan `flutter_local_notifications`, channel Android khusus adzan, timezone lokasi salat, dan diff-based scheduling untuk sisa salat hari ini plus Subuh besok.
 - 📖 **Al-Qur'an & Konten Islami** — Surah Al-Qur'an, bookmark/terakhir dibaca, Asmaul Husna, doa harian, dzikir pagi-petang, kalender Hijriah, tips islami, dan tuntunan salat lengkap.
 - 🤲 **Tuntunan Salat Offline** — Urutan salat praktis dengan bacaan Arab, latin, arti Indonesia, catatan ringkas, doa qunut Subuh opsional, serta dzikir setelah salat.
 - 🧭 **Arah Kiblat** — Kompas kiblat berbasis sensor perangkat, dengan fallback UI ketika sensor tidak tersedia.
@@ -38,14 +38,15 @@ Solatify menggunakan beberapa tuning agar aplikasi tetap ringan:
 
 - Konfigurasi performa terpusat di `lib/core/performance/performance_tuning.dart`.
 - Efek `GlassContainer` dibatasi agar visual tetap konsisten tanpa blur berlebihan.
+- Transisi antar menu memakai fade, slide mikro, dan scale ringan agar perpindahan fitur terasa seamless tanpa animasi berat.
 - Countdown waktu salat memakai tick 1 detik, bukan sub-second rebuild.
-- Audit ulang scheduler notifikasi dibuat lebih hemat, sementara perubahan lokasi/jadwal tetap memicu reschedule langsung.
+- Scheduler notifikasi memakai sync plan agar hanya membatalkan/menjadwalkan ulang alarm yang berubah, sementara perubahan lokasi/jadwal tetap memicu reschedule langsung.
 - List panjang memakai builder/lazy rendering pada fitur konten utama.
-- Header dan spacing layar konten islami disetel agar tetap nyaman saat scroll di layar compact.
+- Header, kartu menu, dan spacing layar fitur diringkas agar tidak ada teks berulang dan tetap nyaman di layar compact.
 
 ## 🔔 Catatan Notifikasi Android
 
-Untuk Android, notifikasi salat memakai channel `Prayer Times Adhan` versi baru (`prayer_times_adhan_channel_v2`) agar perangkat tidak terjebak konfigurasi channel lama. Agar alarm adzan muncul di system tray:
+Untuk Android, notifikasi salat memakai channel `Prayer Times Adhan` (`prayer_times_adhan_channel`) dengan native alarm fallback agar alarm adzan muncul di system tray secara lebih andal:
 
 1. Install build terbaru dan buka aplikasi minimal sekali.
 2. Berikan izin notifikasi (`POST_NOTIFICATIONS`) pada Android 13+.
@@ -57,10 +58,12 @@ Untuk Android, notifikasi salat memakai channel `Prayer Times Adhan` versi baru 
 
 Status branch terbaru sudah diverifikasi dengan:
 
-- `flutter analyze --no-pub` — no issues.
-- `flutter test --no-pub` — 71/71 tests passed.
-- `flutter build apk --debug --no-pub` — Android debug APK berhasil dibuat.
-- `flutter build ios --no-codesign` — iOS app berhasil dibuat tanpa codesign.
+- `flutter test` — 100/100 tests passed.
+- `flutter analyze` — no issues.
+- `flutter test -d emulator-5554 integration_test/app_test.dart` — 2/2 integration tests passed di Android emulator.
+- `flutter test -d 00008140-000518E42EB8401C integration_test/app_test.dart` — 2/2 integration tests passed di iPhone `Satelit88`.
+- `flutter build apk --debug` — Android debug APK berhasil dibuat di `build/app/outputs/flutter-apk/app-debug.apk`.
+- `flutter build ios --no-codesign` — iOS app berhasil dibuat di `build/ios/iphoneos/Runner.app`.
 
 Dokumen QA tambahan tersedia di `docs/qa/`, termasuk runbook, checklist Android/iOS, performance checklist, dan release signoff.
 

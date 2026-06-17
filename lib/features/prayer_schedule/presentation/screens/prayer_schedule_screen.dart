@@ -8,7 +8,6 @@ import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
 import 'package:solatify/core/widgets/solatify_design_tokens.dart';
-import 'package:solatify/core/widgets/solatify_hero_card.dart';
 import 'package:solatify/features/settings/presentation/providers/settings_provider.dart';
 
 import '../../data/prayer_calculation_service.dart';
@@ -205,23 +204,72 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
                       top: ResponsiveLayout.pageTopGap,
                       bottom: ResponsiveLayout.itemGap,
                     ),
-                    child: SolatifyHeroCard(
-                      eyebrow: l.prayerSchedule,
-                      title: l.prayerSchedule,
-                      subtitle:
-                          '$displayDate • ${location.city}, ${location.country} • ${settings.calculationMethod}',
-                      icon: Icons.access_time_filled_rounded,
-                      trailing: TextButton.icon(
-                        style: TextButton.styleFrom(
-                          foregroundColor: theme.colorScheme.tertiary,
-                          visualDensity: VisualDensity.compact,
-                        ),
-                        icon: const Icon(
-                          Icons.edit_location_alt_outlined,
-                          size: SolatifyIconSize.inline,
-                        ),
-                        label: const Text('Ubah'),
-                        onPressed: _showManualCityDialog,
+                    child: GlassContainer(
+                      borderRadius: SolatifyRadius.lg,
+                      borderColor: SolatifyColors.border(context),
+                      fillColor: SolatifyColors.softSurface(context),
+                      padding: SolatifySpacing.compactCard,
+                      child: Row(
+                        children: [
+                          Container(
+                            width: SolatifyIconSize.cardBox,
+                            height: SolatifyIconSize.cardBox,
+                            decoration: BoxDecoration(
+                              borderRadius: SolatifyRadius.icon,
+                              color: theme.colorScheme.tertiary,
+                            ),
+                            child: const Icon(
+                              Icons.access_time_filled_rounded,
+                              color: Colors.white,
+                              size: SolatifyIconSize.cardIcon,
+                            ),
+                          ),
+                          const SizedBox(width: SolatifySpacing.md),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  l.prayerSchedule,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: textColor,
+                                    fontSize: SolatifyType.sectionTitle,
+                                    height: 1.15,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '$displayDate • ${location.city}, ${location.country}',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: textMuted,
+                                    fontSize: SolatifyType.caption,
+                                    height: 1.25,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: SolatifySpacing.sm),
+                          TextButton.icon(
+                            style: TextButton.styleFrom(
+                              foregroundColor: theme.colorScheme.tertiary,
+                              visualDensity: VisualDensity.compact,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            icon: const Icon(
+                              Icons.edit_location_alt_outlined,
+                              size: SolatifyIconSize.inline,
+                            ),
+                            label: const Text('Ubah'),
+                            onPressed: _showManualCityDialog,
+                          ),
+                        ],
                       ),
                     ),
                   ),

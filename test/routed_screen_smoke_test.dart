@@ -138,7 +138,7 @@ void main() {
     await tester.pumpWidget(wrap(const PrayerGuideScreen()));
     await tester.pumpAndSettle();
 
-    expect(find.text('Tuntunan Salat Lengkap'), findsOneWidget);
+    expect(find.text('Tuntunan Salat'), findsOneWidget);
     expect(find.textContaining('Takbiratul Ihram'), findsWidgets);
     expect(tester.takeException(), isNull);
   });
