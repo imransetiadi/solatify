@@ -75,7 +75,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             return AlertDialog(
               backgroundColor: dialogBg,
               title: Text(
-                l.setPrayerOffset(prayer.nameId),
+                l.setPrayerOffset(l.prayerName(prayer.key)),
                 style: TextStyle(color: textColor),
               ),
               content: Column(
@@ -100,9 +100,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     decoration: InputDecoration(
                       suffixText: l.minutes,
                       suffixStyle: TextStyle(color: textMuted),
-                      helperText: l.isEnglish
-                          ? 'Use negative values to make it earlier.'
-                          : 'Gunakan nilai minus untuk memajukan waktu.',
+                      helperText: l.offsetNegativeHint,
                       helperStyle: TextStyle(color: textMuted, fontSize: 11),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(14),
@@ -323,7 +321,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  _buildSectionHeader(context, 'PENGATURAN UMUM'),
+                  _buildSectionHeader(context, l.generalSettings),
                   const SizedBox(height: 12),
                   GlassContainer(
                     blur: 15,
@@ -422,7 +420,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                   const SizedBox(height: 32),
 
-                  _buildSectionHeader(context, 'KOREKSI WAKTU SALAT'),
+                  _buildSectionHeader(context, l.prayerTimeCorrection),
                   const SizedBox(height: 12),
                   GlassContainer(
                     blur: 15,
@@ -560,7 +558,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     return ListTile(
       title: Text(
-        l.isEnglish ? '${prayer.nameId} Offset' : '${prayer.nameId} Ofset',
+        l.isEnglish
+            ? '${l.prayerName(prayer.key)} Offset'
+            : '${l.prayerName(prayer.key)} Ofset',
         style: TextStyle(color: textColor, fontSize: 15),
       ),
       trailing: Row(

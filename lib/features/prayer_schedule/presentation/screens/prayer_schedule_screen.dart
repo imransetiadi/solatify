@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:solatify/core/localization/app_localizations.dart';
 import 'package:solatify/core/theme/theme.dart';
 import 'package:solatify/core/utils/location_service.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
@@ -31,6 +32,7 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
     showDialog<void>(
       context: context,
       builder: (context) {
+        final l = AppLocalizations.of(context);
         String searchQuery = '';
         return StatefulBuilder(
           builder: (context, setStateBuilder) {
@@ -69,7 +71,10 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
 
             return AlertDialog(
               backgroundColor: dialogBg,
-              title: Text('Ubah Lokasi', style: TextStyle(color: dTextColor)),
+              title: Text(
+                l.changeLocation,
+                style: TextStyle(color: dTextColor),
+              ),
               content: SizedBox(
                 width: dialogWidth,
                 height: dialogHeight,
@@ -78,7 +83,7 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
                     TextField(
                       style: TextStyle(color: dTextColor),
                       decoration: InputDecoration(
-                        hintText: 'Cari Kota...',
+                        hintText: l.searchCity,
                         hintStyle: TextStyle(color: dTextHint),
                         prefixIcon: Icon(Icons.search, color: dTextSecondary),
                         enabledBorder: OutlineInputBorder(
@@ -138,6 +143,7 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final location = ref.watch(locationProvider);
     final settings = ref.watch(settingsProvider);
 
@@ -201,7 +207,7 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
                       children: [
                         Expanded(
                           child: Text(
-                            'Jadwal Salat',
+                            l.prayerSchedule,
                             style: TextStyle(
                               fontSize: 26,
                               fontWeight: FontWeight.bold,
@@ -414,31 +420,31 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
                       child: Column(
                         children: [
                           _buildPrayerTimeRow(
-                            'Subuh',
+                            l.prayerName('subuh'),
                             computedTimes['subuh']!,
                             Icons.brightness_5,
                           ),
                           Divider(color: dividerColor, height: 24),
                           _buildPrayerTimeRow(
-                            'Dzuhur',
+                            l.prayerName('dzuhur'),
                             computedTimes['dzuhur']!,
                             Icons.wb_sunny,
                           ),
                           Divider(color: dividerColor, height: 24),
                           _buildPrayerTimeRow(
-                            'Ashar',
+                            l.prayerName('ashar'),
                             computedTimes['ashar']!,
                             Icons.wb_twilight,
                           ),
                           Divider(color: dividerColor, height: 24),
                           _buildPrayerTimeRow(
-                            'Magrib',
+                            l.prayerName('magrib'),
                             computedTimes['magrib']!,
                             Icons.nights_stay,
                           ),
                           Divider(color: dividerColor, height: 24),
                           _buildPrayerTimeRow(
-                            'Isya',
+                            l.prayerName('isya'),
                             computedTimes['isya']!,
                             Icons.dark_mode,
                           ),

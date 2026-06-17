@@ -88,8 +88,8 @@ void main() {
     ).readAsStringSync();
 
     expect(source, contains('_PrayerCountdownCard'));
-    expect(source, contains('Sisa waktu'));
-    expect(source, contains('Menuju'));
+    expect(source, contains('remainingTime'));
+    expect(source, contains('headingToPrayer'));
   });
 
   testWidgets('Tracker screen renders worship checklist', (tester) async {

@@ -73,30 +73,35 @@ class _AppErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Material(
+    final l = AppLocalizations.of(context);
+    return Material(
       color: AppTheme.lightBg,
       child: Center(
         child: Padding(
-          padding: EdgeInsets.all(24),
+          padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline, color: AppTheme.redAccent, size: 48),
-              SizedBox(height: 16),
+              const Icon(
+                Icons.error_outline,
+                color: AppTheme.redAccent,
+                size: 48,
+              ),
+              const SizedBox(height: 16),
               Text(
-                'Terjadi sedikit kendala',
+                l.appErrorTitle,
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   color: AppTheme.textDark,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               Text(
-                'Silakan coba lagi atau buka ulang aplikasi.',
+                l.appErrorMessage,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: AppTheme.textMuted, fontSize: 14),
+                style: const TextStyle(color: AppTheme.textMuted, fontSize: 14),
               ),
             ],
           ),
@@ -229,16 +234,14 @@ class _ExactAlarmPromptGateState extends State<ExactAlarmPromptGate> {
       await showDialog<void>(
         context: navigatorContext,
         builder: (context) {
+          final l = AppLocalizations.of(context);
           return AlertDialog(
-            title: const Text('Aktifkan Alarm Tepat Waktu'),
-            content: const Text(
-              'Agar notifikasi waktu salat muncul tepat saat masuk waktu, '
-              'aktifkan izin Alarms & reminders / Alarm tepat waktu untuk Solatify.',
-            ),
+            title: Text(l.exactAlarmTitle),
+            content: Text(l.exactAlarmMessage),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Nanti'),
+                child: Text(l.later),
               ),
               FilledButton(
                 onPressed: () async {
@@ -249,7 +252,7 @@ class _ExactAlarmPromptGateState extends State<ExactAlarmPromptGate> {
                       .read(notificationSchedulerProvider.notifier)
                       .refreshSchedules(force: true);
                 },
-                child: const Text('Aktifkan'),
+                child: Text(l.enable),
               ),
             ],
           );
@@ -281,16 +284,14 @@ class _ExactAlarmPromptGateState extends State<ExactAlarmPromptGate> {
       await showDialog<void>(
         context: navigatorContext,
         builder: (context) {
+          final l = AppLocalizations.of(context);
           return AlertDialog(
-            title: const Text('Izinkan Berjalan di Latar Belakang'),
-            content: const Text(
-              'Agar adzan tetap muncul saat aplikasi ditutup, atur battery usage '
-              'Solatify ke Unrestricted / Tidak dibatasi.',
-            ),
+            title: Text(l.backgroundPermissionTitle),
+            content: Text(l.backgroundPermissionMessage),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Nanti'),
+                child: Text(l.later),
               ),
               FilledButton(
                 onPressed: () async {
@@ -298,7 +299,7 @@ class _ExactAlarmPromptGateState extends State<ExactAlarmPromptGate> {
                   await NotificationService()
                       .openAndroidBatteryOptimizationSettings();
                 },
-                child: const Text('Buka Pengaturan'),
+                child: Text(l.openSettings),
               ),
             ],
           );

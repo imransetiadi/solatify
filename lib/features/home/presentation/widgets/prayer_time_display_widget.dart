@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:solatify/core/localization/app_localizations.dart';
 import 'package:solatify/core/theme/theme.dart';
 import '../providers/improved_countdown_provider.dart';
 
@@ -10,6 +11,7 @@ class PrayerTimeDisplayWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final countdown = ref.watch(improvedCountdownProvider);
+    final l = AppLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primary = AppTheme.readableAccent(context);
 
@@ -19,9 +21,9 @@ class PrayerTimeDisplayWidget extends ConsumerWidget {
 
     return Column(
       children: [
-        _buildCountdownCard(context, countdown, isDark, primary),
+        _buildCountdownCard(context, countdown, isDark, primary, l),
         const SizedBox(height: 12),
-        _buildPrayerInfoText(countdown),
+        _buildPrayerInfoText(countdown, l),
       ],
     );
   }
@@ -48,6 +50,7 @@ class PrayerTimeDisplayWidget extends ConsumerWidget {
     CountdownState countdown,
     bool isDark,
     Color primary,
+    AppLocalizations l,
   ) {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -59,7 +62,7 @@ class PrayerTimeDisplayWidget extends ConsumerWidget {
       child: Column(
         children: [
           Text(
-            'Waktu ${countdown.nextPrayerName}',
+            l.prayerTimeLabel(l.prayerName(countdown.nextPrayerName)),
             style: TextStyle(
               fontSize: 14,
               color: isDark ? const Color(0xFFC8B8A8) : const Color(0xFF5D4E47),
@@ -88,9 +91,9 @@ class PrayerTimeDisplayWidget extends ConsumerWidget {
     );
   }
 
-  Widget _buildPrayerInfoText(CountdownState countdown) {
+  Widget _buildPrayerInfoText(CountdownState countdown, AppLocalizations l) {
     return Text(
-      'Salat ${countdown.activePrayerName} sedang berlangsung',
+      l.activePrayerInProgress(l.prayerName(countdown.activePrayerName)),
       style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
     );
   }
