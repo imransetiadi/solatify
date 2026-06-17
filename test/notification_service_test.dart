@@ -11,11 +11,16 @@ void main() {
   tzdata.initializeTimeZones();
 
   const channel = MethodChannel('dexterous.com/flutter/local_notifications');
+  const androidPrayerAlarmChannel = MethodChannel(
+    'solatify/android_prayer_alarms',
+  );
   final service = NotificationService();
   final capturedMethods = <MethodCall>[];
+  final capturedNativeAlarmMethods = <MethodCall>[];
 
   setUp(() async {
     capturedMethods.clear();
+    capturedNativeAlarmMethods.clear();
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, (MethodCall call) async {
           capturedMethods.add(call);
@@ -53,11 +58,23 @@ void main() {
               return null;
           }
         });
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(androidPrayerAlarmChannel, (
+          MethodCall call,
+        ) async {
+          capturedNativeAlarmMethods.add(call);
+          if (call.method == 'getPendingPrayerAlarmIds') return <int>[];
+          if (call.method == 'isIgnoringBatteryOptimizations') return true;
+          if (call.method == 'openBatteryOptimizationSettings') return true;
+          return false;
+        });
   });
 
   tearDown(() async {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, null);
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(androidPrayerAlarmChannel, null);
   });
 
   test('falls back to inexact scheduling when exact alarm is denied', () async {
@@ -111,6 +128,44 @@ void main() {
       'prayer_times_adhan_channel_v2',
     );
   });
+
+  test(
+    'uses native Android alarm scheduler for prayer notifications',
+    () async {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(androidPrayerAlarmChannel, (
+            MethodCall call,
+          ) async {
+            capturedNativeAlarmMethods.add(call);
+            return true;
+          });
+
+      await service.init();
+      final scheduledAt = DateTime.now().add(const Duration(minutes: 10));
+
+      await service.schedulePrayerNotification(
+        prayerKey: 'isya',
+        location: 'Jakarta, Indonesia',
+        prayerTime: '19:15',
+        notificationTime: scheduledAt,
+        timezoneName: 'Asia/Jakarta',
+        notificationId: 1005,
+      );
+
+      expect(capturedNativeAlarmMethods, hasLength(1));
+      expect(capturedNativeAlarmMethods.single.method, 'schedulePrayerAlarm');
+      expect(capturedNativeAlarmMethods.single.arguments['id'], 1005);
+      expect(capturedNativeAlarmMethods.single.arguments['prayerKey'], 'isya');
+      expect(
+        capturedNativeAlarmMethods.single.arguments['title'],
+        'Waktu Isya - Jakarta, Indonesia',
+      );
+      expect(
+        capturedMethods.where((call) => call.method == 'zonedSchedule'),
+        isEmpty,
+      );
+    },
+  );
 
   test(
     'uses exact scheduling when Android reports exact notifications allowed',
@@ -210,6 +265,21 @@ void main() {
 
     expect(manifest, contains('android.permission.SCHEDULE_EXACT_ALARM'));
     expect(manifest, contains('android.permission.USE_EXACT_ALARM'));
+    expect(
+      manifest,
+      contains('android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS'),
+    );
+  });
+
+  test('Android manifest declares native prayer alarm receivers', () {
+    final manifest = File(
+      'android/app/src/main/AndroidManifest.xml',
+    ).readAsStringSync();
+
+    expect(manifest, contains('.notifications.PrayerAlarmReceiver'));
+    expect(manifest, contains('.notifications.PrayerAlarmBootReceiver'));
+    expect(manifest, contains('android.intent.action.BOOT_COMPLETED'));
+    expect(manifest, contains('android.intent.action.MY_PACKAGE_REPLACED'));
   });
 
   test('reports pending notification count from the platform API', () async {

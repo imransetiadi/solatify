@@ -23,6 +23,13 @@ class PrayerNotificationRequest {
   final int notificationId;
 }
 
+String buildPrayerNotificationKey({
+  required String prayerKey,
+  required DateTime prayerTime,
+}) {
+  return '${prayerKey}_${prayerTime.toIso8601String()}';
+}
+
 List<PrayerNotificationRequest> buildPrayerNotificationRequests({
   required Map<String, DateTime?> today,
   required Map<String, DateTime?> tomorrow,
@@ -68,6 +75,13 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
   final Set<String> _scheduledNotifications = {};
   ProviderSubscription<PrayerTimesStateEntity>? _prayerTimesSubscription;
   ProviderSubscription<LocationEntity>? _locationSubscription;
+
+  Future<void> refreshSchedules({bool force = false}) async {
+    if (force) {
+      _scheduledNotifications.clear();
+    }
+    await _scheduleAllNotifications();
+  }
 
   Future<void> _initializeNotifications() async {
     try {
@@ -174,7 +188,10 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
     required int notificationId,
   }) async {
     try {
-      final notificationKey = '${prayerKey}_${prayerTime.toIso8601String()}';
+      final notificationKey = buildPrayerNotificationKey(
+        prayerKey: prayerKey,
+        prayerTime: prayerTime,
+      );
 
       // Avoid scheduling duplicate notifications
       if (_scheduledNotifications.contains(notificationKey)) {
