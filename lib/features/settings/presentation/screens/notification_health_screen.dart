@@ -2,11 +2,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:solatify/core/localization/app_localizations.dart';
+import 'package:solatify/core/navigation/app_routes.dart';
 import 'package:solatify/core/theme/theme.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
-import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
 import 'package:solatify/core/widgets/solatify_design_tokens.dart';
+import 'package:solatify/core/widgets/solatify_screen_scaffold.dart';
 import 'package:solatify/features/notifications/data/services/notification_service.dart';
 import 'package:solatify/features/notifications/domain/entities/notification_history_entry.dart';
 import 'package:solatify/features/notifications/presentation/providers/notification_scheduler_provider.dart';
@@ -97,67 +98,43 @@ class _NotificationHealthScreenState
     final accentColor = AppTheme.readableAccent(context);
     final cardOpacity = isDark ? 0.04 : 0.02;
 
-    return Scaffold(
-      body: IslamicBackground(
-        child: SafeArea(
-          child: ResponsiveCenter(
-            child: RefreshIndicator(
-              onRefresh: _refreshHealth,
-              child: ListView(
-                physics: const AlwaysScrollableScrollPhysics(
-                  parent: BouncingScrollPhysics(),
-                ),
-                padding: ResponsiveLayout.pagePadding(context).copyWith(
-                  top: ResponsiveLayout.pageTopGap,
-                  bottom: ResponsiveLayout.bottomSafeGap,
-                ),
-                children: [
-                  Row(
-                    children: [
-                      IconButton(
-                        tooltip: l.back,
-                        onPressed: () => Navigator.of(context).maybePop(),
-                        icon: Icon(Icons.arrow_back, color: textColor),
-                      ),
-                      Expanded(
-                        child: Text(
-                          l.notificationHealthTitle,
-                          style: TextStyle(
-                            color: textColor,
-                            fontSize: SolatifyType.pageTitle,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: ResponsiveLayout.itemGap),
-                  _buildReadinessCard(
-                    l: l,
-                    textColor: textColor,
-                    textSecondary: textSecondary,
-                    accentColor: accentColor,
-                    opacity: cardOpacity,
-                  ),
-                  const SizedBox(height: ResponsiveLayout.itemGap),
-                  _buildScheduleCard(
-                    l: l,
-                    textColor: textColor,
-                    textSecondary: textSecondary,
-                    opacity: cardOpacity,
-                  ),
-                  const SizedBox(height: ResponsiveLayout.itemGap),
-                  _buildActionsCard(
-                    l: l,
-                    textColor: textColor,
-                    textSecondary: textSecondary,
-                    accentColor: accentColor,
-                    opacity: cardOpacity,
-                  ),
-                ],
-              ),
-            ),
+    return SolatifyScreenScaffold(
+      title: l.notificationHealthTitle,
+      backRoute: AppRoutes.settings,
+      padding: EdgeInsets.zero,
+      child: RefreshIndicator(
+        onRefresh: _refreshHealth,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics(),
           ),
+          padding: ResponsiveLayout.pagePadding(
+            context,
+          ).copyWith(top: ResponsiveLayout.itemGap, bottom: 96),
+          children: [
+            _buildReadinessCard(
+              l: l,
+              textColor: textColor,
+              textSecondary: textSecondary,
+              accentColor: accentColor,
+              opacity: cardOpacity,
+            ),
+            const SizedBox(height: ResponsiveLayout.itemGap),
+            _buildScheduleCard(
+              l: l,
+              textColor: textColor,
+              textSecondary: textSecondary,
+              opacity: cardOpacity,
+            ),
+            const SizedBox(height: ResponsiveLayout.itemGap),
+            _buildActionsCard(
+              l: l,
+              textColor: textColor,
+              textSecondary: textSecondary,
+              accentColor: accentColor,
+              opacity: cardOpacity,
+            ),
+          ],
         ),
       ),
     );

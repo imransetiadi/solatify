@@ -47,7 +47,7 @@ Solatify menggunakan beberapa tuning agar aplikasi tetap ringan:
 - Scheduler notifikasi memakai sync plan, filter per waktu salat, dan post-permission refresh agar hanya membatalkan/menjadwalkan ulang alarm yang berubah, sementara perubahan lokasi/jadwal/izin tetap memicu reschedule langsung.
 - List panjang memakai builder/lazy rendering pada fitur konten utama.
 - Header, kartu menu, dan spacing layar fitur diringkas agar tidak ada teks berulang dan tetap nyaman di layar compact.
-- Layar konten prioritas memakai `SolatifyScreenScaffold` untuk pola AppBar, background islami, responsive center, dan padding yang konsisten.
+- Layar konten/detail prioritas memakai `SolatifyScreenScaffold` untuk pola AppBar, background islami, responsive center, dan padding yang konsisten.
 
 ## 🔔 Catatan Notifikasi
 

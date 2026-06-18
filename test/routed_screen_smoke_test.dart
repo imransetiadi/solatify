@@ -154,7 +154,7 @@ void main() {
     );
   });
 
-  test('Priority content screens use compact scaffold', () {
+  test('Priority content and detail screens use compact scaffold', () {
     final scaffoldSource = File(
       'lib/core/widgets/solatify_screen_scaffold.dart',
     ).readAsStringSync();
@@ -162,7 +162,13 @@ void main() {
       'lib/features/duas/presentation/screens/duas_screen.dart',
       'lib/features/dhikr/presentation/screens/dhikr_screen.dart',
       'lib/features/islamic_tips/presentation/screens/islamic_tips_screen.dart',
+      'lib/features/asmaul_husna/presentation/screens/asmaul_husna_screen.dart',
+      'lib/features/hijri_calendar/presentation/screens/hijri_calendar_screen.dart',
+      'lib/features/prayer_guide/presentation/screens/prayer_guide_screen.dart',
     ].map((path) => File(path).readAsStringSync());
+    final notificationHealthSource = File(
+      'lib/features/settings/presentation/screens/notification_health_screen.dart',
+    ).readAsStringSync();
 
     expect(scaffoldSource, contains('SolatifyScreenScaffold'));
     expect(scaffoldSource, contains('ResponsiveCenter'));
@@ -170,6 +176,8 @@ void main() {
       expect(source, contains('SolatifyScreenScaffold'));
       expect(source, contains('AppRoutes.islamicContent'));
     }
+    expect(notificationHealthSource, contains('SolatifyScreenScaffold'));
+    expect(notificationHealthSource, contains('AppRoutes.settings'));
   });
 
   test('Notification Health Center source exposes diagnostics and actions', () {
