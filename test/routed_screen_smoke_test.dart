@@ -154,6 +154,35 @@ void main() {
     );
   });
 
+  test('Priority navigation uses AppRoutes instead of raw internal paths', () {
+    final sourcePaths = [
+      'lib/features/onboarding/presentation/screens/splash_screen.dart',
+      'lib/features/onboarding/presentation/screens/get_started_screen.dart',
+      'lib/features/onboarding/presentation/screens/onboarding_screen.dart',
+      'lib/features/settings/presentation/screens/settings_screen.dart',
+      'lib/features/islamic_content/presentation/screens/islamic_content_screen.dart',
+      'lib/features/quran/presentation/screens/quran_home_screen.dart',
+      'lib/features/notifications/data/services/notification_service.dart',
+    ];
+    final rawNavigationPatterns = [
+      "context.go('/",
+      'context.go("/',
+      "context.push('/",
+      'context.push("/',
+      "context.replace('/",
+      'context.replace("/',
+      "goRouter.go('/",
+      'goRouter.go("/',
+    ];
+
+    for (final path in sourcePaths) {
+      final source = File(path).readAsStringSync();
+      for (final pattern in rawNavigationPatterns) {
+        expect(source, isNot(contains(pattern)), reason: path);
+      }
+    }
+  });
+
   test('Priority content and detail screens use compact scaffold', () {
     final scaffoldSource = File(
       'lib/core/widgets/solatify_screen_scaffold.dart',
