@@ -32,7 +32,10 @@ function StoreButton({
 
 export default function Home() {
   const [locale, setLocale] = useState<Locale>("en");
+  const [activePreviewKey, setActivePreviewKey] = useState("home");
   const content = localizedContent[locale];
+  const activePreview =
+    content.phoneTabs.find((tab) => tab.key === activePreviewKey) ?? content.phoneTabs[0];
 
   useEffect(() => {
     const storedLocale = window.localStorage.getItem("locale");
@@ -99,6 +102,11 @@ export default function Home() {
               </span>
             ))}
           </div>
+          <div className="prayer-countdown" aria-label={`${content.liveCountdown.label}: ${content.liveCountdown.prayer}`}>
+            <span>{content.liveCountdown.label}</span>
+            <strong>{content.liveCountdown.remaining}</strong>
+            <small>{content.liveCountdown.time}</small>
+          </div>
         </div>
 
         <div className="phone-card screenshot-hero" aria-label={content.preview.label}>
@@ -106,8 +114,8 @@ export default function Home() {
           <div className="phone-shell real-screen-shell primary-screen">
             <div className="phone-top" />
             <Image
-              src="/screenshots/ios-home-light.jpg"
-              alt="Solatify iPhone home screen in light mode"
+              src={activePreview.src}
+              alt={activePreview.alt}
               width={1177}
               height={2560}
               priority
@@ -123,6 +131,43 @@ export default function Home() {
               priority
             />
           </div>
+          <div className="phone-tabs" role="tablist" aria-label={content.preview.label}>
+            {content.phoneTabs.map((tab) => (
+              <button
+                aria-selected={tab.key === activePreview.key}
+                className={tab.key === activePreview.key ? "active" : ""}
+                key={tab.key}
+                onClick={() => setActivePreviewKey(tab.key)}
+                role="tab"
+                type="button"
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+          <div className="phone-preview-copy">
+            <strong>{activePreview.title}</strong>
+            <p>{activePreview.copy}</p>
+          </div>
+        </div>
+      </section>
+
+      <div className="ornament-divider" aria-hidden="true" />
+
+      <section className="section how-section reveal" id="how-it-works">
+        <div className="section-heading">
+          <p className="eyebrow">{content.howItWorks.eyebrow}</p>
+          <h2>{content.howItWorks.title}</h2>
+          <p>{content.howItWorks.copy}</p>
+        </div>
+        <div className="step-grid">
+          {content.howItWorks.steps.map((step) => (
+            <article className="step-card" key={step.number}>
+              <span>{step.number}</span>
+              <h3>{step.title}</h3>
+              <p>{step.description}</p>
+            </article>
+          ))}
         </div>
       </section>
 
@@ -167,9 +212,44 @@ export default function Home() {
               <div>
                 <span>{screenshot.label}</span>
                 <strong>{screenshot.title}</strong>
+                <p>{screenshot.story}</p>
               </div>
             </article>
           ))}
+        </div>
+      </section>
+
+      <div className="ornament-divider" aria-hidden="true" />
+
+      <section className="mosque-section reveal" id="nearby-mosques">
+        <div>
+          <p className="eyebrow">{content.mosqueSpotlight.eyebrow}</p>
+          <h2>{content.mosqueSpotlight.title}</h2>
+          <p>{content.mosqueSpotlight.copy}</p>
+          <ul className="check-list mosque-points">
+            {content.mosqueSpotlight.points.map((point) => (
+              <li key={point}>{point}</li>
+            ))}
+          </ul>
+        </div>
+        <div className="mosque-card" aria-label={content.mosqueSpotlight.title}>
+          <span>{content.mosqueSpotlight.badge}</span>
+          <strong>{content.mosqueSpotlight.mosqueName}</strong>
+          <div className="mosque-meta">
+            <div>
+              <small>Distance</small>
+              <b>{content.mosqueSpotlight.distance}</b>
+            </div>
+            <div>
+              <small>Direction</small>
+              <b>{content.mosqueSpotlight.direction}</b>
+            </div>
+            <div>
+              <small>Walking</small>
+              <b>{content.mosqueSpotlight.walking}</b>
+            </div>
+          </div>
+          <button type="button">{content.mosqueSpotlight.action}</button>
         </div>
       </section>
 
@@ -192,6 +272,25 @@ export default function Home() {
             <strong>{content.notifications.adhanTitle}</strong>
             <p>{content.notifications.adhanCopy}</p>
           </div>
+        </div>
+      </section>
+
+      <div className="ornament-divider" aria-hidden="true" />
+
+      <section className="section trust-section reveal" id="trust">
+        <div className="section-heading">
+          <p className="eyebrow">{content.trust.eyebrow}</p>
+          <h2>{content.trust.title}</h2>
+          <p>{content.trust.copy}</p>
+        </div>
+        <div className="trust-grid">
+          {content.trust.items.map((item) => (
+            <article className="trust-card" key={item.title}>
+              <span>✓</span>
+              <h3>{item.title}</h3>
+              <p>{item.description}</p>
+            </article>
+          ))}
         </div>
       </section>
 
@@ -268,6 +367,9 @@ export default function Home() {
           ))}
         </div>
       </section>
+      <div className="mobile-sticky-cta" aria-label={content.store.installLabel}>
+        <a href={storeLinks.appStore}>{content.store.mobileCta}</a>
+      </div>
     </main>
   );
 }
