@@ -28,6 +28,7 @@
 - **Riverpod** untuk state management yang eksplisit dan testable.
 - **Hive** untuk cache lokal jadwal, pengaturan, tracker, dan data Al-Qur'an.
 - **GoRouter** untuk navigasi deklaratif.
+- **Typed route constants** di `AppRoutes` agar path seperti jadwal, Qur'an, konten islami, dan Settings tidak tersebar sebagai string literal.
 - **Clean Architecture** per fitur: `data`, `domain`, dan `presentation`.
 - **Notification domain planner** memisahkan perencanaan jadwal adzan/reminder dari provider UI agar flow notifikasi lebih testable.
 - **flutter_local_notifications** untuk notifikasi salat lokal dan alarm adzan.
@@ -46,6 +47,7 @@ Solatify menggunakan beberapa tuning agar aplikasi tetap ringan:
 - Scheduler notifikasi memakai sync plan, filter per waktu salat, dan post-permission refresh agar hanya membatalkan/menjadwalkan ulang alarm yang berubah, sementara perubahan lokasi/jadwal/izin tetap memicu reschedule langsung.
 - List panjang memakai builder/lazy rendering pada fitur konten utama.
 - Header, kartu menu, dan spacing layar fitur diringkas agar tidak ada teks berulang dan tetap nyaman di layar compact.
+- Layar konten prioritas memakai `SolatifyScreenScaffold` untuk pola AppBar, background islami, responsive center, dan padding yang konsisten.
 
 ## 🔔 Catatan Notifikasi
 
@@ -70,7 +72,7 @@ Untuk Android, notifikasi salat memakai channel `Prayer Times Adhan` (`prayer_ti
 
 Status branch terbaru sudah diverifikasi dengan:
 
-- `flutter test` — 122/122 tests passed.
+- `flutter test` — 124/124 tests passed.
 - `flutter analyze` — no issues.
 - `flutter test -d emulator-5554 integration_test/app_test.dart` — 2/2 integration tests passed di Android emulator.
 - `flutter test -d 00008140-000518E42EB8401C integration_test/app_test.dart` — 2/2 integration tests passed di iPhone `Satelit88`.

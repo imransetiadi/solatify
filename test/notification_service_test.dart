@@ -599,7 +599,7 @@ void main() {
       'android/app/src/main/kotlin/com/solatify/app/solatify/notifications/PrayerAlarmReceiver.kt',
     ).readAsStringSync();
 
-    expect(notificationService, contains("goRouter.go('/schedule')"));
+    expect(notificationService, contains('goRouter.go(AppRoutes.schedule)'));
     expect(receiver, contains('.setContentIntent('));
     expect(receiver, contains('buildContentIntent'));
   });

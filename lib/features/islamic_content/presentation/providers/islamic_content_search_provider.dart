@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:solatify/core/navigation/app_routes.dart';
 import 'package:solatify/features/asmaul_husna/presentation/providers/asmaul_husna_provider.dart';
 import 'package:solatify/features/dhikr/presentation/providers/dhikr_provider.dart';
 import 'package:solatify/features/duas/presentation/providers/duas_provider.dart';
@@ -46,7 +47,7 @@ final islamicContentSearchIndexProvider =
             category: 'Doa Harian',
             title: dua.title,
             subtitle: dua.meaning,
-            route: '/islamic-content/duas',
+            route: AppRoutes.duas,
             icon: Icons.volunteer_activism_outlined,
             keywords: [dua.category, dua.latinText, dua.source],
           ),
@@ -55,7 +56,7 @@ final islamicContentSearchIndexProvider =
             category: 'Dzikir Pagi',
             title: dhikr.title,
             subtitle: dhikr.meaning,
-            route: '/islamic-content/dhikr',
+            route: AppRoutes.dhikr,
             icon: Icons.wb_twilight_outlined,
             keywords: [dhikr.latinText, dhikr.note, 'dzikir pagi'],
           ),
@@ -64,7 +65,7 @@ final islamicContentSearchIndexProvider =
             category: 'Dzikir Petang',
             title: dhikr.title,
             subtitle: dhikr.meaning,
-            route: '/islamic-content/dhikr',
+            route: AppRoutes.dhikr,
             icon: Icons.nightlight_round,
             keywords: [dhikr.latinText, dhikr.note, 'dzikir petang'],
           ),
@@ -73,7 +74,7 @@ final islamicContentSearchIndexProvider =
             category: 'Asmaul Husna',
             title: name.latinName,
             subtitle: name.meaning,
-            route: '/islamic-content/asmaul-husna',
+            route: AppRoutes.asmaulHusna,
             icon: Icons.font_download_outlined,
             keywords: [name.arabicName, name.description],
           ),
@@ -82,7 +83,7 @@ final islamicContentSearchIndexProvider =
             category: 'Tips Islami',
             title: tip.title,
             subtitle: tip.content,
-            route: '/islamic-content/tips',
+            route: AppRoutes.islamicTips,
             icon: Icons.lightbulb_outline,
             keywords: [tip.category, tip.reference],
           ),
@@ -91,7 +92,7 @@ final islamicContentSearchIndexProvider =
             category: 'Tuntunan Salat',
             title: summary.title,
             subtitle: summary.items.join(' • '),
-            route: '/islamic-content/prayer-guide',
+            route: AppRoutes.prayerGuide,
             icon: Icons.menu_book_outlined,
             keywords: ['panduan salat', 'tata cara salat'],
           ),
@@ -100,7 +101,7 @@ final islamicContentSearchIndexProvider =
             category: 'Tuntunan Salat',
             title: step.title,
             subtitle: step.description,
-            route: '/islamic-content/prayer-guide',
+            route: AppRoutes.prayerGuide,
             icon: Icons.menu_book_outlined,
             keywords: [step.latinText, step.meaning, step.note],
           ),
@@ -109,7 +110,7 @@ final islamicContentSearchIndexProvider =
             category: 'Dzikir Setelah Salat',
             title: dhikr.title,
             subtitle: dhikr.meaning,
-            route: '/islamic-content/prayer-guide',
+            route: AppRoutes.prayerGuide,
             icon: Icons.menu_book_outlined,
             keywords: [dhikr.latinText, 'dzikir setelah salat'],
           ),

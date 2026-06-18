@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
+import 'package:solatify/core/navigation/app_routes.dart';
 import 'package:solatify/core/services/solatify_haptics.dart';
 import 'package:solatify/core/theme/theme.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
 import 'package:solatify/core/widgets/solatify_design_tokens.dart';
+
 import '../../domain/models/quran_models.dart';
 import '../quran_provider.dart';
 
@@ -224,7 +225,10 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
         onTap: () {
           SolatifyHaptics.selection();
           context.push(
-            '/quran/surah/${state.lastReadSurah}?scroll_to=${state.lastReadVerse}',
+            AppRoutes.quranSurah(
+              state.lastReadSurah!,
+              scrollTo: state.lastReadVerse,
+            ),
           );
         },
         child: GlassContainer(
@@ -514,7 +518,10 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                           onPressed: () {
                             SolatifyHaptics.selection();
                             context.push(
-                              '/quran/surah/$surahNum?scroll_to=$verseNum',
+                              AppRoutes.quranSurah(
+                                surahNum,
+                                scrollTo: verseNum,
+                              ),
                             );
                           },
                         ),
@@ -535,7 +542,7 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
       margin: const EdgeInsets.only(bottom: 10),
       child: GestureDetector(
         onTap: () {
-          context.push('/quran/surah/${surah.number}');
+          context.push(AppRoutes.quranSurah(surah.number));
         },
         child: GlassContainer(
           opacity: 0.92,

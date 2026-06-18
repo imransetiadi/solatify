@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:solatify/core/navigation/app_routes.dart';
 import 'package:solatify/features/settings/presentation/providers/settings_provider.dart';
 
 import '../../../../core/widgets/islamic/islamic_decorations.dart';
@@ -39,9 +40,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     final settings = ref.read(settingsProvider);
     if (settings.onboardingCompleted) {
-      context.go('/home');
+      context.go(AppRoutes.home);
     } else {
-      context.go('/onboarding');
+      context.go(AppRoutes.onboarding);
     }
   }
 

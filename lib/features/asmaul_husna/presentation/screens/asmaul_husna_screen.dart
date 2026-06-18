@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:solatify/core/navigation/app_routes.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
 import 'package:solatify/core/widgets/solatify_state_view.dart';
@@ -62,7 +63,7 @@ class _AsmaulHusnaScreenState extends ConsumerState<AsmaulHusnaScreen> {
         shadowColor: Colors.transparent,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/islamic-content'),
+          onPressed: () => context.go(AppRoutes.islamicContent),
         ),
         title: const Text(
           'Asmaul Husna',

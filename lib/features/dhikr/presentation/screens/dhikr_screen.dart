@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:solatify/core/localization/app_localizations.dart';
+import 'package:solatify/core/navigation/app_routes.dart';
 import 'package:solatify/core/theme/theme.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
-import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
+import 'package:solatify/core/widgets/solatify_screen_scaffold.dart';
 import 'package:solatify/features/dhikr/presentation/providers/dhikr_provider.dart';
 
 class DhikrScreen extends ConsumerWidget {
@@ -21,45 +21,26 @@ class DhikrScreen extends ConsumerWidget {
     final primaryColor = isDark
         ? const Color(0xFFC78A4C)
         : const Color(0xFFC94B3D);
-    final appBarColor = Theme.of(
-      context,
-    ).colorScheme.surface.withValues(alpha: isDark ? 0.96 : 0.94);
-
     return DefaultTabController(
       length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: appBarColor,
-          surfaceTintColor: Colors.transparent,
-          elevation: 0,
-          shadowColor: Colors.transparent,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            color: textColor,
-            onPressed: () => context.go('/islamic-content'),
-          ),
-          title: Text(
-            l.morningEveningDhikr,
-            style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
-          ),
-          centerTitle: true,
-          bottom: TabBar(
-            labelColor: primaryColor,
-            unselectedLabelColor: textColor.withValues(alpha: 0.6),
-            indicatorColor: primaryColor,
-            tabs: [
-              Tab(text: l.morningDhikr),
-              Tab(text: l.eveningDhikr),
-            ],
-          ),
+      child: SolatifyScreenScaffold(
+        title: l.morningEveningDhikr,
+        backRoute: AppRoutes.islamicContent,
+        padding: EdgeInsets.zero,
+        bottom: TabBar(
+          labelColor: primaryColor,
+          unselectedLabelColor: textColor.withValues(alpha: 0.6),
+          indicatorColor: primaryColor,
+          tabs: [
+            Tab(text: l.morningDhikr),
+            Tab(text: l.eveningDhikr),
+          ],
         ),
-        body: const IslamicBackground(
-          child: TabBarView(
-            children: <Widget>[
-              _DhikrListView(isMorning: true),
-              _DhikrListView(isMorning: false),
-            ],
-          ),
+        child: const TabBarView(
+          children: <Widget>[
+            _DhikrListView(isMorning: true),
+            _DhikrListView(isMorning: false),
+          ],
         ),
       ),
     );

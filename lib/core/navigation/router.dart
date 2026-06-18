@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:solatify/core/localization/app_localizations.dart';
+import 'package:solatify/core/navigation/app_routes.dart';
 import 'package:solatify/core/performance/performance_tuning.dart';
 import 'package:solatify/core/services/solatify_haptics.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
@@ -68,21 +69,24 @@ CustomTransitionPage<void> _buildSeamlessPage(
 }
 
 final goRouter = GoRouter(
-  initialLocation: '/splash',
+  initialLocation: AppRoutes.splash,
   navigatorKey: rootNavigatorKey,
   debugLogDiagnostics: false,
   routes: [
-    GoRoute(path: '/splash', builder: (context, state) => const SplashScreen()),
     GoRoute(
-      path: '/get-started',
+      path: AppRoutes.splash,
+      builder: (context, state) => const SplashScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.getStarted,
       builder: (context, state) => const GetStartedScreen(),
     ),
     GoRoute(
-      path: '/onboarding',
+      path: AppRoutes.onboarding,
       builder: (context, state) => const OnboardingScreen(),
     ),
     GoRoute(
-      path: '/quran/surah/:id',
+      path: '${AppRoutes.quran}/surah/:id',
       parentNavigatorKey: rootNavigatorKey,
       pageBuilder: (context, state) {
         final idStr = state.pathParameters['id'] ?? '1';
@@ -104,77 +108,77 @@ final goRouter = GoRouter(
       },
       routes: [
         GoRoute(
-          path: '/home',
+          path: AppRoutes.home,
           pageBuilder: (context, state) =>
               _buildSeamlessPage(state, const HomeScreen()),
         ),
         GoRoute(
-          path: '/schedule',
+          path: AppRoutes.schedule,
           pageBuilder: (context, state) =>
               _buildSeamlessPage(state, const PrayerScheduleScreen()),
         ),
         GoRoute(
-          path: '/quran',
+          path: AppRoutes.quran,
           pageBuilder: (context, state) =>
               _buildSeamlessPage(state, const QuranHomeScreen()),
         ),
         GoRoute(
-          path: '/islamic-content',
+          path: AppRoutes.islamicContent,
           pageBuilder: (context, state) =>
               _buildSeamlessPage(state, const IslamicContentScreen()),
         ),
         GoRoute(
-          path: '/islamic-content/asmaul-husna',
+          path: AppRoutes.asmaulHusna,
           pageBuilder: (context, state) =>
               _buildSeamlessPage(state, const AsmaulHusnaScreen()),
         ),
         GoRoute(
-          path: '/islamic-content/duas',
+          path: AppRoutes.duas,
           pageBuilder: (context, state) =>
               _buildSeamlessPage(state, const DuasScreen()),
         ),
         GoRoute(
-          path: '/islamic-content/hijri-calendar',
+          path: AppRoutes.hijriCalendar,
           pageBuilder: (context, state) =>
               _buildSeamlessPage(state, const HijriCalendarScreen()),
         ),
         GoRoute(
-          path: '/islamic-content/tips',
+          path: AppRoutes.islamicTips,
           pageBuilder: (context, state) =>
               _buildSeamlessPage(state, const IslamicTipsScreen()),
         ),
         GoRoute(
-          path: '/islamic-content/dhikr',
+          path: AppRoutes.dhikr,
           pageBuilder: (context, state) =>
               _buildSeamlessPage(state, const DhikrScreen()),
         ),
         GoRoute(
-          path: '/islamic-content/prayer-guide',
+          path: AppRoutes.prayerGuide,
           pageBuilder: (context, state) =>
               _buildSeamlessPage(state, const PrayerGuideScreen()),
         ),
         GoRoute(
-          path: '/qibla',
+          path: AppRoutes.qibla,
           pageBuilder: (context, state) =>
               _buildSeamlessPage(state, const QiblaScreen()),
         ),
         GoRoute(
-          path: '/mosque',
+          path: AppRoutes.mosque,
           pageBuilder: (context, state) =>
               _buildSeamlessPage(state, const NearbyMosqueScreen()),
         ),
         GoRoute(
-          path: '/tracker',
+          path: AppRoutes.tracker,
           pageBuilder: (context, state) =>
               _buildSeamlessPage(state, const TrackerScreen()),
         ),
         GoRoute(
-          path: '/settings',
+          path: AppRoutes.settings,
           pageBuilder: (context, state) =>
               _buildSeamlessPage(state, const SettingsScreen()),
         ),
         GoRoute(
-          path: '/settings/notification-health',
+          path: AppRoutes.notificationHealth,
           pageBuilder: (context, state) =>
               _buildSeamlessPage(state, const NotificationHealthScreen()),
         ),
@@ -188,95 +192,120 @@ class MainLayoutScreen extends StatelessWidget {
   final Widget child;
 
   static const _destinations = [
-    _MainDestination(Icons.home_outlined, Icons.home, 'Beranda', '/home'),
+    _MainDestination(
+      Icons.home_outlined,
+      Icons.home,
+      'Beranda',
+      AppRoutes.home,
+    ),
     _MainDestination(
       Icons.calendar_month_outlined,
       Icons.calendar_month,
       'Jadwal',
-      '/schedule',
+      AppRoutes.schedule,
     ),
     _MainDestination(
       Icons.menu_book_outlined,
       Icons.menu_book,
       'Qur\'an',
-      '/quran',
+      AppRoutes.quran,
     ),
     _MainDestination(
       Icons.auto_stories_outlined,
       Icons.auto_stories,
       'Konten',
-      '/islamic-content',
+      AppRoutes.islamicContent,
     ),
-    _MainDestination(Icons.explore_outlined, Icons.explore, 'Kiblat', '/qibla'),
-    _MainDestination(Icons.map_outlined, Icons.map, 'Masjid', '/mosque'),
+    _MainDestination(
+      Icons.explore_outlined,
+      Icons.explore,
+      'Kiblat',
+      AppRoutes.qibla,
+    ),
+    _MainDestination(Icons.map_outlined, Icons.map, 'Masjid', AppRoutes.mosque),
     _MainDestination(
       Icons.settings_outlined,
       Icons.settings,
       'Pengaturan',
-      '/settings',
+      AppRoutes.settings,
     ),
   ];
 
   static const _mobileDestinations = [
-    _MainDestination(Icons.home_outlined, Icons.home, 'Beranda', '/home'),
+    _MainDestination(
+      Icons.home_outlined,
+      Icons.home,
+      'Beranda',
+      AppRoutes.home,
+    ),
     _MainDestination(
       Icons.calendar_month_outlined,
       Icons.calendar_month,
       'Jadwal',
-      '/schedule',
+      AppRoutes.schedule,
     ),
     _MainDestination(
       Icons.menu_book_outlined,
       Icons.menu_book,
       'Qur\'an',
-      '/quran',
+      AppRoutes.quran,
     ),
     _MainDestination(
       Icons.auto_stories_outlined,
       Icons.auto_stories,
       'Konten',
-      '/islamic-content',
+      AppRoutes.islamicContent,
     ),
-    _MainDestination(Icons.apps_outlined, Icons.apps, 'Lainnya', '/more'),
+    _MainDestination(
+      Icons.apps_outlined,
+      Icons.apps,
+      'Lainnya',
+      AppRoutes.more,
+    ),
   ];
 
   static const _moreDestinations = [
-    _MainDestination(Icons.explore_outlined, Icons.explore, 'Kiblat', '/qibla'),
-    _MainDestination(Icons.map_outlined, Icons.map, 'Masjid', '/mosque'),
+    _MainDestination(
+      Icons.explore_outlined,
+      Icons.explore,
+      'Kiblat',
+      AppRoutes.qibla,
+    ),
+    _MainDestination(Icons.map_outlined, Icons.map, 'Masjid', AppRoutes.mosque),
     _MainDestination(
       Icons.check_circle_outline,
       Icons.check_circle,
       'Tracker Ibadah',
-      '/tracker',
+      AppRoutes.tracker,
     ),
     _MainDestination(
       Icons.settings_outlined,
       Icons.settings,
       'Pengaturan',
-      '/settings',
+      AppRoutes.settings,
     ),
   ];
 
   int _calculateSelectedIndex(BuildContext context) {
     final String location = GoRouterState.of(context).uri.toString();
-    if (location.startsWith('/home')) return 0;
-    if (location.startsWith('/schedule')) return 1;
-    if (location.startsWith('/quran')) return 2;
-    if (location.startsWith('/islamic-content')) return 3;
-    if (location.startsWith('/qibla')) return 4;
-    if (location.startsWith('/mosque')) return 5;
-    if (location.startsWith('/tracker')) return 0;
-    if (location.startsWith('/settings')) return 6;
+    if (location.startsWith(AppRoutes.home)) return 0;
+    if (location.startsWith(AppRoutes.schedule)) return 1;
+    if (location.startsWith(AppRoutes.quran)) return 2;
+    if (location.startsWith(AppRoutes.islamicContent)) return 3;
+    if (location.startsWith(AppRoutes.qibla)) return 4;
+    if (location.startsWith(AppRoutes.mosque)) return 5;
+    if (location.startsWith(AppRoutes.tracker)) return 0;
+    if (location.startsWith(AppRoutes.settings)) return 6;
     return 0;
   }
 
   int _calculateMobileSelectedIndex(BuildContext context) {
     final String location = GoRouterState.of(context).uri.toString();
-    if (location.startsWith('/home')) return 0;
-    if (location.startsWith('/schedule')) return 1;
-    if (location.startsWith('/quran')) return 2;
-    if (location.startsWith('/islamic-content')) return 3;
-    if (location.startsWith('/tracker')) return 4;
+    if (location.startsWith(AppRoutes.home)) return 0;
+    if (location.startsWith(AppRoutes.schedule)) return 1;
+    if (location.startsWith(AppRoutes.quran)) return 2;
+    if (location.startsWith(AppRoutes.islamicContent)) return 3;
+    if (location.startsWith(AppRoutes.tracker)) return 4;
     return 4;
   }
 
@@ -288,7 +317,7 @@ class MainLayoutScreen extends StatelessWidget {
   void _onMobileItemTapped(int index, BuildContext context) {
     final destination = _mobileDestinations[index];
     SolatifyHaptics.selection();
-    if (destination.path == '/more') {
+    if (destination.path == AppRoutes.more) {
       _showMoreMenu(context);
       return;
     }
@@ -476,23 +505,23 @@ class MainLayoutScreen extends StatelessWidget {
     _MainDestination destination,
   ) {
     switch (destination.path) {
-      case '/home':
+      case AppRoutes.home:
         return l.navHome;
-      case '/schedule':
+      case AppRoutes.schedule:
         return l.navSchedule;
-      case '/quran':
+      case AppRoutes.quran:
         return l.navQuran;
-      case '/islamic-content':
+      case AppRoutes.islamicContent:
         return l.navContent;
-      case '/qibla':
+      case AppRoutes.qibla:
         return l.navQibla;
-      case '/mosque':
+      case AppRoutes.mosque:
         return l.navMosque;
-      case '/tracker':
+      case AppRoutes.tracker:
         return destination.label;
-      case '/settings':
+      case AppRoutes.settings:
         return l.navSettings;
-      case '/more':
+      case AppRoutes.more:
         return l.navMore;
       default:
         return destination.label;

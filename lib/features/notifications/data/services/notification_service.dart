@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:solatify/core/database/hive_service.dart';
+import 'package:solatify/core/navigation/app_routes.dart';
 import 'package:solatify/core/navigation/router.dart';
 import 'package:solatify/features/notifications/domain/entities/notification_history_entry.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
@@ -308,7 +309,7 @@ class NotificationService {
     if (payload == null || payload.isEmpty) return;
 
     if (_isPrayerNotificationPayload(payload)) {
-      goRouter.go('/schedule');
+      goRouter.go(AppRoutes.schedule);
     }
   }
 

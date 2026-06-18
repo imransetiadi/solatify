@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:solatify/core/localization/app_localizations.dart';
+import 'package:solatify/core/navigation/app_routes.dart';
 import 'package:solatify/core/services/solatify_haptics.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
@@ -41,32 +42,32 @@ class _IslamicContentScreenState extends ConsumerState<IslamicContentScreen> {
     _ContentMenuItem(
       title: 'Asmaul Husna',
       icon: Icons.font_download_outlined,
-      path: '/islamic-content/asmaul-husna',
+      path: AppRoutes.asmaulHusna,
     ),
     _ContentMenuItem(
       title: 'Doa Harian',
       icon: Icons.volunteer_activism_outlined,
-      path: '/islamic-content/duas',
+      path: AppRoutes.duas,
     ),
     _ContentMenuItem(
       title: 'Kalender Hijriah',
       icon: Icons.calendar_month_outlined,
-      path: '/islamic-content/hijri-calendar',
+      path: AppRoutes.hijriCalendar,
     ),
     _ContentMenuItem(
       title: 'Dzikir',
       icon: Icons.wb_twilight_outlined,
-      path: '/islamic-content/dhikr',
+      path: AppRoutes.dhikr,
     ),
     _ContentMenuItem(
       title: 'Tuntunan Salat',
       icon: Icons.menu_book_outlined,
-      path: '/islamic-content/prayer-guide',
+      path: AppRoutes.prayerGuide,
     ),
     _ContentMenuItem(
       title: 'Tips Islami',
       icon: Icons.lightbulb_outline,
-      path: '/islamic-content/tips',
+      path: AppRoutes.islamicTips,
     ),
   ];
 
@@ -154,7 +155,7 @@ class _IslamicContentScreenState extends ConsumerState<IslamicContentScreen> {
                   textColor: textColor,
                   mutedColor: mutedColor,
                   primaryColor: redAccent,
-                  onTap: () => context.go('/islamic-content/tips'),
+                  onTap: () => context.go(AppRoutes.islamicTips),
                 ),
                 loading: () => const SolatifyStateView.loading(
                   title: 'Memuat tips harian',
@@ -221,32 +222,32 @@ class _IslamicContentScreenState extends ConsumerState<IslamicContentScreen> {
       _ContentMenuItem(
         title: 'Asmaul Husna',
         icon: Icons.font_download_outlined,
-        path: '/islamic-content/asmaul-husna',
+        path: AppRoutes.asmaulHusna,
       ),
       _ContentMenuItem(
         title: 'Daily Duas',
         icon: Icons.volunteer_activism_outlined,
-        path: '/islamic-content/duas',
+        path: AppRoutes.duas,
       ),
       _ContentMenuItem(
         title: 'Hijri Calendar',
         icon: Icons.calendar_month_outlined,
-        path: '/islamic-content/hijri-calendar',
+        path: AppRoutes.hijriCalendar,
       ),
       _ContentMenuItem(
         title: 'Dhikr',
         icon: Icons.wb_twilight_outlined,
-        path: '/islamic-content/dhikr',
+        path: AppRoutes.dhikr,
       ),
       _ContentMenuItem(
         title: 'Prayer Guide',
         icon: Icons.menu_book_outlined,
-        path: '/islamic-content/prayer-guide',
+        path: AppRoutes.prayerGuide,
       ),
       _ContentMenuItem(
         title: 'Islamic Tips',
         icon: Icons.lightbulb_outline,
-        path: '/islamic-content/tips',
+        path: AppRoutes.islamicTips,
       ),
     ];
   }

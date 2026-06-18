@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:solatify/core/localization/app_localizations.dart';
+import 'package:solatify/core/navigation/app_routes.dart';
 import 'package:solatify/core/services/solatify_haptics.dart';
 import 'package:solatify/core/theme/theme.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
@@ -707,7 +708,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           ),
                           onTap: () {
                             SolatifyHaptics.selection();
-                            context.push('/settings/notification-health');
+                            context.push(AppRoutes.notificationHealth);
                           },
                         ),
                         Divider(color: dividerColor, height: 16),

@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:solatify/core/database/hive_service.dart';
+import 'package:solatify/core/navigation/app_routes.dart';
 import 'package:solatify/core/theme/theme.dart';
 import 'package:solatify/features/asmaul_husna/presentation/screens/asmaul_husna_screen.dart';
 import 'package:solatify/features/dhikr/presentation/screens/dhikr_screen.dart';
@@ -122,7 +123,7 @@ void main() {
         category: 'Doa Harian',
         title: 'Doa Qunut',
         subtitle: 'Dibaca saat salat Subuh',
-        route: '/islamic-content/duas',
+        route: AppRoutes.duas,
         icon: Icons.volunteer_activism_outlined,
         keywords: ['subuh', 'qunut'],
       ),
@@ -130,7 +131,7 @@ void main() {
         category: 'Asmaul Husna',
         title: 'Ar Rahman',
         subtitle: 'Maha Pengasih',
-        route: '/islamic-content/asmaul-husna',
+        route: AppRoutes.asmaulHusna,
         icon: Icons.font_download_outlined,
         keywords: ['rahman'],
       ),
@@ -138,7 +139,7 @@ void main() {
         category: 'Tips Islami',
         title: 'Keutamaan Shalat Dhuha',
         subtitle: 'Amalan pagi hari',
-        route: '/islamic-content/tips',
+        route: AppRoutes.islamicTips,
         icon: Icons.lightbulb_outline,
         keywords: ['dhuha'],
       ),
@@ -146,15 +147,15 @@ void main() {
 
     expect(
       searchIslamicContentItems(items, 'qunut').single.route,
-      '/islamic-content/duas',
+      AppRoutes.duas,
     );
     expect(
       searchIslamicContentItems(items, 'rahman').single.route,
-      '/islamic-content/asmaul-husna',
+      AppRoutes.asmaulHusna,
     );
     expect(
       searchIslamicContentItems(items, 'shalat dhuha').single.route,
-      '/islamic-content/tips',
+      AppRoutes.islamicTips,
     );
     expect(searchIslamicContentItems(items, 'tidak ada'), isEmpty);
   });

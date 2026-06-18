@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:solatify/core/database/hive_service.dart';
+import 'package:solatify/core/navigation/app_routes.dart';
 import 'package:solatify/core/theme/theme.dart';
 import 'package:solatify/features/hijri_calendar/presentation/screens/hijri_calendar_screen.dart';
 import 'package:solatify/features/mosque/presentation/screens/nearby_mosque_screen.dart';
@@ -139,7 +140,36 @@ void main() {
     expect(source, contains('updateNotificationSoundMode'));
     expect(source, contains('refreshSchedules(force: true)'));
     expect(source, contains('notificationHealthEntryTitle'));
-    expect(source, contains('/settings/notification-health'));
+    expect(source, contains('AppRoutes.notificationHealth'));
+  });
+
+  test('AppRoutes exposes typed static and dynamic routes', () {
+    expect(AppRoutes.home, '/home');
+    expect(AppRoutes.schedule, '/schedule');
+    expect(AppRoutes.notificationHealth, '/settings/notification-health');
+    expect(AppRoutes.quranSurah(2), '/quran/surah/2');
+    expect(
+      AppRoutes.quranSurah(2, scrollTo: 255),
+      '/quran/surah/2?scroll_to=255',
+    );
+  });
+
+  test('Priority content screens use compact scaffold', () {
+    final scaffoldSource = File(
+      'lib/core/widgets/solatify_screen_scaffold.dart',
+    ).readAsStringSync();
+    final screenSources = [
+      'lib/features/duas/presentation/screens/duas_screen.dart',
+      'lib/features/dhikr/presentation/screens/dhikr_screen.dart',
+      'lib/features/islamic_tips/presentation/screens/islamic_tips_screen.dart',
+    ].map((path) => File(path).readAsStringSync());
+
+    expect(scaffoldSource, contains('SolatifyScreenScaffold'));
+    expect(scaffoldSource, contains('ResponsiveCenter'));
+    for (final source in screenSources) {
+      expect(source, contains('SolatifyScreenScaffold'));
+      expect(source, contains('AppRoutes.islamicContent'));
+    }
   });
 
   test('Notification Health Center source exposes diagnostics and actions', () {
