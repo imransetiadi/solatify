@@ -2,7 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/datasources/tracker_local_data_source.dart';
 import '../../data/repositories/tracker_repository_impl.dart';
 import '../../domain/entities/prayer_log_entity.dart';
+import '../../domain/entities/weekly_stats_entity.dart';
 import '../../domain/repositories/tracker_repository.dart';
+import '../../domain/usecases/get_weekly_stats.dart';
 
 final trackerLocalDataSourceProvider = Provider<TrackerLocalDataSource>((ref) {
   return const TrackerLocalDataSourceImpl();
@@ -60,3 +62,8 @@ final trackerProvider =
       final repository = ref.watch(trackerRepositoryProvider);
       return TrackerNotifier(repository);
     });
+
+final trackerWeeklyStatsProvider = FutureProvider<WeeklyStatsEntity>((ref) {
+  final repository = ref.watch(trackerRepositoryProvider);
+  return GetWeeklyStats(repository).execute(DateTime.now());
+});

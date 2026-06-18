@@ -101,6 +101,9 @@ void main() {
 
     expect(find.text('Tracker Ibadah'), findsOneWidget);
     expect(find.text('Ceklis Ibadah Hari Ini'), findsOneWidget);
+    expect(find.text('Progress Hari Ini'), findsOneWidget);
+    expect(find.text('Insight 7 Hari'), findsOneWidget);
+    expect(find.textContaining('/5 salat'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
