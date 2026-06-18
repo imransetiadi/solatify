@@ -1,6 +1,7 @@
 import UIKit
 import Flutter
 import UserNotifications
+import WidgetKit
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
@@ -11,6 +12,7 @@ import UserNotifications
     GeneratedPluginRegistrant.register(with: self)
     UNUserNotificationCenter.current().delegate = self
     registerIosSettingsChannel()
+    registerIosPrayerWidgetChannel()
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
@@ -49,6 +51,45 @@ import UserNotifications
         result(FlutterMethodNotImplemented)
       }
     }
+  }
+
+  private func registerIosPrayerWidgetChannel() {
+    guard let registrar = registrar(forPlugin: "SolatifyIosPrayerWidget") else {
+      return
+    }
+
+    let channel = FlutterMethodChannel(
+      name: "solatify/ios_prayer_widget",
+      binaryMessenger: registrar.messenger()
+    )
+    channel.setMethodCallHandler { call, result in
+      switch call.method {
+      case "syncPrayerWidget":
+        self.syncPrayerWidget(call: call, result: result)
+      default:
+        result(FlutterMethodNotImplemented)
+      }
+    }
+  }
+
+  private func syncPrayerWidget(call: FlutterMethodCall, result: @escaping FlutterResult) {
+    guard let payload = call.arguments as? [String: String],
+          let defaults = UserDefaults(suiteName: "group.com.solatify.app.solatify") else {
+      result(false)
+      return
+    }
+
+    defaults.set(payload["nextPrayerName"] ?? "-", forKey: "nextPrayerName")
+    defaults.set(payload["nextPrayerTimeLabel"] ?? "--:--", forKey: "nextPrayerTimeLabel")
+    defaults.set(payload["countdownLabel"] ?? "--:--", forKey: "countdownLabel")
+    defaults.set(payload["locationLabel"] ?? "Solatify", forKey: "locationLabel")
+    defaults.set(payload["hijriLabel"] ?? "Jadwal salat", forKey: "hijriLabel")
+    defaults.synchronize()
+
+    if #available(iOS 14.0, *) {
+      WidgetCenter.shared.reloadTimelines(ofKind: "SolatifyPrayerWidget")
+    }
+    result(true)
   }
 
   private func requestNotificationPermissions(result: @escaping FlutterResult) {
