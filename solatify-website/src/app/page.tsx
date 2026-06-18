@@ -69,7 +69,7 @@ export default function Home() {
         </div>
       </header>
 
-      <section className="hero" id="top">
+      <section className="hero reveal" id="top">
         <div className="hero-glow" />
         <div className="hero-content">
           <div className="app-badge">
@@ -101,55 +101,34 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="phone-card" aria-label={content.preview.label}>
+        <div className="phone-card screenshot-hero" aria-label={content.preview.label}>
           <div className="phone-orbit" aria-hidden="true" />
-          <div className="phone-shell">
+          <div className="phone-shell real-screen-shell primary-screen">
             <div className="phone-top" />
-            <div className="phone-status">
-              <span>09:41</span>
-              <span>● ● ●</span>
-            </div>
-            <div className="notification-preview">
-              <Image src="/brand/solatify-logo.png" alt="" width={28} height={28} />
-              <div>
-                <strong>{content.preview.notificationTitle}</strong>
-                <span>{content.preview.notificationBody}</span>
-              </div>
-            </div>
-            <div className="app-preview-card active">
-              <span>{content.preview.nextPrayerLabel}</span>
-              <strong>{content.preview.prayerName}</strong>
-              <p>{content.preview.location}</p>
-              <div className="countdown-pill">{content.preview.countdown}</div>
-            </div>
-            <div className="app-preview-grid">
-              <div>
-                <span>{content.preview.qibla}</span>
-                <strong>295°</strong>
-              </div>
-              <div>
-                <span>{content.preview.quran}</span>
-                <strong>{content.preview.quranValue}</strong>
-              </div>
-            </div>
-            <div className="quick-actions-preview">
-              {content.preview.quickActions.map((action) => (
-                <span key={action}>{action}</span>
-              ))}
-            </div>
-            <div className="mini-list">
-              {content.preview.prayers.map(([name, time]) => (
-                <div key={name}>
-                  <span>{name}</span>
-                  <strong>{time}</strong>
-                </div>
-              ))}
-            </div>
+            <Image
+              src="/screenshots/ios-home-light.jpg"
+              alt="Solatify iPhone home screen in light mode"
+              width={1177}
+              height={2560}
+              priority
+            />
+          </div>
+          <div className="phone-shell real-screen-shell secondary-screen" aria-hidden="true">
+            <div className="phone-top" />
+            <Image
+              src="/screenshots/android-home-dark.jpg"
+              alt=""
+              width={1177}
+              height={2560}
+              priority
+            />
           </div>
         </div>
       </section>
 
-      <section className="section feature-showcase" id="features">
+      <div className="ornament-divider" aria-hidden="true" />
+
+      <section className="section feature-showcase reveal" id="features">
         <div className="section-heading">
           <p className="eyebrow">{content.featuresSection.eyebrow}</p>
           <h2>{content.featuresSection.title}</h2>
@@ -166,7 +145,37 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="notification-section glass-section" id="notifications">
+      <div className="ornament-divider" aria-hidden="true" />
+
+      <section className="section screenshot-section reveal" id="screenshots">
+        <div className="section-heading">
+          <p className="eyebrow">{content.screenshotsSection.eyebrow}</p>
+          <h2>{content.screenshotsSection.title}</h2>
+          <p>{content.screenshotsSection.copy}</p>
+        </div>
+        <div className="screenshot-grid">
+          {content.screenshots.map((screenshot) => (
+            <article className="screenshot-card" key={screenshot.src}>
+              <div className="screenshot-frame">
+                <Image
+                  src={screenshot.src}
+                  alt={`${screenshot.title} preview`}
+                  width={1177}
+                  height={2560}
+                />
+              </div>
+              <div>
+                <span>{screenshot.label}</span>
+                <strong>{screenshot.title}</strong>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <div className="ornament-divider" aria-hidden="true" />
+
+      <section className="notification-section glass-section reveal" id="notifications">
         <div className="ornament-card notification-copy">
           <p className="eyebrow">{content.notifications.eyebrow}</p>
           <h2>{content.notifications.title}</h2>
@@ -186,7 +195,9 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="split-section" id="why">
+      <div className="ornament-divider" aria-hidden="true" />
+
+      <section className="split-section reveal" id="why">
         <div>
           <p className="eyebrow">{content.why.eyebrow}</p>
           <h2>{content.why.title}</h2>
@@ -202,7 +213,26 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="section cta-section app-download-panel">
+      <section className="section use-cases-section reveal" id="use-cases">
+        <div className="section-heading">
+          <p className="eyebrow">{content.useCasesSection.eyebrow}</p>
+          <h2>{content.useCasesSection.title}</h2>
+          <p>{content.useCasesSection.copy}</p>
+        </div>
+        <div className="use-case-grid">
+          {content.useCases.map((item) => (
+            <article className="use-case-card" key={item.title}>
+              <span>{item.icon}</span>
+              <h3>{item.title}</h3>
+              <p>{item.description}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <div className="ornament-divider" aria-hidden="true" />
+
+      <section className="section cta-section app-download-panel reveal">
         <div>
           <p className="eyebrow">{content.cta.eyebrow}</p>
           <h2>{content.cta.title}</h2>
@@ -224,7 +254,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="section faq-section" id="faq">
+      <section className="section faq-section reveal" id="faq">
         <div className="section-heading">
           <p className="eyebrow">{content.faqSection.eyebrow}</p>
           <h2>{content.faqSection.title}</h2>

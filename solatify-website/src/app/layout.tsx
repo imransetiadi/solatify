@@ -2,10 +2,10 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://solatify.app"),
-  title: "Solatify — Prayer Times, Qur’an, Dhikr & Islamic Companion",
+  metadataBase: new URL("https://solatify.my.id"),
+  title: "Solatify — Jadwal Salat, Qur’an, Adzan & Islamic Companion",
   description:
-    "Install Solatify for accurate prayer times, prayer time notifications, optional adhan playback, Qur’an reading, Qibla direction, dhikr, duas, Hijri calendar, Islamic tips, and prayer tracking.",
+    "Solatify helps Muslims with accurate prayer times, notifikasi adzan, Qur’an reading, Qibla direction, nearby mosques, dzikir, doa, Hijri calendar, Islamic tips, and worship tracking.",
   keywords: [
     "Solatify",
     "prayer times",
@@ -15,7 +15,10 @@ export const metadata: Metadata = {
     "dhikr",
     "islamic app",
     "prayer notification",
-    "waktu salat"
+    "waktu salat",
+    "jadwal salat",
+    "masjid terdekat",
+    "aplikasi muslim indonesia"
   ],
   applicationName: "Solatify",
   manifest: "/manifest.webmanifest",
@@ -26,9 +29,9 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Solatify — Your Daily Islamic Companion",
     description:
-      "Accurate prayer times, prayer arrival notifications, optional adhan playback, Qur’an, dhikr, duas, Qibla, Hijri calendar, and worship tracking in one calm Islamic app.",
+      "Accurate prayer times, notifikasi adzan, Qur’an, Qibla, nearby mosques, dzikir, doa, Hijri calendar, and worship tracking in one calm Islamic app.",
     type: "website",
-    url: "https://solatify.app",
+    url: "https://solatify.my.id",
     siteName: "Solatify",
     images: [
       {
@@ -43,7 +46,7 @@ export const metadata: Metadata = {
     card: "summary",
     title: "Solatify — Your Daily Islamic Companion",
     description:
-      "Prayer times, prayer notifications, optional adhan playback, Qur’an, Qibla, dhikr, duas, and worship tracking.",
+      "Prayer times, notifikasi adzan, Qur’an, Qibla, nearby mosques, dzikir, doa, and worship tracking.",
     images: ["/icon.png"]
   }
 };
