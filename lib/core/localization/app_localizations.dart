@@ -166,6 +166,9 @@ class AppLocalizations {
   String get sendTestNotificationSubtitle => isEnglish
       ? 'Send a notification now and refresh prayer schedules.'
       : 'Kirim notifikasi sekarang dan segarkan jadwal salat.';
+  String get sendTestNotificationInProgress => isEnglish
+      ? 'Sending test notification...'
+      : 'Mengirim test notifikasi...';
   String get notificationHealthStatus =>
       isEnglish ? 'Current Status' : 'Status Saat Ini';
   String get notificationHealthUnknown =>

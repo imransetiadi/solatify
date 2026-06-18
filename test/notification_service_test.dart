@@ -574,6 +574,13 @@ void main() {
 
       expect(settingsScreen, contains('sendTestNotificationTitle'));
       expect(settingsScreen, contains('_sendTestNotification'));
+      expect(
+        settingsScreen,
+        contains('defaultTargetPlatform == TargetPlatform.iOS'),
+      );
+      expect(settingsScreen, contains('requestIosPermissions'));
+      expect(settingsScreen, contains('openPlatformNotificationSettings'));
+      expect(settingsScreen, contains('sendTestNotificationInProgress'));
       expect(settingsScreen, contains('showTestNotification'));
       expect(settingsScreen, contains('refreshSchedules(force: true)'));
       expect(settingsScreen, isNot(contains('notificationHealthEntryTitle')));

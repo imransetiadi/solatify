@@ -1047,9 +1047,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
   ) async {
     final messenger = ScaffoldMessenger.of(context);
     final l = AppLocalizations.of(context);
+    final notificationService = NotificationService();
 
     try {
-      await NotificationService().showTestNotification();
+      if (defaultTargetPlatform == TargetPlatform.iOS) {
+        final granted = await notificationService.requestIosPermissions();
+        if (!granted) {
+          await notificationService.openPlatformNotificationSettings();
+          if (!mounted) return;
+          messenger.showSnackBar(
+            SnackBar(content: Text(l.notificationPermissionSettingsHint)),
+          );
+          return;
+        }
+      }
+
+      messenger.showSnackBar(
+        SnackBar(content: Text(l.sendTestNotificationInProgress)),
+      );
+
+      await notificationService.showTestNotification();
       await ref
           .read(notificationSchedulerProvider.notifier)
           .refreshSchedules(force: true);
