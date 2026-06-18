@@ -149,6 +149,16 @@ void main() {
     expect(source, contains('syncAdhanNotificationsWithPermission(false)'));
   });
 
+  test('Settings copy avoids repeated settings wording', () {
+    final localizationSource = File(
+      'lib/core/localization/app_localizations.dart',
+    ).readAsStringSync();
+
+    expect(localizationSource, contains("isEnglish ? 'GENERAL' : 'UMUM'"));
+    expect(localizationSource, isNot(contains('PENGATURAN UMUM')));
+    expect(localizationSource, isNot(contains('GENERAL SETTINGS')));
+  });
+
   test('AppRoutes exposes typed static and dynamic routes', () {
     expect(AppRoutes.home, '/home');
     expect(AppRoutes.schedule, '/schedule');

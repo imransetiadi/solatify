@@ -76,7 +76,7 @@ Untuk Android, notifikasi salat memakai channel `Prayer Times Adhan` (`prayer_ti
 
 Status branch terbaru sudah diverifikasi dengan:
 
-- `flutter test` — 135/135 tests passed.
+- `flutter test` — 136/136 tests passed.
 - `flutter analyze` — no issues.
 - `flutter test -d emulator-5554 integration_test/app_test.dart` — 2/2 integration tests passed di Android emulator.
 - `flutter test -d 00008140-000518E42EB8401C integration_test/app_test.dart` — 2/2 integration tests passed di iPhone `Satelit88`.

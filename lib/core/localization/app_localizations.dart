@@ -58,8 +58,7 @@ class AppLocalizations {
   String get prayerOffsetLimitHint => isEnglish
       ? 'Allowed range: -60 to +60 minutes.'
       : 'Batas input: -60 sampai +60 menit.';
-  String get generalSettings =>
-      isEnglish ? 'GENERAL SETTINGS' : 'PENGATURAN UMUM';
+  String get generalSettings => isEnglish ? 'GENERAL' : 'UMUM';
   String get prayerTimeCorrection =>
       isEnglish ? 'PRAYER TIME CORRECTION' : 'KOREKSI WAKTU SALAT';
   String get changeLocation => isEnglish ? 'Change Location' : 'Ubah Lokasi';
