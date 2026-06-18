@@ -23,7 +23,8 @@ export const localizedContent = {
       appStoreLabel: "Download on the",
       playStoreLabel: "Get it on",
       appStore: "App Store",
-      playStore: "Google Play"
+      playStore: "Google Play",
+      mobileCta: "Download Solatify"
     },
     hero: {
       badge: "Your calm Islamic companion",
@@ -56,6 +57,56 @@ export const localizedContent = {
         ["Isha", "19:23"]
       ]
     },
+    liveCountdown: {
+      label: "Next prayer",
+      prayer: "Maghrib",
+      time: "18:08",
+      remaining: "Maghrib in 12m"
+    },
+    phoneTabs: [
+      {
+        key: "home",
+        label: "Home",
+        src: "/screenshots/ios-home-light.jpg",
+        alt: "Solatify home screen with next prayer preview",
+        title: "Personal worship home",
+        copy: "See the next prayer, quick actions, and daily rhythm the moment Solatify opens."
+      },
+      {
+        key: "quran",
+        label: "Qur’an",
+        src: "/screenshots/ios-quran-light.jpg",
+        alt: "Solatify Qur’an reading screen",
+        title: "Continue your Qur’an routine",
+        copy: "Return to focused reading with a clean page, comfortable spacing, and progress-friendly flow."
+      },
+      {
+        key: "schedule",
+        label: "Schedule",
+        src: "/screenshots/ios-schedule-light.jpg",
+        alt: "Solatify prayer schedule screen",
+        title: "Today’s prayer schedule",
+        copy: "Review every prayer time quickly and keep the day organized around worship."
+      },
+      {
+        key: "mosque",
+        label: "Mosque",
+        src: "/screenshots/android-mosque-dark.jpg",
+        alt: "Solatify nearby mosques screen",
+        title: "Find nearby mosques fast",
+        copy: "Discover mosque options around you with distance, direction, and travel context."
+      }
+    ],
+    howItWorks: {
+      eyebrow: "How it works",
+      title: "From permission to prayer reminder in three calm steps.",
+      copy: "Solatify keeps the setup familiar: allow location, let schedules calculate, then choose how prayer reminders should appear.",
+      steps: [
+        { number: "01", title: "Allow location", description: "Use your city or device location so Solatify can calculate accurate local prayer times." },
+        { number: "02", title: "Get prayer times", description: "Daily schedules update automatically with offsets you can align to your local mosque." },
+        { number: "03", title: "Enable reminders", description: "Choose notification, reminder, and optional adhan behavior that matches your device settings." }
+      ]
+    },
     featuresSection: {
       eyebrow: "Features",
       title: "Designed for your daily Islamic routine.",
@@ -68,13 +119,35 @@ export const localizedContent = {
       copy: "Light previews use iPhone screenshots, while dark previews use Android screenshots, so visitors can instantly feel both platform experiences."
     },
     screenshots: [
-      { src: "/screenshots/ios-home-light.jpg", title: "iPhone Home", label: "Light mode" },
-      { src: "/screenshots/ios-schedule-light.jpg", title: "Prayer Schedule", label: "iPhone" },
-      { src: "/screenshots/ios-quran-light.jpg", title: "Qur’an Reader", label: "iPhone" },
-      { src: "/screenshots/android-mosque-dark.jpg", title: "Nearby Mosques", label: "Android dark" },
-      { src: "/screenshots/android-quran-dark.jpg", title: "Dark Qur’an", label: "Android" },
-      { src: "/screenshots/android-tracker-dark.jpg", title: "Worship Tracker", label: "Android" }
+      { src: "/screenshots/ios-home-light.jpg", title: "iPhone Home", label: "Light mode", story: "See Maghrib coming before the day gets busy." },
+      { src: "/screenshots/ios-schedule-light.jpg", title: "Prayer Schedule", label: "iPhone", story: "Never miss the rhythm of today’s prayer times." },
+      { src: "/screenshots/ios-quran-light.jpg", title: "Qur’an Reader", label: "iPhone", story: "Continue your Qur’an routine with a focused page." },
+      { src: "/screenshots/android-mosque-dark.jpg", title: "Nearby Mosques", label: "Android dark", story: "Find a place to pray when you are away from home." },
+      { src: "/screenshots/android-quran-dark.jpg", title: "Dark Qur’an", label: "Android", story: "Read comfortably in low light without visual noise." },
+      { src: "/screenshots/android-tracker-dark.jpg", title: "Worship Tracker", label: "Android", story: "Build consistency with a simple worship tracker." }
     ],
+    mosqueSpotlight: {
+      eyebrow: "Nearby Mosques",
+      title: "A travel-ready way to find a mosque near you.",
+      copy: "Show distance, direction, and estimated walking time so users quickly understand where to pray next.",
+      badge: "Nearby now",
+      mosqueName: "Masjid Al-Ikhlas",
+      distance: "650 m away",
+      direction: "North-east",
+      walking: "8 min walk",
+      action: "Open directions",
+      points: ["Distance and direction at a glance", "Map-ready mosque detail", "Useful when traveling or commuting"]
+    },
+    trust: {
+      eyebrow: "Privacy & Trust",
+      title: "Helpful reminders without feeling invasive.",
+      copy: "Solatify is designed around permission-first behavior, local notification control, and clear user choices.",
+      items: [
+        { title: "Location with purpose", description: "Location is used to calculate prayer times and nearby mosque context, not to make the app feel noisy." },
+        { title: "Local notification control", description: "Prayer reminders and optional adhan behavior stay tied to your device permission and app settings." },
+        { title: "No excessive tracking copy", description: "The product story focuses on worship utility, privacy clarity, and trust before conversion." }
+      ]
+    },
     notifications: {
       eyebrow: "Prayer Notifications",
       title: "Know exactly when prayer time arrives.",
@@ -202,19 +275,24 @@ export const localizedContent = {
           "Solatify is an Islamic companion app for prayer times, adhan reminders, Qur’an reading, Qibla direction, dhikr, duas, Hijri calendar, and worship tracking."
       },
       {
-        question: "Can Solatify notify me when prayer time arrives?",
+        question: "Can Solatify remind me 10 minutes before prayer?",
         answer:
-          "Yes. Solatify can show a status-bar notification when each prayer time arrives, and tapping it can open the app to your prayer schedule."
+          "Solatify is designed around flexible prayer reminders, including pre-prayer reminders and arrival notifications when device permissions allow them."
       },
       {
-        question: "Does adhan play automatically?",
+        question: "Does adhan work on iOS and Android?",
         answer:
-          "Adhan playback is optional. You can turn it on or off manually, and it only works when the required device notification permission is enabled."
+          "Adhan playback is optional and depends on each platform’s notification permission, sound mode, and app settings. Solatify keeps those controls clear for users."
       },
       {
-        question: "Will Solatify work on iPhone and Android?",
+        question: "Can I use Solatify offline?",
         answer:
-          "The landing page is prepared for both App Store and Google Play links, so users can install from the platform they use."
+          "Core saved content can be designed for quick access, while location updates, mosque discovery, and store downloads may need internet access."
+      },
+      {
+        question: "Does Solatify support Indonesia?",
+        answer:
+          "Yes. Solatify is especially relevant for Indonesian users with Indonesian copy, daily prayer flow, nearby mosques, Qibla, Qur’an, dhikr, and Hijri calendar features."
       },
       {
         question: "Does Solatify support dark mode?",
@@ -245,7 +323,8 @@ export const localizedContent = {
       appStoreLabel: "Unduh di",
       playStoreLabel: "Dapatkan di",
       appStore: "App Store",
-      playStore: "Google Play"
+      playStore: "Google Play",
+      mobileCta: "Download Solatify"
     },
     hero: {
       badge: "Teman ibadah harian yang tenang",
@@ -278,6 +357,56 @@ export const localizedContent = {
         ["Isya", "19:23"]
       ]
     },
+    liveCountdown: {
+      label: "Salat berikutnya",
+      prayer: "Magrib",
+      time: "18:08",
+      remaining: "Magrib dalam 12m"
+    },
+    phoneTabs: [
+      {
+        key: "home",
+        label: "Home",
+        src: "/screenshots/ios-home-light.jpg",
+        alt: "Tampilan home Solatify dengan salat berikutnya",
+        title: "Home ibadah yang personal",
+        copy: "Lihat salat berikutnya, quick action, dan ritme harian begitu Solatify dibuka."
+      },
+      {
+        key: "quran",
+        label: "Qur’an",
+        src: "/screenshots/ios-quran-light.jpg",
+        alt: "Tampilan baca Qur’an Solatify",
+        title: "Lanjutkan rutinitas Qur’an",
+        copy: "Kembali membaca dengan halaman fokus, spacing nyaman, dan alur yang ramah progress."
+      },
+      {
+        key: "schedule",
+        label: "Jadwal",
+        src: "/screenshots/ios-schedule-light.jpg",
+        alt: "Tampilan jadwal salat Solatify",
+        title: "Jadwal salat hari ini",
+        copy: "Cek semua waktu salat dengan cepat dan atur hari tetap selaras dengan ibadah."
+      },
+      {
+        key: "mosque",
+        label: "Masjid",
+        src: "/screenshots/android-mosque-dark.jpg",
+        alt: "Tampilan masjid terdekat Solatify",
+        title: "Cari masjid terdekat cepat",
+        copy: "Temukan pilihan masjid di sekitarmu dengan jarak, arah, dan konteks perjalanan."
+      }
+    ],
+    howItWorks: {
+      eyebrow: "Cara kerja",
+      title: "Dari izin lokasi ke pengingat salat dalam tiga langkah tenang.",
+      copy: "Solatify menjaga setup tetap familiar: izinkan lokasi, jadwal dihitung otomatis, lalu pilih cara pengingat salat muncul.",
+      steps: [
+        { number: "01", title: "Izinkan lokasi", description: "Gunakan kota atau lokasi perangkat agar Solatify menghitung waktu salat lokal dengan akurat." },
+        { number: "02", title: "Dapatkan jadwal", description: "Jadwal harian diperbarui otomatis dengan offset yang bisa disesuaikan ke waktu masjid lokal." },
+        { number: "03", title: "Aktifkan pengingat", description: "Pilih notifikasi, reminder, dan adzan opsional sesuai izin serta pengaturan perangkatmu." }
+      ]
+    },
     featuresSection: {
       eyebrow: "Fitur",
       title: "Dirancang untuk rutinitas Islami harianmu.",
@@ -290,13 +419,35 @@ export const localizedContent = {
       copy: "Preview mode terang memakai screenshot iPhone, sementara preview mode gelap memakai screenshot Android agar pengunjung langsung merasakan kedua pengalaman platform."
     },
     screenshots: [
-      { src: "/screenshots/ios-home-light.jpg", title: "Home iPhone", label: "Mode terang" },
-      { src: "/screenshots/ios-schedule-light.jpg", title: "Jadwal Salat", label: "iPhone" },
-      { src: "/screenshots/ios-quran-light.jpg", title: "Baca Qur’an", label: "iPhone" },
-      { src: "/screenshots/android-mosque-dark.jpg", title: "Masjid Terdekat", label: "Android gelap" },
-      { src: "/screenshots/android-quran-dark.jpg", title: "Qur’an Gelap", label: "Android" },
-      { src: "/screenshots/android-tracker-dark.jpg", title: "Tracker Ibadah", label: "Android" }
+      { src: "/screenshots/ios-home-light.jpg", title: "Home iPhone", label: "Mode terang", story: "Lihat Magrib sebelum harimu makin sibuk." },
+      { src: "/screenshots/ios-schedule-light.jpg", title: "Jadwal Salat", label: "iPhone", story: "Jaga ritme waktu salat hari ini tanpa terlewat." },
+      { src: "/screenshots/ios-quran-light.jpg", title: "Baca Qur’an", label: "iPhone", story: "Lanjutkan rutinitas Qur’an dengan halaman yang fokus." },
+      { src: "/screenshots/android-mosque-dark.jpg", title: "Masjid Terdekat", label: "Android gelap", story: "Temukan tempat salat saat jauh dari rumah." },
+      { src: "/screenshots/android-quran-dark.jpg", title: "Qur’an Gelap", label: "Android", story: "Baca nyaman di cahaya redup tanpa tampilan ramai." },
+      { src: "/screenshots/android-tracker-dark.jpg", title: "Tracker Ibadah", label: "Android", story: "Bangun konsistensi lewat tracker ibadah sederhana." }
     ],
+    mosqueSpotlight: {
+      eyebrow: "Masjid Terdekat",
+      title: "Cara praktis menemukan masjid saat bepergian.",
+      copy: "Tampilkan jarak, arah, dan estimasi jalan kaki agar pengguna cepat paham tempat salat berikutnya.",
+      badge: "Terdekat sekarang",
+      mosqueName: "Masjid Al-Ikhlas",
+      distance: "650 m dari sini",
+      direction: "Timur laut",
+      walking: "8 menit jalan kaki",
+      action: "Buka arah",
+      points: ["Jarak dan arah sekali lihat", "Detail masjid siap peta", "Berguna saat traveling atau commute"]
+    },
+    trust: {
+      eyebrow: "Privasi & Trust",
+      title: "Pengingat yang membantu tanpa terasa mengganggu.",
+      copy: "Solatify dirancang dengan perilaku permission-first, kontrol notifikasi lokal, dan pilihan pengguna yang jelas.",
+      items: [
+        { title: "Lokasi sesuai kebutuhan", description: "Lokasi digunakan untuk menghitung jadwal salat dan konteks masjid terdekat, bukan membuat aplikasi terasa berisik." },
+        { title: "Kontrol notifikasi lokal", description: "Pengingat salat dan adzan opsional tetap mengikuti izin perangkat serta pengaturan aplikasi." },
+        { title: "Tanpa narasi tracking berlebihan", description: "Cerita produk fokus pada manfaat ibadah, kejelasan privasi, dan rasa percaya sebelum konversi." }
+      ]
+    },
     notifications: {
       eyebrow: "Notifikasi Salat",
       title: "Tahu tepat saat waktu salat tiba.",
@@ -425,19 +576,24 @@ export const localizedContent = {
           "Solatify adalah aplikasi pendamping Islami untuk jadwal salat, pengingat adzan, bacaan Qur’an, arah kiblat, dzikir, doa, kalender Hijriah, dan tracker ibadah."
       },
       {
-        question: "Apakah Solatify bisa mengingatkan saat waktu salat tiba?",
+        question: "Apakah Solatify bisa mengingatkan 10 menit sebelum salat?",
         answer:
-          "Ya. Solatify bisa menampilkan notifikasi saat setiap waktu salat tiba, dan ketukan pada notifikasi dapat membuka jadwal salat di aplikasi."
+          "Solatify dirancang untuk pengingat salat yang fleksibel, termasuk reminder sebelum salat dan notifikasi saat waktu tiba jika izin perangkat mendukung."
       },
       {
-        question: "Apakah adzan bisa diputar otomatis?",
+        question: "Apakah adzan berjalan di iOS dan Android?",
         answer:
-          "Pemutaran adzan bersifat opsional. Kamu bisa mengaktifkan atau mematikannya secara manual, dan fitur ini bekerja saat izin notifikasi perangkat sudah aktif."
+          "Adzan bersifat opsional dan bergantung pada izin notifikasi, mode suara perangkat, serta pengaturan aplikasi di masing-masing platform. Solatify membuat kontrolnya jelas."
       },
       {
-        question: "Apakah Solatify tersedia untuk iPhone dan Android?",
+        question: "Apakah Solatify bisa digunakan offline?",
         answer:
-          "Landing page ini disiapkan untuk tautan App Store dan Google Play agar pengguna bisa install sesuai platform yang digunakan."
+          "Konten inti bisa dirancang untuk akses cepat, sementara update lokasi, pencarian masjid, dan tautan store tetap membutuhkan internet."
+      },
+      {
+        question: "Apakah Solatify mendukung Indonesia?",
+        answer:
+          "Ya. Solatify sangat relevan untuk pengguna Indonesia dengan bahasa Indonesia, jadwal salat harian, masjid terdekat, kiblat, Qur’an, dzikir, dan kalender Hijriah."
       },
       {
         question: "Apakah Solatify mendukung dark mode?",
