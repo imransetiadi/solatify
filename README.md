@@ -40,6 +40,7 @@ Solatify menggunakan beberapa tuning agar aplikasi tetap ringan:
 
 - Konfigurasi performa terpusat di `lib/core/performance/performance_tuning.dart`.
 - Budget cold start, warm resume, frame build/raster, dan compact smoke target dijaga lewat test agar baseline performa tidak drift diam-diam.
+- Asset runtime dan launcher source dijaga lewat budget test agar gambar/SVG tidak membengkak tanpa audit.
 - Efek `GlassContainer` dibatasi agar visual tetap konsisten tanpa blur berlebihan.
 - Transisi antar menu memakai fade, slide mikro, dan scale ringan agar perpindahan fitur terasa seamless tanpa animasi berat.
 - Empty, loading, error, dan permission states memakai pola visual `SolatifyStateView` agar feedback lintas fitur lebih konsisten.
@@ -74,7 +75,7 @@ Untuk Android, notifikasi salat memakai channel `Prayer Times Adhan` (`prayer_ti
 
 Status branch terbaru sudah diverifikasi dengan:
 
-- `flutter test` — 131/131 tests passed.
+- `flutter test` — 134/134 tests passed.
 - `flutter analyze` — no issues.
 - `flutter test -d emulator-5554 integration_test/app_test.dart` — 2/2 integration tests passed di Android emulator.
 - `flutter test -d 00008140-000518E42EB8401C integration_test/app_test.dart` — 2/2 integration tests passed di iPhone `Satelit88`.
