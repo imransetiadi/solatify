@@ -22,18 +22,21 @@ class PrayerLogEntity {
     required this.prayers,
     this.prayerStatuses = const {},
     this.habits = const {},
+    this.habitProgress = const {},
   });
 
   final DateTime date;
   final Map<String, bool> prayers;
   final Map<String, PrayerStatus> prayerStatuses;
   final Map<String, bool> habits;
+  final Map<String, int> habitProgress;
 
   PrayerLogEntity copyWith({
     DateTime? date,
     Map<String, bool>? prayers,
     Map<String, PrayerStatus>? prayerStatuses,
     Map<String, bool>? habits,
+    Map<String, int>? habitProgress,
   }) {
     return PrayerLogEntity(
       date: date ?? this.date,
@@ -41,6 +44,7 @@ class PrayerLogEntity {
       prayerStatuses:
           prayerStatuses ?? Map<String, PrayerStatus>.from(this.prayerStatuses),
       habits: habits ?? Map<String, bool>.from(this.habits),
+      habitProgress: habitProgress ?? Map<String, int>.from(this.habitProgress),
     );
   }
 
@@ -72,5 +76,17 @@ class PrayerLogEntity {
     final updatedHabits = Map<String, bool>.from(habits);
     updatedHabits[habitKey] = isDone;
     return copyWith(habits: updatedHabits);
+  }
+
+  int getHabitProgress(String habitKey) => habitProgress[habitKey] ?? 0;
+
+  PrayerLogEntity copyWithHabitProgress(String habitKey, int progress) {
+    final updatedProgress = Map<String, int>.from(habitProgress);
+    updatedProgress[habitKey] = progress < 0 ? 0 : progress;
+
+    final updatedHabits = Map<String, bool>.from(habits);
+    updatedHabits[habitKey] = (updatedProgress[habitKey] ?? 0) > 0;
+
+    return copyWith(habits: updatedHabits, habitProgress: updatedProgress);
   }
 }

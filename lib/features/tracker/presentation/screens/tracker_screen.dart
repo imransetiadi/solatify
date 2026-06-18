@@ -27,6 +27,7 @@ class TrackerScreen extends ConsumerWidget {
     final weeklyStatsAsync = ref.watch(trackerWeeklyStatsProvider);
     final selectedDate = ref.watch(trackerSelectedDateProvider);
     final customHabits = ref.watch(customHabitProvider);
+    final customHabitTargets = ref.watch(customHabitTargetProvider);
     final colorScheme = Theme.of(context).colorScheme;
     final textColor = colorScheme.onSurface;
     final mutedColor = colorScheme.onSurfaceVariant;
@@ -58,6 +59,7 @@ class TrackerScreen extends ConsumerWidget {
                 log: log,
                 selectedDate: selectedDate,
                 customHabits: customHabits,
+                customHabitTargets: customHabitTargets,
                 weeklyStatsAsync: weeklyStatsAsync,
                 accentColor: accentColor,
                 textColor: textColor,
@@ -83,19 +85,36 @@ class TrackerScreen extends ConsumerWidget {
                   SolatifyHaptics.light();
                   ref.read(trackerProvider.notifier).toggleHabit(habit);
                 },
-                onAddHabit: (habitName) {
+                onAddHabit: (habitName, target, unit) {
                   SolatifyHaptics.selection();
                   ref.read(customHabitProvider.notifier).addHabit(habitName);
+                  if (target != null) {
+                    ref
+                        .read(customHabitTargetProvider.notifier)
+                        .setTarget(habitName, target: target, unit: unit);
+                  }
                 },
                 onRenameHabit: (oldName, newName) {
                   SolatifyHaptics.selection();
                   ref
                       .read(customHabitProvider.notifier)
                       .renameHabit(oldName, newName);
+                  ref
+                      .read(customHabitTargetProvider.notifier)
+                      .renameHabit(oldName, newName);
                 },
                 onDeleteHabit: (habitName) {
                   SolatifyHaptics.selection();
                   ref.read(customHabitProvider.notifier).deleteHabit(habitName);
+                  ref
+                      .read(customHabitTargetProvider.notifier)
+                      .deleteHabit(habitName);
+                },
+                onUpdateHabitProgress: (habit, progress) {
+                  SolatifyHaptics.selection();
+                  ref
+                      .read(trackerProvider.notifier)
+                      .updateHabitProgress(habit, progress);
                 },
               ),
               loading: () => const SolatifyStateView.loading(
@@ -121,6 +140,7 @@ class _TrackerContent extends StatelessWidget {
     required this.log,
     required this.selectedDate,
     required this.customHabits,
+    required this.customHabitTargets,
     required this.weeklyStatsAsync,
     required this.accentColor,
     required this.textColor,
@@ -132,11 +152,13 @@ class _TrackerContent extends StatelessWidget {
     required this.onAddHabit,
     required this.onRenameHabit,
     required this.onDeleteHabit,
+    required this.onUpdateHabitProgress,
   });
 
   final PrayerLogEntity log;
   final DateTime selectedDate;
   final List<String> customHabits;
+  final Map<String, CustomHabitTarget> customHabitTargets;
   final AsyncValue<WeeklyStatsEntity> weeklyStatsAsync;
   final Color accentColor;
   final Color textColor;
@@ -145,9 +167,10 @@ class _TrackerContent extends StatelessWidget {
   final void Function(String prayer, PrayerStatus status) onUpdateStatus;
   final ValueChanged<DateTime> onSelectDate;
   final ValueChanged<String> onToggleHabit;
-  final ValueChanged<String> onAddHabit;
+  final void Function(String habitName, int? target, String unit) onAddHabit;
   final void Function(String oldName, String newName) onRenameHabit;
   final ValueChanged<String> onDeleteHabit;
+  final void Function(String habitKey, int progress) onUpdateHabitProgress;
 
   @override
   Widget build(BuildContext context) {
@@ -239,7 +262,9 @@ class _TrackerContent extends StatelessWidget {
         const SizedBox(height: 14),
         _HabitSection(
           habits: log.habits,
+          habitProgress: log.habitProgress,
           customHabits: customHabits,
+          customHabitTargets: customHabitTargets,
           accentColor: accentColor,
           textColor: textColor,
           mutedColor: mutedColor,
@@ -247,6 +272,7 @@ class _TrackerContent extends StatelessWidget {
           onAddHabit: onAddHabit,
           onRenameHabit: onRenameHabit,
           onDeleteHabit: onDeleteHabit,
+          onUpdateHabitProgress: onUpdateHabitProgress,
         ),
         const SizedBox(height: 14),
         _WeeklyInsightCard(
@@ -703,7 +729,9 @@ class _PrayerChip extends StatelessWidget {
 class _HabitSection extends StatelessWidget {
   const _HabitSection({
     required this.habits,
+    required this.habitProgress,
     required this.customHabits,
+    required this.customHabitTargets,
     required this.accentColor,
     required this.textColor,
     required this.mutedColor,
@@ -711,6 +739,7 @@ class _HabitSection extends StatelessWidget {
     required this.onAddHabit,
     required this.onRenameHabit,
     required this.onDeleteHabit,
+    required this.onUpdateHabitProgress,
   });
 
   static const habitLabels = {
@@ -723,14 +752,17 @@ class _HabitSection extends StatelessWidget {
   };
 
   final Map<String, bool> habits;
+  final Map<String, int> habitProgress;
   final List<String> customHabits;
+  final Map<String, CustomHabitTarget> customHabitTargets;
   final Color accentColor;
   final Color textColor;
   final Color mutedColor;
   final ValueChanged<String> onToggleHabit;
-  final ValueChanged<String> onAddHabit;
+  final void Function(String habitName, int? target, String unit) onAddHabit;
   final void Function(String oldName, String newName) onRenameHabit;
   final ValueChanged<String> onDeleteHabit;
+  final void Function(String habitKey, int progress) onUpdateHabitProgress;
 
   @override
   Widget build(BuildContext context) {
@@ -792,6 +824,27 @@ class _HabitSection extends StatelessWidget {
             runSpacing: 10,
             children: allHabits.entries.map((entry) {
               final isDone = habits[entry.key] ?? false;
+              final habitName = entry.key.startsWith('custom:')
+                  ? entry.key.substring('custom:'.length)
+                  : null;
+              final target = habitName == null
+                  ? null
+                  : customHabitTargets[habitName];
+              if (target != null) {
+                final progress = habitProgress[entry.key] ?? 0;
+                return _TargetHabitChip(
+                  label: entry.value,
+                  progress: progress,
+                  target: target,
+                  accentColor: accentColor,
+                  textColor: textColor,
+                  mutedColor: mutedColor,
+                  onDecrease: () =>
+                      onUpdateHabitProgress(entry.key, progress - 1),
+                  onIncrease: () =>
+                      onUpdateHabitProgress(entry.key, progress + 1),
+                );
+              }
               return _HabitChip(
                 label: entry.value,
                 isDone: isDone,
@@ -809,6 +862,8 @@ class _HabitSection extends StatelessWidget {
 
   void _showAddHabitSheet(BuildContext context) {
     final controller = TextEditingController();
+    final targetController = TextEditingController();
+    final unitController = TextEditingController(text: 'kali');
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -842,13 +897,49 @@ class _HabitSection extends StatelessWidget {
                     hintText: 'Contoh: Baca Al-Kahfi',
                     border: OutlineInputBorder(),
                   ),
-                  onSubmitted: (_) => _submitHabit(context, controller),
+                  onSubmitted: (_) => _submitHabit(
+                    context,
+                    controller,
+                    targetController,
+                    unitController,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: targetController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Target opsional',
+                    hintText: 'Contoh: 100',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: unitController,
+                  textInputAction: TextInputAction.done,
+                  decoration: const InputDecoration(
+                    labelText: 'Satuan',
+                    hintText: 'kali, halaman, menit',
+                    border: OutlineInputBorder(),
+                  ),
+                  onSubmitted: (_) => _submitHabit(
+                    context,
+                    controller,
+                    targetController,
+                    unitController,
+                  ),
                 ),
                 const SizedBox(height: 14),
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton.icon(
-                    onPressed: () => _submitHabit(context, controller),
+                    onPressed: () => _submitHabit(
+                      context,
+                      controller,
+                      targetController,
+                      unitController,
+                    ),
                     icon: const Icon(Icons.add),
                     label: const Text('Simpan Habit'),
                   ),
@@ -858,14 +949,27 @@ class _HabitSection extends StatelessWidget {
           ),
         );
       },
-    ).whenComplete(controller.dispose);
+    ).whenComplete(() {
+      controller.dispose();
+      targetController.dispose();
+      unitController.dispose();
+    });
   }
 
-  void _submitHabit(BuildContext context, TextEditingController controller) {
+  void _submitHabit(
+    BuildContext context,
+    TextEditingController controller,
+    TextEditingController targetController,
+    TextEditingController unitController,
+  ) {
     final habitName = controller.text.trim();
     if (habitName.isEmpty) return;
+    final target = int.tryParse(targetController.text.trim());
+    final unit = unitController.text.trim().isEmpty
+        ? 'kali'
+        : unitController.text.trim();
     Navigator.of(context).pop();
-    onAddHabit(habitName);
+    onAddHabit(habitName, target != null && target > 0 ? target : null, unit);
   }
 
   void _showManageHabitSheet(BuildContext context) {
@@ -1048,6 +1152,109 @@ class _HabitChip extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _TargetHabitChip extends StatelessWidget {
+  const _TargetHabitChip({
+    required this.label,
+    required this.progress,
+    required this.target,
+    required this.accentColor,
+    required this.textColor,
+    required this.mutedColor,
+    required this.onDecrease,
+    required this.onIncrease,
+  });
+
+  final String label;
+  final int progress;
+  final CustomHabitTarget target;
+  final Color accentColor;
+  final Color textColor;
+  final Color mutedColor;
+  final VoidCallback onDecrease;
+  final VoidCallback onIncrease;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDone = progress >= target.target;
+    final currentProgress = progress.clamp(0, target.target);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: isDone
+            ? accentColor.withValues(alpha: 0.15)
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isDone ? accentColor : mutedColor.withValues(alpha: 0.22),
+          width: 1.5,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isDone ? Icons.check_circle : Icons.track_changes_outlined,
+            size: 17,
+            color: isDone ? accentColor : mutedColor,
+          ),
+          const SizedBox(width: 8),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  color: isDone ? accentColor : textColor,
+                  fontWeight: isDone ? FontWeight.bold : FontWeight.w600,
+                  fontSize: 13,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                '$currentProgress/${target.target} ${target.unit}',
+                style: TextStyle(
+                  color: isDone ? accentColor : mutedColor,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(width: 8),
+          _HabitStepButton(
+            icon: Icons.remove,
+            onPressed: progress <= 0 ? null : onDecrease,
+          ),
+          const SizedBox(width: 4),
+          _HabitStepButton(icon: Icons.add, onPressed: onIncrease),
+        ],
+      ),
+    );
+  }
+}
+
+class _HabitStepButton extends StatelessWidget {
+  const _HabitStepButton({required this.icon, required this.onPressed});
+
+  final IconData icon;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox.square(
+      dimension: 28,
+      child: IconButton.filledTonal(
+        padding: EdgeInsets.zero,
+        iconSize: 15,
+        onPressed: onPressed,
+        icon: Icon(icon),
       ),
     );
   }

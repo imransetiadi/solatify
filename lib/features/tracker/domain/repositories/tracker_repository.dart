@@ -9,5 +9,10 @@ abstract class TrackerRepository {
     PrayerStatus status,
   );
   Future<void> updateHabitStatus(DateTime date, String habitKey, bool isDone);
+  Future<void> updateHabitProgress(
+    DateTime date,
+    String habitKey,
+    int progress,
+  );
   Future<List<PrayerLogEntity>> getWeeklyLogs(DateTime endDate);
 }
