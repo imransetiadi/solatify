@@ -2,6 +2,7 @@ package com.solatify.app.solatify
 
 import com.solatify.app.solatify.notifications.PrayerAlarm
 import com.solatify.app.solatify.notifications.PrayerAlarmScheduler
+import com.solatify.app.solatify.widget.PrayerWidgetStore
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -94,6 +95,27 @@ class MainActivity : FlutterActivity() {
 
                 "openNotificationSettings" -> {
                     result.success(openNotificationSettings())
+                }
+
+                else -> result.notImplemented()
+            }
+        }
+
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            "solatify/android_prayer_widget",
+        ).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "syncPrayerWidget" -> {
+                    @Suppress("UNCHECKED_CAST")
+                    val payload = call.arguments as? Map<String, String>
+                    if (payload == null) {
+                        result.error("invalid_arguments", "Missing prayer widget payload", null)
+                        return@setMethodCallHandler
+                    }
+                    PrayerWidgetStore.save(applicationContext, payload)
+                    PrayerWidgetStore.refreshWidgets(applicationContext)
+                    result.success(true)
                 }
 
                 else -> result.notImplemented()
