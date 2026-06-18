@@ -147,6 +147,22 @@ class CustomHabitNotifier extends StateNotifier<List<String>> {
     if (persistChanges) unawaited(_persist());
   }
 
+  void renameHabit(String oldName, String newName) {
+    final normalized = newName.trim();
+    if (normalized.isEmpty || !state.contains(oldName)) return;
+    if (normalized != oldName && state.contains(normalized)) return;
+
+    state = [for (final habit in state) habit == oldName ? normalized : habit];
+    if (persistChanges) unawaited(_persist());
+  }
+
+  void deleteHabit(String habitName) {
+    if (!state.contains(habitName)) return;
+
+    state = state.where((habit) => habit != habitName).toList(growable: false);
+    if (persistChanges) unawaited(_persist());
+  }
+
   Future<void> _persist() async {
     final box = await Hive.openBox<dynamic>(HiveConstants.settingsBox);
     await box.put(storageKey, state);

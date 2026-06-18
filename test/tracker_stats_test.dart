@@ -219,5 +219,24 @@ void main() {
 
       expect(notifier.state, ['Baca Al-Kahfi']);
     });
+
+    test('renames custom habit when new name is valid and unique', () async {
+      final notifier = CustomHabitNotifier(const ['Baca Al-Kahfi']);
+
+      notifier.renameHabit('Baca Al-Kahfi', ' Infak Jumat ');
+
+      expect(notifier.state, ['Infak Jumat']);
+    });
+
+    test('deletes custom habit by name', () async {
+      final notifier = CustomHabitNotifier(const [
+        'Baca Al-Kahfi',
+        'Infak Jumat',
+      ]);
+
+      notifier.deleteHabit('Baca Al-Kahfi');
+
+      expect(notifier.state, ['Infak Jumat']);
+    });
   });
 }
