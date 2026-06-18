@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:solatify/features/tracker/data/models/prayer_log_dto.dart';
 import 'package:solatify/features/tracker/domain/entities/prayer_log_entity.dart';
+import 'package:solatify/features/tracker/domain/entities/weekly_stats_entity.dart';
 import 'package:solatify/features/tracker/domain/repositories/tracker_repository.dart';
 import 'package:solatify/features/tracker/domain/usecases/get_weekly_stats.dart';
 import 'package:solatify/features/tracker/presentation/providers/tracker_provider.dart';
@@ -205,6 +206,29 @@ void main() {
         );
       },
     );
+
+    test('should build a shareable weekly progress summary', () async {
+      const stats = WeeklyStatsEntity(
+        completionRates: {},
+        totalDone: 18,
+        currentStreakDays: 4,
+        bestDayLabel: 'Hari ini',
+        strongestItemLabel: 'Subuh',
+        weakestItemLabel: 'Isya',
+        smartInsightMessage: 'MasyaAllah, kamu sedang menjaga streak 4 hari.',
+        smartInsightAction: 'Fokus kecil berikutnya: kuatkan Isya.',
+      );
+
+      final summary = stats.shareSummaryText;
+
+      expect(summary, contains('Progress Ibadah Mingguan'));
+      expect(summary, contains('Total salat: 18'));
+      expect(summary, contains('Streak: 4 hari'));
+      expect(summary, contains('Hari terbaik: Hari ini'));
+      expect(summary, contains('Terkuat: Subuh'));
+      expect(summary, contains('Perlu fokus: Isya'));
+      expect(summary, contains('Dibuat dengan Solatify'));
+    });
   });
 
   group('PrayerLogEntity status migration', () {
