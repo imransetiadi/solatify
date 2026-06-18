@@ -94,8 +94,8 @@ export default function Home() {
             </div>
             <div className="quick-actions-preview">
               <span>Dhikr</span>
+              <span>Mosques</span>
               <span>Daily Dua</span>
-              <span>Hijri</span>
             </div>
             <div className="mini-list">
               <div><span>Fajr</span><strong>04:32</strong></div>
