@@ -60,6 +60,7 @@ Notifikasi salat mendukung kontrol yang lebih granular di Settings:
 - Pengingat sebelum salat, termasuk opsi 10 menit sebelum waktu salat.
 - Mode suara `adhan`, `beep`, atau `silent notification` sesuai preferensi pengguna.
 - Verifikasi izin setelah kembali dari Settings dan reschedule otomatis saat izin berubah.
+- Settings dan Notification Health Center memverifikasi ulang izin saat app kembali aktif dari system settings, lalu reschedule atau cancel otomatis sesuai status terbaru.
 - Riwayat notifikasi menyimpan status terakhir terjadwal/gagal untuk debugging dan transparansi.
 - Notification Health Center di Settings membantu cek izin, pending schedule, riwayat terakhir, kirim test notifikasi, dan reschedule manual.
 
@@ -75,7 +76,7 @@ Untuk Android, notifikasi salat memakai channel `Prayer Times Adhan` (`prayer_ti
 
 Status branch terbaru sudah diverifikasi dengan:
 
-- `flutter test` — 134/134 tests passed.
+- `flutter test` — 135/135 tests passed.
 - `flutter analyze` — no issues.
 - `flutter test -d emulator-5554 integration_test/app_test.dart` — 2/2 integration tests passed di Android emulator.
 - `flutter test -d 00008140-000518E42EB8401C integration_test/app_test.dart` — 2/2 integration tests passed di iPhone `Satelit88`.

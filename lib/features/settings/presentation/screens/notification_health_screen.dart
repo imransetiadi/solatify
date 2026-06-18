@@ -21,7 +21,8 @@ class NotificationHealthScreen extends ConsumerStatefulWidget {
 }
 
 class _NotificationHealthScreenState
-    extends ConsumerState<NotificationHealthScreen> {
+    extends ConsumerState<NotificationHealthScreen>
+    with WidgetsBindingObserver {
   final NotificationService _notificationService = NotificationService();
 
   NotificationReadiness? _readiness;
@@ -33,7 +34,20 @@ class _NotificationHealthScreenState
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) => _refreshHealth());
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    _refreshHealth();
   }
 
   Future<void> _refreshHealth() async {

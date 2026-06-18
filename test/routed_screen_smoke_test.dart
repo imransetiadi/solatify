@@ -141,6 +141,12 @@ void main() {
     expect(source, contains('refreshSchedules(force: true)'));
     expect(source, contains('notificationHealthEntryTitle'));
     expect(source, contains('AppRoutes.notificationHealth'));
+    expect(source, contains('WidgetsBindingObserver'));
+    expect(source, contains('WidgetsBinding.instance.addObserver(this)'));
+    expect(source, contains('WidgetsBinding.instance.removeObserver(this)'));
+    expect(source, contains('AppLifecycleState.resumed'));
+    expect(source, contains('_verifyNotificationPermissionAfterReturn'));
+    expect(source, contains('syncAdhanNotificationsWithPermission(false)'));
   });
 
   test('AppRoutes exposes typed static and dynamic routes', () {
@@ -221,6 +227,10 @@ void main() {
     expect(source, contains('showTestNotification'));
     expect(source, contains('openPlatformNotificationSettings'));
     expect(source, contains('refreshSchedules(force: true)'));
+    expect(source, contains('WidgetsBindingObserver'));
+    expect(source, contains('WidgetsBinding.instance.addObserver(this)'));
+    expect(source, contains('WidgetsBinding.instance.removeObserver(this)'));
+    expect(source, contains('AppLifecycleState.resumed'));
   });
 
   test('Surah Detail source exposes Quran reading mode controls', () {

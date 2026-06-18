@@ -207,13 +207,27 @@ class SettingsScreen extends ConsumerStatefulWidget {
   ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+class _SettingsScreenState extends ConsumerState<SettingsScreen>
+    with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _syncAdhanNotificationPermission();
     });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    _verifyNotificationPermissionAfterReturn();
   }
 
   void _showPrayerOffsetDialog(
@@ -1036,6 +1050,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     final notificationsAllowed = await _areAdhanNotificationsAllowed();
     if (!mounted || notificationsAllowed) return;
+
+    await ref
+        .read(settingsProvider.notifier)
+        .syncAdhanNotificationsWithPermission(false);
+    await ref
+        .read(notificationSchedulerProvider.notifier)
+        .cancelAllNotifications();
+  }
+
+  Future<void> _verifyNotificationPermissionAfterReturn() async {
+    if (!mounted) return;
+    final settings = ref.read(settingsProvider);
+    if (!settings.adhanNotificationsEnabled) return;
+
+    final notificationsAllowed = await _areAdhanNotificationsAllowed();
+    if (!mounted) return;
+
+    if (notificationsAllowed) {
+      await ref
+          .read(notificationSchedulerProvider.notifier)
+          .refreshSchedules(force: true);
+      return;
+    }
 
     await ref
         .read(settingsProvider.notifier)

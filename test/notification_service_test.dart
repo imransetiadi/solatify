@@ -565,6 +565,32 @@ void main() {
     expect(notificationService, contains('openAndroidExactAlarmSettings'));
   });
 
+  test('settings verifies notification permission after returning to app', () {
+    final settingsScreen = File(
+      'lib/features/settings/presentation/screens/settings_screen.dart',
+    ).readAsStringSync();
+    final healthScreen = File(
+      'lib/features/settings/presentation/screens/notification_health_screen.dart',
+    ).readAsStringSync();
+
+    expect(settingsScreen, contains('didChangeAppLifecycleState'));
+    expect(settingsScreen, contains('AppLifecycleState.resumed'));
+    expect(
+      settingsScreen,
+      contains('_verifyNotificationPermissionAfterReturn'),
+    );
+    expect(settingsScreen, contains('_areAdhanNotificationsAllowed'));
+    expect(settingsScreen, contains('refreshSchedules(force: true)'));
+    expect(settingsScreen, contains('cancelAllNotifications'));
+    expect(
+      settingsScreen,
+      contains('syncAdhanNotificationsWithPermission(false)'),
+    );
+    expect(healthScreen, contains('didChangeAppLifecycleState'));
+    expect(healthScreen, contains('AppLifecycleState.resumed'));
+    expect(healthScreen, contains('_refreshHealth'));
+  });
+
   test('iOS notification permission is requested before opening settings', () {
     final notificationService = File(
       'lib/features/notifications/data/services/notification_service.dart',
