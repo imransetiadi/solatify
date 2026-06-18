@@ -40,8 +40,21 @@ class TrackerNotifier extends StateNotifier<AsyncValue<PrayerLogEntity>> {
 
     // Optimistic UI update
     final updatedPrayers = Map<String, bool>.from(currentLog.prayers);
+    final updatedStatuses = Map<String, PrayerStatus>.from(
+      currentLog.prayerStatuses,
+    );
     updatedPrayers[prayerKey] = newStatus;
-    state = AsyncValue.data(currentLog.copyWith(prayers: updatedPrayers));
+    if (newStatus) {
+      updatedStatuses[prayerKey] = PrayerStatus.onTime;
+    } else {
+      updatedStatuses.remove(prayerKey);
+    }
+    state = AsyncValue.data(
+      currentLog.copyWith(
+        prayers: updatedPrayers,
+        prayerStatuses: updatedStatuses,
+      ),
+    );
 
     try {
       await _repository.updatePrayerStatus(
@@ -51,6 +64,28 @@ class TrackerNotifier extends StateNotifier<AsyncValue<PrayerLogEntity>> {
       );
     } catch (e, st) {
       // Rollback on error
+      state = AsyncValue.data(currentLog);
+      state = AsyncValue.error(e, st);
+    }
+  }
+
+  Future<void> updatePrayerStatusDetail(
+    String prayerKey,
+    PrayerStatus status,
+  ) async {
+    final currentLog = state.value;
+    if (currentLog == null) return;
+
+    final updatedLog = currentLog.copyWithStatus(prayerKey, status);
+    state = AsyncValue.data(updatedLog);
+
+    try {
+      await _repository.updatePrayerStatusDetail(
+        currentLog.date,
+        prayerKey,
+        status,
+      );
+    } catch (e, st) {
       state = AsyncValue.data(currentLog);
       state = AsyncValue.error(e, st);
     }
