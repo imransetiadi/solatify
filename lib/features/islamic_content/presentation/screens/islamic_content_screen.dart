@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:solatify/core/localization/app_localizations.dart';
+import 'package:solatify/core/services/solatify_haptics.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
@@ -380,7 +381,10 @@ class _SearchResultsList extends StatelessWidget {
                     ],
                   ),
                   trailing: Icon(Icons.chevron_right, color: mutedColor),
-                  onTap: () => context.push(item.route),
+                  onTap: () {
+                    SolatifyHaptics.selection();
+                    context.push(item.route);
+                  },
                 ),
               ),
             );
@@ -516,7 +520,10 @@ class _ContentMenuCard extends StatelessWidget {
       padding: EdgeInsets.zero,
       child: InkWell(
         borderRadius: SolatifyRadius.compactCard,
-        onTap: () => context.go(item.path),
+        onTap: () {
+          SolatifyHaptics.selection();
+          context.go(item.path);
+        },
         child: Padding(
           padding: ResponsiveLayout.listCardPadding,
           child: Row(

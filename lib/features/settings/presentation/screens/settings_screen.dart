@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:solatify/core/localization/app_localizations.dart';
+import 'package:solatify/core/services/solatify_haptics.dart';
 import 'package:solatify/core/theme/theme.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
@@ -71,7 +72,10 @@ class _NotificationV2Controls extends StatelessWidget {
               selected: selected,
               selectedColor: accentColor.withValues(alpha: 0.18),
               checkmarkColor: accentColor,
-              onSelected: (value) => onPrayerChanged(prayerKey, value),
+              onSelected: (value) {
+                SolatifyHaptics.light();
+                onPrayerChanged(prayerKey, value);
+              },
             );
           }).toList(),
         ),
@@ -90,7 +94,10 @@ class _NotificationV2Controls extends StatelessWidget {
               label: Text(label),
               selected: settings.preNotificationMinutes == minutes,
               selectedColor: accentColor.withValues(alpha: 0.18),
-              onSelected: (_) => onReminderChanged(minutes),
+              onSelected: (_) {
+                SolatifyHaptics.selection();
+                onReminderChanged(minutes);
+              },
             );
           }).toList(),
         ),
@@ -108,7 +115,10 @@ class _NotificationV2Controls extends StatelessWidget {
               label: Text(entry.value),
               selected: settings.notificationSoundMode == entry.key,
               selectedColor: accentColor.withValues(alpha: 0.18),
-              onSelected: (_) => onSoundModeChanged(entry.key),
+              onSelected: (_) {
+                SolatifyHaptics.selection();
+                onSoundModeChanged(entry.key);
+              },
             );
           }).toList(),
         ),
@@ -623,12 +633,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               Switch.adaptive(
                                 value: settings.adhanNotificationsEnabled,
                                 activeThumbColor: accentColor,
-                                onChanged: (enabled) =>
-                                    _toggleAdhanNotifications(
-                                      context,
-                                      ref,
-                                      enabled,
-                                    ),
+                                onChanged: (enabled) {
+                                  SolatifyHaptics.light();
+                                  _toggleAdhanNotifications(
+                                    context,
+                                    ref,
+                                    enabled,
+                                  );
+                                },
                               ),
                             ],
                           ),
@@ -693,8 +705,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             Icons.chevron_right,
                             color: textSecondary,
                           ),
-                          onTap: () =>
-                              context.push('/settings/notification-health'),
+                          onTap: () {
+                            SolatifyHaptics.selection();
+                            context.push('/settings/notification-health');
+                          },
                         ),
                         Divider(color: dividerColor, height: 16),
                         // Theme toggles
@@ -929,6 +943,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         size: SolatifyIconSize.inline,
       ),
       onTap: () async {
+        SolatifyHaptics.selection();
         final opened = await onTap();
         if (opened || !mounted) return;
 
@@ -1056,7 +1071,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ? Colors.black
         : (isDark ? const Color(0xFFC8B8A8) : const Color(0xFFAFA19A));
     return GestureDetector(
-      onTap: () => ref.read(settingsProvider.notifier).updateTheme(mode),
+      onTap: () {
+        SolatifyHaptics.selection();
+        ref.read(settingsProvider.notifier).updateTheme(mode);
+      },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(10),

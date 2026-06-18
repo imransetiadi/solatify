@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:solatify/core/services/solatify_haptics.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
@@ -73,9 +74,12 @@ class TrackerScreen extends ConsumerWidget {
                       children: log.prayers.keys.map((prayer) {
                         final isDone = log.prayers[prayer] ?? false;
                         return InkWell(
-                          onTap: () => ref
-                              .read(trackerProvider.notifier)
-                              .togglePrayer(prayer),
+                          onTap: () {
+                            SolatifyHaptics.light();
+                            ref
+                                .read(trackerProvider.notifier)
+                                .togglePrayer(prayer);
+                          },
                           borderRadius: BorderRadius.circular(20),
                           child: Container(
                             padding: const EdgeInsets.symmetric(

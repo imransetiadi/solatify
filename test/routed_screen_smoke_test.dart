@@ -208,6 +208,28 @@ void main() {
     }
   });
 
+  test('Priority interactions use Solatify haptic helper', () {
+    final helperSource = File(
+      'lib/core/services/solatify_haptics.dart',
+    ).readAsStringSync();
+    final targetSources = [
+      'lib/core/navigation/router.dart',
+      'lib/features/tracker/presentation/screens/tracker_screen.dart',
+      'lib/features/quran/presentation/screens/surah_detail_screen.dart',
+      'lib/features/quran/presentation/screens/quran_home_screen.dart',
+      'lib/features/islamic_content/presentation/screens/islamic_content_screen.dart',
+      'lib/features/settings/presentation/screens/settings_screen.dart',
+    ].map((path) => File(path).readAsStringSync());
+
+    expect(helperSource, contains('class SolatifyHaptics'));
+    expect(helperSource, contains('HapticFeedback.selectionClick'));
+    expect(helperSource, contains('HapticFeedback.lightImpact'));
+    expect(helperSource, contains('HapticFeedback.mediumImpact'));
+    for (final source in targetSources) {
+      expect(source, contains('SolatifyHaptics'));
+    }
+  });
+
   testWidgets('Notification Health Center screen renders shell', (
     tester,
   ) async {

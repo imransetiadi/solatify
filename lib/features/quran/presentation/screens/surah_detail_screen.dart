@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:solatify/core/services/solatify_haptics.dart';
 import 'package:solatify/core/theme/theme.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
@@ -140,7 +141,10 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
               style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
             ),
             tooltip: 'Tampilan baca',
-            onPressed: () => _showReaderControls(context),
+            onPressed: () {
+              SolatifyHaptics.selection();
+              _showReaderControls(context);
+            },
           ),
           surahAsync.when(
             loading: () => const SizedBox(),
@@ -520,6 +524,7 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
                   ),
                   tooltip: 'Tandai Terakhir Baca',
                   onPressed: () {
+                    SolatifyHaptics.success();
                     ref
                         .read(quranBookmarksProvider.notifier)
                         .setLastRead(surah.number, verse.number, surah.name);
@@ -544,6 +549,7 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
                   ),
                   tooltip: 'Simpan Ayat',
                   onPressed: () {
+                    SolatifyHaptics.light();
                     ref
                         .read(quranBookmarksProvider.notifier)
                         .toggleBookmark(surah.number, verse.number);
@@ -648,20 +654,29 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
                       contentPadding: EdgeInsets.zero,
                       title: const Text('Tampilkan transliterasi'),
                       value: preferences.showTransliteration,
-                      onChanged: notifier.updateShowTransliteration,
+                      onChanged: (value) {
+                        SolatifyHaptics.light();
+                        notifier.updateShowTransliteration(value);
+                      },
                     ),
                     SwitchListTile.adaptive(
                       contentPadding: EdgeInsets.zero,
                       title: const Text('Tampilkan terjemahan'),
                       value: preferences.showTranslation,
-                      onChanged: notifier.updateShowTranslation,
+                      onChanged: (value) {
+                        SolatifyHaptics.light();
+                        notifier.updateShowTranslation(value);
+                      },
                     ),
                     SwitchListTile.adaptive(
                       contentPadding: EdgeInsets.zero,
                       title: const Text('Mode fokus'),
                       subtitle: const Text('Ringkas header dan area baca.'),
                       value: preferences.focusMode,
-                      onChanged: notifier.updateFocusMode,
+                      onChanged: (value) {
+                        SolatifyHaptics.light();
+                        notifier.updateFocusMode(value);
+                      },
                     ),
                   ],
                 ),

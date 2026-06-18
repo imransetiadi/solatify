@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:solatify/core/services/solatify_haptics.dart';
 import 'package:solatify/core/theme/theme.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
@@ -221,6 +222,7 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
       margin: const EdgeInsets.only(bottom: 12),
       child: GestureDetector(
         onTap: () {
+          SolatifyHaptics.selection();
           context.push(
             '/quran/surah/${state.lastReadSurah}?scroll_to=${state.lastReadVerse}',
           );
@@ -485,6 +487,7 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                             size: SolatifyIconSize.cardIcon,
                           ),
                           onPressed: () {
+                            SolatifyHaptics.light();
                             ref
                                 .read(quranBookmarksProvider.notifier)
                                 .toggleBookmark(surahNum, verseNum);
@@ -509,6 +512,7 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                             ),
                           ),
                           onPressed: () {
+                            SolatifyHaptics.selection();
                             context.push(
                               '/quran/surah/$surahNum?scroll_to=$verseNum',
                             );

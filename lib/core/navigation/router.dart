@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:solatify/core/localization/app_localizations.dart';
 import 'package:solatify/core/performance/performance_tuning.dart';
+import 'package:solatify/core/services/solatify_haptics.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
 import 'package:solatify/core/widgets/solatify_design_tokens.dart';
 import 'package:solatify/features/asmaul_husna/presentation/screens/asmaul_husna_screen.dart';
@@ -280,11 +281,13 @@ class MainLayoutScreen extends StatelessWidget {
   }
 
   void _onItemTapped(int index, BuildContext context) {
+    SolatifyHaptics.selection();
     GoRouter.of(context).go(_destinations[index].path);
   }
 
   void _onMobileItemTapped(int index, BuildContext context) {
     final destination = _mobileDestinations[index];
+    SolatifyHaptics.selection();
     if (destination.path == '/more') {
       _showMoreMenu(context);
       return;
@@ -359,6 +362,7 @@ class MainLayoutScreen extends StatelessWidget {
                           ),
                         ),
                         onTap: () {
+                          SolatifyHaptics.selection();
                           Navigator.pop(context);
                           GoRouter.of(context).go(destination.path);
                         },
