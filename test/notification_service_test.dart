@@ -625,17 +625,33 @@ void main() {
 
     expect(notificationService, contains('requestAlertPermission: false'));
     expect(notificationService, contains('requestIosPermissions'));
+    expect(notificationService, contains('requestNotificationPermissions'));
+    expect(notificationService, contains('areNotificationsEnabled'));
+    expect(notificationService, contains('showTestNotification'));
     expect(notificationService, contains('requestPermissions('));
     expect(notificationService, contains('alert: true'));
     expect(notificationService, contains('badge: true'));
     expect(notificationService, contains('sound: true'));
+    expect(
+      notificationService,
+      contains('Skipping iOS prayer schedule; notification denied.'),
+    );
     expect(settingsScreen, contains('requestIosPermissions'));
     expect(notificationService, contains('openIosNotificationSettings'));
+    expect(
+      appDelegate,
+      contains('UNUserNotificationCenter.current().delegate'),
+    );
+    expect(appDelegate, contains('willPresent notification'));
+    expect(appDelegate, contains('.banner'));
     expect(appDelegate, contains('registerIosSettingsChannel'));
     expect(
       appDelegate,
       contains('registrar(forPlugin: "SolatifyIosSettings")'),
     );
+    expect(appDelegate, contains('requestNotificationPermissions'));
+    expect(appDelegate, contains('areNotificationsEnabled'));
+    expect(appDelegate, contains('showTestNotification'));
     expect(appDelegate, contains('openNotificationSettings'));
     expect(appDelegate, contains('UIApplication.openSettingsURLString'));
   });

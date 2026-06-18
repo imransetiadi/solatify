@@ -229,6 +229,16 @@ class NotificationService {
 
     try {
       await _ensureInitialized();
+      final nativeGranted = await _iosSettingsChannel.invokeMethod<bool>(
+        'requestNotificationPermissions',
+      );
+      if (nativeGranted != null) {
+        debugPrint(
+          'Native iOS notification permission granted: $nativeGranted',
+        );
+        return nativeGranted;
+      }
+
       final iosImplementation = _flutterLocalNotificationsPlugin
           .resolvePlatformSpecificImplementation<
             IOSFlutterLocalNotificationsPlugin
@@ -417,6 +427,11 @@ class NotificationService {
     }
 
     if (defaultTargetPlatform == TargetPlatform.iOS) {
+      final nativeEnabled = await _iosSettingsChannel.invokeMethod<bool>(
+        'areNotificationsEnabled',
+      );
+      if (nativeEnabled != null) return nativeEnabled;
+
       final iosImplementation = _flutterLocalNotificationsPlugin
           .resolvePlatformSpecificImplementation<
             IOSFlutterLocalNotificationsPlugin
@@ -582,6 +597,19 @@ class NotificationService {
       await _ensureInitialized();
       if (refreshExactAlarmCapability) {
         await _refreshExactAlarmCapability();
+      }
+
+      if (defaultTargetPlatform == TargetPlatform.iOS) {
+        final granted = await requestIosPermissions();
+        if (!granted) {
+          await recordScheduleFailure(
+            reason: 'iOS notification permission denied',
+            permissionStatus:
+                NotificationReadinessStatus.needsNotificationPermission.name,
+          );
+          debugPrint('Skipping iOS prayer schedule; notification denied.');
+          return;
+        }
       }
 
       final title = getNotificationTitle(prayerKey, location);
@@ -789,6 +817,19 @@ class NotificationService {
   Future<void> showTestNotification() async {
     try {
       await _ensureInitialized();
+
+      if (defaultTargetPlatform == TargetPlatform.iOS) {
+        final shownNatively = await _iosSettingsChannel.invokeMethod<bool>(
+          'showTestNotification',
+        );
+        if (shownNatively == true) {
+          debugPrint('Native iOS test notification sent');
+          return;
+        }
+        debugPrint(
+          'Native iOS test notification unavailable; falling back to plugin.',
+        );
+      }
 
       final notificationId = DateTime.now().millisecondsSinceEpoch.remainder(
         1000000,
