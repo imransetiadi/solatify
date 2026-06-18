@@ -156,6 +156,20 @@ void main() {
     expect(source, contains('refreshSchedules(force: true)'));
   });
 
+  test('Surah Detail source exposes Quran reading mode controls', () {
+    final source = File(
+      'lib/features/quran/presentation/screens/surah_detail_screen.dart',
+    ).readAsStringSync();
+
+    expect(source, contains('Tampilan Baca Qur'));
+    expect(source, contains('Ukuran Arab'));
+    expect(source, contains('Tampilkan transliterasi'));
+    expect(source, contains('Tampilkan terjemahan'));
+    expect(source, contains('Mode fokus'));
+    expect(source, contains('Progress Surah'));
+    expect(source, contains(r'Ayat $currentVerse / $totalVerses'));
+  });
+
   testWidgets('Notification Health Center screen renders shell', (
     tester,
   ) async {

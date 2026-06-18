@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import '../../../../core/theme/theme.dart';
-import '../../../../core/widgets/glass_container.dart';
-import '../../../../core/widgets/responsive_layout.dart';
-import '../../domain/models/quran_models.dart';
-import '../quran_provider.dart';
+import 'package:solatify/core/theme/theme.dart';
+import 'package:solatify/core/widgets/glass_container.dart';
+import 'package:solatify/core/widgets/responsive_layout.dart';
+import 'package:solatify/features/quran/domain/models/quran_models.dart';
+import 'package:solatify/features/quran/presentation/quran_provider.dart';
 
 class SurahDetailScreen extends ConsumerStatefulWidget {
   const SurahDetailScreen({
@@ -24,6 +23,14 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
   final ScrollController _scrollController = ScrollController();
   final Map<int, GlobalKey> _verseKeys = {};
   bool _hasScrolled = false;
+  int _currentVerse = 1;
+  int _totalVerses = 1;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_updateReadingProgressFromScroll);
+  }
 
   Color get _textColor => Theme.of(context).brightness == Brightness.dark
       ? Colors.white
@@ -45,8 +52,23 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
 
   @override
   void dispose() {
+    _scrollController.removeListener(_updateReadingProgressFromScroll);
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _updateReadingProgressFromScroll() {
+    if (!_scrollController.hasClients || _totalVerses <= 1) return;
+    const estimatedVerseHeight = 260.0;
+    final nextVerse =
+        (_scrollController.offset / estimatedVerseHeight).floor().clamp(
+          0,
+          _totalVerses - 1,
+        ) +
+        1;
+    if (nextVerse != _currentVerse && mounted) {
+      setState(() => _currentVerse = nextVerse);
+    }
   }
 
   void _scrollToVerse(int verseNumber) {
@@ -70,6 +92,7 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
   Widget build(BuildContext context) {
     final surahAsync = ref.watch(surahDetailProvider(widget.surahId));
     final audioState = ref.watch(quranAudioProvider);
+    final readerPreferences = ref.watch(quranReaderPreferencesProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : const Color(0xFF241A12);
     final textSecondary = isDark
@@ -78,6 +101,7 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        toolbarHeight: readerPreferences.focusMode ? 48 : null,
         title: surahAsync.when(
           loading: () => const Text('Memuat...'),
           error: (_, _) => const Text('Al-Qur\'an'),
@@ -96,7 +120,7 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                if (isPlayingThisSurah)
+                if (!readerPreferences.focusMode && isPlayingThisSurah)
                   Text(
                     audioState.isPlaying
                         ? '🔊 Memutar semua ayat...'
@@ -110,6 +134,14 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
           },
         ),
         actions: [
+          IconButton(
+            icon: const Text(
+              'Aa',
+              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+            ),
+            tooltip: 'Tampilan baca',
+            onPressed: () => _showReaderControls(context),
+          ),
           surahAsync.when(
             loading: () => const SizedBox(),
             error: (_, _) => const SizedBox(),
@@ -118,7 +150,9 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
                 audioState.playingSurah == surah.number && audioState.isPlaying
                     ? Icons.pause_circle_filled
                     : Icons.play_circle_fill,
-                color: _redAccent,
+                color: readerPreferences.focusMode
+                    ? _textSecondary
+                    : _redAccent,
                 size: 28,
               ),
               tooltip: 'Putar Semua Ayat (${surah.numberOfVerses} Ayat)',
@@ -181,6 +215,11 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
               ),
               data: (surah) {
                 final verses = surah.verses ?? [];
+                _totalVerses = verses.isEmpty ? 1 : verses.length;
+                final progressVerse = _currentVerse.clamp(
+                  1,
+                  verses.isEmpty ? 1 : verses.length,
+                );
 
                 // Initialize keys for scrolling
                 for (var v in verses) {
@@ -192,42 +231,59 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
                     !_hasScrolled &&
                     verses.isNotEmpty) {
                   Future.delayed(const Duration(milliseconds: 300), () {
+                    if (mounted) {
+                      setState(
+                        () => _currentVerse = widget.initialScrollVerse!,
+                      );
+                    }
                     _scrollToVerse(widget.initialScrollVerse!);
                   });
                 }
 
                 return ResponsiveCenter(
-                  child: ListView.builder(
-                    controller: _scrollController,
-                    physics: const BouncingScrollPhysics(),
-                    padding: EdgeInsets.fromLTRB(
-                      ResponsiveLayout.pagePadding(context).horizontal / 2,
-                      16,
-                      ResponsiveLayout.pagePadding(context).horizontal / 2,
-                      audioState.playingSurah != null ? 140 : 80,
-                    ),
-                    itemCount: verses.length + 1, // +1 for the Header Banner
-                    itemBuilder: (context, index) {
-                      if (index == 0) {
-                        return _buildSurahHeaderBanner(surah);
-                      }
+                  child: Column(
+                    children: [
+                      _buildReadingProgress(progressVerse, verses.length),
+                      Expanded(
+                        child: ListView.builder(
+                          controller: _scrollController,
+                          physics: const BouncingScrollPhysics(),
+                          padding: EdgeInsets.fromLTRB(
+                            ResponsiveLayout.pagePadding(context).horizontal /
+                                2,
+                            readerPreferences.focusMode ? 8 : 16,
+                            ResponsiveLayout.pagePadding(context).horizontal /
+                                2,
+                            audioState.playingSurah != null ? 140 : 80,
+                          ),
+                          itemCount: verses.length + 1,
+                          itemBuilder: (context, index) {
+                            if (index == 0) {
+                              return readerPreferences.focusMode
+                                  ? const SizedBox(height: 8)
+                                  : _buildSurahHeaderBanner(surah);
+                            }
 
-                      final verse = verses[index - 1];
-                      final isBookmarked = ref
-                          .read(quranBookmarksProvider.notifier)
-                          .isBookmarked(surah.number, verse.number);
-                      final isCurrentlyPlaying =
-                          audioState.playingSurah == surah.number &&
-                          audioState.playingVerse == verse.number;
+                            final verse = verses[index - 1];
+                            final isBookmarked = ref
+                                .read(quranBookmarksProvider.notifier)
+                                .isBookmarked(surah.number, verse.number);
+                            final isCurrentlyPlaying =
+                                audioState.playingSurah == surah.number &&
+                                audioState.playingVerse == verse.number;
 
-                      return _buildVerseItem(
-                        surah: surah,
-                        verse: verse,
-                        isBookmarked: isBookmarked,
-                        isCurrentlyPlaying: isCurrentlyPlaying,
-                        audioState: audioState,
-                      );
-                    },
+                            return _buildVerseItem(
+                              surah: surah,
+                              verse: verse,
+                              isBookmarked: isBookmarked,
+                              isCurrentlyPlaying: isCurrentlyPlaying,
+                              audioState: audioState,
+                              preferences: readerPreferences,
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                   ),
                 );
               },
@@ -330,12 +386,53 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
     );
   }
 
+  Widget _buildReadingProgress(int currentVerse, int totalVerses) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        ResponsiveLayout.pagePadding(context).horizontal / 2,
+        8,
+        ResponsiveLayout.pagePadding(context).horizontal / 2,
+        0,
+      ),
+      child: GlassContainer(
+        opacity: Theme.of(context).brightness == Brightness.dark ? 0.05 : 0.03,
+        borderRadius: 18,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        child: Row(
+          children: [
+            Icon(Icons.auto_stories_outlined, color: _accentColor, size: 16),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Progress Surah',
+                style: TextStyle(
+                  color: _textSecondary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            Text(
+              'Ayat $currentVerse / $totalVerses',
+              style: TextStyle(
+                color: _textColor,
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildVerseItem({
     required Surah surah,
     required Verse verse,
     required bool isBookmarked,
     required bool isCurrentlyPlaying,
     required QuranAudioState audioState,
+    required QuranReaderPreferences preferences,
   }) {
     final bookmarksState = ref.watch(quranBookmarksProvider);
     final isLastRead =
@@ -483,21 +580,19 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
           ),
           const SizedBox(height: 16),
 
-          // Arabic Text
           Text(
             verse.arabic,
             textAlign: TextAlign.right,
             style: TextStyle(
               color: _textColor,
-              fontSize: 28,
+              fontSize: preferences.arabicFontSize,
               height: 2.0,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 12),
 
-          // Latin Transliteration Text
-          if (verse.latin.isNotEmpty) ...[
+          if (preferences.showTransliteration && verse.latin.isNotEmpty) ...[
             Text(
               verse.latin,
               textAlign: TextAlign.left,
@@ -511,16 +606,96 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
             const SizedBox(height: 8),
           ],
 
-          // Translation Text
-          Text(
-            verse.translation,
-            textAlign: TextAlign.left,
-            style: TextStyle(color: _textMuted, fontSize: 14, height: 1.5),
-          ),
-          const SizedBox(height: 16),
+          if (preferences.showTranslation) ...[
+            Text(
+              verse.translation,
+              textAlign: TextAlign.left,
+              style: TextStyle(color: _textMuted, fontSize: 14, height: 1.5),
+            ),
+            const SizedBox(height: 16),
+          ],
           Divider(color: _dividerColor, height: 1),
         ],
       ),
+    );
+  }
+
+  void _showReaderControls(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      builder: (sheetContext) {
+        return Consumer(
+          builder: (context, ref, _) {
+            final preferences = ref.watch(quranReaderPreferencesProvider);
+            final notifier = ref.read(quranReaderPreferencesProvider.notifier);
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Tampilan Baca Qur\'an',
+                      style: TextStyle(
+                        color: _textColor,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Text(
+                          'Ukuran Arab',
+                          style: TextStyle(
+                            color: _textColor,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const Spacer(),
+                        Text(
+                          preferences.arabicFontSize.round().toString(),
+                          style: TextStyle(color: _textSecondary),
+                        ),
+                      ],
+                    ),
+                    Slider(
+                      value: preferences.arabicFontSize,
+                      min: quranReaderMinArabicFontSize,
+                      max: quranReaderMaxArabicFontSize,
+                      divisions: 8,
+                      label: preferences.arabicFontSize.round().toString(),
+                      onChanged: notifier.updateArabicFontSize,
+                    ),
+                    SwitchListTile.adaptive(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('Tampilkan transliterasi'),
+                      value: preferences.showTransliteration,
+                      onChanged: notifier.updateShowTransliteration,
+                    ),
+                    SwitchListTile.adaptive(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('Tampilkan terjemahan'),
+                      value: preferences.showTranslation,
+                      onChanged: notifier.updateShowTranslation,
+                    ),
+                    SwitchListTile.adaptive(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('Mode fokus'),
+                      subtitle: const Text('Ringkas header dan area baca.'),
+                      value: preferences.focusMode,
+                      onChanged: notifier.updateFocusMode,
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 

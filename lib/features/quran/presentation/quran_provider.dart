@@ -2,10 +2,14 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:solatify/core/database/hive_service.dart';
+import 'package:solatify/features/quran/data/quran_repository.dart';
+import 'package:solatify/features/quran/domain/models/quran_models.dart';
 
-import '../../../core/database/hive_service.dart';
-import '../data/quran_repository.dart';
-import '../domain/models/quran_models.dart';
+const double quranReaderMinArabicFontSize = 24;
+const double quranReaderMaxArabicFontSize = 40;
+const double quranReaderDefaultArabicFontSize = 30;
+const String _quranReaderPreferencesKey = 'quran_reader_preferences';
 
 final quranRepositoryProvider = Provider<QuranRepository>((ref) {
   return QuranRepository();
@@ -46,6 +50,108 @@ final surahDetailProvider = FutureProvider.family<Surah, int>((
   final repo = ref.watch(quranRepositoryProvider);
   return await repo.getSurahDetail(number);
 });
+
+class QuranReaderPreferences {
+  const QuranReaderPreferences({
+    this.arabicFontSize = quranReaderDefaultArabicFontSize,
+    this.showTransliteration = true,
+    this.showTranslation = true,
+    this.focusMode = false,
+  });
+
+  factory QuranReaderPreferences.fromJson(Map<dynamic, dynamic>? json) {
+    if (json == null) return const QuranReaderPreferences();
+    return QuranReaderPreferences(
+      arabicFontSize: clampQuranArabicFontSize(
+        (json['arabicFontSize'] as num?)?.toDouble() ??
+            quranReaderDefaultArabicFontSize,
+      ),
+      showTransliteration: json['showTransliteration'] != false,
+      showTranslation: json['showTranslation'] != false,
+      focusMode: json['focusMode'] == true,
+    );
+  }
+
+  final double arabicFontSize;
+  final bool showTransliteration;
+  final bool showTranslation;
+  final bool focusMode;
+
+  QuranReaderPreferences copyWith({
+    double? arabicFontSize,
+    bool? showTransliteration,
+    bool? showTranslation,
+    bool? focusMode,
+  }) {
+    return QuranReaderPreferences(
+      arabicFontSize: arabicFontSize ?? this.arabicFontSize,
+      showTransliteration: showTransliteration ?? this.showTransliteration,
+      showTranslation: showTranslation ?? this.showTranslation,
+      focusMode: focusMode ?? this.focusMode,
+    );
+  }
+
+  Map<String, Object?> toJson() {
+    return {
+      'arabicFontSize': arabicFontSize,
+      'showTransliteration': showTransliteration,
+      'showTranslation': showTranslation,
+      'focusMode': focusMode,
+    };
+  }
+}
+
+double clampQuranArabicFontSize(double value) {
+  return value
+      .clamp(quranReaderMinArabicFontSize, quranReaderMaxArabicFontSize)
+      .toDouble();
+}
+
+class QuranReaderPreferencesNotifier
+    extends StateNotifier<QuranReaderPreferences> {
+  QuranReaderPreferencesNotifier() : super(_loadInitialState());
+
+  static QuranReaderPreferences _loadInitialState() {
+    try {
+      final raw = HiveService.getSetting(_quranReaderPreferencesKey);
+      if (raw is Map) return QuranReaderPreferences.fromJson(raw);
+    } catch (_) {
+      return const QuranReaderPreferences();
+    }
+    return const QuranReaderPreferences();
+  }
+
+  Future<void> updateArabicFontSize(double value) async {
+    await _save(
+      state.copyWith(arabicFontSize: clampQuranArabicFontSize(value)),
+    );
+  }
+
+  Future<void> updateShowTransliteration(bool value) async {
+    await _save(state.copyWith(showTransliteration: value));
+  }
+
+  Future<void> updateShowTranslation(bool value) async {
+    await _save(state.copyWith(showTranslation: value));
+  }
+
+  Future<void> updateFocusMode(bool value) async {
+    await _save(state.copyWith(focusMode: value));
+  }
+
+  Future<void> _save(QuranReaderPreferences next) async {
+    state = next;
+    await HiveService.saveSetting(_quranReaderPreferencesKey, next.toJson());
+  }
+}
+
+final quranReaderPreferencesProvider =
+    StateNotifierProvider<
+      QuranReaderPreferencesNotifier,
+      QuranReaderPreferences
+    >((ref) {
+      return QuranReaderPreferencesNotifier();
+    });
 
 // BOOKMARK STATES
 class QuranBookmarksState {

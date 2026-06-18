@@ -17,6 +17,7 @@ void main() {
     tempDir = Directory.systemTemp.createTempSync('quran_test_dir');
     Hive.init(tempDir.path);
     await initializeDateFormatting('id_ID', null);
+    await Hive.openBox<dynamic>('settings');
     await Hive.openBox<dynamic>('quran_bookmarks');
     await Hive.openBox<dynamic>('quran_index');
     await Hive.openBox<dynamic>('quran_surah_details');
@@ -201,6 +202,40 @@ void main() {
       expect(result, [
         [5, 9],
       ]);
+    });
+  });
+
+  group('Quran Reader Preferences Tests', () {
+    test('uses readable defaults', () {
+      const preferences = QuranReaderPreferences();
+
+      expect(preferences.arabicFontSize, quranReaderDefaultArabicFontSize);
+      expect(preferences.showTransliteration, isTrue);
+      expect(preferences.showTranslation, isTrue);
+      expect(preferences.focusMode, isFalse);
+    });
+
+    test('clamps Arabic font size to safe bounds', () {
+      expect(clampQuranArabicFontSize(12), quranReaderMinArabicFontSize);
+      expect(clampQuranArabicFontSize(60), quranReaderMaxArabicFontSize);
+    });
+
+    test('notifier updates reader controls', () async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+
+      final notifier = container.read(quranReaderPreferencesProvider.notifier);
+
+      await notifier.updateArabicFontSize(36);
+      await notifier.updateShowTransliteration(false);
+      await notifier.updateShowTranslation(false);
+      await notifier.updateFocusMode(true);
+
+      final state = container.read(quranReaderPreferencesProvider);
+      expect(state.arabicFontSize, 36);
+      expect(state.showTransliteration, isFalse);
+      expect(state.showTranslation, isFalse);
+      expect(state.focusMode, isTrue);
     });
   });
 

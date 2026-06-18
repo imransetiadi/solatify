@@ -15,7 +15,7 @@
 
 - 🕋 **Jadwal Salat Akurat** — Kalkulasi waktu salat berbasis `adhan` dan `timezone`, mendukung metode Kemenag dan metode internasional lain, termasuk koreksi manual per waktu salat.
 - 🔔 **Alarm Adzan Otomatis** — Notifikasi lokal waktu salat berjalan offline dengan toggle per waktu salat, pengingat sebelum salat, pilihan mode suara adzan/beep/silent, riwayat status scheduling, timezone lokasi salat, dan diff-based scheduling untuk sisa salat hari ini plus Subuh besok.
-- 📖 **Al-Qur'an & Konten Islami** — Surah Al-Qur'an, bookmark/terakhir dibaca, Asmaul Husna, doa harian, dzikir pagi-petang, kalender Hijriah, tips islami, dan tuntunan salat lengkap.
+- 📖 **Al-Qur'an & Konten Islami** — Surah Al-Qur'an, reading mode dengan kontrol ukuran font Arab, toggle transliterasi/terjemahan, progress surah, bookmark/terakhir dibaca, Asmaul Husna, doa harian, dzikir pagi-petang, kalender Hijriah, tips islami, dan tuntunan salat lengkap.
 - 🤲 **Tuntunan Salat Offline** — Urutan salat praktis dengan bacaan Arab, latin, arti Indonesia, catatan ringkas, doa qunut Subuh opsional, serta dzikir setelah salat.
 - 🧭 **Arah Kiblat** — Kompas kiblat berbasis sensor perangkat, dengan fallback UI ketika sensor tidak tersedia.
 - 🕌 **Masjid Terdekat** — Pencarian masjid sekitar, tombol lihat peta, dan rute melalui aplikasi peta/browser perangkat.
@@ -67,7 +67,7 @@ Untuk Android, notifikasi salat memakai channel `Prayer Times Adhan` (`prayer_ti
 
 Status branch terbaru sudah diverifikasi dengan:
 
-- `flutter test` — 110/110 tests passed.
+- `flutter test` — 114/114 tests passed.
 - `flutter analyze` — no issues.
 - `flutter test -d emulator-5554 integration_test/app_test.dart` — 2/2 integration tests passed di Android emulator.
 - `flutter test -d 00008140-000518E42EB8401C integration_test/app_test.dart` — 2/2 integration tests passed di iPhone `Satelit88`.
