@@ -62,6 +62,19 @@ export const localizedContent = {
       copy:
         "From prayer reminders to Qur’an bookmarks and dhikr, Solatify brings essential Muslim routines into one focused experience."
     },
+    screenshotsSection: {
+      eyebrow: "App Preview",
+      title: "Real screens from Solatify on iPhone and Android.",
+      copy: "Light previews use iPhone screenshots, while dark previews use Android screenshots, so visitors can instantly feel both platform experiences."
+    },
+    screenshots: [
+      { src: "/screenshots/ios-home-light.jpg", title: "iPhone Home", label: "Light mode" },
+      { src: "/screenshots/ios-schedule-light.jpg", title: "Prayer Schedule", label: "iPhone" },
+      { src: "/screenshots/ios-quran-light.jpg", title: "Qur’an Reader", label: "iPhone" },
+      { src: "/screenshots/android-mosque-dark.jpg", title: "Nearby Mosques", label: "Android dark" },
+      { src: "/screenshots/android-quran-dark.jpg", title: "Dark Qur’an", label: "Android" },
+      { src: "/screenshots/android-tracker-dark.jpg", title: "Worship Tracker", label: "Android" }
+    ],
     notifications: {
       eyebrow: "Prayer Notifications",
       title: "Know exactly when prayer time arrives.",
@@ -160,6 +173,28 @@ export const localizedContent = {
           "Fast access to prayer times, Qur’an, Qibla, nearby mosques, dhikr, duas, Hijri calendar, and Islamic content."
       }
     ],
+    useCasesSection: {
+      eyebrow: "Use Cases",
+      title: "Made for the moments Muslims open every day.",
+      copy: "Solatify keeps each routine focused, whether you are at home, traveling, or building a stronger Qur’an habit."
+    },
+    useCases: [
+      {
+        icon: "🕌",
+        title: "For daily prayer",
+        description: "See the next prayer, review today’s schedule, and keep adhan reminders calm and intentional."
+      },
+      {
+        icon: "🧳",
+        title: "For travel",
+        description: "Use Qibla direction and nearby mosques when your routine moves outside your usual city."
+      },
+      {
+        icon: "📖",
+        title: "For Qur’an routine",
+        description: "Return to reading, remember last progress, and keep worship content close without clutter."
+      }
+    ],
     faqs: [
       {
         question: "What is Solatify?",
@@ -249,6 +284,19 @@ export const localizedContent = {
       copy:
         "Dari pengingat salat hingga bookmark Qur’an dan dzikir, Solatify menyatukan rutinitas Muslim penting dalam satu pengalaman yang fokus."
     },
+    screenshotsSection: {
+      eyebrow: "Preview Aplikasi",
+      title: "Tampilan asli Solatify di iPhone dan Android.",
+      copy: "Preview mode terang memakai screenshot iPhone, sementara preview mode gelap memakai screenshot Android agar pengunjung langsung merasakan kedua pengalaman platform."
+    },
+    screenshots: [
+      { src: "/screenshots/ios-home-light.jpg", title: "Home iPhone", label: "Mode terang" },
+      { src: "/screenshots/ios-schedule-light.jpg", title: "Jadwal Salat", label: "iPhone" },
+      { src: "/screenshots/ios-quran-light.jpg", title: "Baca Qur’an", label: "iPhone" },
+      { src: "/screenshots/android-mosque-dark.jpg", title: "Masjid Terdekat", label: "Android gelap" },
+      { src: "/screenshots/android-quran-dark.jpg", title: "Qur’an Gelap", label: "Android" },
+      { src: "/screenshots/android-tracker-dark.jpg", title: "Tracker Ibadah", label: "Android" }
+    ],
     notifications: {
       eyebrow: "Notifikasi Salat",
       title: "Tahu tepat saat waktu salat tiba.",
@@ -346,6 +394,28 @@ export const localizedContent = {
         title: "Siap untuk rutinitas harian",
         description:
           "Akses cepat ke jadwal salat, Qur’an, kiblat, masjid terdekat, dzikir, doa, kalender Hijriah, dan konten Islami."
+      }
+    ],
+    useCasesSection: {
+      eyebrow: "Kegunaan",
+      title: "Dibuat untuk momen yang dibuka Muslim setiap hari.",
+      copy: "Solatify menjaga setiap rutinitas tetap fokus, baik di rumah, saat bepergian, maupun saat membangun kebiasaan Qur’an."
+    },
+    useCases: [
+      {
+        icon: "🕌",
+        title: "Untuk salat harian",
+        description: "Lihat salat berikutnya, cek jadwal hari ini, dan gunakan pengingat adzan yang tenang serta niat."
+      },
+      {
+        icon: "🧳",
+        title: "Untuk perjalanan",
+        description: "Gunakan arah kiblat dan masjid terdekat saat rutinitasmu berpindah dari kota biasanya."
+      },
+      {
+        icon: "📖",
+        title: "Untuk rutinitas Qur’an",
+        description: "Kembali membaca, ingat progress terakhir, dan simpan konten ibadah dekat tanpa terasa ramai."
       }
     ],
     faqs: [
