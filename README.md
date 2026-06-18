@@ -83,7 +83,7 @@ Status branch terbaru sudah diverifikasi dengan:
 - `flutter build apk --debug` — Android debug APK berhasil dibuat di `build/app/outputs/flutter-apk/app-debug.apk`.
 - `flutter build ios --no-codesign` — iOS app berhasil dibuat di `build/ios/iphoneos/Runner.app`.
 
-Dokumen QA tambahan tersedia di `docs/qa/`, termasuk runbook, checklist Android/iOS, performance checklist, dan release signoff.
+Dokumen QA tambahan tersedia di `docs/qa/`, termasuk runbook, checklist Android/iOS, performance checklist, dan release signoff. Catatan checkpoint pengembangan terbaru tersedia di `docs/DEVELOPMENT_NOTES.md`.
 
 ## 💻 Memulai
 
