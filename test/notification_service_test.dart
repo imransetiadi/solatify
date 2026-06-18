@@ -212,7 +212,7 @@ void main() {
   );
 
   test(
-    'uses one prayer adhan notification channel across Flutter and native Android',
+    'uses matching prayer notification channels across Flutter and native Android',
     () {
       final notificationService = File(
         'lib/features/notifications/data/services/notification_service.dart',
@@ -226,9 +226,51 @@ void main() {
         contains("_prayerChannelId = 'prayer_times_adhan_channel'"),
       );
       expect(receiver, contains('CHANNEL_ID = "prayer_times_adhan_channel"'));
+      expect(
+        receiver,
+        contains('BEEP_CHANNEL_ID = "prayer_times_beep_channel"'),
+      );
+      expect(
+        receiver,
+        contains('SILENT_CHANNEL_ID = "prayer_times_silent_channel"'),
+      );
+      expect(receiver, contains('channelIdFor(soundMode)'));
+      expect(receiver, contains('SOUND_MODE_BEEP'));
+      expect(receiver, contains('SOUND_MODE_SILENT'));
       expect(notificationService, contains('deleteNotificationChannel'));
     },
   );
+
+  test('native Android alarm model persists sound mode and reminder metadata', () {
+    final mainActivity = File(
+      'android/app/src/main/kotlin/com/solatify/app/solatify/MainActivity.kt',
+    ).readAsStringSync();
+    final scheduler = File(
+      'android/app/src/main/kotlin/com/solatify/app/solatify/notifications/PrayerAlarmScheduler.kt',
+    ).readAsStringSync();
+    final receiver = File(
+      'android/app/src/main/kotlin/com/solatify/app/solatify/notifications/PrayerAlarmReceiver.kt',
+    ).readAsStringSync();
+
+    expect(mainActivity, contains('call.argument<Boolean>("isReminder")'));
+    expect(mainActivity, contains('call.argument<String>("soundMode")'));
+    expect(scheduler, contains('EXTRA_IS_REMINDER'));
+    expect(scheduler, contains('EXTRA_SOUND_MODE'));
+    expect(scheduler, contains('.put("isReminder", isReminder)'));
+    expect(scheduler, contains('.put("soundMode", soundMode)'));
+    expect(
+      receiver,
+      contains('getBooleanExtra(PrayerAlarmScheduler.EXTRA_IS_REMINDER'),
+    );
+    expect(
+      receiver,
+      contains('getStringExtra(PrayerAlarmScheduler.EXTRA_SOUND_MODE)'),
+    );
+    expect(
+      receiver,
+      contains('if (soundMode == SOUND_MODE_ADHAN && !isReminder)'),
+    );
+  });
 
   test(
     'uses native Android alarm scheduler for prayer notifications',
@@ -257,6 +299,11 @@ void main() {
       expect(capturedNativeAlarmMethods.single.method, 'schedulePrayerAlarm');
       expect(capturedNativeAlarmMethods.single.arguments['id'], 1005);
       expect(capturedNativeAlarmMethods.single.arguments['prayerKey'], 'isya');
+      expect(capturedNativeAlarmMethods.single.arguments['soundMode'], 'adhan');
+      expect(
+        capturedNativeAlarmMethods.single.arguments['isReminder'],
+        isFalse,
+      );
       expect(
         capturedNativeAlarmMethods.single.arguments['title'],
         'Waktu Isya - Jakarta, Indonesia',
@@ -269,6 +316,39 @@ void main() {
         capturedMethods.where((call) => call.method == 'cancel'),
         hasLength(1),
       );
+    },
+  );
+
+  test(
+    'passes sound mode and reminder metadata to native Android scheduler',
+    () async {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(androidPrayerAlarmChannel, (
+            MethodCall call,
+          ) async {
+            capturedNativeAlarmMethods.add(call);
+            return true;
+          });
+
+      await service.init();
+
+      await service.schedulePrayerNotification(
+        prayerKey: 'subuh',
+        location: 'Jakarta, Indonesia',
+        prayerTime: '04:30',
+        notificationTime: DateTime.now().add(const Duration(minutes: 10)),
+        timezoneName: 'Asia/Jakarta',
+        notificationId: 3001,
+        isReminder: true,
+        soundMode: 'silent',
+      );
+
+      expect(capturedNativeAlarmMethods.single.method, 'schedulePrayerAlarm');
+      expect(
+        capturedNativeAlarmMethods.single.arguments['soundMode'],
+        'silent',
+      );
+      expect(capturedNativeAlarmMethods.single.arguments['isReminder'], isTrue);
     },
   );
 

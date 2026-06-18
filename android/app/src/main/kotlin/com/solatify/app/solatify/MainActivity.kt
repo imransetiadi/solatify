@@ -28,6 +28,8 @@ class MainActivity : FlutterActivity() {
                     val title = call.argument<String>("title")
                     val body = call.argument<String>("body")
                     val scheduledAtMillis = call.argument<Long>("scheduledAtMillis")
+                    val isReminder = call.argument<Boolean>("isReminder") ?: false
+                    val soundMode = call.argument<String>("soundMode") ?: "adhan"
 
                     if (id == null || prayerKey == null || title == null || body == null || scheduledAtMillis == null) {
                         result.error("invalid_arguments", "Missing prayer alarm fields", null)
@@ -42,6 +44,8 @@ class MainActivity : FlutterActivity() {
                                 title = title,
                                 body = body,
                                 scheduledAtMillis = scheduledAtMillis,
+                                isReminder = isReminder,
+                                soundMode = soundMode,
                             ),
                         ),
                     )

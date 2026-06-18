@@ -106,6 +106,8 @@ class NotificationService {
     required String body,
     required DateTime scheduledAt,
     required int notificationId,
+    required bool isReminder,
+    required String soundMode,
   }) async {
     if (defaultTargetPlatform != TargetPlatform.android) return false;
 
@@ -117,6 +119,8 @@ class NotificationService {
             'title': title,
             'body': body,
             'scheduledAtMillis': scheduledAt.millisecondsSinceEpoch,
+            'isReminder': isReminder,
+            'soundMode': soundMode,
           });
       return scheduled ?? false;
     } catch (e, stack) {
@@ -595,6 +599,8 @@ class NotificationService {
           body: body,
           scheduledAt: scheduledDate,
           notificationId: notificationId,
+          isReminder: isReminder,
+          soundMode: soundMode,
         );
         if (scheduledNatively) {
           await _flutterLocalNotificationsPlugin.cancel(notificationId);

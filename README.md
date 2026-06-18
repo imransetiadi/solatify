@@ -58,7 +58,7 @@ Notifikasi salat mendukung kontrol yang lebih granular di Settings:
 - Riwayat notifikasi menyimpan status terakhir terjadwal/gagal untuk debugging dan transparansi.
 - Notification Health Center di Settings membantu cek izin, pending schedule, riwayat terakhir, kirim test notifikasi, dan reschedule manual.
 
-Untuk Android, notifikasi salat memakai channel `Prayer Times Adhan` (`prayer_times_adhan_channel`), `Prayer Times Beep` (`prayer_times_beep_channel`), dan `Prayer Times Silent` (`prayer_times_silent_channel`) dengan native alarm fallback agar alarm adzan muncul di system tray secara lebih andal:
+Untuk Android, notifikasi salat memakai channel `Prayer Times Adhan` (`prayer_times_adhan_channel`), `Prayer Times Beep` (`prayer_times_beep_channel`), dan `Prayer Times Silent` (`prayer_times_silent_channel`) dengan native alarm fallback yang ikut menghormati mode `adhan`, `beep`, `silent`, dan reminder agar alarm muncul di system tray secara lebih andal:
 
 1. Install build terbaru dan buka aplikasi minimal sekali.
 2. Berikan izin notifikasi (`POST_NOTIFICATIONS`) pada Android 13+.
@@ -70,7 +70,7 @@ Untuk Android, notifikasi salat memakai channel `Prayer Times Adhan` (`prayer_ti
 
 Status branch terbaru sudah diverifikasi dengan:
 
-- `flutter test` — 120/120 tests passed.
+- `flutter test` — 122/122 tests passed.
 - `flutter analyze` — no issues.
 - `flutter test -d emulator-5554 integration_test/app_test.dart` — 2/2 integration tests passed di Android emulator.
 - `flutter test -d 00008140-000518E42EB8401C integration_test/app_test.dart` — 2/2 integration tests passed di iPhone `Satelit88`.

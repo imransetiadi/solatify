@@ -90,6 +90,8 @@ class PrayerAlarmScheduler(private val context: Context) {
             putExtra(EXTRA_TITLE, alarm.title)
             putExtra(EXTRA_BODY, alarm.body)
             putExtra(EXTRA_SCHEDULED_AT, alarm.scheduledAtMillis)
+            putExtra(EXTRA_IS_REMINDER, alarm.isReminder)
+            putExtra(EXTRA_SOUND_MODE, alarm.soundMode)
         }
         return PendingIntent.getBroadcast(context, alarm.id, intent, flags or immutableFlag())
     }
@@ -166,6 +168,8 @@ class PrayerAlarmScheduler(private val context: Context) {
         const val EXTRA_TITLE = "title"
         const val EXTRA_BODY = "body"
         const val EXTRA_SCHEDULED_AT = "scheduledAtMillis"
+        const val EXTRA_IS_REMINDER = "isReminder"
+        const val EXTRA_SOUND_MODE = "soundMode"
     }
 }
 
@@ -175,6 +179,8 @@ data class PrayerAlarm(
     val title: String,
     val body: String,
     val scheduledAtMillis: Long,
+    val isReminder: Boolean = false,
+    val soundMode: String = "adhan",
 ) {
     fun toJson(): JSONObject {
         return JSONObject()
@@ -183,6 +189,8 @@ data class PrayerAlarm(
             .put("title", title)
             .put("body", body)
             .put("scheduledAtMillis", scheduledAtMillis)
+            .put("isReminder", isReminder)
+            .put("soundMode", soundMode)
     }
 
     companion object {
@@ -193,6 +201,8 @@ data class PrayerAlarm(
                 title = json.getString("title"),
                 body = json.getString("body"),
                 scheduledAtMillis = json.getLong("scheduledAtMillis"),
+                isReminder = json.optBoolean("isReminder", false),
+                soundMode = json.optString("soundMode", "adhan"),
             )
         }
     }
