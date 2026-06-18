@@ -92,6 +92,48 @@ void main() {
       expect(stats.statusCounts[PrayerStatus.late], 1);
       expect(stats.statusCounts[PrayerStatus.qadha], 1);
     });
+
+    test(
+      'should build 14-day heatmap progress from prayers and habits',
+      () async {
+        final today = DateTime(2026, 6, 18);
+        repository.mockLogs = [
+          PrayerLogEntity(
+            date: today,
+            prayers: {
+              'subuh': true,
+              'dzuhur': true,
+              'ashar': true,
+              'magrib': true,
+              'isya': true,
+            },
+            habits: {
+              'tahajud': true,
+              'dhuha': true,
+              'shalawat': true,
+              'sedekah': true,
+              'puasa_sunnah': true,
+              'murojaah': true,
+            },
+          ),
+          PrayerLogEntity(
+            date: today.subtract(const Duration(days: 1)),
+            prayers: {'subuh': true},
+            habits: {'dhuha': true},
+          ),
+        ];
+
+        final stats = await useCase.execute(today);
+
+        expect(stats.heatmap.length, 14);
+        expect(stats.heatmap.first.progress, 1.0);
+        expect(stats.heatmap[1].progress, closeTo(2 / 11, 0.001));
+        expect(
+          stats.heatmap.last.date,
+          today.subtract(const Duration(days: 13)),
+        );
+      },
+    );
   });
 
   group('PrayerLogEntity status migration', () {

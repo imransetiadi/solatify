@@ -142,6 +142,15 @@ class _TrackerContent extends StatelessWidget {
           onSelectDate: onSelectDate,
         ),
         const SizedBox(height: 14),
+        _ConsistencyHeatmapCard(
+          weeklyStatsAsync: weeklyStatsAsync,
+          selectedDate: selectedDate,
+          accentColor: accentColor,
+          textColor: textColor,
+          mutedColor: mutedColor,
+          onSelectDate: onSelectDate,
+        ),
+        const SizedBox(height: 14),
         _ProgressCard(
           completedCount: completedCount,
           totalCount: totalCount,
@@ -385,6 +394,109 @@ String _historyLabel(DateTime date, DateTime today) {
     return 'Kemarin';
   }
   return '${date.day}/${date.month}';
+}
+
+class _ConsistencyHeatmapCard extends StatelessWidget {
+  const _ConsistencyHeatmapCard({
+    required this.weeklyStatsAsync,
+    required this.selectedDate,
+    required this.accentColor,
+    required this.textColor,
+    required this.mutedColor,
+    required this.onSelectDate,
+  });
+
+  final AsyncValue<WeeklyStatsEntity> weeklyStatsAsync;
+  final DateTime selectedDate;
+  final Color accentColor;
+  final Color textColor;
+  final Color mutedColor;
+  final ValueChanged<DateTime> onSelectDate;
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassContainer(
+      opacity: 0.05,
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Kalender Konsistensi',
+            style: TextStyle(
+              color: textColor,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            '14 hari terakhir',
+            style: TextStyle(color: mutedColor, fontSize: 13),
+          ),
+          const SizedBox(height: 14),
+          weeklyStatsAsync.when(
+            data: (stats) => Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: stats.heatmap.map((day) {
+                final isSelected = _isSameDay(day.date, selectedDate);
+                final opacity = 0.08 + (day.progress.clamp(0, 1) * 0.5);
+                return InkWell(
+                  onTap: () => onSelectDate(day.date),
+                  borderRadius: BorderRadius.circular(14),
+                  child: Container(
+                    width: 42,
+                    padding: const EdgeInsets.symmetric(vertical: 9),
+                    decoration: BoxDecoration(
+                      color: accentColor.withValues(alpha: opacity),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: isSelected
+                            ? accentColor
+                            : accentColor.withValues(alpha: 0.12),
+                        width: isSelected ? 1.8 : 1,
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '${day.date.day}',
+                          style: TextStyle(
+                            color: isSelected ? accentColor : textColor,
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${(day.progress * 100).round()}%',
+                          style: TextStyle(
+                            color: mutedColor,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+            loading: () => Text(
+              'Menghitung konsistensi...',
+              style: TextStyle(color: mutedColor, fontSize: 13),
+            ),
+            error: (_, _) => Text(
+              'Kalender konsistensi belum dapat dimuat.',
+              style: TextStyle(color: mutedColor, fontSize: 13),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _ProgressCard extends StatelessWidget {
