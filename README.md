@@ -42,6 +42,7 @@ Solatify menggunakan beberapa tuning agar aplikasi tetap ringan:
 - Efek `GlassContainer` dibatasi agar visual tetap konsisten tanpa blur berlebihan.
 - Transisi antar menu memakai fade, slide mikro, dan scale ringan agar perpindahan fitur terasa seamless tanpa animasi berat.
 - Empty, loading, error, dan permission states memakai pola visual `SolatifyStateView` agar feedback lintas fitur lebih konsisten.
+- Compact-width widget smoke tests menjaga Home, Jadwal, Qur'an, Settings, dan Konten Islami tetap aman di lebar ponsel kecil.
 - Haptic feedback ringan ditambahkan pada navigasi, toggle tracker/settings, bookmark Qur'an, dan aksi menu agar interaksi terasa lebih native.
 - Countdown waktu salat memakai tick 1 detik, bukan sub-second rebuild.
 - Scheduler notifikasi memakai sync plan, filter per waktu salat, dan post-permission refresh agar hanya membatalkan/menjadwalkan ulang alarm yang berubah, sementara perubahan lokasi/jadwal/izin tetap memicu reschedule langsung.
@@ -72,7 +73,7 @@ Untuk Android, notifikasi salat memakai channel `Prayer Times Adhan` (`prayer_ti
 
 Status branch terbaru sudah diverifikasi dengan:
 
-- `flutter test` — 125/125 tests passed.
+- `flutter test` — 130/130 tests passed.
 - `flutter analyze` — no issues.
 - `flutter test -d emulator-5554 integration_test/app_test.dart` — 2/2 integration tests passed di Android emulator.
 - `flutter test -d 00008140-000518E42EB8401C integration_test/app_test.dart` — 2/2 integration tests passed di iPhone `Satelit88`.
