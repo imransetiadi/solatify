@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:solatify/core/services/solatify_haptics.dart';
 import 'package:solatify/core/theme/theme.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
@@ -9,6 +10,7 @@ import 'package:solatify/core/widgets/responsive_layout.dart';
 import 'package:solatify/core/widgets/solatify_state_view.dart';
 import 'package:solatify/features/tracker/domain/entities/prayer_log_entity.dart';
 import 'package:solatify/features/tracker/domain/entities/weekly_stats_entity.dart';
+import 'package:solatify/features/tracker/domain/services/tracker_share_service.dart';
 import 'package:solatify/features/tracker/presentation/providers/tracker_provider.dart';
 
 class TrackerScreen extends ConsumerWidget {
@@ -1615,7 +1617,7 @@ class _InsightContent extends StatelessWidget {
           child: OutlinedButton.icon(
             onPressed: shareSummary.isEmpty
                 ? null
-                : () => _copyShareSummary(context),
+                : () => _shareSummary(context),
             icon: const Icon(Icons.ios_share_outlined, size: 18),
             label: const Text('Bagikan Progress'),
           ),
@@ -1624,15 +1626,32 @@ class _InsightContent extends StatelessWidget {
     );
   }
 
-  Future<void> _copyShareSummary(BuildContext context) async {
-    await Clipboard.setData(ClipboardData(text: shareSummary));
+  Future<void> _shareSummary(BuildContext context) async {
+    final box = context.findRenderObject() as RenderBox?;
+    final origin = box == null
+        ? null
+        : box.localToGlobal(Offset.zero) & box.size;
+    final service = TrackerShareService(
+      shareText: (text) {
+        return SharePlus.instance.share(
+          ShareParams(
+            text: text,
+            title: 'Progress Ibadah Mingguan Solatify',
+            sharePositionOrigin: origin,
+          ),
+        );
+      },
+      copyText: (text) => Clipboard.setData(ClipboardData(text: text)),
+    );
+    final result = await service.shareProgress(shareSummary);
     if (!context.mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Ringkasan progress disalin. Siap dibagikan.'),
-      ),
-    );
+    final message = result == TrackerShareResult.shared
+        ? 'Share sheet progress dibuka.'
+        : 'Share gagal, ringkasan progress disalin.';
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 }
 
