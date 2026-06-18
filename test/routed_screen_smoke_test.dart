@@ -110,6 +110,7 @@ void main() {
     expect(find.text('Habit Sunnah'), findsOneWidget);
     expect(find.text('Tahajud'), findsOneWidget);
     expect(find.text('Tambah Habit'), findsOneWidget);
+    expect(find.text('Kelola'), findsOneWidget);
     expect(find.text('Kalender Konsistensi'), findsOneWidget);
     expect(find.text('14 hari terakhir'), findsOneWidget);
     expect(tester.takeException(), isNull);

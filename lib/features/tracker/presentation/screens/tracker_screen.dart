@@ -87,6 +87,16 @@ class TrackerScreen extends ConsumerWidget {
                   SolatifyHaptics.selection();
                   ref.read(customHabitProvider.notifier).addHabit(habitName);
                 },
+                onRenameHabit: (oldName, newName) {
+                  SolatifyHaptics.selection();
+                  ref
+                      .read(customHabitProvider.notifier)
+                      .renameHabit(oldName, newName);
+                },
+                onDeleteHabit: (habitName) {
+                  SolatifyHaptics.selection();
+                  ref.read(customHabitProvider.notifier).deleteHabit(habitName);
+                },
               ),
               loading: () => const SolatifyStateView.loading(
                 title: 'Memuat tracker ibadah',
@@ -120,6 +130,8 @@ class _TrackerContent extends StatelessWidget {
     required this.onSelectDate,
     required this.onToggleHabit,
     required this.onAddHabit,
+    required this.onRenameHabit,
+    required this.onDeleteHabit,
   });
 
   final PrayerLogEntity log;
@@ -134,6 +146,8 @@ class _TrackerContent extends StatelessWidget {
   final ValueChanged<DateTime> onSelectDate;
   final ValueChanged<String> onToggleHabit;
   final ValueChanged<String> onAddHabit;
+  final void Function(String oldName, String newName) onRenameHabit;
+  final ValueChanged<String> onDeleteHabit;
 
   @override
   Widget build(BuildContext context) {
@@ -231,6 +245,8 @@ class _TrackerContent extends StatelessWidget {
           mutedColor: mutedColor,
           onToggleHabit: onToggleHabit,
           onAddHabit: onAddHabit,
+          onRenameHabit: onRenameHabit,
+          onDeleteHabit: onDeleteHabit,
         ),
         const SizedBox(height: 14),
         _WeeklyInsightCard(
@@ -693,6 +709,8 @@ class _HabitSection extends StatelessWidget {
     required this.mutedColor,
     required this.onToggleHabit,
     required this.onAddHabit,
+    required this.onRenameHabit,
+    required this.onDeleteHabit,
   });
 
   static const habitLabels = {
@@ -711,6 +729,8 @@ class _HabitSection extends StatelessWidget {
   final Color mutedColor;
   final ValueChanged<String> onToggleHabit;
   final ValueChanged<String> onAddHabit;
+  final void Function(String oldName, String newName) onRenameHabit;
+  final ValueChanged<String> onDeleteHabit;
 
   @override
   Widget build(BuildContext context) {
@@ -744,6 +764,13 @@ class _HabitSection extends StatelessWidget {
                 onPressed: () => _showAddHabitSheet(context),
                 icon: const Icon(Icons.add, size: 18),
                 label: const Text('Tambah Habit'),
+              ),
+              TextButton.icon(
+                onPressed: customHabits.isEmpty
+                    ? null
+                    : () => _showManageHabitSheet(context),
+                icon: const Icon(Icons.tune, size: 18),
+                label: const Text('Kelola'),
               ),
             ],
           ),
@@ -839,6 +866,132 @@ class _HabitSection extends StatelessWidget {
     if (habitName.isEmpty) return;
     Navigator.of(context).pop();
     onAddHabit(habitName);
+  }
+
+  void _showManageHabitSheet(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Kelola Habit Custom',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Ubah nama atau hapus habit custom yang sudah kamu buat.',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: mutedColor),
+                ),
+                const SizedBox(height: 12),
+                for (final habit in customHabits)
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(habit),
+                    trailing: Wrap(
+                      spacing: 4,
+                      children: [
+                        IconButton(
+                          tooltip: 'Rename',
+                          icon: const Icon(Icons.edit_outlined),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            _showRenameHabitSheet(context, habit);
+                          },
+                        ),
+                        IconButton(
+                          tooltip: 'Hapus',
+                          icon: const Icon(Icons.delete_outline),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            onDeleteHabit(habit);
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showRenameHabitSheet(BuildContext context, String oldName) {
+    final controller = TextEditingController(text: oldName);
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(
+              20,
+              4,
+              20,
+              MediaQuery.viewInsetsOf(context).bottom + 20,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Rename Habit',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: controller,
+                  autofocus: true,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: const InputDecoration(
+                    labelText: 'Nama habit',
+                    border: OutlineInputBorder(),
+                  ),
+                  onSubmitted: (_) =>
+                      _submitRenameHabit(context, oldName, controller),
+                ),
+                const SizedBox(height: 14),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: () =>
+                        _submitRenameHabit(context, oldName, controller),
+                    icon: const Icon(Icons.check),
+                    label: const Text('Simpan Perubahan'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    ).whenComplete(controller.dispose);
+  }
+
+  void _submitRenameHabit(
+    BuildContext context,
+    String oldName,
+    TextEditingController controller,
+  ) {
+    final newName = controller.text.trim();
+    if (newName.isEmpty) return;
+    Navigator.of(context).pop();
+    onRenameHabit(oldName, newName);
   }
 }
 
