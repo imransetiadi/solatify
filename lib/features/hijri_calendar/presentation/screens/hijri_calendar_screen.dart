@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:solatify/core/navigation/app_routes.dart';
+import 'package:solatify/core/widgets/responsive_layout.dart';
 import 'package:solatify/core/widgets/solatify_screen_scaffold.dart';
 import 'package:solatify/core/widgets/solatify_state_view.dart';
 import 'package:solatify/features/hijri_calendar/presentation/providers/hijri_calendar_provider.dart';
@@ -29,7 +30,7 @@ class HijriCalendarScreen extends ConsumerWidget {
     return SolatifyScreenScaffold(
       title: 'Kalender Hijriah',
       backRoute: AppRoutes.islamicContent,
-      padding: const EdgeInsets.fromLTRB(0, 16, 0, 0),
+      padding: ResponsiveLayout.pagePadding(context).copyWith(top: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

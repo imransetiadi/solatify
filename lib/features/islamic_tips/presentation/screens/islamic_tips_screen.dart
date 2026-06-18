@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:solatify/core/navigation/app_routes.dart';
+import 'package:solatify/core/widgets/responsive_layout.dart';
 import 'package:solatify/core/widgets/solatify_screen_scaffold.dart';
 import 'package:solatify/core/widgets/solatify_state_view.dart';
 import 'package:solatify/features/islamic_tips/presentation/providers/tips_provider.dart';
@@ -25,7 +26,7 @@ class IslamicTipsScreen extends ConsumerWidget {
     return SolatifyScreenScaffold(
       title: 'Tips Islami Harian',
       backRoute: AppRoutes.islamicContent,
-      padding: const EdgeInsets.fromLTRB(0, 16, 0, 0),
+      padding: ResponsiveLayout.pagePadding(context).copyWith(top: 16),
       child: tipsAsync.when(
         data: (tips) {
           if (tips.isEmpty) {

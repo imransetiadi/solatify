@@ -225,6 +225,19 @@ void main() {
     expect(notificationHealthSource, contains('AppRoutes.settings'));
   });
 
+  test('Content detail screens keep symmetric responsive page padding', () {
+    final screenSources = [
+      'lib/features/asmaul_husna/presentation/screens/asmaul_husna_screen.dart',
+      'lib/features/hijri_calendar/presentation/screens/hijri_calendar_screen.dart',
+      'lib/features/islamic_tips/presentation/screens/islamic_tips_screen.dart',
+    ].map((path) => File(path).readAsStringSync());
+
+    for (final source in screenSources) {
+      expect(source, contains('ResponsiveLayout.pagePadding(context)'));
+      expect(source, isNot(contains('EdgeInsets.fromLTRB(0, 16, 0, 0)')));
+    }
+  });
+
   test('Notification Health Center source exposes diagnostics and actions', () {
     final source = File(
       'lib/features/settings/presentation/screens/notification_health_screen.dart',

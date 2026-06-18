@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:solatify/core/navigation/app_routes.dart';
+import 'package:solatify/core/widgets/responsive_layout.dart';
 import 'package:solatify/core/widgets/solatify_screen_scaffold.dart';
 import 'package:solatify/core/widgets/solatify_state_view.dart';
 import 'package:solatify/features/asmaul_husna/presentation/providers/asmaul_husna_provider.dart';
@@ -51,7 +52,7 @@ class _AsmaulHusnaScreenState extends ConsumerState<AsmaulHusnaScreen> {
     return SolatifyScreenScaffold(
       title: 'Asmaul Husna',
       backRoute: AppRoutes.islamicContent,
-      padding: const EdgeInsets.fromLTRB(0, 16, 0, 0),
+      padding: ResponsiveLayout.pagePadding(context).copyWith(top: 16),
       child: Column(
         children: [
           TextField(
