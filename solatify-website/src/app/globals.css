@@ -109,7 +109,10 @@ main { width: min(1180px, calc(100% - 32px)); margin: 0 auto; }
 
 .brand,
 .theme-toggle,
+.language-toggle,
 .store-button { display: inline-flex; align-items: center; }
+
+.header-actions { display: inline-flex; align-items: center; gap: 10px; }
 
 .brand { gap: 10px; font-weight: 800; letter-spacing: -0.02em; }
 
@@ -131,7 +134,8 @@ main { width: min(1180px, calc(100% - 32px)); margin: 0 auto; }
 
 .nav-links { display: flex; gap: 24px; color: var(--muted); font-size: 0.94rem; font-weight: 700; }
 .nav-links a:hover,
-.theme-toggle:hover { color: var(--accent); transform: translateY(-1px); }
+.theme-toggle:hover,
+.language-toggle button:hover { color: var(--accent); transform: translateY(-1px); }
 
 .theme-toggle {
   gap: 8px;
@@ -142,6 +146,33 @@ main { width: min(1180px, calc(100% - 32px)); margin: 0 auto; }
   background: color-mix(in srgb, var(--surface-strong) 88%, transparent);
   cursor: pointer;
   font-weight: 800;
+}
+
+.language-toggle {
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-strong) 82%, transparent);
+}
+
+.language-toggle button {
+  min-width: 42px;
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 10px;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+
+.language-toggle button.active {
+  color: #fff8ef;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--accent) 24%, transparent);
 }
 
 .hero {
@@ -408,6 +439,7 @@ details p { margin: 14px 0 0; }
 @media (max-width: 980px) {
   main { width: min(100% - 24px, 760px); }
   .site-header { align-items: flex-start; border-radius: 28px; flex-wrap: wrap; }
+  .header-actions { margin-left: auto; }
   .nav-links { order: 3; width: 100%; justify-content: center; gap: 14px; flex-wrap: wrap; }
   .hero,
   .notification-section,
@@ -424,6 +456,9 @@ details p { margin: 14px 0 0; }
 @media (max-width: 640px) {
   main { width: min(100% - 18px, 100%); }
   .site-header { top: 8px; margin-top: 8px; padding: 10px; }
+  .header-actions { gap: 6px; }
+  .language-toggle button { min-width: 36px; padding: 8px; }
+  .theme-toggle { padding: 10px 12px; }
   .brand span:last-child,
   .nav-links { display: none; }
   h1 { font-size: clamp(2.55rem, 16vw, 4.2rem); }
