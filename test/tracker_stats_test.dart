@@ -141,6 +141,70 @@ void main() {
         );
       },
     );
+
+    test('should calculate streak and actionable smart insights', () async {
+      final today = DateTime(2026, 6, 18);
+      repository.mockLogs = [
+        PrayerLogEntity(
+          date: today,
+          prayers: {
+            'subuh': true,
+            'dzuhur': true,
+            'ashar': true,
+            'magrib': true,
+            'isya': true,
+          },
+          habits: {'dhuha': true, 'shalawat': true},
+        ),
+        PrayerLogEntity(
+          date: today.subtract(const Duration(days: 1)),
+          prayers: {
+            'subuh': true,
+            'dzuhur': true,
+            'ashar': true,
+            'magrib': true,
+            'isya': true,
+          },
+          habits: {'dhuha': true},
+        ),
+        PrayerLogEntity(
+          date: today.subtract(const Duration(days: 2)),
+          prayers: {'subuh': true, 'dzuhur': true, 'magrib': true},
+          habits: {'dhuha': true},
+        ),
+        PrayerLogEntity(
+          date: today.subtract(const Duration(days: 3)),
+          prayers: {'subuh': true},
+        ),
+      ];
+
+      final stats = await useCase.execute(today);
+
+      expect(stats.currentStreakDays, 3);
+      expect(stats.bestDayLabel, 'Hari ini');
+      expect(stats.strongestItemLabel, 'Subuh');
+      expect(stats.weakestItemLabel, 'Isya');
+      expect(stats.smartInsightMessage, contains('streak 3 hari'));
+      expect(stats.smartInsightAction, contains('Isya'));
+    });
+
+    test(
+      'should show motivational empty insight when no tracker data exists',
+      () async {
+        repository.mockLogs = const [];
+
+        final stats = await useCase.execute(DateTime(2026, 6, 18));
+
+        expect(stats.currentStreakDays, 0);
+        expect(stats.bestDayLabel, 'Belum ada data');
+        expect(stats.strongestItemLabel, 'Mulai hari ini');
+        expect(stats.weakestItemLabel, 'Pilih satu ibadah');
+        expect(
+          stats.smartInsightMessage,
+          contains('Mulai dari satu checklist'),
+        );
+      },
+    );
   });
 
   group('PrayerLogEntity status migration', () {
