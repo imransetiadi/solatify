@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
-import 'package:solatify/features/notifications/presentation/providers/notification_scheduler_provider.dart';
+import 'package:solatify/features/notifications/domain/entities/prayer_notification_request.dart';
+import 'package:solatify/features/notifications/domain/services/prayer_notification_planner.dart';
 import 'package:solatify/features/settings/domain/entities/settings_state.dart';
 
 void main() {
@@ -301,4 +304,23 @@ void main() {
       expect(plan.desiredKeysById.keys, [2001]);
     });
   });
+
+  test(
+    'notification scheduler provider delegates planning to domain service',
+    () {
+      final providerSource = File(
+        'lib/features/notifications/presentation/providers/notification_scheduler_provider.dart',
+      ).readAsStringSync();
+
+      expect(providerSource, contains('prayer_notification_planner.dart'));
+      expect(
+        providerSource,
+        isNot(contains('class PrayerNotificationRequest')),
+      );
+      expect(
+        providerSource,
+        isNot(contains('class PrayerNotificationSyncPlan')),
+      );
+    },
+  );
 }
