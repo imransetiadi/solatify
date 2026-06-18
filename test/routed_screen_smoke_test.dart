@@ -134,8 +134,18 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Tambah Habit Custom'), findsOneWidget);
+    expect(find.text('Template Populer'), findsOneWidget);
+    expect(find.text('Shalawat 100x'), findsOneWidget);
+    expect(find.text('Tilawah 2 halaman'), findsOneWidget);
     expect(find.text('Target opsional'), findsOneWidget);
     expect(find.text('Satuan'), findsOneWidget);
+
+    await tester.tap(find.text('Shalawat 100x'));
+    await tester.pumpAndSettle();
+
+    expect(find.widgetWithText(TextField, 'Shalawat 100x'), findsOneWidget);
+    expect(find.widgetWithText(TextField, '100'), findsOneWidget);
+    expect(find.widgetWithText(TextField, 'kali'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

@@ -831,6 +831,15 @@ class _HabitSection extends StatelessWidget {
     'murojaah': 'Murojaah',
   };
 
+  static const habitTemplates = [
+    _HabitTemplate(name: 'Shalawat 100x', target: 100, unit: 'kali'),
+    _HabitTemplate(name: 'Baca Al-Kahfi'),
+    _HabitTemplate(name: 'Sedekah Harian'),
+    _HabitTemplate(name: 'Dzikir Pagi'),
+    _HabitTemplate(name: 'Tilawah 2 halaman', target: 2, unit: 'halaman'),
+    _HabitTemplate(name: 'Murojaah 15 menit', target: 15, unit: 'menit'),
+  ];
+
   final Map<String, bool> habits;
   final Map<String, int> habitProgress;
   final List<String> customHabits;
@@ -968,6 +977,40 @@ class _HabitSection extends StatelessWidget {
                   ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 12),
+                Text(
+                  'Template Populer',
+                  style: TextStyle(
+                    color: textColor,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: habitTemplates.map((template) {
+                    final alreadyExists = customHabits.contains(template.name);
+                    return ActionChip(
+                      label: Text(template.name),
+                      avatar: Icon(
+                        template.hasTarget
+                            ? Icons.track_changes_outlined
+                            : Icons.check_circle_outline,
+                        size: 16,
+                      ),
+                      onPressed: alreadyExists
+                          ? null
+                          : () => _applyTemplate(
+                              template,
+                              controller,
+                              targetController,
+                              unitController,
+                            ),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 14),
                 TextField(
                   controller: controller,
                   autofocus: true,
@@ -1034,6 +1077,17 @@ class _HabitSection extends StatelessWidget {
       targetController.dispose();
       unitController.dispose();
     });
+  }
+
+  void _applyTemplate(
+    _HabitTemplate template,
+    TextEditingController controller,
+    TextEditingController targetController,
+    TextEditingController unitController,
+  ) {
+    controller.text = template.name;
+    targetController.text = template.target?.toString() ?? '';
+    unitController.text = template.unit;
   }
 
   void _submitHabit(
@@ -1235,6 +1289,16 @@ class _HabitChip extends StatelessWidget {
       ),
     );
   }
+}
+
+class _HabitTemplate {
+  const _HabitTemplate({required this.name, this.target, this.unit = 'kali'});
+
+  final String name;
+  final int? target;
+  final String unit;
+
+  bool get hasTarget => target != null;
 }
 
 class _TargetHabitChip extends StatelessWidget {
