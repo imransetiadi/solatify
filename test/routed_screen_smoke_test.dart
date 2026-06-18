@@ -109,6 +109,8 @@ void main() {
     expect(find.text('Kemarin'), findsOneWidget);
     expect(find.text('Habit Sunnah'), findsOneWidget);
     expect(find.text('Tahajud'), findsOneWidget);
+    expect(find.text('Kalender Konsistensi'), findsOneWidget);
+    expect(find.text('14 hari terakhir'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

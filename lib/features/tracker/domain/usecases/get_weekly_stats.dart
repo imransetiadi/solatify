@@ -11,6 +11,14 @@ class GetWeeklyStats {
     final logs = await repository.getWeeklyLogs(endDate);
 
     final prayers = ['subuh', 'dzuhur', 'ashar', 'magrib', 'isya'];
+    final habitKeys = [
+      'tahajud',
+      'dhuha',
+      'shalawat',
+      'sedekah',
+      'puasa_sunnah',
+      'murojaah',
+    ];
     final rates = <String, double>{};
     final statusCounts = {for (final status in PrayerStatus.values) status: 0};
     int totalDone = 0;
@@ -26,10 +34,35 @@ class GetWeeklyStats {
       }
     }
 
+    final logsByDate = {for (final log in logs) _dateKey(log.date): log};
+    final dailyTargetCount = prayers.length + habitKeys.length;
+    final heatmap = List.generate(14, (index) {
+      final date = _dateOnly(endDate.subtract(Duration(days: index)));
+      final log = logsByDate[_dateKey(date)];
+      final completedCount = log == null
+          ? 0
+          : prayers.where(log.isPrayerDone).length +
+                habitKeys.where(log.isHabitDone).length;
+
+      return TrackerHeatmapDayEntity(
+        date: date,
+        progress: dailyTargetCount == 0 ? 0 : completedCount / dailyTargetCount,
+      );
+    });
+
     return WeeklyStatsEntity(
       completionRates: rates,
       totalDone: totalDone,
       statusCounts: statusCounts,
+      heatmap: heatmap,
     );
+  }
+
+  DateTime _dateOnly(DateTime date) =>
+      DateTime(date.year, date.month, date.day);
+
+  String _dateKey(DateTime date) {
+    final normalized = _dateOnly(date);
+    return '${normalized.year}-${normalized.month.toString().padLeft(2, '0')}-${normalized.day.toString().padLeft(2, '0')}';
   }
 }
