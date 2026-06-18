@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:solatify/core/localization/app_localizations.dart';
 import 'package:solatify/core/theme/theme.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
@@ -665,6 +666,35 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 .read(notificationSchedulerProvider.notifier)
                                 .refreshSchedules(force: true);
                           },
+                        ),
+                        Divider(color: dividerColor, height: 16),
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: Icon(
+                            Icons.health_and_safety_outlined,
+                            color: accentColor,
+                          ),
+                          title: Text(
+                            l.notificationHealthEntryTitle,
+                            style: TextStyle(
+                              color: textColor,
+                              fontSize: SolatifyType.body,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          subtitle: Text(
+                            l.notificationHealthEntrySubtitle,
+                            style: TextStyle(
+                              color: textSecondary,
+                              fontSize: SolatifyType.caption,
+                            ),
+                          ),
+                          trailing: Icon(
+                            Icons.chevron_right,
+                            color: textSecondary,
+                          ),
+                          onTap: () =>
+                              context.push('/settings/notification-health'),
                         ),
                         Divider(color: dividerColor, height: 16),
                         // Theme toggles

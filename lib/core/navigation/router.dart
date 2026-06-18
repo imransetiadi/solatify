@@ -1,28 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:solatify/core/localization/app_localizations.dart';
 import 'package:solatify/core/performance/performance_tuning.dart';
+import 'package:solatify/core/widgets/responsive_layout.dart';
 import 'package:solatify/core/widgets/solatify_design_tokens.dart';
+import 'package:solatify/features/asmaul_husna/presentation/screens/asmaul_husna_screen.dart';
+import 'package:solatify/features/dhikr/presentation/screens/dhikr_screen.dart';
+import 'package:solatify/features/duas/presentation/screens/duas_screen.dart';
+import 'package:solatify/features/hijri_calendar/presentation/screens/hijri_calendar_screen.dart';
+import 'package:solatify/features/home/presentation/screens/home_screen.dart';
+import 'package:solatify/features/islamic_content/presentation/screens/islamic_content_screen.dart';
+import 'package:solatify/features/islamic_tips/presentation/screens/islamic_tips_screen.dart';
+import 'package:solatify/features/mosque/presentation/screens/nearby_mosque_screen.dart';
+import 'package:solatify/features/onboarding/presentation/screens/get_started_screen.dart';
+import 'package:solatify/features/onboarding/presentation/screens/onboarding_screen.dart';
+import 'package:solatify/features/onboarding/presentation/screens/splash_screen.dart';
 import 'package:solatify/features/prayer_guide/presentation/screens/prayer_guide_screen.dart';
-
-import '../../features/asmaul_husna/presentation/screens/asmaul_husna_screen.dart';
-import '../../features/dhikr/presentation/screens/dhikr_screen.dart';
-import '../../features/duas/presentation/screens/duas_screen.dart';
-import '../../features/hijri_calendar/presentation/screens/hijri_calendar_screen.dart';
-import '../../features/home/presentation/screens/home_screen.dart';
-import '../../features/islamic_content/presentation/screens/islamic_content_screen.dart';
-import '../../features/islamic_tips/presentation/screens/islamic_tips_screen.dart';
-import '../../features/mosque/presentation/screens/nearby_mosque_screen.dart';
-import '../../features/onboarding/presentation/screens/get_started_screen.dart';
-import '../../features/onboarding/presentation/screens/onboarding_screen.dart';
-import '../../features/onboarding/presentation/screens/splash_screen.dart';
-import '../../features/prayer_schedule/presentation/screens/prayer_schedule_screen.dart';
-import '../../features/qibla/presentation/screens/qibla_screen.dart';
-import '../../features/quran/presentation/screens/quran_home_screen.dart';
-import '../../features/quran/presentation/screens/surah_detail_screen.dart';
-import '../../features/settings/presentation/screens/settings_screen.dart';
-import '../../features/tracker/presentation/screens/tracker_screen.dart';
-import '../localization/app_localizations.dart';
-import '../widgets/responsive_layout.dart';
+import 'package:solatify/features/prayer_schedule/presentation/screens/prayer_schedule_screen.dart';
+import 'package:solatify/features/qibla/presentation/screens/qibla_screen.dart';
+import 'package:solatify/features/quran/presentation/screens/quran_home_screen.dart';
+import 'package:solatify/features/quran/presentation/screens/surah_detail_screen.dart';
+import 'package:solatify/features/settings/presentation/screens/notification_health_screen.dart';
+import 'package:solatify/features/settings/presentation/screens/settings_screen.dart';
+import 'package:solatify/features/tracker/presentation/screens/tracker_screen.dart';
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>(
   debugLabel: 'root',
@@ -171,6 +171,11 @@ final goRouter = GoRouter(
           path: '/settings',
           pageBuilder: (context, state) =>
               _buildSeamlessPage(state, const SettingsScreen()),
+        ),
+        GoRoute(
+          path: '/settings/notification-health',
+          pageBuilder: (context, state) =>
+              _buildSeamlessPage(state, const NotificationHealthScreen()),
         ),
       ],
     ),

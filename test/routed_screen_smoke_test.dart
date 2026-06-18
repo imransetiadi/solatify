@@ -11,6 +11,7 @@ import 'package:solatify/features/hijri_calendar/presentation/screens/hijri_cale
 import 'package:solatify/features/mosque/presentation/screens/nearby_mosque_screen.dart';
 import 'package:solatify/features/prayer_guide/presentation/screens/prayer_guide_screen.dart';
 import 'package:solatify/features/qibla/presentation/screens/qibla_screen.dart';
+import 'package:solatify/features/settings/presentation/screens/notification_health_screen.dart';
 import 'package:solatify/features/settings/presentation/screens/settings_screen.dart';
 import 'package:solatify/features/tracker/presentation/screens/tracker_screen.dart';
 
@@ -137,6 +138,36 @@ void main() {
     expect(source, contains('updatePreNotificationMinutes'));
     expect(source, contains('updateNotificationSoundMode'));
     expect(source, contains('refreshSchedules(force: true)'));
+    expect(source, contains('notificationHealthEntryTitle'));
+    expect(source, contains('/settings/notification-health'));
+  });
+
+  test('Notification Health Center source exposes diagnostics and actions', () {
+    final source = File(
+      'lib/features/settings/presentation/screens/notification_health_screen.dart',
+    ).readAsStringSync();
+
+    expect(source, contains('NotificationHealthScreen'));
+    expect(source, contains('getReadinessStatus'));
+    expect(source, contains('getPendingNotificationIds'));
+    expect(source, contains('getNotificationHistory'));
+    expect(source, contains('showTestNotification'));
+    expect(source, contains('openPlatformNotificationSettings'));
+    expect(source, contains('refreshSchedules(force: true)'));
+  });
+
+  testWidgets('Notification Health Center screen renders shell', (
+    tester,
+  ) async {
+    await tester.pumpWidget(wrap(const NotificationHealthScreen()));
+
+    await tester.pump();
+
+    expect(find.text('Pusat Kesehatan Notifikasi'), findsOneWidget);
+    expect(find.text('Status Saat Ini'), findsOneWidget);
+    expect(find.text('Riwayat Jadwal'), findsOneWidget);
+    expect(find.text('Aksi Pemulihan'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('Hijri calendar screen renders', (tester) async {

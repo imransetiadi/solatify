@@ -153,6 +153,57 @@ class AppLocalizations {
       isEnglish ? 'Exact alarm permission' : 'Izin alarm tepat waktu';
   String get openBatterySettings =>
       isEnglish ? 'Battery unrestricted' : 'Baterai tidak dibatasi';
+  String get back => isEnglish ? 'Back' : 'Kembali';
+  String get none => isEnglish ? 'None' : 'Tidak ada';
+  String get notificationHealthTitle =>
+      isEnglish ? 'Notification Health Center' : 'Pusat Kesehatan Notifikasi';
+  String get notificationHealthEntryTitle =>
+      isEnglish ? 'Notification Health Center' : 'Pusat Kesehatan Notifikasi';
+  String get notificationHealthEntrySubtitle => isEnglish
+      ? 'Check permission, schedule history, and recovery actions.'
+      : 'Cek izin, riwayat jadwal, dan aksi pemulihan.';
+  String get notificationHealthStatus =>
+      isEnglish ? 'Current Status' : 'Status Saat Ini';
+  String get notificationHealthUnknown =>
+      isEnglish ? 'Status unavailable' : 'Status belum tersedia';
+  String get notificationHealthUnknownMessage => isEnglish
+      ? 'Pull to refresh or reopen this page.'
+      : 'Tarik untuk refresh atau buka ulang halaman ini.';
+  String get notificationHealthSchedule =>
+      isEnglish ? 'Schedule History' : 'Riwayat Jadwal';
+  String get notificationHealthPendingCount =>
+      isEnglish ? 'Pending notifications' : 'Notifikasi tertunda';
+  String get notificationHealthPendingIds =>
+      isEnglish ? 'Pending IDs' : 'ID tertunda';
+  String get notificationHealthLastScheduled =>
+      isEnglish ? 'Last scheduled' : 'Terakhir dijadwalkan';
+  String get notificationHealthScheduledCount =>
+      isEnglish ? 'Scheduled count' : 'Jumlah terjadwal';
+  String get notificationHealthLastFailed =>
+      isEnglish ? 'Last failed' : 'Terakhir gagal';
+  String get notificationHealthFailureReason =>
+      isEnglish ? 'Failure reason' : 'Alasan gagal';
+  String get notificationHealthActions =>
+      isEnglish ? 'Recovery Actions' : 'Aksi Pemulihan';
+  String get notificationHealthRefresh =>
+      isEnglish ? 'Refresh status' : 'Cek ulang status';
+  String get notificationHealthReschedule =>
+      isEnglish ? 'Reschedule prayers' : 'Jadwalkan ulang salat';
+  String get notificationHealthSendTest =>
+      isEnglish ? 'Send test notification' : 'Kirim test notifikasi';
+  String get notificationHealthOpenSystemSettings => isEnglish
+      ? 'Open system notification settings'
+      : 'Buka pengaturan notifikasi sistem';
+  String get notificationHealthRescheduled => isEnglish
+      ? 'Prayer notifications rescheduled.'
+      : 'Notifikasi salat dijadwalkan ulang.';
+  String get notificationHealthTestSent =>
+      isEnglish ? 'Test notification sent.' : 'Test notifikasi dikirim.';
+  String get notificationHealthSystemSettingsOpened =>
+      isEnglish ? 'System settings opened.' : 'Pengaturan sistem dibuka.';
+  String get notificationHealthActionFailed => isEnglish
+      ? 'Action could not be completed.'
+      : 'Aksi belum bisa diselesaikan.';
   String setPrayerOffset(String prayerName) => isEnglish
       ? 'Set $prayerName Time Offset'
       : 'Atur Ofset Waktu $prayerName';
