@@ -121,6 +121,8 @@ void main() {
 
     expect(find.textContaining('Pengaturan'), findsWidgets);
     expect(find.text('NOTIFIKASI'), findsNothing);
+    expect(find.text('Kirim Test Notifikasi'), findsOneWidget);
+    expect(find.text('Pusat Kesehatan Notifikasi'), findsNothing);
     expect(find.text('Kirim notifikasi uji'), findsNothing);
     expect(find.text('Jadwalkan tes 2 menit'), findsNothing);
     expect(find.textContaining('Pending:'), findsNothing);
@@ -139,8 +141,11 @@ void main() {
     expect(source, contains('updatePreNotificationMinutes'));
     expect(source, contains('updateNotificationSoundMode'));
     expect(source, contains('refreshSchedules(force: true)'));
-    expect(source, contains('notificationHealthEntryTitle'));
-    expect(source, contains('AppRoutes.notificationHealth'));
+    expect(source, contains('sendTestNotificationTitle'));
+    expect(source, contains('_sendTestNotification'));
+    expect(source, contains('showTestNotification'));
+    expect(source, isNot(contains('notificationHealthEntryTitle')));
+    expect(source, isNot(contains('AppRoutes.notificationHealth')));
     expect(source, contains('WidgetsBindingObserver'));
     expect(source, contains('WidgetsBinding.instance.addObserver(this)'));
     expect(source, contains('WidgetsBinding.instance.removeObserver(this)'));

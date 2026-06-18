@@ -565,6 +565,22 @@ void main() {
     expect(notificationService, contains('openAndroidExactAlarmSettings'));
   });
 
+  test(
+    'settings exposes direct test notification action instead of health center entry',
+    () {
+      final settingsScreen = File(
+        'lib/features/settings/presentation/screens/settings_screen.dart',
+      ).readAsStringSync();
+
+      expect(settingsScreen, contains('sendTestNotificationTitle'));
+      expect(settingsScreen, contains('_sendTestNotification'));
+      expect(settingsScreen, contains('showTestNotification'));
+      expect(settingsScreen, contains('refreshSchedules(force: true)'));
+      expect(settingsScreen, isNot(contains('notificationHealthEntryTitle')));
+      expect(settingsScreen, isNot(contains('AppRoutes.notificationHealth')));
+    },
+  );
+
   test('settings verifies notification permission after returning to app', () {
     final settingsScreen = File(
       'lib/features/settings/presentation/screens/settings_screen.dart',

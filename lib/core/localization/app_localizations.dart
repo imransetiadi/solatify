@@ -161,6 +161,11 @@ class AppLocalizations {
   String get notificationHealthEntrySubtitle => isEnglish
       ? 'Check permission, schedule history, and recovery actions.'
       : 'Cek izin, riwayat jadwal, dan aksi pemulihan.';
+  String get sendTestNotificationTitle =>
+      isEnglish ? 'Send Test Notification' : 'Kirim Test Notifikasi';
+  String get sendTestNotificationSubtitle => isEnglish
+      ? 'Send a notification now and refresh prayer schedules.'
+      : 'Kirim notifikasi sekarang dan segarkan jadwal salat.';
   String get notificationHealthStatus =>
       isEnglish ? 'Current Status' : 'Status Saat Ini';
   String get notificationHealthUnknown =>

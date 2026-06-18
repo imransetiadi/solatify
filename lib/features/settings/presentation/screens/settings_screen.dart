@@ -2,9 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:solatify/core/localization/app_localizations.dart';
-import 'package:solatify/core/navigation/app_routes.dart';
 import 'package:solatify/core/services/solatify_haptics.dart';
 import 'package:solatify/core/theme/theme.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
@@ -698,11 +696,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                         ListTile(
                           contentPadding: EdgeInsets.zero,
                           leading: Icon(
-                            Icons.health_and_safety_outlined,
+                            Icons.notifications_active_outlined,
                             color: accentColor,
                           ),
                           title: Text(
-                            l.notificationHealthEntryTitle,
+                            l.sendTestNotificationTitle,
                             style: TextStyle(
                               color: textColor,
                               fontSize: SolatifyType.body,
@@ -710,19 +708,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                             ),
                           ),
                           subtitle: Text(
-                            l.notificationHealthEntrySubtitle,
+                            l.sendTestNotificationSubtitle,
                             style: TextStyle(
                               color: textSecondary,
                               fontSize: SolatifyType.caption,
                             ),
                           ),
                           trailing: Icon(
-                            Icons.chevron_right,
-                            color: textSecondary,
+                            Icons.send_outlined,
+                            color: accentColor,
                           ),
-                          onTap: () {
+                          onTap: () async {
                             SolatifyHaptics.selection();
-                            context.push(AppRoutes.notificationHealth);
+                            await _sendTestNotification(context, ref);
                           },
                         ),
                         Divider(color: dividerColor, height: 16),
@@ -1036,6 +1034,31 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
       }
     } catch (e) {
       debugPrint('Error toggling automatic adhan notifications: $e');
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(content: Text(l.notificationPermissionError)),
+      );
+    }
+  }
+
+  Future<void> _sendTestNotification(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final l = AppLocalizations.of(context);
+
+    try {
+      await NotificationService().showTestNotification();
+      await ref
+          .read(notificationSchedulerProvider.notifier)
+          .refreshSchedules(force: true);
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(content: Text(l.notificationHealthTestSent)),
+      );
+    } catch (e) {
+      debugPrint('Error sending test notification: $e');
       if (!mounted) return;
       messenger.showSnackBar(
         SnackBar(content: Text(l.notificationPermissionError)),
