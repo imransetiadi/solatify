@@ -35,6 +35,12 @@ export const features = [
       "Find the Qibla direction quickly with a focused compass-style experience for travel and daily use."
   },
   {
+    icon: "📍",
+    title: "Nearby Mosques",
+    description:
+      "Find nearby mosques quickly with map-ready directions for prayer on the go."
+  },
+  {
     icon: "🤲",
     title: "Duas & Dhikr",
     description:
@@ -65,7 +71,8 @@ export const advantages = [
   },
   {
     title: "Built for daily flow",
-    description: "Fast access to prayer times, Qur’an, Qibla, dhikr, duas, Hijri calendar, and Islamic content."
+    description:
+      "Fast access to prayer times, Qur’an, Qibla, nearby mosques, dhikr, duas, Hijri calendar, and Islamic content."
   }
 ];
 
@@ -99,5 +106,10 @@ export const faqs = [
     question: "Does Solatify include Qur’an and dhikr features?",
     answer:
       "Yes. Solatify brings Qur’an reading, dhikr, duas, Asmaul Husna, Islamic tips, and related worship features into one app."
+  },
+  {
+    question: "Can Solatify help me find nearby mosques?",
+    answer:
+      "Yes. Solatify includes a nearby mosques feature so you can quickly find mosque locations and map-ready directions when you are away from home."
   }
 ];

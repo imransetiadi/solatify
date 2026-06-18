@@ -62,8 +62,13 @@ export default function Home() {
         </div>
 
         <div className="phone-card" aria-label="Solatify app preview">
+          <div className="phone-orbit" aria-hidden="true" />
           <div className="phone-shell">
             <div className="phone-top" />
+            <div className="phone-status">
+              <span>09:41</span>
+              <span>● ● ●</span>
+            </div>
             <div className="notification-preview">
               <Image src="/brand/solatify-logo.png" alt="" width={28} height={28} />
               <div>
@@ -75,10 +80,22 @@ export default function Home() {
               <span>Next prayer</span>
               <strong>Maghrib</strong>
               <p>18:08 • Jakarta</p>
+              <div className="countdown-pill">00:42:12 remaining</div>
             </div>
             <div className="app-preview-grid">
-              <div><span>Qibla</span><strong>295°</strong></div>
-              <div><span>Qur’an</span><strong>Last read</strong></div>
+              <div>
+                <span>Qibla</span>
+                <strong>295°</strong>
+              </div>
+              <div>
+                <span>Qur’an</span>
+                <strong>Al-Fatihah</strong>
+              </div>
+            </div>
+            <div className="quick-actions-preview">
+              <span>Dhikr</span>
+              <span>Mosques</span>
+              <span>Daily Dua</span>
             </div>
             <div className="mini-list">
               <div><span>Fajr</span><strong>04:32</strong></div>
@@ -90,7 +107,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="section" id="features">
+      <section className="section feature-showcase" id="features">
         <div className="section-heading">
           <p className="eyebrow">Features</p>
           <h2>Designed for your daily Islamic routine.</h2>
@@ -110,7 +127,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="notification-section" id="notifications">
+      <section className="notification-section glass-section" id="notifications">
         <div className="ornament-card notification-copy">
           <p className="eyebrow">Prayer Notifications</p>
           <h2>Know exactly when prayer time arrives.</h2>
@@ -153,7 +170,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="cta-section">
+      <section className="section cta-section app-download-panel">
         <div>
           <p className="eyebrow">Install Solatify</p>
           <h2>Bring prayer, Qur’an, and remembrance closer every day.</h2>
