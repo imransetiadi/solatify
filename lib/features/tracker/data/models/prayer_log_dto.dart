@@ -6,6 +6,7 @@ class PrayerLogDto extends PrayerLogEntity {
     required super.prayers,
     super.prayerStatuses,
     super.habits,
+    super.habitProgress,
   });
 
   factory PrayerLogDto.fromEntity(PrayerLogEntity entity) {
@@ -14,6 +15,7 @@ class PrayerLogDto extends PrayerLogEntity {
       prayers: entity.prayers,
       prayerStatuses: entity.prayerStatuses,
       habits: entity.habits,
+      habitProgress: entity.habitProgress,
     );
   }
 
@@ -32,6 +34,9 @@ class PrayerLogDto extends PrayerLogEntity {
         ),
       ),
       habits: Map<String, bool>.from((json['habits'] as Map?) ?? const {}),
+      habitProgress: Map<String, int>.from(
+        (json['habitProgress'] as Map?) ?? const {},
+      ),
     );
   }
 
@@ -43,6 +48,7 @@ class PrayerLogDto extends PrayerLogEntity {
         (key, value) => MapEntry(key, value.name),
       ),
       'habits': habits,
+      'habitProgress': habitProgress,
     };
   }
 }

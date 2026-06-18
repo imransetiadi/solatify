@@ -113,6 +113,18 @@ void main() {
     expect(find.text('Kelola'), findsOneWidget);
     expect(find.text('Kalender Konsistensi'), findsOneWidget);
     expect(find.text('14 hari terakhir'), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.text('Tambah Habit'),
+      160,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text('Tambah Habit'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Tambah Habit Custom'), findsOneWidget);
+    expect(find.text('Target opsional'), findsOneWidget);
+    expect(find.text('Satuan'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

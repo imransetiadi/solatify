@@ -40,6 +40,13 @@ class MockTrackerRepository implements TrackerRepository {
     String habitKey,
     bool isDone,
   ) async {}
+
+  @override
+  Future<void> updateHabitProgress(
+    DateTime date,
+    String habitKey,
+    int progress,
+  ) async {}
 }
 
 void main() {
@@ -188,6 +195,15 @@ void main() {
       expect(log.habits, isEmpty);
       expect(json['habits']['tahajud'], isTrue);
     });
+
+    test('habit progress defaults to zero and can be incremented', () {
+      final log = PrayerLogEntity(date: DateTime.now(), prayers: const {});
+
+      final updated = log.copyWithHabitProgress('custom:100 Shalawat', 25);
+
+      expect(log.getHabitProgress('custom:100 Shalawat'), 0);
+      expect(updated.getHabitProgress('custom:100 Shalawat'), 25);
+    });
   });
 
   group('TrackerNotifier selected date', () {
@@ -237,6 +253,15 @@ void main() {
       notifier.deleteHabit('Baca Al-Kahfi');
 
       expect(notifier.state, ['Infak Jumat']);
+    });
+
+    test('stores optional target metadata for new custom habit', () async {
+      final notifier = CustomHabitTargetNotifier(const {});
+
+      notifier.setTarget('100 Shalawat', target: 100, unit: 'kali');
+
+      expect(notifier.state['100 Shalawat']?.target, 100);
+      expect(notifier.state['100 Shalawat']?.unit, 'kali');
     });
   });
 }

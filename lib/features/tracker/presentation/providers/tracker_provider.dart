@@ -114,6 +114,25 @@ class TrackerNotifier extends StateNotifier<AsyncValue<PrayerLogEntity>> {
       state = AsyncValue.error(e, st);
     }
   }
+
+  Future<void> updateHabitProgress(String habitKey, int progress) async {
+    final currentLog = state.value;
+    if (currentLog == null) return;
+
+    final updatedLog = currentLog.copyWithHabitProgress(habitKey, progress);
+    state = AsyncValue.data(updatedLog);
+
+    try {
+      await _repository.updateHabitProgress(
+        currentLog.date,
+        habitKey,
+        updatedLog.getHabitProgress(habitKey),
+      );
+    } catch (e, st) {
+      state = AsyncValue.data(currentLog);
+      state = AsyncValue.error(e, st);
+    }
+  }
 }
 
 final trackerProvider =
@@ -179,4 +198,105 @@ final customHabitProvider =
           ? stored.whereType<String>().toList(growable: false)
           : const <String>[];
       return CustomHabitNotifier(habits, persistChanges: true);
+    });
+
+class CustomHabitTarget {
+  const CustomHabitTarget({required this.target, required this.unit});
+
+  factory CustomHabitTarget.fromJson(Map<dynamic, dynamic> json) {
+    final rawTarget = json['target'];
+    final rawUnit = json['unit'];
+    final target = rawTarget is int
+        ? rawTarget
+        : int.tryParse('$rawTarget') ?? 0;
+    final unit = rawUnit is String && rawUnit.trim().isNotEmpty
+        ? rawUnit.trim()
+        : 'kali';
+
+    return CustomHabitTarget(target: target, unit: unit);
+  }
+
+  final int target;
+  final String unit;
+
+  Map<String, dynamic> toJson() => {'target': target, 'unit': unit};
+}
+
+class CustomHabitTargetNotifier
+    extends StateNotifier<Map<String, CustomHabitTarget>> {
+  CustomHabitTargetNotifier(
+    super.initialTargets, {
+    this.persistChanges = false,
+  });
+
+  static const storageKey = 'tracker_custom_habit_targets';
+
+  final bool persistChanges;
+
+  void setTarget(
+    String habitName, {
+    required int target,
+    required String unit,
+  }) {
+    final normalizedName = habitName.trim();
+    final normalizedUnit = unit.trim().isEmpty ? 'kali' : unit.trim();
+    if (normalizedName.isEmpty || target <= 0) return;
+
+    state = {
+      ...state,
+      normalizedName: CustomHabitTarget(target: target, unit: normalizedUnit),
+    };
+    if (persistChanges) unawaited(_persist());
+  }
+
+  void renameHabit(String oldName, String newName) {
+    final target = state[oldName];
+    final normalized = newName.trim();
+    if (target == null || normalized.isEmpty) return;
+    if (normalized != oldName && state.containsKey(normalized)) return;
+
+    final updatedTargets = Map<String, CustomHabitTarget>.from(state)
+      ..remove(oldName)
+      ..[normalized] = target;
+    state = updatedTargets;
+    if (persistChanges) unawaited(_persist());
+  }
+
+  void deleteHabit(String habitName) {
+    if (!state.containsKey(habitName)) return;
+
+    final updatedTargets = Map<String, CustomHabitTarget>.from(state)
+      ..remove(habitName);
+    state = updatedTargets;
+    if (persistChanges) unawaited(_persist());
+  }
+
+  Future<void> _persist() async {
+    final box = await Hive.openBox<dynamic>(HiveConstants.settingsBox);
+    final payload = state.map((key, value) => MapEntry(key, value.toJson()));
+    await box.put(storageKey, payload);
+  }
+}
+
+final customHabitTargetProvider =
+    StateNotifierProvider<
+      CustomHabitTargetNotifier,
+      Map<String, CustomHabitTarget>
+    >((ref) {
+      final box = Hive.isBoxOpen(HiveConstants.settingsBox)
+          ? Hive.box<dynamic>(HiveConstants.settingsBox)
+          : null;
+      final stored = box?.get(CustomHabitTargetNotifier.storageKey);
+      final targets = <String, CustomHabitTarget>{};
+      if (stored is Map) {
+        for (final entry in stored.entries) {
+          final key = entry.key;
+          final value = entry.value;
+          if (key is String && value is Map) {
+            final target = CustomHabitTarget.fromJson(value);
+            if (target.target > 0) targets[key] = target;
+          }
+        }
+      }
+      return CustomHabitTargetNotifier(targets, persistChanges: true);
     });
