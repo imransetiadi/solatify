@@ -12,4 +12,9 @@ class PerformanceTuning {
   );
   static const double routeTransitionYOffset = 0.018;
   static const double routeTransitionScaleBegin = 0.992;
+  static const Duration coldStartBudget = Duration(seconds: 5);
+  static const Duration warmResumeBudget = Duration(seconds: 2);
+  static const Duration frameBuildBudget = Duration(milliseconds: 16);
+  static const Duration frameRasterBudget = Duration(milliseconds: 16);
+  static const int compactWidthSmokeScreenCount = 5;
 }

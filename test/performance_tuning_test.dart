@@ -39,5 +39,25 @@ void main() {
         greaterThanOrEqualTo(0.99),
       );
     });
+
+    test('defines repeatable golden path performance budgets', () {
+      expect(
+        PerformanceTuning.coldStartBudget,
+        lessThanOrEqualTo(const Duration(seconds: 5)),
+      );
+      expect(
+        PerformanceTuning.warmResumeBudget,
+        lessThanOrEqualTo(const Duration(seconds: 2)),
+      );
+      expect(
+        PerformanceTuning.frameBuildBudget,
+        lessThanOrEqualTo(const Duration(milliseconds: 16)),
+      );
+      expect(
+        PerformanceTuning.frameRasterBudget,
+        lessThanOrEqualTo(const Duration(milliseconds: 16)),
+      );
+      expect(PerformanceTuning.compactWidthSmokeScreenCount, 5);
+    });
   });
 }

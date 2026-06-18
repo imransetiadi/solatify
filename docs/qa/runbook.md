@@ -59,6 +59,7 @@
 - [ ] Scroll Home, Quran, and Schedule while watching frame times
 - [ ] Rapidly switch tabs and open or close the More menu
 - [ ] Repeat the same checks on iOS and Android
+- [ ] Fill `docs/qa/performance-baseline-template.md` with timing, frame, memory, and log evidence
 
 ## Pass / Fail Log
 | Date | Platform | Device | OS | Build | Test Area | Result | Evidence |

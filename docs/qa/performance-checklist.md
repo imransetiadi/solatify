@@ -20,6 +20,17 @@
 - Memory growth: no obvious monotonic leak during repeated navigation and background/resume loops
 - Logs: no repeated background exception spam or scheduling loops
 
+These thresholds are mirrored by `PerformanceTuning` constants so automated tests catch accidental budget drift. Device-specific timing still requires profile-mode evidence.
+
+## Golden Path Scenarios
+Capture each path in `docs/qa/performance-baseline-template.md`:
+
+1. **Cold start** — force stop the app, launch from icon, measure until Home is usable.
+2. **Home scroll** — scroll Home prayer cards and quick actions for at least 20 seconds.
+3. **Quran list** — open Qur'an, search or scroll the surah list for at least 20 seconds.
+4. **Schedule** — open Jadwal, move between dates, open location sheet, and scroll prayer cards.
+5. **Menu switching** — switch Home, Schedule, Quran, Content, and More quickly for three rounds.
+
 ## Startup
 - Measure cold start time from app launch to the first usable screen
 - Measure warm start after background resume
@@ -51,6 +62,7 @@
 - Flutter DevTools CPU profile
 - Flutter DevTools memory view
 - `adb logcat` or Xcode Console
+- `docs/qa/performance-baseline-template.md` for evidence capture
 
 ## Pass Criteria
 - Startup is consistent across repeated launches
