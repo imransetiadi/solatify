@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:solatify/core/theme/theme.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
+import 'package:solatify/core/widgets/solatify_state_view.dart';
 import 'package:solatify/features/quran/domain/models/quran_models.dart';
 import 'package:solatify/features/quran/presentation/quran_provider.dart';
 
@@ -94,7 +95,6 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
     final audioState = ref.watch(quranAudioProvider);
     final readerPreferences = ref.watch(quranReaderPreferencesProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : const Color(0xFF241A12);
     final textSecondary = isDark
         ? const Color(0xFFC8B8A8)
         : const Color(0xFF5D4E47);
@@ -176,42 +176,16 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
         child: Stack(
           children: [
             surahAsync.when(
-              loading: () =>
-                  Center(child: CircularProgressIndicator(color: _redAccent)),
-              error: (err, stack) => Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.error_outline, color: _redAccent, size: 64),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Gagal memuat Surah',
-                        style: TextStyle(
-                          color: textColor,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        err.toString().replaceAll('Exception:', ''),
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: textSecondary, fontSize: 14),
-                      ),
-                      const SizedBox(height: 24),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _accentColor,
-                        ),
-                        onPressed: () =>
-                            ref.refresh(surahDetailProvider(widget.surahId)),
-                        child: const Text('Coba Lagi'),
-                      ),
-                    ],
-                  ),
-                ),
+              loading: () => const SolatifyStateView.loading(
+                title: 'Memuat Surah',
+                description: 'Menyiapkan ayat dan terjemahan Al-Qur\'an.',
+              ),
+              error: (err, stack) => SolatifyStateView.error(
+                title: 'Gagal memuat Surah',
+                description: err.toString().replaceAll('Exception:', '').trim(),
+                actionLabel: 'Coba Lagi',
+                onAction: () =>
+                    ref.refresh(surahDetailProvider(widget.surahId)),
               ),
               data: (surah) {
                 final verses = surah.verses ?? [];

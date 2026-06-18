@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
+import 'package:solatify/core/widgets/solatify_state_view.dart';
 import 'package:solatify/features/tracker/presentation/providers/tracker_provider.dart';
 
 class TrackerScreen extends ConsumerWidget {
@@ -123,14 +124,15 @@ class TrackerScreen extends ConsumerWidget {
                   ],
                 ),
               ),
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (_, _) => GlassContainer(
-                opacity: 0.05,
-                padding: const EdgeInsets.all(18),
-                child: Text(
-                  'Tracker ibadah belum dapat dimuat.',
-                  style: TextStyle(color: mutedColor),
-                ),
+              loading: () => const SolatifyStateView.loading(
+                title: 'Memuat tracker ibadah',
+                description: 'Menyiapkan checklist ibadah hari ini.',
+                compact: true,
+              ),
+              error: (_, _) => const SolatifyStateView.error(
+                title: 'Tracker belum dapat dimuat',
+                description: 'Silakan buka ulang halaman tracker.',
+                compact: true,
               ),
             ),
           ),

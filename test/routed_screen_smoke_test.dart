@@ -186,6 +186,28 @@ void main() {
     expect(providerSource, contains('searchIslamicContentItems'));
   });
 
+  test('Priority screens use shared Solatify state view', () {
+    final stateViewSource = File(
+      'lib/core/widgets/solatify_state_view.dart',
+    ).readAsStringSync();
+    final screenSources = [
+      'lib/features/islamic_content/presentation/screens/islamic_content_screen.dart',
+      'lib/features/asmaul_husna/presentation/screens/asmaul_husna_screen.dart',
+      'lib/features/islamic_tips/presentation/screens/islamic_tips_screen.dart',
+      'lib/features/hijri_calendar/presentation/screens/hijri_calendar_screen.dart',
+      'lib/features/tracker/presentation/screens/tracker_screen.dart',
+      'lib/features/quran/presentation/screens/surah_detail_screen.dart',
+    ].map((path) => File(path).readAsStringSync());
+
+    expect(stateViewSource, contains('SolatifyStateVariant'));
+    expect(stateViewSource, contains('SolatifyStateView.loading'));
+    expect(stateViewSource, contains('SolatifyStateView.empty'));
+    expect(stateViewSource, contains('SolatifyStateView.error'));
+    for (final source in screenSources) {
+      expect(source, contains('SolatifyStateView'));
+    }
+  });
+
   testWidgets('Notification Health Center screen renders shell', (
     tester,
   ) async {

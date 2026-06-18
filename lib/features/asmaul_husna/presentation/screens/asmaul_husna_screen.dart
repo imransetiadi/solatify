@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
+import 'package:solatify/core/widgets/solatify_state_view.dart';
 import 'package:solatify/features/asmaul_husna/presentation/providers/asmaul_husna_provider.dart';
 
 class AsmaulHusnaScreen extends ConsumerStatefulWidget {
@@ -107,11 +108,11 @@ class _AsmaulHusnaScreenState extends ConsumerState<AsmaulHusnaScreen> {
                       }).toList();
 
                       if (filteredList.isEmpty) {
-                        return Center(
-                          child: Text(
-                            'Tidak ada hasil ditemukan.',
-                            style: TextStyle(color: textColorMuted),
-                          ),
+                        return const SolatifyStateView.empty(
+                          title: 'Tidak ada hasil',
+                          description:
+                              'Coba cari nama atau makna Asmaul Husna lain.',
+                          compact: true,
                         );
                       }
 
@@ -190,13 +191,14 @@ class _AsmaulHusnaScreenState extends ConsumerState<AsmaulHusnaScreen> {
                         },
                       );
                     },
-                    loading: () =>
-                        const Center(child: CircularProgressIndicator()),
-                    error: (error, stackTrace) => Center(
-                      child: Text(
-                        'Gagal memuat data Asmaul Husna',
-                        style: TextStyle(color: textColorMuted),
-                      ),
+                    loading: () => const SolatifyStateView.loading(
+                      title: 'Memuat Asmaul Husna',
+                      description: 'Menyiapkan 99 nama Allah yang indah.',
+                    ),
+                    error: (error, stackTrace) => const SolatifyStateView.error(
+                      title: 'Gagal memuat Asmaul Husna',
+                      description:
+                          'Silakan buka ulang halaman atau coba lagi nanti.',
                     ),
                   ),
                 ),

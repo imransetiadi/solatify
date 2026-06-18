@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
+import 'package:solatify/core/widgets/solatify_state_view.dart';
 import 'package:solatify/features/hijri_calendar/presentation/providers/hijri_calendar_provider.dart';
 
 class HijriCalendarScreen extends ConsumerWidget {
@@ -73,10 +74,12 @@ class HijriCalendarScreen extends ConsumerWidget {
                   child: eventsAsync.when(
                     data: (events) {
                       if (events.isEmpty) {
-                        return Center(
-                          child: Text(
-                            'Tidak ada event Hijriah mendatang.',
-                            style: TextStyle(color: textColorMuted),
+                        return const Center(
+                          child: SolatifyStateView.empty(
+                            title: 'Tidak ada event Hijriah',
+                            description:
+                                'Belum ada event mendatang di kalender Hijriah.',
+                            compact: true,
                           ),
                         );
                       }
@@ -162,13 +165,13 @@ class HijriCalendarScreen extends ConsumerWidget {
                         },
                       );
                     },
-                    loading: () =>
-                        const Center(child: CircularProgressIndicator()),
-                    error: (error, stackTrace) => Center(
-                      child: Text(
-                        'Gagal memuat event Hijriah',
-                        style: TextStyle(color: textColorMuted),
-                      ),
+                    loading: () => const SolatifyStateView.loading(
+                      title: 'Memuat kalender Hijriah',
+                      description: 'Menyiapkan event Hijriah mendatang.',
+                    ),
+                    error: (error, stackTrace) => const SolatifyStateView.error(
+                      title: 'Gagal memuat event Hijriah',
+                      description: 'Silakan buka ulang halaman kalender.',
                     ),
                   ),
                 ),

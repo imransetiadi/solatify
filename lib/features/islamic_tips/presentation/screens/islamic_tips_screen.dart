@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
+import 'package:solatify/core/widgets/solatify_state_view.dart';
 import 'package:solatify/features/islamic_tips/presentation/providers/tips_provider.dart';
 
 class IslamicTipsScreen extends ConsumerWidget {
@@ -50,7 +51,11 @@ class IslamicTipsScreen extends ConsumerWidget {
             child: tipsAsync.when(
               data: (tips) {
                 if (tips.isEmpty) {
-                  return const Center(child: Text('Tidak ada tips saat ini.'));
+                  return const SolatifyStateView.empty(
+                    title: 'Belum ada tips',
+                    description:
+                        'Tips islami akan tampil kembali saat data tersedia.',
+                  );
                 }
                 return ListView.builder(
                   padding: const EdgeInsets.only(bottom: 96),
@@ -119,9 +124,14 @@ class IslamicTipsScreen extends ConsumerWidget {
                   },
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stackTrace) =>
-                  const Center(child: Text('Gagal memuat tips islami.')),
+              loading: () => const SolatifyStateView.loading(
+                title: 'Memuat tips islami',
+                description: 'Menyiapkan inspirasi ibadah hari ini.',
+              ),
+              error: (error, stackTrace) => const SolatifyStateView.error(
+                title: 'Gagal memuat tips islami',
+                description: 'Silakan coba lagi dari halaman Konten Islami.',
+              ),
             ),
           ),
         ),

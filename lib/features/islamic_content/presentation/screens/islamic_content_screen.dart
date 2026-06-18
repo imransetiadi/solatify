@@ -6,6 +6,7 @@ import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
 import 'package:solatify/core/widgets/solatify_design_tokens.dart';
+import 'package:solatify/core/widgets/solatify_state_view.dart';
 import 'package:solatify/features/islamic_content/presentation/providers/islamic_content_search_provider.dart';
 import 'package:solatify/features/islamic_tips/presentation/providers/tips_provider.dart';
 
@@ -128,11 +129,16 @@ class _IslamicContentScreenState extends ConsumerState<IslamicContentScreen> {
                     mutedColor: mutedColor,
                     primaryColor: redAccent,
                   ),
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
-                  error: (error, _) => Text(
-                    'Gagal mencari konten: $error',
-                    style: TextStyle(color: mutedColor),
+                  loading: () => const SolatifyStateView.loading(
+                    title: 'Mencari konten',
+                    description:
+                        'Menelusuri doa, dzikir, tips, dan tuntunan salat.',
+                    compact: true,
+                  ),
+                  error: (error, _) => const SolatifyStateView.error(
+                    title: 'Gagal mencari konten',
+                    description: 'Silakan hapus kata kunci lalu coba lagi.',
+                    compact: true,
                   ),
                 ),
                 const SizedBox(height: ResponsiveLayout.sectionGap),
@@ -149,8 +155,17 @@ class _IslamicContentScreenState extends ConsumerState<IslamicContentScreen> {
                   primaryColor: redAccent,
                   onTap: () => context.go('/islamic-content/tips'),
                 ),
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) => Text('${l.failedToLoadTip}: $e'),
+                loading: () => const SolatifyStateView.loading(
+                  title: 'Memuat tips harian',
+                  description: 'Menyiapkan inspirasi singkat untuk hari ini.',
+                  compact: true,
+                ),
+                error: (e, _) => SolatifyStateView.error(
+                  title: l.failedToLoadTip,
+                  description:
+                      'Silakan coba lagi nanti dari halaman Konten Islami.',
+                  compact: true,
+                ),
               ),
               const SizedBox(height: ResponsiveLayout.sectionGap),
               _SectionTitle(
@@ -298,15 +313,11 @@ class _SearchResultsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (results.isEmpty) {
-      return GlassContainer(
-        borderRadius: SolatifyRadius.md,
-        borderColor: primaryColor.withValues(alpha: 0.10),
-        fillColor: surfaceColor.withValues(alpha: 0.96),
-        padding: ResponsiveLayout.listCardPadding,
-        child: Text(
-          'Belum ada konten yang cocok. Coba kata lain seperti qunut, dzikir, rahman, atau dhuha.',
-          style: TextStyle(color: mutedColor, fontSize: SolatifyType.body),
-        ),
+      return const SolatifyStateView.empty(
+        title: 'Belum ada konten yang cocok',
+        description:
+            'Coba kata lain seperti qunut, dzikir, rahman, atau dhuha.',
+        compact: true,
       );
     }
 
