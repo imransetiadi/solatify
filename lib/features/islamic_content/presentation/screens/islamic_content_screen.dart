@@ -6,10 +6,34 @@ import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
 import 'package:solatify/core/widgets/solatify_design_tokens.dart';
+import 'package:solatify/features/islamic_content/presentation/providers/islamic_content_search_provider.dart';
 import 'package:solatify/features/islamic_tips/presentation/providers/tips_provider.dart';
 
-class IslamicContentScreen extends ConsumerWidget {
+class IslamicContentScreen extends ConsumerStatefulWidget {
   const IslamicContentScreen({super.key});
+
+  @override
+  ConsumerState<IslamicContentScreen> createState() =>
+      _IslamicContentScreenState();
+}
+
+class _IslamicContentScreenState extends ConsumerState<IslamicContentScreen> {
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(() {
+      ref.read(islamicContentSearchQueryProvider.notifier).state =
+          _searchController.text;
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   static const _menuItems = [
     _ContentMenuItem(
@@ -45,7 +69,7 @@ class IslamicContentScreen extends ConsumerWidget {
   ];
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
@@ -57,6 +81,8 @@ class IslamicContentScreen extends ConsumerWidget {
     final surfaceColor = theme.colorScheme.surface;
     final appBarColor = surfaceColor.withValues(alpha: isDark ? 0.96 : 0.94);
     final randomTip = ref.watch(randomTipProvider);
+    final searchQuery = ref.watch(islamicContentSearchQueryProvider).trim();
+    final searchResults = ref.watch(islamicContentSearchResultsProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -79,6 +105,38 @@ class IslamicContentScreen extends ConsumerWidget {
               bottom: ResponsiveLayout.bottomSafeGap,
             ),
             children: [
+              _GlobalSearchField(
+                controller: _searchController,
+                primaryColor: redAccent,
+                surfaceColor: surfaceColor,
+                textColor: textColor,
+                mutedColor: mutedColor,
+              ),
+              const SizedBox(height: ResponsiveLayout.itemGap),
+              if (searchQuery.isNotEmpty) ...[
+                _SectionTitle(
+                  icon: Icons.search,
+                  title: 'Hasil Pencarian Konten Islami',
+                  color: redAccent,
+                ),
+                const SizedBox(height: ResponsiveLayout.itemGap),
+                searchResults.when(
+                  data: (results) => _SearchResultsList(
+                    results: results,
+                    surfaceColor: surfaceColor,
+                    textColor: textColor,
+                    mutedColor: mutedColor,
+                    primaryColor: redAccent,
+                  ),
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (error, _) => Text(
+                    'Gagal mencari konten: $error',
+                    style: TextStyle(color: mutedColor),
+                  ),
+                ),
+                const SizedBox(height: ResponsiveLayout.sectionGap),
+              ],
               randomTip.when(
                 data: (tip) => _DailyTipCard(
                   seeAllLabel: l.seeAllTips,
@@ -175,6 +233,149 @@ class IslamicContentScreen extends ConsumerWidget {
         path: '/islamic-content/tips',
       ),
     ];
+  }
+}
+
+class _GlobalSearchField extends StatelessWidget {
+  const _GlobalSearchField({
+    required this.controller,
+    required this.primaryColor,
+    required this.surfaceColor,
+    required this.textColor,
+    required this.mutedColor,
+  });
+
+  final TextEditingController controller;
+  final Color primaryColor;
+  final Color surfaceColor;
+  final Color textColor;
+  final Color mutedColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassContainer(
+      borderRadius: SolatifyRadius.md,
+      borderColor: primaryColor.withValues(alpha: 0.10),
+      fillColor: surfaceColor.withValues(alpha: 0.96),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+      child: TextField(
+        controller: controller,
+        style: TextStyle(color: textColor, fontSize: SolatifyType.body),
+        textInputAction: TextInputAction.search,
+        decoration: InputDecoration(
+          icon: Icon(Icons.search, color: primaryColor),
+          hintText: 'Cari doa, dzikir, Asmaul Husna...',
+          hintStyle: TextStyle(color: mutedColor),
+          border: InputBorder.none,
+          suffixIcon: controller.text.isEmpty
+              ? null
+              : IconButton(
+                  tooltip: 'Bersihkan pencarian',
+                  icon: Icon(Icons.close, color: mutedColor),
+                  onPressed: controller.clear,
+                ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SearchResultsList extends StatelessWidget {
+  const _SearchResultsList({
+    required this.results,
+    required this.surfaceColor,
+    required this.textColor,
+    required this.mutedColor,
+    required this.primaryColor,
+  });
+
+  final List<IslamicContentSearchItem> results;
+  final Color surfaceColor;
+  final Color textColor;
+  final Color mutedColor;
+  final Color primaryColor;
+
+  @override
+  Widget build(BuildContext context) {
+    if (results.isEmpty) {
+      return GlassContainer(
+        borderRadius: SolatifyRadius.md,
+        borderColor: primaryColor.withValues(alpha: 0.10),
+        fillColor: surfaceColor.withValues(alpha: 0.96),
+        padding: ResponsiveLayout.listCardPadding,
+        child: Text(
+          'Belum ada konten yang cocok. Coba kata lain seperti qunut, dzikir, rahman, atau dhuha.',
+          style: TextStyle(color: mutedColor, fontSize: SolatifyType.body),
+        ),
+      );
+    }
+
+    return Column(
+      children: results
+          .take(12)
+          .map((item) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: GlassContainer(
+                borderRadius: SolatifyRadius.md,
+                borderColor: primaryColor.withValues(alpha: 0.10),
+                fillColor: surfaceColor.withValues(alpha: 0.96),
+                padding: EdgeInsets.zero,
+                child: ListTile(
+                  leading: Container(
+                    width: SolatifyIconSize.cardBox,
+                    height: SolatifyIconSize.cardBox,
+                    decoration: BoxDecoration(
+                      color: primaryColor.withValues(alpha: 0.14),
+                      borderRadius: SolatifyRadius.icon,
+                    ),
+                    child: Icon(
+                      item.icon,
+                      color: primaryColor,
+                      size: SolatifyIconSize.cardIcon,
+                    ),
+                  ),
+                  title: Text(
+                    item.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: textColor,
+                      fontWeight: FontWeight.w800,
+                      fontSize: SolatifyType.body,
+                    ),
+                  ),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.category,
+                        style: TextStyle(
+                          color: primaryColor,
+                          fontWeight: FontWeight.w700,
+                          fontSize: SolatifyType.eyebrow,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        item.subtitle,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: mutedColor,
+                          fontSize: SolatifyType.caption,
+                        ),
+                      ),
+                    ],
+                  ),
+                  trailing: Icon(Icons.chevron_right, color: mutedColor),
+                  onTap: () => context.push(item.route),
+                ),
+              ),
+            );
+          })
+          .toList(growable: false),
+    );
   }
 }
 

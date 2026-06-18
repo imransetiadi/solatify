@@ -170,6 +170,22 @@ void main() {
     expect(source, contains(r'Ayat $currentVerse / $totalVerses'));
   });
 
+  test('Islamic Content source exposes global search controls', () {
+    final source = File(
+      'lib/features/islamic_content/presentation/screens/islamic_content_screen.dart',
+    ).readAsStringSync();
+    final providerSource = File(
+      'lib/features/islamic_content/presentation/providers/islamic_content_search_provider.dart',
+    ).readAsStringSync();
+
+    expect(source, contains('Cari doa, dzikir, Asmaul Husna'));
+    expect(source, contains('Hasil Pencarian Konten Islami'));
+    expect(source, contains('Belum ada konten yang cocok'));
+    expect(source, contains('context.push(item.route)'));
+    expect(providerSource, contains('IslamicContentSearchItem'));
+    expect(providerSource, contains('searchIslamicContentItems'));
+  });
+
   testWidgets('Notification Health Center screen renders shell', (
     tester,
   ) async {

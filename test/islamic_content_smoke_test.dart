@@ -11,6 +11,7 @@ import 'package:solatify/features/asmaul_husna/presentation/screens/asmaul_husna
 import 'package:solatify/features/dhikr/presentation/screens/dhikr_screen.dart';
 import 'package:solatify/features/duas/presentation/screens/duas_screen.dart';
 import 'package:solatify/features/hijri_calendar/presentation/screens/hijri_calendar_screen.dart';
+import 'package:solatify/features/islamic_content/presentation/providers/islamic_content_search_provider.dart';
 import 'package:solatify/features/islamic_content/presentation/screens/islamic_content_screen.dart';
 import 'package:solatify/features/islamic_tips/presentation/screens/islamic_tips_screen.dart';
 import 'package:solatify/features/prayer_guide/data/datasources/prayer_guide_local_data_source.dart';
@@ -99,6 +100,63 @@ void main() {
     expect(find.text('Kalender Hijriah'), findsOneWidget);
     expect(find.text('Tips Islami'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Islamic content hub global search renders results', (
+    tester,
+  ) async {
+    await tester.pumpWidget(wrap(const IslamicContentScreen()));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField), 'dzikir');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Hasil Pencarian Konten Islami'), findsOneWidget);
+    expect(find.textContaining('Dzikir'), findsWidgets);
+    expect(tester.takeException(), isNull);
+  });
+
+  test('Islamic content search matches normalized category and keywords', () {
+    const items = [
+      IslamicContentSearchItem(
+        category: 'Doa Harian',
+        title: 'Doa Qunut',
+        subtitle: 'Dibaca saat salat Subuh',
+        route: '/islamic-content/duas',
+        icon: Icons.volunteer_activism_outlined,
+        keywords: ['subuh', 'qunut'],
+      ),
+      IslamicContentSearchItem(
+        category: 'Asmaul Husna',
+        title: 'Ar Rahman',
+        subtitle: 'Maha Pengasih',
+        route: '/islamic-content/asmaul-husna',
+        icon: Icons.font_download_outlined,
+        keywords: ['rahman'],
+      ),
+      IslamicContentSearchItem(
+        category: 'Tips Islami',
+        title: 'Keutamaan Shalat Dhuha',
+        subtitle: 'Amalan pagi hari',
+        route: '/islamic-content/tips',
+        icon: Icons.lightbulb_outline,
+        keywords: ['dhuha'],
+      ),
+    ];
+
+    expect(
+      searchIslamicContentItems(items, 'qunut').single.route,
+      '/islamic-content/duas',
+    );
+    expect(
+      searchIslamicContentItems(items, 'rahman').single.route,
+      '/islamic-content/asmaul-husna',
+    );
+    expect(
+      searchIslamicContentItems(items, 'shalat dhuha').single.route,
+      '/islamic-content/tips',
+    );
+    expect(searchIslamicContentItems(items, 'tidak ada'), isEmpty);
   });
 
   testWidgets('Content menu renders prayer guide card', (tester) async {
