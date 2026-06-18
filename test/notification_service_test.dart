@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:solatify/features/notifications/data/services/notification_service.dart';
 import 'package:solatify/features/notifications/domain/entities/notification_history_entry.dart';
@@ -52,6 +53,9 @@ void main() {
   });
 
   setUp(() async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    FlutterLocalNotificationsPlatform.instance =
+        AndroidFlutterLocalNotificationsPlugin();
     capturedMethods.clear();
     capturedNativeAlarmMethods.clear();
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger

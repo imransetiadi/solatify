@@ -299,7 +299,7 @@ class NotificationService {
     );
 
     final didInit = await _flutterLocalNotificationsPlugin.initialize(
-      initSettings,
+      settings: initSettings,
       onDidReceiveNotificationResponse: (NotificationResponse response) {
         debugPrint('Notification tapped with payload: ${response.payload}');
         _handleNotificationTap(response.payload);
@@ -382,7 +382,9 @@ class NotificationService {
         >();
 
     for (final legacyChannelId in _legacyPrayerChannelIds) {
-      await androidPlugin?.deleteNotificationChannel(legacyChannelId);
+      await androidPlugin?.deleteNotificationChannel(
+        channelId: legacyChannelId,
+      );
     }
     await androidPlugin?.createNotificationChannel(prayerChannel);
     await androidPlugin?.createNotificationChannel(beepChannel);
@@ -570,10 +572,10 @@ class NotificationService {
       );
 
       await _flutterLocalNotificationsPlugin.show(
-        notificationId,
-        title,
-        body,
-        notificationDetails,
+        id: notificationId,
+        title: title,
+        body: body,
+        notificationDetails: notificationDetails,
         payload: prayerKey,
       );
       debugPrint('Prayer notification sent: $title - $body');
@@ -632,7 +634,7 @@ class NotificationService {
           soundMode: soundMode,
         );
         if (scheduledNatively) {
-          await _flutterLocalNotificationsPlugin.cancel(notificationId);
+          await _flutterLocalNotificationsPlugin.cancel(id: notificationId);
           debugPrint(
             'Native Android prayer alarm scheduled for $notificationTime '
             'timezone=$timezoneName: $title',
@@ -653,14 +655,12 @@ class NotificationService {
       final scheduleMode = _androidScheduleMode();
       try {
         await _flutterLocalNotificationsPlugin.zonedSchedule(
-          notificationId,
-          title,
-          body,
-          scheduledDate,
-          notificationDetails,
+          id: notificationId,
+          title: title,
+          body: body,
+          scheduledDate: scheduledDate,
+          notificationDetails: notificationDetails,
           androidScheduleMode: scheduleMode,
-          uiLocalNotificationDateInterpretation:
-              UILocalNotificationDateInterpretation.absoluteTime,
           payload: prayerKey,
         );
       } catch (e) {
@@ -675,14 +675,12 @@ class NotificationService {
           'with inexact scheduling: $e',
         );
         await _flutterLocalNotificationsPlugin.zonedSchedule(
-          notificationId,
-          title,
-          body,
-          scheduledDate,
-          notificationDetails,
+          id: notificationId,
+          title: title,
+          body: body,
+          scheduledDate: scheduledDate,
+          notificationDetails: notificationDetails,
           androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-          uiLocalNotificationDateInterpretation:
-              UILocalNotificationDateInterpretation.absoluteTime,
           payload: prayerKey,
         );
       }
@@ -860,10 +858,10 @@ class NotificationService {
       );
 
       await _flutterLocalNotificationsPlugin.show(
-        notificationId,
-        'Tes Notifikasi Solatify',
-        'Jika notifikasi ini muncul, pengingat salat siap digunakan.',
-        notificationDetails,
+        id: notificationId,
+        title: 'Tes Notifikasi Solatify',
+        body: 'Jika notifikasi ini muncul, pengingat salat siap digunakan.',
+        notificationDetails: notificationDetails,
         payload: 'test_notification',
       );
       debugPrint(
@@ -909,14 +907,13 @@ class NotificationService {
       final scheduledDate = tz.TZDateTime.from(targetTime, tz.local);
 
       await _flutterLocalNotificationsPlugin.zonedSchedule(
-        9002,
-        'Tes Jadwal Notifikasi Solatify',
-        'Jika notifikasi terjadwal ini muncul, jadwal pengingat siap digunakan.',
-        scheduledDate,
-        notificationDetails,
+        id: 9002,
+        title: 'Tes Jadwal Notifikasi Solatify',
+        body:
+            'Jika notifikasi terjadwal ini muncul, jadwal pengingat siap digunakan.',
+        scheduledDate: scheduledDate,
+        notificationDetails: notificationDetails,
         androidScheduleMode: _androidScheduleMode(),
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
         payload: 'scheduled_test_notification',
       );
       debugPrint('Diagnostic scheduled notification set for $targetTime');
@@ -929,7 +926,7 @@ class NotificationService {
   Future<void> cancelNotification(int notificationId) async {
     try {
       await cancelAndroidPrayerAlarm(notificationId);
-      await _flutterLocalNotificationsPlugin.cancel(notificationId);
+      await _flutterLocalNotificationsPlugin.cancel(id: notificationId);
       debugPrint('Notification $notificationId cancelled');
     } catch (e) {
       debugPrint('Error cancelling notification: $e');
