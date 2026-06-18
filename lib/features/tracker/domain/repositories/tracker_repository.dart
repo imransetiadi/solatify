@@ -8,5 +8,6 @@ abstract class TrackerRepository {
     String prayerKey,
     PrayerStatus status,
   );
+  Future<void> updateHabitStatus(DateTime date, String habitKey, bool isDone);
   Future<List<PrayerLogEntity>> getWeeklyLogs(DateTime endDate);
 }

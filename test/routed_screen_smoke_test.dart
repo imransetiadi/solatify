@@ -107,6 +107,8 @@ void main() {
     expect(find.text('Status otomatis: Tepat Waktu'), findsOneWidget);
     expect(find.text('Riwayat Tracker'), findsOneWidget);
     expect(find.text('Kemarin'), findsOneWidget);
+    expect(find.text('Habit Sunnah'), findsOneWidget);
+    expect(find.text('Tahajud'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

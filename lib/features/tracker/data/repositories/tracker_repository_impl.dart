@@ -67,6 +67,18 @@ class TrackerRepositoryImpl implements TrackerRepository {
   }
 
   @override
+  Future<void> updateHabitStatus(
+    DateTime date,
+    String habitKey,
+    bool isDone,
+  ) async {
+    final log = await getLogByDate(date);
+    await localDataSource.saveLog(
+      PrayerLogDto.fromEntity(log.copyWithHabit(habitKey, isDone)),
+    );
+  }
+
+  @override
   Future<List<PrayerLogEntity>> getWeeklyLogs(DateTime endDate) async {
     final dateKeys = <String>[];
     for (int i = 0; i < 7; i++) {
