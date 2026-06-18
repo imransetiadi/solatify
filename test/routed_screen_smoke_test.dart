@@ -117,6 +117,14 @@ void main() {
     expect(find.text('Kalender Konsistensi'), findsOneWidget);
     expect(find.text('14 hari terakhir'), findsOneWidget);
 
+    await tester.tap(find.text('0%').first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Detail Hari'), findsOneWidget);
+    expect(find.text('Pilih tanggal ini'), findsOneWidget);
+    await tester.tap(find.byTooltip('Close'));
+    await tester.pumpAndSettle();
+
     await tester.scrollUntilVisible(
       find.text('Tambah Habit'),
       160,

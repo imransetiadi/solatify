@@ -497,7 +497,7 @@ class _ConsistencyHeatmapCard extends StatelessWidget {
                 final isSelected = _isSameDay(day.date, selectedDate);
                 final opacity = 0.08 + (day.progress.clamp(0, 1) * 0.5);
                 return InkWell(
-                  onTap: () => onSelectDate(day.date),
+                  onTap: () => _showDayDetail(context, day, isSelected),
                   borderRadius: BorderRadius.circular(14),
                   child: Container(
                     width: 42,
@@ -549,6 +549,86 @@ class _ConsistencyHeatmapCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  void _showDayDetail(
+    BuildContext context,
+    TrackerHeatmapDayEntity day,
+    bool isSelected,
+  ) {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) {
+        final progressPercent = (day.progress * 100).round();
+        final dateLabel = _historyLabel(day.date, _dateOnly(DateTime.now()));
+
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Detail Hari',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Close',
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  dateLabel,
+                  style: TextStyle(
+                    color: textColor,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  '$progressPercent% target harian tercatat di kalender konsistensi.',
+                  style: TextStyle(color: mutedColor, fontSize: 13),
+                ),
+                const SizedBox(height: 14),
+                LinearProgressIndicator(
+                  value: day.progress.clamp(0, 1),
+                  color: accentColor,
+                  backgroundColor: mutedColor.withValues(alpha: 0.14),
+                  minHeight: 8,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: isSelected
+                        ? null
+                        : () {
+                            Navigator.of(context).pop();
+                            onSelectDate(day.date);
+                          },
+                    icon: const Icon(Icons.event_available_outlined),
+                    label: const Text('Pilih tanggal ini'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
