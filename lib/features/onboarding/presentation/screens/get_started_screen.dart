@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:solatify/core/navigation/app_routes.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/features/settings/presentation/providers/settings_provider.dart';
 
@@ -150,7 +151,7 @@ class _GetStartedScreenState extends ConsumerState<GetStartedScreen> {
                                 ref
                                     .read(settingsProvider.notifier)
                                     .completeOnboarding();
-                                context.go('/home');
+                                context.go(AppRoutes.home);
                               }
                             },
                             style: ElevatedButton.styleFrom(

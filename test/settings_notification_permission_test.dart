@@ -101,4 +101,21 @@ class _FakeSettingsRepository implements SettingsRepository {
     savedAdhanNotificationsEnabled = enabled;
     _settings = _settings.copyWith(adhanNotificationsEnabled: enabled);
   }
+
+  @override
+  Future<void> updateEnabledPrayerNotifications(
+    Map<String, bool> enabled,
+  ) async {
+    _settings = _settings.copyWith(enabledPrayerNotifications: enabled);
+  }
+
+  @override
+  Future<void> updatePreNotificationMinutes(int minutes) async {
+    _settings = _settings.copyWith(preNotificationMinutes: minutes);
+  }
+
+  @override
+  Future<void> updateNotificationSoundMode(String mode) async {
+    _settings = _settings.copyWith(notificationSoundMode: mode);
+  }
 }

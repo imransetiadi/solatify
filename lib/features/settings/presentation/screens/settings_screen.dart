@@ -2,7 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:solatify/core/localization/app_localizations.dart';
+import 'package:solatify/core/navigation/app_routes.dart';
+import 'package:solatify/core/services/solatify_haptics.dart';
 import 'package:solatify/core/theme/theme.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
@@ -10,6 +13,7 @@ import 'package:solatify/core/widgets/responsive_layout.dart';
 import 'package:solatify/core/widgets/solatify_design_tokens.dart';
 import 'package:solatify/features/notifications/data/services/notification_service.dart';
 import 'package:solatify/features/notifications/presentation/providers/notification_scheduler_provider.dart';
+import 'package:solatify/features/settings/domain/entities/settings_state.dart';
 import 'package:solatify/features/settings/presentation/providers/settings_provider.dart';
 
 enum PrayerOffsetType { subuh, dzuhur, ashar, magrib, isya }
@@ -18,6 +22,137 @@ int normalizePrayerOffsetInput(String value) {
   final parsed = int.tryParse(value.trim());
   if (parsed == null) return 0;
   return parsed.clamp(-60, 60).toInt();
+}
+
+class _NotificationV2Controls extends StatelessWidget {
+  const _NotificationV2Controls({
+    required this.settings,
+    required this.textColor,
+    required this.textSecondary,
+    required this.accentColor,
+    required this.onPrayerChanged,
+    required this.onReminderChanged,
+    required this.onSoundModeChanged,
+  });
+
+  final SettingsState settings;
+  final Color textColor;
+  final Color textSecondary;
+  final Color accentColor;
+  final Future<void> Function(String prayerKey, bool enabled) onPrayerChanged;
+  final Future<void> Function(int minutes) onReminderChanged;
+  final Future<void> Function(String mode) onSoundModeChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    const prayerKeys = ['subuh', 'dzuhur', 'ashar', 'magrib', 'isya'];
+    const reminderOptions = [0, 5, 10, 15];
+    final soundModes = {
+      'adhan': l.adhanSoundMode,
+      'beep': l.beepSoundMode,
+      'silent': l.silentSoundMode,
+    };
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _NotificationOptionTitle(
+          title: l.notificationPerPrayerTitle,
+          color: textColor,
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: prayerKeys.map((prayerKey) {
+            final selected =
+                settings.enabledPrayerNotifications[prayerKey] != false;
+            return FilterChip(
+              label: Text(l.prayerName(prayerKey)),
+              selected: selected,
+              selectedColor: accentColor.withValues(alpha: 0.18),
+              checkmarkColor: accentColor,
+              onSelected: (value) {
+                SolatifyHaptics.light();
+                onPrayerChanged(prayerKey, value);
+              },
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 14),
+        _NotificationOptionTitle(
+          title: l.preNotificationReminder,
+          color: textColor,
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: reminderOptions.map((minutes) {
+            final label = minutes == 0 ? l.noReminder : '$minutes ${l.minutes}';
+            return ChoiceChip(
+              label: Text(label),
+              selected: settings.preNotificationMinutes == minutes,
+              selectedColor: accentColor.withValues(alpha: 0.18),
+              onSelected: (_) {
+                SolatifyHaptics.selection();
+                onReminderChanged(minutes);
+              },
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 14),
+        _NotificationOptionTitle(
+          title: l.notificationSoundMode,
+          color: textColor,
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: soundModes.entries.map((entry) {
+            return ChoiceChip(
+              label: Text(entry.value),
+              selected: settings.notificationSoundMode == entry.key,
+              selectedColor: accentColor.withValues(alpha: 0.18),
+              onSelected: (_) {
+                SolatifyHaptics.selection();
+                onSoundModeChanged(entry.key);
+              },
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          l.automaticAdhanNotificationsDescription,
+          style: TextStyle(
+            color: textSecondary,
+            fontSize: SolatifyType.caption,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _NotificationOptionTitle extends StatelessWidget {
+  const _NotificationOptionTitle({required this.title, required this.color});
+
+  final String title;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      title,
+      style: TextStyle(
+        color: color,
+        fontSize: SolatifyType.caption,
+        fontWeight: FontWeight.w700,
+      ),
+    );
+  }
 }
 
 final prayerOffsetInputFormatter = TextInputFormatter.withFunction((
@@ -72,13 +207,27 @@ class SettingsScreen extends ConsumerStatefulWidget {
   ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+class _SettingsScreenState extends ConsumerState<SettingsScreen>
+    with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _syncAdhanNotificationPermission();
     });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    _verifyNotificationPermissionAfterReturn();
   }
 
   void _showPrayerOffsetDialog(
@@ -499,15 +648,82 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               Switch.adaptive(
                                 value: settings.adhanNotificationsEnabled,
                                 activeThumbColor: accentColor,
-                                onChanged: (enabled) =>
-                                    _toggleAdhanNotifications(
-                                      context,
-                                      ref,
-                                      enabled,
-                                    ),
+                                onChanged: (enabled) {
+                                  SolatifyHaptics.light();
+                                  _toggleAdhanNotifications(
+                                    context,
+                                    ref,
+                                    enabled,
+                                  );
+                                },
                               ),
                             ],
                           ),
+                        ),
+                        const SizedBox(height: 8),
+                        _NotificationV2Controls(
+                          settings: settings,
+                          textColor: textColor,
+                          textSecondary: textSecondary,
+                          accentColor: accentColor,
+                          onPrayerChanged: (prayerKey, enabled) async {
+                            await ref
+                                .read(settingsProvider.notifier)
+                                .updateEnabledPrayerNotification(
+                                  prayerKey,
+                                  enabled,
+                                );
+                            await ref
+                                .read(notificationSchedulerProvider.notifier)
+                                .refreshSchedules(force: true);
+                          },
+                          onReminderChanged: (minutes) async {
+                            await ref
+                                .read(settingsProvider.notifier)
+                                .updatePreNotificationMinutes(minutes);
+                            await ref
+                                .read(notificationSchedulerProvider.notifier)
+                                .refreshSchedules(force: true);
+                          },
+                          onSoundModeChanged: (mode) async {
+                            await ref
+                                .read(settingsProvider.notifier)
+                                .updateNotificationSoundMode(mode);
+                            await ref
+                                .read(notificationSchedulerProvider.notifier)
+                                .refreshSchedules(force: true);
+                          },
+                        ),
+                        Divider(color: dividerColor, height: 16),
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: Icon(
+                            Icons.health_and_safety_outlined,
+                            color: accentColor,
+                          ),
+                          title: Text(
+                            l.notificationHealthEntryTitle,
+                            style: TextStyle(
+                              color: textColor,
+                              fontSize: SolatifyType.body,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          subtitle: Text(
+                            l.notificationHealthEntrySubtitle,
+                            style: TextStyle(
+                              color: textSecondary,
+                              fontSize: SolatifyType.caption,
+                            ),
+                          ),
+                          trailing: Icon(
+                            Icons.chevron_right,
+                            color: textSecondary,
+                          ),
+                          onTap: () {
+                            SolatifyHaptics.selection();
+                            context.push(AppRoutes.notificationHealth);
+                          },
                         ),
                         Divider(color: dividerColor, height: 16),
                         // Theme toggles
@@ -742,6 +958,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         size: SolatifyIconSize.inline,
       ),
       onTap: () async {
+        SolatifyHaptics.selection();
         final opened = await onTap();
         if (opened || !mounted) return;
 
@@ -763,13 +980,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     try {
       if (enabled) {
-        final opened = await NotificationService()
-            .openPlatformNotificationSettings();
-        if (!opened) {
-          messenger.showSnackBar(
-            SnackBar(content: Text(l.notificationPermissionError)),
-          );
-          return;
+        if (defaultTargetPlatform == TargetPlatform.iOS) {
+          final granted = await NotificationService().requestIosPermissions();
+          if (!granted) {
+            await NotificationService().openPlatformNotificationSettings();
+            messenger.showSnackBar(
+              SnackBar(content: Text(l.notificationPermissionSettingsHint)),
+            );
+            return;
+          }
+        } else {
+          final opened = await NotificationService()
+              .openPlatformNotificationSettings();
+          if (!opened) {
+            messenger.showSnackBar(
+              SnackBar(content: Text(l.notificationPermissionError)),
+            );
+            return;
+          }
         }
       } else {
         await ref
@@ -782,13 +1010,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           .updateAdhanNotificationsEnabled(enabled);
 
       if (enabled) {
-        messenger.showSnackBar(
-          SnackBar(content: Text(l.notificationPermissionSettingsHint)),
-        );
+        await ref
+            .read(notificationSchedulerProvider.notifier)
+            .refreshSchedules(force: true);
+      }
+
+      if (enabled) {
+        if (defaultTargetPlatform == TargetPlatform.android) {
+          messenger.showSnackBar(
+            SnackBar(content: Text(l.notificationPermissionSettingsHint)),
+          );
+        }
       } else {
         final opened = await NotificationService()
             .openPlatformNotificationSettings();
-        if (!opened) return;
+        if (!opened) {
+          messenger.showSnackBar(
+            SnackBar(content: Text(l.notificationPermissionError)),
+          );
+          return;
+        }
         messenger.showSnackBar(
           SnackBar(content: Text(l.notificationPermissionSettingsHint)),
         );
@@ -809,6 +1050,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     final notificationsAllowed = await _areAdhanNotificationsAllowed();
     if (!mounted || notificationsAllowed) return;
+
+    await ref
+        .read(settingsProvider.notifier)
+        .syncAdhanNotificationsWithPermission(false);
+    await ref
+        .read(notificationSchedulerProvider.notifier)
+        .cancelAllNotifications();
+  }
+
+  Future<void> _verifyNotificationPermissionAfterReturn() async {
+    if (!mounted) return;
+    final settings = ref.read(settingsProvider);
+    if (!settings.adhanNotificationsEnabled) return;
+
+    final notificationsAllowed = await _areAdhanNotificationsAllowed();
+    if (!mounted) return;
+
+    if (notificationsAllowed) {
+      await ref
+          .read(notificationSchedulerProvider.notifier)
+          .refreshSchedules(force: true);
+      return;
+    }
 
     await ref
         .read(settingsProvider.notifier)
@@ -845,7 +1109,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ? Colors.black
         : (isDark ? const Color(0xFFC8B8A8) : const Color(0xFFAFA19A));
     return GestureDetector(
-      onTap: () => ref.read(settingsProvider.notifier).updateTheme(mode),
+      onTap: () {
+        SolatifyHaptics.selection();
+        ref.read(settingsProvider.notifier).updateTheme(mode);
+      },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(10),

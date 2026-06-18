@@ -1,7 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:solatify/core/database/hive_service.dart';
+import 'package:solatify/core/navigation/app_routes.dart';
 import 'package:solatify/core/navigation/router.dart';
+import 'package:solatify/features/notifications/domain/entities/notification_history_entry.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -77,7 +80,10 @@ class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
 
   static const String _prayerChannelId = 'prayer_times_adhan_channel';
+  static const String _prayerBeepChannelId = 'prayer_times_beep_channel';
+  static const String _prayerSilentChannelId = 'prayer_times_silent_channel';
   static const String _diagnosticChannelId = 'solatify_diagnostic_channel_v2';
+  static const String _notificationHistoryKey = 'notification_history';
   static const List<String> _legacyPrayerChannelIds = [
     'prayer_times_adhan_channel_v2',
     'prayer_times_adhan_channel_v7',
@@ -101,6 +107,8 @@ class NotificationService {
     required String body,
     required DateTime scheduledAt,
     required int notificationId,
+    required bool isReminder,
+    required String soundMode,
   }) async {
     if (defaultTargetPlatform != TargetPlatform.android) return false;
 
@@ -112,6 +120,8 @@ class NotificationService {
             'title': title,
             'body': body,
             'scheduledAtMillis': scheduledAt.millisecondsSinceEpoch,
+            'isReminder': isReminder,
+            'soundMode': soundMode,
           });
       return scheduled ?? false;
     } catch (e, stack) {
@@ -214,6 +224,28 @@ class NotificationService {
     }
   }
 
+  Future<bool> requestIosPermissions() async {
+    if (defaultTargetPlatform != TargetPlatform.iOS) return true;
+
+    try {
+      await _ensureInitialized();
+      final iosImplementation = _flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin
+          >();
+      final granted = await iosImplementation?.requestPermissions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+      debugPrint('iOS notification permission granted: $granted');
+      return granted ?? false;
+    } catch (e, stack) {
+      debugPrint('Error requesting iOS notification permission: $e\n$stack');
+      return false;
+    }
+  }
+
   Future<bool> openPlatformNotificationSettings() async {
     if (defaultTargetPlatform == TargetPlatform.iOS) {
       return openIosNotificationSettings();
@@ -277,7 +309,7 @@ class NotificationService {
     if (payload == null || payload.isEmpty) return;
 
     if (_isPrayerNotificationPayload(payload)) {
-      goRouter.go('/schedule');
+      goRouter.go(AppRoutes.schedule);
     }
   }
 
@@ -315,6 +347,24 @@ class NotificationService {
           enableVibration: true,
           enableLights: true,
         );
+    const AndroidNotificationChannel beepChannel = AndroidNotificationChannel(
+      _prayerBeepChannelId,
+      'Prayer Times Beep',
+      description: 'Short sound notifications for prayer times',
+      importance: Importance.max,
+      playSound: true,
+      enableVibration: true,
+      enableLights: true,
+    );
+    const AndroidNotificationChannel silentChannel = AndroidNotificationChannel(
+      _prayerSilentChannelId,
+      'Prayer Times Silent',
+      description: 'Silent notifications for prayer times',
+      importance: Importance.max,
+      playSound: false,
+      enableVibration: false,
+      enableLights: true,
+    );
 
     final androidPlugin = _flutterLocalNotificationsPlugin
         .resolvePlatformSpecificImplementation<
@@ -325,6 +375,8 @@ class NotificationService {
       await androidPlugin?.deleteNotificationChannel(legacyChannelId);
     }
     await androidPlugin?.createNotificationChannel(prayerChannel);
+    await androidPlugin?.createNotificationChannel(beepChannel);
+    await androidPlugin?.createNotificationChannel(silentChannel);
     await androidPlugin?.createNotificationChannel(diagnosticChannel);
     debugPrint('Notification channel created: $_prayerChannelId');
     debugPrint('Notification channel created: $_diagnosticChannelId');
@@ -522,6 +574,8 @@ class NotificationService {
     required DateTime notificationTime,
     required String timezoneName,
     required int notificationId,
+    bool isReminder = false,
+    String soundMode = 'adhan',
     bool refreshExactAlarmCapability = true,
   }) async {
     try {
@@ -532,6 +586,7 @@ class NotificationService {
 
       final title = getNotificationTitle(prayerKey, location);
       final body = getNotificationMessage(prayerKey, location, prayerTime);
+      final notificationDetails = _prayerNotificationDetails(soundMode);
 
       if (defaultTargetPlatform == TargetPlatform.android) {
         final prayerLocation = tz.getLocation(timezoneName);
@@ -545,6 +600,8 @@ class NotificationService {
           body: body,
           scheduledAt: scheduledDate,
           notificationId: notificationId,
+          isReminder: isReminder,
+          soundMode: soundMode,
         );
         if (scheduledNatively) {
           await _flutterLocalNotificationsPlugin.cancel(notificationId);
@@ -558,32 +615,6 @@ class NotificationService {
           'Native Android prayer alarm unavailable; falling back to plugin scheduling.',
         );
       }
-
-      const AndroidNotificationDetails androidDetails =
-          AndroidNotificationDetails(
-            _prayerChannelId,
-            'Prayer Times Adhan',
-            channelDescription: 'Adhan notifications for prayer times',
-            importance: Importance.max,
-            priority: Priority.high,
-            enableVibration: true,
-            playSound: true,
-            sound: RawResourceAndroidNotificationSound('adhan'),
-            enableLights: true,
-            icon: '@mipmap/ic_launcher',
-          );
-
-      const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
-        presentAlert: true,
-        presentBadge: true,
-        presentSound: true,
-        sound: 'adhan_short.caf',
-      );
-
-      const NotificationDetails notificationDetails = NotificationDetails(
-        android: androidDetails,
-        iOS: iosDetails,
-      );
 
       final prayerLocation = tz.getLocation(timezoneName);
       final scheduledDate = tz.TZDateTime.from(
@@ -637,6 +668,70 @@ class NotificationService {
     }
   }
 
+  NotificationDetails _prayerNotificationDetails(String soundMode) {
+    switch (soundMode) {
+      case 'silent':
+        return const NotificationDetails(
+          android: AndroidNotificationDetails(
+            _prayerSilentChannelId,
+            'Prayer Times Silent',
+            channelDescription: 'Silent notifications for prayer times',
+            importance: Importance.max,
+            priority: Priority.high,
+            enableVibration: false,
+            playSound: false,
+            enableLights: true,
+            icon: '@mipmap/ic_launcher',
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: false,
+          ),
+        );
+      case 'beep':
+        return const NotificationDetails(
+          android: AndroidNotificationDetails(
+            _prayerBeepChannelId,
+            'Prayer Times Beep',
+            channelDescription: 'Short sound notifications for prayer times',
+            importance: Importance.max,
+            priority: Priority.high,
+            enableVibration: true,
+            playSound: true,
+            enableLights: true,
+            icon: '@mipmap/ic_launcher',
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+          ),
+        );
+      default:
+        return const NotificationDetails(
+          android: AndroidNotificationDetails(
+            _prayerChannelId,
+            'Prayer Times Adhan',
+            channelDescription: 'Adhan notifications for prayer times',
+            importance: Importance.max,
+            priority: Priority.high,
+            enableVibration: true,
+            playSound: true,
+            sound: RawResourceAndroidNotificationSound('adhan'),
+            enableLights: true,
+            icon: '@mipmap/ic_launcher',
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+            sound: 'adhan_short.caf',
+          ),
+        );
+    }
+  }
+
   Future<NotificationReadiness> getReadinessStatus() async {
     try {
       await _ensureInitialized();
@@ -657,6 +752,38 @@ class NotificationService {
       debugPrint('Error checking notification readiness: $e');
       return NotificationReadiness.unknown();
     }
+  }
+
+  NotificationHistoryEntry getNotificationHistory() {
+    final raw = HiveService.getSetting(_notificationHistoryKey);
+    if (raw is Map) return NotificationHistoryEntry.fromJson(raw);
+    return const NotificationHistoryEntry();
+  }
+
+  Future<void> recordScheduleSuccess({
+    required int scheduledCount,
+    required String permissionStatus,
+  }) async {
+    final current = getNotificationHistory();
+    final next = current.copyWith(
+      lastScheduledAt: DateTime.now(),
+      lastScheduledCount: scheduledCount,
+      lastPermissionStatus: permissionStatus,
+    );
+    await HiveService.saveSetting(_notificationHistoryKey, next.toJson());
+  }
+
+  Future<void> recordScheduleFailure({
+    required String reason,
+    String? permissionStatus,
+  }) async {
+    final current = getNotificationHistory();
+    final next = current.copyWith(
+      lastFailedAt: DateTime.now(),
+      lastFailedReason: reason,
+      lastPermissionStatus: permissionStatus,
+    );
+    await HiveService.saveSetting(_notificationHistoryKey, next.toJson());
   }
 
   Future<void> showTestNotification() async {

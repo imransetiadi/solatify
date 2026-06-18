@@ -9,4 +9,7 @@ abstract class SettingsRepository {
   Future<void> completeOnboarding();
   Future<void> updatePrayerOffsets(Map<String, int> offsets);
   Future<void> updateAdhanNotificationsEnabled(bool enabled);
+  Future<void> updateEnabledPrayerNotifications(Map<String, bool> enabled);
+  Future<void> updatePreNotificationMinutes(int minutes);
+  Future<void> updateNotificationSoundMode(String mode);
 }

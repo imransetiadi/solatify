@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:solatify/core/performance/performance_tuning.dart';
 import 'package:solatify/features/notifications/data/services/notification_service.dart';
+import 'package:solatify/features/notifications/domain/services/prayer_notification_planner.dart';
 import 'package:solatify/features/prayer_schedule/data/prayer_timezone_service.dart';
 import 'package:solatify/features/prayer_schedule/domain/entities/location_entity.dart';
 import 'package:solatify/features/prayer_schedule/domain/entities/prayer_times_state_entity.dart';
@@ -12,106 +13,6 @@ import 'package:solatify/features/prayer_schedule/presentation/location_provider
 import 'package:solatify/features/prayer_schedule/presentation/prayer_times_provider.dart';
 import 'package:solatify/features/settings/domain/entities/settings_state.dart';
 import 'package:solatify/features/settings/presentation/providers/settings_provider.dart';
-
-class PrayerNotificationRequest {
-  const PrayerNotificationRequest({
-    required this.prayerKey,
-    required this.prayerTime,
-    required this.notificationId,
-  });
-
-  final String prayerKey;
-  final DateTime prayerTime;
-  final int notificationId;
-}
-
-class PrayerNotificationSyncPlan {
-  const PrayerNotificationSyncPlan({
-    required this.requestsToSchedule,
-    required this.notificationIdsToCancel,
-    required this.desiredKeysById,
-  });
-
-  final List<PrayerNotificationRequest> requestsToSchedule;
-  final List<int> notificationIdsToCancel;
-  final Map<int, String> desiredKeysById;
-}
-
-String buildPrayerNotificationKey({
-  required String prayerKey,
-  required DateTime prayerTime,
-}) {
-  return '${prayerKey}_${prayerTime.toIso8601String()}';
-}
-
-List<PrayerNotificationRequest> buildPrayerNotificationRequests({
-  required Map<String, DateTime?> today,
-  required Map<String, DateTime?> tomorrow,
-  required DateTime now,
-}) {
-  const prayerKeys = ['subuh', 'dzuhur', 'ashar', 'magrib', 'isya'];
-  final requests = <PrayerNotificationRequest>[];
-
-  for (var index = 0; index < prayerKeys.length; index++) {
-    final key = prayerKeys[index];
-    final prayerTime = today[key];
-    if (prayerTime != null && prayerTime.isAfter(now)) {
-      requests.add(
-        PrayerNotificationRequest(
-          prayerKey: key,
-          prayerTime: prayerTime,
-          notificationId: 1001 + index,
-        ),
-      );
-    }
-  }
-
-  final tomorrowSubuh = tomorrow['subuh'];
-  if (tomorrowSubuh != null && tomorrowSubuh.isAfter(now)) {
-    requests.add(
-      PrayerNotificationRequest(
-        prayerKey: 'subuh',
-        prayerTime: tomorrowSubuh,
-        notificationId: 2001,
-      ),
-    );
-  }
-
-  return requests;
-}
-
-PrayerNotificationSyncPlan buildPrayerNotificationSyncPlan({
-  required Map<int, String> activeKeysById,
-  required List<PrayerNotificationRequest> requests,
-}) {
-  final desiredKeysById = <int, String>{
-    for (final request in requests)
-      request.notificationId: buildPrayerNotificationKey(
-        prayerKey: request.prayerKey,
-        prayerTime: request.prayerTime,
-      ),
-  };
-
-  final notificationIdsToCancel =
-      activeKeysById.entries
-          .where((entry) => desiredKeysById[entry.key] != entry.value)
-          .map((entry) => entry.key)
-          .toList(growable: false)
-        ..sort();
-
-  final requestsToSchedule = requests
-      .where((request) {
-        final key = desiredKeysById[request.notificationId];
-        return activeKeysById[request.notificationId] != key;
-      })
-      .toList(growable: false);
-
-  return PrayerNotificationSyncPlan(
-    requestsToSchedule: requestsToSchedule,
-    notificationIdsToCancel: notificationIdsToCancel,
-    desiredKeysById: desiredKeysById,
-  );
-}
 
 class NotificationSchedulerNotifier extends StateNotifier<void> {
   NotificationSchedulerNotifier(this._ref) : super(null) {
@@ -228,6 +129,8 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
         today: today,
         tomorrow: tomorrow,
         now: now,
+        enabledPrayerNotifications: settings.enabledPrayerNotifications,
+        preNotificationMinutes: settings.preNotificationMinutes,
       );
 
       final plan = buildPrayerNotificationSyncPlan(
@@ -263,9 +166,12 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
         await _scheduleNotification(
           prayerKey: request.prayerKey,
           prayerTime: request.prayerTime,
+          notificationTime: request.notificationTime,
           location: locationStr,
           timezoneName: timezoneName,
           notificationId: request.notificationId,
+          isReminder: request.isReminder,
+          soundMode: settings.notificationSoundMode,
         );
       }
 
@@ -273,11 +179,17 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
         ..clear()
         ..addAll(plan.desiredKeysById);
 
+      await NotificationService().recordScheduleSuccess(
+        scheduledCount: plan.desiredKeysById.length,
+        permissionStatus: readiness.status.name,
+      );
+
       debugPrint(
         'Synced ${plan.desiredKeysById.length} prayer notifications for today and tomorrow',
       );
     } catch (e) {
       debugPrint('Error scheduling notifications: $e');
+      await NotificationService().recordScheduleFailure(reason: e.toString());
     } finally {
       _schedulingInProgress = false;
       if (_rescheduleRequested && mounted) {
@@ -290,9 +202,12 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
   Future<void> _scheduleNotification({
     required String prayerKey,
     required DateTime prayerTime,
+    required DateTime notificationTime,
     required String location,
     required String timezoneName,
     required int notificationId,
+    required bool isReminder,
+    required String soundMode,
   }) async {
     try {
       final timeFormatter = DateFormat('HH:mm');
@@ -303,9 +218,11 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
         prayerKey: prayerKey,
         location: location,
         prayerTime: prayerTimeStr,
-        notificationTime: prayerTime,
+        notificationTime: notificationTime,
         timezoneName: timezoneName,
         notificationId: notificationId,
+        isReminder: isReminder,
+        soundMode: soundMode,
         refreshExactAlarmCapability: false,
       );
 

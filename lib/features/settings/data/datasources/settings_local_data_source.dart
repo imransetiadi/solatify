@@ -10,6 +10,9 @@ abstract class SettingsLocalDataSource {
   Future<void> completeOnboarding();
   Future<void> updatePrayerOffsets(Map<String, int> offsets);
   Future<void> updateAdhanNotificationsEnabled(bool enabled);
+  Future<void> updateEnabledPrayerNotifications(Map<String, bool> enabled);
+  Future<void> updatePreNotificationMinutes(int minutes);
+  Future<void> updateNotificationSoundMode(String mode);
 }
 
 class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
@@ -47,6 +50,9 @@ class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
       final adhanNotificationsEnabled = rawAdhanNotificationsEnabled is bool
           ? rawAdhanNotificationsEnabled
           : false;
+      final enabledPrayerNotifications = _readEnabledPrayerNotifications();
+      final preNotificationMinutes = _readPreNotificationMinutes();
+      final notificationSoundMode = _readNotificationSoundMode();
 
       ThemeMode themeMode;
       switch (themeStr) {
@@ -67,6 +73,9 @@ class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
         onboardingCompleted: onboarding,
         prayerOffsets: offsets,
         adhanNotificationsEnabled: adhanNotificationsEnabled,
+        enabledPrayerNotifications: enabledPrayerNotifications,
+        preNotificationMinutes: preNotificationMinutes,
+        notificationSoundMode: notificationSoundMode,
       );
     } catch (e) {
       return const SettingsState(
@@ -84,6 +93,40 @@ class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
         adhanNotificationsEnabled: false,
       );
     }
+  }
+
+  Map<String, bool> _readEnabledPrayerNotifications() {
+    final raw = HiveService.getSetting(
+      'enabled_prayer_notifications',
+      defaultValue: SettingsState.defaultEnabledPrayerNotifications,
+    );
+    if (raw is! Map) return SettingsState.defaultEnabledPrayerNotifications;
+
+    return {
+      for (final entry
+          in SettingsState.defaultEnabledPrayerNotifications.entries)
+        entry.key: raw[entry.key] is bool
+            ? raw[entry.key] as bool
+            : entry.value,
+    };
+  }
+
+  int _readPreNotificationMinutes() {
+    final raw = HiveService.getSetting(
+      'pre_notification_minutes',
+      defaultValue: SettingsState.defaultPreNotificationMinutes,
+    );
+    if (raw is int && const {0, 5, 10, 15}.contains(raw)) return raw;
+    return SettingsState.defaultPreNotificationMinutes;
+  }
+
+  String _readNotificationSoundMode() {
+    final raw = HiveService.getSetting(
+      'notification_sound_mode',
+      defaultValue: SettingsState.defaultNotificationSoundMode,
+    )?.toString();
+    if (const {'adhan', 'beep', 'silent'}.contains(raw)) return raw!;
+    return SettingsState.defaultNotificationSoundMode;
   }
 
   @override
@@ -126,5 +169,22 @@ class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
   @override
   Future<void> updateAdhanNotificationsEnabled(bool enabled) async {
     await HiveService.saveSetting('adhan_notifications_enabled', enabled);
+  }
+
+  @override
+  Future<void> updateEnabledPrayerNotifications(
+    Map<String, bool> enabled,
+  ) async {
+    await HiveService.saveSetting('enabled_prayer_notifications', enabled);
+  }
+
+  @override
+  Future<void> updatePreNotificationMinutes(int minutes) async {
+    await HiveService.saveSetting('pre_notification_minutes', minutes);
+  }
+
+  @override
+  Future<void> updateNotificationSoundMode(String mode) async {
+    await HiveService.saveSetting('notification_sound_mode', mode);
   }
 }

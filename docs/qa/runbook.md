@@ -37,6 +37,7 @@
 - [ ] Open Qibla, Mosque, and Settings from More
 - [ ] Rotate between portrait and landscape on phone and tablet
 - [ ] Confirm notification permission prompts can be accepted or rejected cleanly
+- [ ] Return from iOS notification settings and confirm Solatify refreshes notification health/reschedules automatically
 - [ ] Confirm exact alarm or scheduling permission flow works if surfaced by the OS
 - [ ] Verify prayer notifications appear at the expected time
 
@@ -50,6 +51,7 @@
 - [ ] Confirm location permission prompts can be accepted or rejected cleanly
 - [ ] Confirm notification permission prompts can be accepted or rejected cleanly
 - [ ] Confirm exact alarm permission flow works if required by the device
+- [ ] Return from Android notification/exact alarm settings and confirm Solatify refreshes notification health/reschedules automatically
 - [ ] Reboot the device or emulator and confirm future notifications still schedule
 
 ## Performance Profiling
@@ -59,6 +61,7 @@
 - [ ] Scroll Home, Quran, and Schedule while watching frame times
 - [ ] Rapidly switch tabs and open or close the More menu
 - [ ] Repeat the same checks on iOS and Android
+- [ ] Fill `docs/qa/performance-baseline-template.md` with timing, frame, memory, and log evidence
 
 ## Pass / Fail Log
 | Date | Platform | Device | OS | Build | Test Area | Result | Evidence |

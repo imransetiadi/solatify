@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:solatify/features/notifications/data/services/notification_service.dart';
+import 'package:solatify/features/notifications/domain/entities/notification_history_entry.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -18,6 +19,37 @@ void main() {
   final service = NotificationService();
   final capturedMethods = <MethodCall>[];
   final capturedNativeAlarmMethods = <MethodCall>[];
+
+  test(
+    'notification history entry serializes schedule and failure metadata',
+    () {
+      final entry = NotificationHistoryEntry(
+        lastScheduledAt: DateTime(2026, 6, 18, 7),
+        lastScheduledCount: 6,
+        lastFailedAt: DateTime(2026, 6, 18, 8),
+        lastFailedReason: 'permission denied',
+        lastPermissionStatus: 'ready',
+      );
+
+      final restored = NotificationHistoryEntry.fromJson(entry.toJson());
+
+      expect(restored.lastScheduledAt, DateTime(2026, 6, 18, 7));
+      expect(restored.lastScheduledCount, 6);
+      expect(restored.lastFailedAt, DateTime(2026, 6, 18, 8));
+      expect(restored.lastFailedReason, 'permission denied');
+      expect(restored.lastPermissionStatus, 'ready');
+    },
+  );
+
+  test('notification service exposes history recording helpers', () {
+    final source = File(
+      'lib/features/notifications/data/services/notification_service.dart',
+    ).readAsStringSync();
+
+    expect(source, contains('recordScheduleSuccess'));
+    expect(source, contains('recordScheduleFailure'));
+    expect(source, contains('notification_history'));
+  });
 
   setUp(() async {
     capturedMethods.clear();
@@ -180,7 +212,7 @@ void main() {
   );
 
   test(
-    'uses one prayer adhan notification channel across Flutter and native Android',
+    'uses matching prayer notification channels across Flutter and native Android',
     () {
       final notificationService = File(
         'lib/features/notifications/data/services/notification_service.dart',
@@ -194,9 +226,51 @@ void main() {
         contains("_prayerChannelId = 'prayer_times_adhan_channel'"),
       );
       expect(receiver, contains('CHANNEL_ID = "prayer_times_adhan_channel"'));
+      expect(
+        receiver,
+        contains('BEEP_CHANNEL_ID = "prayer_times_beep_channel"'),
+      );
+      expect(
+        receiver,
+        contains('SILENT_CHANNEL_ID = "prayer_times_silent_channel"'),
+      );
+      expect(receiver, contains('channelIdFor(soundMode)'));
+      expect(receiver, contains('SOUND_MODE_BEEP'));
+      expect(receiver, contains('SOUND_MODE_SILENT'));
       expect(notificationService, contains('deleteNotificationChannel'));
     },
   );
+
+  test('native Android alarm model persists sound mode and reminder metadata', () {
+    final mainActivity = File(
+      'android/app/src/main/kotlin/com/solatify/app/solatify/MainActivity.kt',
+    ).readAsStringSync();
+    final scheduler = File(
+      'android/app/src/main/kotlin/com/solatify/app/solatify/notifications/PrayerAlarmScheduler.kt',
+    ).readAsStringSync();
+    final receiver = File(
+      'android/app/src/main/kotlin/com/solatify/app/solatify/notifications/PrayerAlarmReceiver.kt',
+    ).readAsStringSync();
+
+    expect(mainActivity, contains('call.argument<Boolean>("isReminder")'));
+    expect(mainActivity, contains('call.argument<String>("soundMode")'));
+    expect(scheduler, contains('EXTRA_IS_REMINDER'));
+    expect(scheduler, contains('EXTRA_SOUND_MODE'));
+    expect(scheduler, contains('.put("isReminder", isReminder)'));
+    expect(scheduler, contains('.put("soundMode", soundMode)'));
+    expect(
+      receiver,
+      contains('getBooleanExtra(PrayerAlarmScheduler.EXTRA_IS_REMINDER'),
+    );
+    expect(
+      receiver,
+      contains('getStringExtra(PrayerAlarmScheduler.EXTRA_SOUND_MODE)'),
+    );
+    expect(
+      receiver,
+      contains('if (soundMode == SOUND_MODE_ADHAN && !isReminder)'),
+    );
+  });
 
   test(
     'uses native Android alarm scheduler for prayer notifications',
@@ -225,6 +299,11 @@ void main() {
       expect(capturedNativeAlarmMethods.single.method, 'schedulePrayerAlarm');
       expect(capturedNativeAlarmMethods.single.arguments['id'], 1005);
       expect(capturedNativeAlarmMethods.single.arguments['prayerKey'], 'isya');
+      expect(capturedNativeAlarmMethods.single.arguments['soundMode'], 'adhan');
+      expect(
+        capturedNativeAlarmMethods.single.arguments['isReminder'],
+        isFalse,
+      );
       expect(
         capturedNativeAlarmMethods.single.arguments['title'],
         'Waktu Isya - Jakarta, Indonesia',
@@ -237,6 +316,39 @@ void main() {
         capturedMethods.where((call) => call.method == 'cancel'),
         hasLength(1),
       );
+    },
+  );
+
+  test(
+    'passes sound mode and reminder metadata to native Android scheduler',
+    () async {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(androidPrayerAlarmChannel, (
+            MethodCall call,
+          ) async {
+            capturedNativeAlarmMethods.add(call);
+            return true;
+          });
+
+      await service.init();
+
+      await service.schedulePrayerNotification(
+        prayerKey: 'subuh',
+        location: 'Jakarta, Indonesia',
+        prayerTime: '04:30',
+        notificationTime: DateTime.now().add(const Duration(minutes: 10)),
+        timezoneName: 'Asia/Jakarta',
+        notificationId: 3001,
+        isReminder: true,
+        soundMode: 'silent',
+      );
+
+      expect(capturedNativeAlarmMethods.single.method, 'schedulePrayerAlarm');
+      expect(
+        capturedNativeAlarmMethods.single.arguments['soundMode'],
+        'silent',
+      );
+      expect(capturedNativeAlarmMethods.single.arguments['isReminder'], isTrue);
     },
   );
 
@@ -282,6 +394,52 @@ void main() {
       );
     },
   );
+
+  test('uses lightweight beep channel for beep notification mode', () async {
+    await service.init();
+
+    await service.schedulePrayerNotification(
+      prayerKey: 'dzuhur',
+      location: 'Jakarta, Indonesia',
+      prayerTime: '12:00',
+      notificationTime: DateTime.now().add(const Duration(minutes: 10)),
+      timezoneName: 'Asia/Jakarta',
+      notificationId: 1102,
+      soundMode: 'beep',
+    );
+
+    final zonedSchedule = capturedMethods.lastWhere(
+      (call) => call.method == 'zonedSchedule',
+    );
+    expect(
+      zonedSchedule.arguments['platformSpecifics']['channelId'],
+      'prayer_times_beep_channel',
+    );
+    expect(zonedSchedule.arguments['platformSpecifics']['playSound'], isTrue);
+  });
+
+  test('disables sound for silent notification mode', () async {
+    await service.init();
+
+    await service.schedulePrayerNotification(
+      prayerKey: 'ashar',
+      location: 'Jakarta, Indonesia',
+      prayerTime: '15:20',
+      notificationTime: DateTime.now().add(const Duration(minutes: 10)),
+      timezoneName: 'Asia/Jakarta',
+      notificationId: 1103,
+      soundMode: 'silent',
+    );
+
+    final zonedSchedule = capturedMethods.lastWhere(
+      (call) => call.method == 'zonedSchedule',
+    );
+    expect(
+      zonedSchedule.arguments['platformSpecifics']['channelId'],
+      'prayer_times_silent_channel',
+    );
+    expect(zonedSchedule.arguments['platformSpecifics']['playSound'], isFalse);
+  });
 
   test(
     'retries prayer scheduling inexactly when exact scheduling is rejected',
@@ -407,17 +565,48 @@ void main() {
     expect(notificationService, contains('openAndroidExactAlarmSettings'));
   });
 
-  test('iOS notification permission is manual from settings', () {
+  test('settings verifies notification permission after returning to app', () {
+    final settingsScreen = File(
+      'lib/features/settings/presentation/screens/settings_screen.dart',
+    ).readAsStringSync();
+    final healthScreen = File(
+      'lib/features/settings/presentation/screens/notification_health_screen.dart',
+    ).readAsStringSync();
+
+    expect(settingsScreen, contains('didChangeAppLifecycleState'));
+    expect(settingsScreen, contains('AppLifecycleState.resumed'));
+    expect(
+      settingsScreen,
+      contains('_verifyNotificationPermissionAfterReturn'),
+    );
+    expect(settingsScreen, contains('_areAdhanNotificationsAllowed'));
+    expect(settingsScreen, contains('refreshSchedules(force: true)'));
+    expect(settingsScreen, contains('cancelAllNotifications'));
+    expect(
+      settingsScreen,
+      contains('syncAdhanNotificationsWithPermission(false)'),
+    );
+    expect(healthScreen, contains('didChangeAppLifecycleState'));
+    expect(healthScreen, contains('AppLifecycleState.resumed'));
+    expect(healthScreen, contains('_refreshHealth'));
+  });
+
+  test('iOS notification permission is requested before opening settings', () {
     final notificationService = File(
       'lib/features/notifications/data/services/notification_service.dart',
+    ).readAsStringSync();
+    final settingsScreen = File(
+      'lib/features/settings/presentation/screens/settings_screen.dart',
     ).readAsStringSync();
     final appDelegate = File('ios/Runner/AppDelegate.swift').readAsStringSync();
 
     expect(notificationService, contains('requestAlertPermission: false'));
-    expect(
-      notificationService,
-      isNot(contains('requestPermissions(alert: true')),
-    );
+    expect(notificationService, contains('requestIosPermissions'));
+    expect(notificationService, contains('requestPermissions('));
+    expect(notificationService, contains('alert: true'));
+    expect(notificationService, contains('badge: true'));
+    expect(notificationService, contains('sound: true'));
+    expect(settingsScreen, contains('requestIosPermissions'));
     expect(notificationService, contains('openIosNotificationSettings'));
     expect(appDelegate, contains('registerIosSettingsChannel'));
     expect(
@@ -436,7 +625,7 @@ void main() {
       'android/app/src/main/kotlin/com/solatify/app/solatify/notifications/PrayerAlarmReceiver.kt',
     ).readAsStringSync();
 
-    expect(notificationService, contains("goRouter.go('/schedule')"));
+    expect(notificationService, contains('goRouter.go(AppRoutes.schedule)'));
     expect(receiver, contains('.setContentIntent('));
     expect(receiver, contains('buildContentIntent'));
   });

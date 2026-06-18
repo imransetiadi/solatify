@@ -5,94 +5,95 @@
 ## Release Info
 - Version: Not set in this audit
 - Build Number: Not set in this audit
-- Branch / Commit: `fix-android-notifications` / `8be2e45` plus working-tree QA changes
-- Date: 2026-06-16 19:04 WIB
-- Release Owner: Codex QA audit
-- Test Devices: iOS physical `Satelit88` on iOS 18.5; Android device not connected; macOS and Chrome also detected
-- Evidence Location: Terminal output from this QA run and this document
+- Branch / Commit: `fix-android-adhan-playback` / `0f09718` plus Phase 17 evidence docs
+- Date: 2026-06-18 09:50 WIB
+- Release Owner: Codex Phase 17 real-device QA evidence audit
+- Test Devices Detected: Android `2602BPC18G` on Android 16, Android emulator `emulator-5554` on Android 17, cabled iOS `Satelit88` on iOS 18.5, macOS, Chrome
+- Evidence Location: Terminal output from Phase 16/17 commands and this document
 
 ## Authoritative Commands
-- `flutter test`
 - `flutter analyze`
-- `flutter test integration_test/app_test.dart`
+- `flutter test`
+- `flutter devices`
+- `flutter build apk --debug`
+- `flutter build ios --no-codesign`
 
-## Command Evidence - 2026-06-16
-- [x] `flutter analyze --no-pub` — Passed, `No issues found!`
-- [x] `flutter test --no-pub` — Passed, `57/57` tests passed
-- [ ] `flutter test integration_test/app_test.dart` — Blocked/failed on iOS device execution: tests launched and scheduled prayer notification, then did not complete; Flutter finalization also hit temporary-directory `PathNotFoundException`
+## Command Evidence - 2026-06-18
+- [x] `flutter analyze` — Passed, `No issues found!`
+- [x] `flutter test` — Passed, `135/135` tests passed
+- [x] `flutter devices` — Passed, detected Android physical, Android emulator, cabled iOS, macOS, and Chrome targets
 - [x] `flutter build apk --debug` — Passed, built `build/app/outputs/flutter-apk/app-debug.apk`
-- [x] `flutter build ios --no-codesign` — Passed, built `build/ios/iphoneos/Runner.app`
-- [x] `flutter devices` — Passed, found iOS physical device `Satelit88`; no Android device detected
+- [x] `flutter build apk --profile` — Passed, built `build/app/outputs/flutter-apk/app-profile.apk` at 89.3 MB
+- [x] `flutter build ios --no-codesign` — Passed, built `build/ios/iphoneos/Runner.app` at 22.8 MB
+- [x] `flutter test -d GMFYIJQKVOM7AIYP integration_test/app_test.dart` — Passed on Android physical `2602BPC18G`, `2/2` tests passed; native Android prayer alarms were scheduled in logs
+- [x] `flutter test -d emulator-5554 integration_test/app_test.dart` — Passed on Android emulator, `2/2` tests passed
+- [x] `flutter test -d 00008140-000518E42EB8401C integration_test/app_test.dart` — Passed on cabled iOS physical `Satelit88`, `2/2` tests passed; iOS prayer notifications were scheduled in logs
 
-## Required Evidence
-- Pass result for each command above
-- iOS and Android device logs for any issue found
-- Screenshot or recording for any UI regression
-- Screenshot or recording showing `Ceklis Ibadah Hari Ini` moved from Beranda into More → `Tracker Ibadah`
-- Performance notes if any threshold is near or exceeded
+## Automated Coverage Summary
+- [x] Notification v2 settings, pre-prayer reminder, per-prayer toggle, sound mode, and history are covered by unit/source/widget tests
+- [x] Settings and Notification Health Center verify notification permission after returning from system settings in source guard tests
+- [x] Android native adhan/beep/silent/reminder metadata is covered by service/native source tests
+- [x] Quran reading mode controls are covered by source and provider tests
+- [x] Global Islamic Content search is covered by widget/provider tests
+- [x] Typed route constants and internal navigation guardrails are covered by source tests
+- [x] Compact-width smoke coverage exists for Home, Schedule, Quran, Settings, and Islamic Content
+- [x] Performance and asset budget guardrails are covered by deterministic tests
+
+## Required Manual Device Evidence Before Public Release
+- [x] iOS: cold start and main navigation on iPhone via cabled integration test
+- [ ] iOS: notification permission prompt accept/reject flow — manual visible prompt evidence pending
+- [ ] iOS: return from notification settings and confirm Notification Health refreshes/reschedules automatically
+- [ ] iOS: visible test notification and scheduled diagnostic notification delivery — integration logs show scheduled prayer notifications, visible delivery evidence pending
+- [x] Android physical: cold start and main navigation on phone via integration test
+- [ ] Android physical: POST_NOTIFICATIONS prompt accept/reject flow
+- [ ] Android physical: exact alarm settings flow, if surfaced by OS
+- [ ] Android physical: return from notification/exact alarm settings and confirm Notification Health refreshes/reschedules automatically
+- [ ] Android physical: visible test notification and scheduled diagnostic notification delivery
+- [ ] Mosque map/search and directions open a map/browser or show failure snackbar on iOS and Android
+- [ ] Profile-mode performance evidence filled in `docs/qa/performance-baseline-template.md`; profile APK build exists, DevTools/manual frame evidence pending
+- [ ] Store signing readiness: Android release AAB signing and iOS Apple Developer signing/provisioning
 
 ## Notification UX Checks
-- [x] Settings shows the `NOTIFIKASI` section without layout overflow in widget/build coverage
-- [x] Status text updates after notification permission changes in service/readiness coverage
-- [ ] `Aktifkan izin notifikasi` opens or requests the platform permission flow when action is needed — requires manual iOS/Android device evidence
-- [x] `Kirim notifikasi uji` sends a visible test notification when notifications are available in platform-channel test coverage; real visible notification requires device evidence
-- [ ] Android: diagnostic channel `Solatify Diagnostic` is enabled in system notification settings
-- [ ] Android: `Kirim notifikasi uji` shows snackbar and creates a new visible system notification on every tap
-- [ ] Android: `Jadwalkan tes 2 menit` shows snackbar and delivers after roughly 2 minutes
-- [x] Android: next real prayer notification delivery verified or diagnostic logs captured in scheduler logs during integration attempt; real Android delivery still requires device evidence
-- [ ] iOS: `Kirim notifikasi uji` shows snackbar and creates a new visible system notification on every tap — requires manual device evidence
-- [ ] iOS: `Jadwalkan tes 2 menit` shows snackbar and delivers after roughly 2 minutes — requires manual device evidence
-- [ ] iOS: Settings notification buttons never fail silently after tap
-- [x] Failure states show a SnackBar instead of crashing the Settings screen in source/test coverage
-- [x] Android exact-alarm denial shows the less precise schedule status and still allows a test notification in service tests
+- [x] Settings shows notification controls without automated layout failures
+- [x] Notification Health Center exposes readiness, pending IDs, history, test notification, settings shortcut, and reschedule actions
+- [x] Post-permission return verification is wired in Settings and Notification Health Center lifecycle callbacks
+- [x] Failure states show SnackBar/source-handled fallback instead of crashing Settings
+- [ ] Real visible notification delivery on Android physical device — manual evidence pending
+- [ ] Real visible notification delivery on iOS physical device — manual evidence pending
 
 ## iOS Verification
-- [ ] Cold start works on the tested iPhone and iPad devices — iPhone app launched during integration attempt; iPad not tested
-- [ ] Main navigation works — integration attempt did not complete, manual evidence required
-- [x] Beranda no longer shows `Ceklis Ibadah Hari Ini` in automated widget/source coverage
-- [x] More opens `Tracker Ibadah` in automated widget coverage
-- [x] Tracker prayer toggle updates checked/unchecked state in automated tracker tests
-- [ ] Responsive layout checked on phone and tablet — tablet widget coverage exists; physical device evidence pending
-- [ ] Notification permission flow checked
-- [ ] Mosque `Lihat Peta` opens map/browser or shows failure snackbar
-- [ ] Mosque `Rute` opens directions or shows failure snackbar
-- [ ] Prayer notification delivery verified — scheduling observed in logs, real delivery pending manual evidence
-- [ ] No blocking crash or layout bug found — cannot mark pass while integration test is incomplete
+- [x] iOS no-codesign build succeeds
+- [x] Cabled install/launch/navigation on iPhone passed via integration test
+- [ ] iPad responsive run — manual evidence pending
+- [ ] Notification permission and visible delivery — scheduled in integration logs, manual visible delivery evidence pending
+- [ ] Map route deep link/browser behavior — manual evidence pending
+- [ ] Profile-mode performance run — profile APK builds, DevTools/manual frame evidence pending
 
 ## Android Verification
-- [ ] Cold start works on the tested phone and tablet devices — Android device not connected in this audit
-- [ ] Main navigation works — Android device not connected in this audit
-- [x] Beranda no longer shows `Ceklis Ibadah Hari Ini` in automated widget/source coverage
-- [x] More opens `Tracker Ibadah` in automated widget coverage
-- [x] Tracker prayer toggle updates checked/unchecked state in automated tracker tests
-- [x] Responsive layout checked on phone and tablet via widget/integration-style viewport coverage; physical Android evidence pending
-- [ ] Notification permission flow checked
-- [ ] Exact alarm flow checked if applicable
-- [ ] Mosque `Lihat Peta` opens map/browser or shows failure snackbar
-- [ ] Mosque `Rute` opens directions or shows failure snackbar
-- [ ] Prayer notification delivery verified — scheduling/channel behavior covered by tests; real device delivery pending
-- [ ] Reboot and reschedule behavior checked
-- [ ] No blocking crash, freeze, or layout bug found
+- [x] Android debug APK build succeeds
+- [x] Android physical device and emulator are detected by `flutter devices`
+- [x] Install/launch/navigation on Android physical device passed via integration test
+- [ ] Notification permission, exact alarm, and delivery — manual evidence pending
+- [ ] Map route deep link/browser behavior — manual evidence pending
+- [ ] Profile-mode performance run — profile APK builds, DevTools/manual frame evidence pending
 
-## Performance Gate
-- [ ] Startup meets the thresholds in `performance-checklist.md` — profile-mode timing not run in this audit
-- [ ] Main screens scroll smoothly — profile-mode frame evidence not collected
-- [ ] Tab switching is stable — automated navigation coverage exists, profile/manual evidence pending
-- [ ] No obvious memory growth during repeated navigation — DevTools memory evidence not collected
-- [ ] No repeated background exception spam in logs — no app exception spam seen in unit/build output; device log profiling pending
+## Build Artifacts
+- Debug APK: `build/app/outputs/flutter-apk/app-debug.apk`
+- Profile APK: `build/app/outputs/flutter-apk/app-profile.apk`
+- iOS no-codesign app: `build/ios/iphoneos/Runner.app`
 
-## Open Issues
-| Severity | Issue | Platform | Owner | Status | Evidence |
-|----------|-------|----------|--------|--------|----------|
-| High | `flutter test integration_test/app_test.dart` did not complete on iOS device and Flutter finalization reported temporary-directory `PathNotFoundException` | iOS / Flutter tool | QA | Open | Integration command output from 2026-06-16 |
-| Medium | Android device QA could not be executed because no Android device/emulator was connected | Android | QA | Pending device access | `flutter devices` listed iOS, macOS, Chrome only |
-| Medium | Profile-mode performance thresholds were not measured on device | iOS / Android | QA | Pending profiling run | `docs/qa/performance-checklist.md` requires `flutter run --profile` |
+## Known Warnings / Risks
+- Flutter warns that `flutter_local_notifications` and `flutter_compass_v2` do not support Swift Package Manager for iOS; currently warning-only, future Flutter versions may make this stricter.
+- Flutter warns that `audio_session`, `flutter_compass_v2`, and `package_info_plus` apply Kotlin Gradle Plugin; future Flutter versions may require plugin upgrades.
+- iOS build is no-codesign only; TestFlight/App Store still requires Apple Developer team, signing certificate, provisioning profile, archive signing, and upload.
+- Public Android release still requires signed release build/AAB and Play Console checks.
 
 ## Final Decision
-- [ ] Approved for release
-- [x] Blocked from release
+- [ ] Approved for public release
+- [x] Blocked from public release pending manual device QA and signed release evidence
+- [x] Automated readiness passed for current branch
 
 ## Signoff Notes
-- Summary: Static analysis, full unit/widget tests, Android debug build, and iOS no-codesign build pass. Release signoff remains blocked because integration QA did not complete and Android/device performance evidence was not collected.
-- Risks accepted: None for release approval. Automated readiness is good, but device-level release evidence is incomplete.
-- Follow-up items after release: None; required before release are rerunning integration QA to completion, Android physical/emulator QA, manual notification/GPS/map-route checks, and profile-mode performance capture.
+- Summary: Static analysis, full automated tests, Android debug/profile builds, iOS no-codesign build, Android physical integration test, Android emulator integration test, cabled iOS physical integration test, and device discovery pass on 2026-06-18.
+- Release blocker: public release still needs real iOS/Android visible permission/delivery evidence, map deep-link evidence, profile-mode DevTools baseline evidence, and signed store build evidence.
+- Next action: run manual notification/map QA on both phones, fill `docs/qa/performance-baseline-template.md` with DevTools evidence, then update this signoff from blocked to approved only if all required manual evidence passes.

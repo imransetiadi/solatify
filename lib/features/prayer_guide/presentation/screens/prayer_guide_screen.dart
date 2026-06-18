@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import 'package:solatify/core/navigation/app_routes.dart';
 import 'package:solatify/core/theme/theme.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
-import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
+import 'package:solatify/core/widgets/solatify_screen_scaffold.dart';
 import 'package:solatify/features/prayer_guide/domain/models/prayer_guide_step.dart';
 import 'package:solatify/features/prayer_guide/presentation/providers/prayer_guide_provider.dart';
 
@@ -20,100 +20,80 @@ class PrayerGuideScreen extends ConsumerWidget {
     final mutedColor = theme.brightness == Brightness.dark
         ? AppTheme.darkModeTextSecondary
         : AppTheme.lightModeTextSecondary;
-    final appBarColor = theme.colorScheme.surface.withValues(
-      alpha: theme.brightness == Brightness.dark ? 0.96 : 0.94,
-    );
     final summaries = ref.watch(prayerGuideSummariesProvider);
     final steps = ref.watch(prayerGuideStepsProvider);
     final dhikrItems = ref.watch(postPrayerDhikrProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: appBarColor,
-        foregroundColor: textColor,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        shadowColor: Colors.transparent,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/islamic-content'),
-        ),
-        title: Text(
-          'Tuntunan Salat',
-          style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-      ),
-      body: IslamicBackground(
-        child: ResponsiveCenter(
-          child: ListView(
-            scrollCacheExtent: const ScrollCacheExtent.pixels(10000),
-            padding: ResponsiveLayout.pagePadding(
-              context,
-            ).copyWith(top: 16, bottom: 96),
-            children: [
-              _OpeningReadingCard(
+    return SolatifyScreenScaffold(
+      title: 'Tuntunan Salat',
+      backRoute: AppRoutes.islamicContent,
+      padding: EdgeInsets.zero,
+      child: ListView(
+        scrollCacheExtent: const ScrollCacheExtent.pixels(10000),
+        padding: ResponsiveLayout.pagePadding(
+          context,
+        ).copyWith(top: 16, bottom: 96),
+        children: [
+          _OpeningReadingCard(
+            primaryColor: primaryColor,
+            textColor: textColor,
+            mutedColor: mutedColor,
+          ),
+          const SizedBox(height: 18),
+          _SectionHeader(
+            icon: Icons.fact_check_outlined,
+            title: 'Ringkasan Penting',
+            color: primaryColor,
+          ),
+          const SizedBox(height: 12),
+          ...summaries.map(
+            (summary) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _SummaryCard(
+                summary: summary,
                 primaryColor: primaryColor,
                 textColor: textColor,
                 mutedColor: mutedColor,
               ),
-              const SizedBox(height: 18),
-              _SectionHeader(
-                icon: Icons.fact_check_outlined,
-                title: 'Ringkasan Penting',
-                color: primaryColor,
-              ),
-              const SizedBox(height: 12),
-              ...summaries.map(
-                (summary) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: _SummaryCard(
-                    summary: summary,
-                    primaryColor: primaryColor,
-                    textColor: textColor,
-                    mutedColor: mutedColor,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              _SectionHeader(
-                icon: Icons.format_list_numbered,
-                title: 'Urutan Salat',
-                color: primaryColor,
-              ),
-              const SizedBox(height: 12),
-              ...steps.map(
-                (step) => Padding(
-                  padding: const EdgeInsets.only(bottom: 14),
-                  child: _PrayerStepCard(
-                    step: step,
-                    primaryColor: primaryColor,
-                    textColor: textColor,
-                    mutedColor: mutedColor,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              _SectionHeader(
-                icon: Icons.auto_awesome,
-                title: 'Dzikir Setelah Salat',
-                color: primaryColor,
-              ),
-              const SizedBox(height: 12),
-              ...dhikrItems.map(
-                (dhikr) => Padding(
-                  padding: const EdgeInsets.only(bottom: 14),
-                  child: _DhikrCard(
-                    dhikr: dhikr,
-                    primaryColor: primaryColor,
-                    textColor: textColor,
-                    mutedColor: mutedColor,
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
+          const SizedBox(height: 10),
+          _SectionHeader(
+            icon: Icons.format_list_numbered,
+            title: 'Urutan Salat',
+            color: primaryColor,
+          ),
+          const SizedBox(height: 12),
+          ...steps.map(
+            (step) => Padding(
+              padding: const EdgeInsets.only(bottom: 14),
+              child: _PrayerStepCard(
+                step: step,
+                primaryColor: primaryColor,
+                textColor: textColor,
+                mutedColor: mutedColor,
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          _SectionHeader(
+            icon: Icons.auto_awesome,
+            title: 'Dzikir Setelah Salat',
+            color: primaryColor,
+          ),
+          const SizedBox(height: 12),
+          ...dhikrItems.map(
+            (dhikr) => Padding(
+              padding: const EdgeInsets.only(bottom: 14),
+              child: _DhikrCard(
+                dhikr: dhikr,
+                primaryColor: primaryColor,
+                textColor: textColor,
+                mutedColor: mutedColor,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

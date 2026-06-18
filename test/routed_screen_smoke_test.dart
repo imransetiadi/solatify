@@ -6,11 +6,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:solatify/core/database/hive_service.dart';
+import 'package:solatify/core/navigation/app_routes.dart';
 import 'package:solatify/core/theme/theme.dart';
 import 'package:solatify/features/hijri_calendar/presentation/screens/hijri_calendar_screen.dart';
 import 'package:solatify/features/mosque/presentation/screens/nearby_mosque_screen.dart';
 import 'package:solatify/features/prayer_guide/presentation/screens/prayer_guide_screen.dart';
 import 'package:solatify/features/qibla/presentation/screens/qibla_screen.dart';
+import 'package:solatify/features/settings/presentation/screens/notification_health_screen.dart';
 import 'package:solatify/features/settings/presentation/screens/settings_screen.dart';
 import 'package:solatify/features/tracker/presentation/screens/tracker_screen.dart';
 
@@ -122,6 +124,200 @@ void main() {
     expect(find.text('Kirim notifikasi uji'), findsNothing);
     expect(find.text('Jadwalkan tes 2 menit'), findsNothing);
     expect(find.textContaining('Pending:'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  test('Settings source exposes Notification v2 controls', () {
+    final source = File(
+      'lib/features/settings/presentation/screens/settings_screen.dart',
+    ).readAsStringSync();
+
+    expect(source, contains('notificationPerPrayerTitle'));
+    expect(source, contains('preNotificationReminder'));
+    expect(source, contains('notificationSoundMode'));
+    expect(source, contains('updateEnabledPrayerNotification'));
+    expect(source, contains('updatePreNotificationMinutes'));
+    expect(source, contains('updateNotificationSoundMode'));
+    expect(source, contains('refreshSchedules(force: true)'));
+    expect(source, contains('notificationHealthEntryTitle'));
+    expect(source, contains('AppRoutes.notificationHealth'));
+    expect(source, contains('WidgetsBindingObserver'));
+    expect(source, contains('WidgetsBinding.instance.addObserver(this)'));
+    expect(source, contains('WidgetsBinding.instance.removeObserver(this)'));
+    expect(source, contains('AppLifecycleState.resumed'));
+    expect(source, contains('_verifyNotificationPermissionAfterReturn'));
+    expect(source, contains('syncAdhanNotificationsWithPermission(false)'));
+  });
+
+  test('AppRoutes exposes typed static and dynamic routes', () {
+    expect(AppRoutes.home, '/home');
+    expect(AppRoutes.schedule, '/schedule');
+    expect(AppRoutes.notificationHealth, '/settings/notification-health');
+    expect(AppRoutes.quranSurah(2), '/quran/surah/2');
+    expect(
+      AppRoutes.quranSurah(2, scrollTo: 255),
+      '/quran/surah/2?scroll_to=255',
+    );
+  });
+
+  test('Priority navigation uses AppRoutes instead of raw internal paths', () {
+    final sourcePaths = [
+      'lib/features/onboarding/presentation/screens/splash_screen.dart',
+      'lib/features/onboarding/presentation/screens/get_started_screen.dart',
+      'lib/features/onboarding/presentation/screens/onboarding_screen.dart',
+      'lib/features/settings/presentation/screens/settings_screen.dart',
+      'lib/features/islamic_content/presentation/screens/islamic_content_screen.dart',
+      'lib/features/quran/presentation/screens/quran_home_screen.dart',
+      'lib/features/notifications/data/services/notification_service.dart',
+    ];
+    final rawNavigationPatterns = [
+      "context.go('/",
+      'context.go("/',
+      "context.push('/",
+      'context.push("/',
+      "context.replace('/",
+      'context.replace("/',
+      "goRouter.go('/",
+      'goRouter.go("/',
+    ];
+
+    for (final path in sourcePaths) {
+      final source = File(path).readAsStringSync();
+      for (final pattern in rawNavigationPatterns) {
+        expect(source, isNot(contains(pattern)), reason: path);
+      }
+    }
+  });
+
+  test('Priority content and detail screens use compact scaffold', () {
+    final scaffoldSource = File(
+      'lib/core/widgets/solatify_screen_scaffold.dart',
+    ).readAsStringSync();
+    final screenSources = [
+      'lib/features/duas/presentation/screens/duas_screen.dart',
+      'lib/features/dhikr/presentation/screens/dhikr_screen.dart',
+      'lib/features/islamic_tips/presentation/screens/islamic_tips_screen.dart',
+      'lib/features/asmaul_husna/presentation/screens/asmaul_husna_screen.dart',
+      'lib/features/hijri_calendar/presentation/screens/hijri_calendar_screen.dart',
+      'lib/features/prayer_guide/presentation/screens/prayer_guide_screen.dart',
+    ].map((path) => File(path).readAsStringSync());
+    final notificationHealthSource = File(
+      'lib/features/settings/presentation/screens/notification_health_screen.dart',
+    ).readAsStringSync();
+
+    expect(scaffoldSource, contains('SolatifyScreenScaffold'));
+    expect(scaffoldSource, contains('ResponsiveCenter'));
+    for (final source in screenSources) {
+      expect(source, contains('SolatifyScreenScaffold'));
+      expect(source, contains('AppRoutes.islamicContent'));
+    }
+    expect(notificationHealthSource, contains('SolatifyScreenScaffold'));
+    expect(notificationHealthSource, contains('AppRoutes.settings'));
+  });
+
+  test('Notification Health Center source exposes diagnostics and actions', () {
+    final source = File(
+      'lib/features/settings/presentation/screens/notification_health_screen.dart',
+    ).readAsStringSync();
+
+    expect(source, contains('NotificationHealthScreen'));
+    expect(source, contains('getReadinessStatus'));
+    expect(source, contains('getPendingNotificationIds'));
+    expect(source, contains('getNotificationHistory'));
+    expect(source, contains('showTestNotification'));
+    expect(source, contains('openPlatformNotificationSettings'));
+    expect(source, contains('refreshSchedules(force: true)'));
+    expect(source, contains('WidgetsBindingObserver'));
+    expect(source, contains('WidgetsBinding.instance.addObserver(this)'));
+    expect(source, contains('WidgetsBinding.instance.removeObserver(this)'));
+    expect(source, contains('AppLifecycleState.resumed'));
+  });
+
+  test('Surah Detail source exposes Quran reading mode controls', () {
+    final source = File(
+      'lib/features/quran/presentation/screens/surah_detail_screen.dart',
+    ).readAsStringSync();
+
+    expect(source, contains('Tampilan Baca Qur'));
+    expect(source, contains('Ukuran Arab'));
+    expect(source, contains('Tampilkan transliterasi'));
+    expect(source, contains('Tampilkan terjemahan'));
+    expect(source, contains('Mode fokus'));
+    expect(source, contains('Progress Surah'));
+    expect(source, contains(r'Ayat $currentVerse / $totalVerses'));
+  });
+
+  test('Islamic Content source exposes global search controls', () {
+    final source = File(
+      'lib/features/islamic_content/presentation/screens/islamic_content_screen.dart',
+    ).readAsStringSync();
+    final providerSource = File(
+      'lib/features/islamic_content/presentation/providers/islamic_content_search_provider.dart',
+    ).readAsStringSync();
+
+    expect(source, contains('Cari doa, dzikir, Asmaul Husna'));
+    expect(source, contains('Hasil Pencarian Konten Islami'));
+    expect(source, contains('Belum ada konten yang cocok'));
+    expect(source, contains('context.push(item.route)'));
+    expect(providerSource, contains('IslamicContentSearchItem'));
+    expect(providerSource, contains('searchIslamicContentItems'));
+  });
+
+  test('Priority screens use shared Solatify state view', () {
+    final stateViewSource = File(
+      'lib/core/widgets/solatify_state_view.dart',
+    ).readAsStringSync();
+    final screenSources = [
+      'lib/features/islamic_content/presentation/screens/islamic_content_screen.dart',
+      'lib/features/asmaul_husna/presentation/screens/asmaul_husna_screen.dart',
+      'lib/features/islamic_tips/presentation/screens/islamic_tips_screen.dart',
+      'lib/features/hijri_calendar/presentation/screens/hijri_calendar_screen.dart',
+      'lib/features/tracker/presentation/screens/tracker_screen.dart',
+      'lib/features/quran/presentation/screens/surah_detail_screen.dart',
+    ].map((path) => File(path).readAsStringSync());
+
+    expect(stateViewSource, contains('SolatifyStateVariant'));
+    expect(stateViewSource, contains('SolatifyStateView.loading'));
+    expect(stateViewSource, contains('SolatifyStateView.empty'));
+    expect(stateViewSource, contains('SolatifyStateView.error'));
+    for (final source in screenSources) {
+      expect(source, contains('SolatifyStateView'));
+    }
+  });
+
+  test('Priority interactions use Solatify haptic helper', () {
+    final helperSource = File(
+      'lib/core/services/solatify_haptics.dart',
+    ).readAsStringSync();
+    final targetSources = [
+      'lib/core/navigation/router.dart',
+      'lib/features/tracker/presentation/screens/tracker_screen.dart',
+      'lib/features/quran/presentation/screens/surah_detail_screen.dart',
+      'lib/features/quran/presentation/screens/quran_home_screen.dart',
+      'lib/features/islamic_content/presentation/screens/islamic_content_screen.dart',
+      'lib/features/settings/presentation/screens/settings_screen.dart',
+    ].map((path) => File(path).readAsStringSync());
+
+    expect(helperSource, contains('class SolatifyHaptics'));
+    expect(helperSource, contains('HapticFeedback.selectionClick'));
+    expect(helperSource, contains('HapticFeedback.lightImpact'));
+    expect(helperSource, contains('HapticFeedback.mediumImpact'));
+    for (final source in targetSources) {
+      expect(source, contains('SolatifyHaptics'));
+    }
+  });
+
+  testWidgets('Notification Health Center screen renders shell', (
+    tester,
+  ) async {
+    await tester.pumpWidget(wrap(const NotificationHealthScreen()));
+
+    await tester.pump();
+
+    expect(find.text('Pusat Kesehatan Notifikasi'), findsOneWidget);
+    expect(find.text('Status Saat Ini'), findsOneWidget);
+    expect(find.text('Riwayat Jadwal'), findsOneWidget);
+    expect(find.text('Aksi Pemulihan'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

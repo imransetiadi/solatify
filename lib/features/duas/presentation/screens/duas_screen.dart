@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import 'package:solatify/core/navigation/app_routes.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
-import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
+import 'package:solatify/core/widgets/solatify_screen_scaffold.dart';
 import 'package:solatify/features/duas/domain/entities/dua.dart';
 import 'package:solatify/features/duas/presentation/providers/duas_provider.dart';
 
@@ -53,110 +53,80 @@ class _DuasScreenState extends ConsumerState<DuasScreen> {
         ? Colors.white.withValues(alpha: 0.2)
         : Colors.black12;
     final cardBg = isDark ? const Color(0xFF241A14) : Colors.white;
-    final appBarColor = Theme.of(
-      context,
-    ).colorScheme.surface.withValues(alpha: isDark ? 0.96 : 0.94);
-
-    return Scaffold(
-      backgroundColor: isDark
-          ? const Color(0xFF160F0A)
-          : const Color(0xFFFFF7ED),
-      appBar: AppBar(
-        backgroundColor: appBarColor,
-        foregroundColor: textColor,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        shadowColor: Colors.transparent,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/islamic-content'),
-        ),
-        title: const Text(
-          'Doa-Doa Harian',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-      ),
-      body: IslamicBackground(
-        child: ResponsiveCenter(
-          child: Padding(
-            padding: ResponsiveLayout.pagePadding(context).copyWith(top: 16),
-            child: Column(
-              children: [
-                TextField(
-                  controller: _searchController,
-                  style: TextStyle(color: textColor),
-                  decoration: InputDecoration(
-                    hintText: 'Cari doa...',
-                    hintStyle: TextStyle(color: textColorMuted),
-                    prefixIcon: Icon(Icons.search, color: textColorMuted),
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: borderColor),
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: primaryColor),
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    filled: true,
-                    fillColor: cardBg,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Expanded(
-                  child: duasAsync.when(
-                    data: (allDuas) {
-                      final filteredList = allDuas.where((dua) {
-                        return dua.title.toLowerCase().contains(_searchQuery) ||
-                            dua.arabicText.toLowerCase().contains(
-                              _searchQuery,
-                            ) ||
-                            dua.meaning.toLowerCase().contains(_searchQuery);
-                      }).toList();
-
-                      if (filteredList.isEmpty) {
-                        return Center(
-                          child: Text(
-                            'Tidak ada hasil ditemukan.',
-                            style: TextStyle(color: textColorMuted),
-                          ),
-                        );
-                      }
-
-                      return ListView.builder(
-                        itemCount: filteredList.length,
-                        padding: ResponsiveLayout.pagePadding(
-                          context,
-                        ).copyWith(top: 0, bottom: 96),
-                        itemBuilder: (context, index) {
-                          final dua = filteredList[index];
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: _DuaCard(
-                              dua: dua,
-                              surfaceColor: cardBg,
-                              primaryColor: primaryColor,
-                              textColor: textColor,
-                              mutedColor: textColorMuted,
-                            ),
-                          );
-                        },
-                      );
-                    },
-                    loading: () =>
-                        const Center(child: CircularProgressIndicator()),
-                    error: (error, stackTrace) => Center(
-                      child: Text(
-                        'Gagal memuat data doa',
-                        style: TextStyle(color: textColorMuted),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+    return SolatifyScreenScaffold(
+      title: 'Doa-Doa Harian',
+      backRoute: AppRoutes.islamicContent,
+      padding: const EdgeInsets.fromLTRB(0, 16, 0, 0),
+      child: Column(
+        children: [
+          TextField(
+            controller: _searchController,
+            style: TextStyle(color: textColor),
+            decoration: InputDecoration(
+              hintText: 'Cari doa...',
+              hintStyle: TextStyle(color: textColorMuted),
+              prefixIcon: Icon(Icons.search, color: textColorMuted),
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: borderColor),
+                borderRadius: BorderRadius.circular(24),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: primaryColor),
+                borderRadius: BorderRadius.circular(24),
+              ),
+              filled: true,
+              fillColor: cardBg,
             ),
           ),
-        ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: duasAsync.when(
+              data: (allDuas) {
+                final filteredList = allDuas.where((dua) {
+                  return dua.title.toLowerCase().contains(_searchQuery) ||
+                      dua.arabicText.toLowerCase().contains(_searchQuery) ||
+                      dua.meaning.toLowerCase().contains(_searchQuery);
+                }).toList();
+
+                if (filteredList.isEmpty) {
+                  return Center(
+                    child: Text(
+                      'Tidak ada hasil ditemukan.',
+                      style: TextStyle(color: textColorMuted),
+                    ),
+                  );
+                }
+
+                return ListView.builder(
+                  itemCount: filteredList.length,
+                  padding: ResponsiveLayout.pagePadding(
+                    context,
+                  ).copyWith(top: 0, bottom: 96),
+                  itemBuilder: (context, index) {
+                    final dua = filteredList[index];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: _DuaCard(
+                        dua: dua,
+                        surfaceColor: cardBg,
+                        primaryColor: primaryColor,
+                        textColor: textColor,
+                        mutedColor: textColorMuted,
+                      ),
+                    );
+                  },
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, stackTrace) => Center(
+                child: Text(
+                  'Gagal memuat data doa',
+                  style: TextStyle(color: textColorMuted),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
