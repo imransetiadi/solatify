@@ -381,6 +381,29 @@ void main() {
     }
   });
 
+  test('Android prayer widget is registered and synced from Home', () {
+    final manifest = File(
+      'android/app/src/main/AndroidManifest.xml',
+    ).readAsStringSync();
+    final homeSource = File(
+      'lib/features/home/presentation/screens/home_screen.dart',
+    ).readAsStringSync();
+    final widgetInfo = File(
+      'android/app/src/main/res/xml/prayer_widget_info.xml',
+    ).readAsStringSync();
+    final mainActivity = File(
+      'android/app/src/main/kotlin/com/solatify/app/solatify/MainActivity.kt',
+    ).readAsStringSync();
+
+    expect(manifest, contains('.widget.PrayerWidgetProvider'));
+    expect(manifest, contains('@xml/prayer_widget_info'));
+    expect(widgetInfo, contains('@layout/prayer_widget'));
+    expect(homeSource, contains('prayerWidgetPayloadProvider'));
+    expect(homeSource, contains('androidPrayerWidgetServiceProvider'));
+    expect(mainActivity, contains('solatify/android_prayer_widget'));
+    expect(mainActivity, contains('syncPrayerWidget'));
+  });
+
   testWidgets('Notification Health Center screen renders shell', (
     tester,
   ) async {

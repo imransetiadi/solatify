@@ -11,6 +11,7 @@ import 'package:solatify/core/widgets/solatify_design_tokens.dart';
 import 'package:solatify/features/prayer_schedule/presentation/location_provider.dart';
 import 'package:solatify/features/prayer_schedule/presentation/prayer_times_provider.dart';
 import 'package:solatify/features/prayer_schedule/presentation/widgets/manual_location_dialog.dart';
+import 'package:solatify/features/prayer_widget/presentation/prayer_widget_provider.dart';
 import '../providers/countdown_provider.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -28,6 +29,10 @@ class HomeScreen extends ConsumerWidget {
         ),
       ),
     );
+    ref.listen(prayerWidgetPayloadProvider, (previous, next) {
+      if (previous == next) return;
+      ref.read(androidPrayerWidgetServiceProvider).sync(next);
+    });
     final prayerList = ref.watch(prayerListProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primary = AppTheme.readableAccent(context);
