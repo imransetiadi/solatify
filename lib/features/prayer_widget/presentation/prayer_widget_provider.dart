@@ -4,9 +4,14 @@ import 'package:solatify/features/home/presentation/providers/countdown_provider
 import 'package:solatify/features/prayer_schedule/presentation/location_provider.dart';
 import 'package:solatify/features/prayer_schedule/presentation/prayer_times_provider.dart';
 import 'package:solatify/features/prayer_widget/domain/android_prayer_widget_service.dart';
+import 'package:solatify/features/prayer_widget/domain/ios_prayer_widget_service.dart';
 
 final androidPrayerWidgetServiceProvider = Provider<AndroidPrayerWidgetService>(
   (ref) => AndroidPrayerWidgetService(),
+);
+
+final iosPrayerWidgetServiceProvider = Provider<IosPrayerWidgetService>(
+  (ref) => IosPrayerWidgetService(),
 );
 
 final prayerWidgetPayloadProvider = Provider<PrayerWidgetPayload>((ref) {

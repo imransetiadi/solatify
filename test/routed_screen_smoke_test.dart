@@ -404,6 +404,29 @@ void main() {
     expect(mainActivity, contains('syncPrayerWidget'));
   });
 
+  test('iOS prayer widget is registered and synced from Home', () {
+    final project = File(
+      'ios/Runner.xcodeproj/project.pbxproj',
+    ).readAsStringSync();
+    final appDelegate = File('ios/Runner/AppDelegate.swift').readAsStringSync();
+    final widgetSource = File(
+      'ios/SolatifyPrayerWidgetExtension/SolatifyPrayerWidget.swift',
+    ).readAsStringSync();
+    final homeSource = File(
+      'lib/features/home/presentation/screens/home_screen.dart',
+    ).readAsStringSync();
+
+    expect(project, contains('SolatifyPrayerWidgetExtension'));
+    expect(project, contains('com.apple.product-type.app-extension'));
+    expect(project, contains('Embed App Extensions'));
+    expect(project, contains('Runner/Runner.entitlements'));
+    expect(appDelegate, contains('solatify/ios_prayer_widget'));
+    expect(appDelegate, contains('WidgetCenter.shared.reloadTimelines'));
+    expect(widgetSource, contains('StaticConfiguration'));
+    expect(widgetSource, contains('group.com.solatify.app.solatify'));
+    expect(homeSource, contains('iosPrayerWidgetServiceProvider'));
+  });
+
   testWidgets('Notification Health Center screen renders shell', (
     tester,
   ) async {

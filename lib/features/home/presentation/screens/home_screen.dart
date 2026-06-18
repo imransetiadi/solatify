@@ -32,6 +32,7 @@ class HomeScreen extends ConsumerWidget {
     ref.listen(prayerWidgetPayloadProvider, (previous, next) {
       if (previous == next) return;
       ref.read(androidPrayerWidgetServiceProvider).sync(next);
+      ref.read(iosPrayerWidgetServiceProvider).sync(next);
     });
     final prayerList = ref.watch(prayerListProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
