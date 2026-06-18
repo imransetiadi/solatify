@@ -63,6 +63,13 @@ class TrackerScreen extends ConsumerWidget {
                   ref.read(trackerProvider.notifier).togglePrayer(prayer);
                   ref.invalidate(trackerWeeklyStatsProvider);
                 },
+                onUpdateStatus: (prayer, status) {
+                  SolatifyHaptics.selection();
+                  ref
+                      .read(trackerProvider.notifier)
+                      .updatePrayerStatusDetail(prayer, status);
+                  ref.invalidate(trackerWeeklyStatsProvider);
+                },
               ),
               loading: () => const SolatifyStateView.loading(
                 title: 'Memuat tracker ibadah',
@@ -90,6 +97,7 @@ class _TrackerContent extends StatelessWidget {
     required this.textColor,
     required this.mutedColor,
     required this.onTogglePrayer,
+    required this.onUpdateStatus,
   });
 
   final PrayerLogEntity log;
@@ -98,6 +106,7 @@ class _TrackerContent extends StatelessWidget {
   final Color textColor;
   final Color mutedColor;
   final ValueChanged<String> onTogglePrayer;
+  final void Function(String prayer, PrayerStatus status) onUpdateStatus;
 
   @override
   Widget build(BuildContext context) {
@@ -136,19 +145,33 @@ class _TrackerContent extends StatelessWidget {
                 'Tandai salat yang sudah ditunaikan hari ini. Pelan-pelan, yang penting istiqamah.',
                 style: TextStyle(color: mutedColor, fontSize: 13),
               ),
+              const SizedBox(height: 6),
+              Text(
+                'Status otomatis: Tepat Waktu',
+                style: TextStyle(
+                  color: accentColor,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
               const SizedBox(height: 16),
               Wrap(
                 spacing: 8,
                 runSpacing: 10,
                 children: TrackerScreen._prayerLabels.entries.map((entry) {
                   final isDone = log.prayers[entry.key] ?? false;
+                  final status = log.getPrayerStatus(entry.key);
                   return _PrayerChip(
                     label: entry.value,
                     isDone: isDone,
+                    status: status,
                     accentColor: accentColor,
                     textColor: textColor,
                     mutedColor: mutedColor,
                     onTap: () => onTogglePrayer(entry.key),
+                    onStatusTap: isDone
+                        ? () => _showStatusSheet(context, entry.key, status)
+                        : null,
                   );
                 }).toList(),
               ),
@@ -165,6 +188,78 @@ class _TrackerContent extends StatelessWidget {
       ],
     );
   }
+
+  void _showStatusSheet(
+    BuildContext context,
+    String prayer,
+    PrayerStatus? currentStatus,
+  ) {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Ubah Status Salat',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Status otomatis saat dicentang adalah Tepat Waktu. Kamu bisa koreksi jika perlu.',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: mutedColor),
+                ),
+                const SizedBox(height: 12),
+                for (final status in PrayerStatus.values)
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(
+                      status == (currentStatus ?? PrayerStatus.onTime)
+                          ? Icons.radio_button_checked
+                          : Icons.radio_button_off,
+                      color: accentColor,
+                    ),
+                    title: Text(_statusTitle(status)),
+                    subtitle: Text(_statusDescription(status)),
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      onUpdateStatus(prayer, status);
+                    },
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+String _statusTitle(PrayerStatus status) {
+  return switch (status) {
+    PrayerStatus.onTime => 'Tepat Waktu',
+    PrayerStatus.late => 'Terlambat',
+    PrayerStatus.qadha => 'Qadha',
+  };
+}
+
+String _statusDescription(PrayerStatus status) {
+  return switch (status) {
+    PrayerStatus.onTime => 'Ditunaikan di awal atau dalam rentang waktu salat.',
+    PrayerStatus.late =>
+      'Ditunaikan masih dalam waktunya, tetapi tidak di awal.',
+    PrayerStatus.qadha =>
+      'Ditunaikan sebagai pengganti setelah waktunya lewat.',
+  };
 }
 
 class _ProgressCard extends StatelessWidget {
@@ -262,18 +357,22 @@ class _PrayerChip extends StatelessWidget {
   const _PrayerChip({
     required this.label,
     required this.isDone,
+    required this.status,
     required this.accentColor,
     required this.textColor,
     required this.mutedColor,
     required this.onTap,
+    required this.onStatusTap,
   });
 
   final String label;
   final bool isDone;
+  final PrayerStatus? status;
   final Color accentColor;
   final Color textColor;
   final Color mutedColor;
   final VoidCallback onTap;
+  final VoidCallback? onStatusTap;
 
   @override
   Widget build(BuildContext context) {
@@ -292,23 +391,43 @@ class _PrayerChip extends StatelessWidget {
             width: 1.5,
           ),
         ),
-        child: Row(
+        child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(
-              isDone ? Icons.check_circle : Icons.circle_outlined,
-              size: 17,
-              color: isDone ? accentColor : mutedColor,
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  isDone ? Icons.check_circle : Icons.circle_outlined,
+                  size: 17,
+                  color: isDone ? accentColor : mutedColor,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: isDone ? accentColor : textColor,
+                    fontWeight: isDone ? FontWeight.bold : FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                color: isDone ? accentColor : textColor,
-                fontWeight: isDone ? FontWeight.bold : FontWeight.w600,
-                fontSize: 13,
+            if (isDone) ...[
+              const SizedBox(height: 6),
+              GestureDetector(
+                onTap: onStatusTap,
+                child: Text(
+                  'Status otomatis: ${_statusTitle(status ?? PrayerStatus.onTime)}',
+                  style: TextStyle(
+                    color: accentColor,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
-            ),
+            ],
           ],
         ),
       ),
@@ -340,6 +459,7 @@ class _WeeklyInsightCard extends StatelessWidget {
           return _InsightContent(
             totalDone: stats.totalDone,
             average: average,
+            statusCounts: stats.statusCounts,
             accentColor: accentColor,
             textColor: textColor,
             mutedColor: mutedColor,
@@ -348,6 +468,7 @@ class _WeeklyInsightCard extends StatelessWidget {
         loading: () => _InsightContent(
           totalDone: 0,
           average: '0.0',
+          statusCounts: const {},
           accentColor: accentColor,
           textColor: textColor,
           mutedColor: mutedColor,
@@ -356,6 +477,7 @@ class _WeeklyInsightCard extends StatelessWidget {
         error: (_, _) => _InsightContent(
           totalDone: 0,
           average: '0.0',
+          statusCounts: const {},
           accentColor: accentColor,
           textColor: textColor,
           mutedColor: mutedColor,
@@ -370,6 +492,7 @@ class _InsightContent extends StatelessWidget {
   const _InsightContent({
     required this.totalDone,
     required this.average,
+    required this.statusCounts,
     required this.accentColor,
     required this.textColor,
     required this.mutedColor,
@@ -379,6 +502,7 @@ class _InsightContent extends StatelessWidget {
 
   final int totalDone;
   final String average;
+  final Map<PrayerStatus, int> statusCounts;
   final Color accentColor;
   final Color textColor;
   final Color mutedColor;
@@ -422,9 +546,56 @@ class _InsightContent extends StatelessWidget {
             ),
           ],
         ),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: PrayerStatus.values.map((status) {
+            return _StatusCountPill(
+              label: _statusTitle(status),
+              value: statusCounts[status] ?? 0,
+              accentColor: accentColor,
+              mutedColor: mutedColor,
+            );
+          }).toList(),
+        ),
         const SizedBox(height: 12),
         Text(description, style: TextStyle(color: mutedColor, fontSize: 13)),
       ],
+    );
+  }
+}
+
+class _StatusCountPill extends StatelessWidget {
+  const _StatusCountPill({
+    required this.label,
+    required this.value,
+    required this.accentColor,
+    required this.mutedColor,
+  });
+
+  final String label;
+  final int value;
+  final Color accentColor;
+  final Color mutedColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: accentColor.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: accentColor.withValues(alpha: 0.14)),
+      ),
+      child: Text(
+        '$label: $value',
+        style: TextStyle(
+          color: mutedColor,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
     );
   }
 }

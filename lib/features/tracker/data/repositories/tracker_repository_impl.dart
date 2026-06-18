@@ -36,10 +36,33 @@ class TrackerRepositoryImpl implements TrackerRepository {
   ) async {
     final log = await getLogByDate(date);
     final updatedPrayers = Map<String, bool>.from(log.prayers);
+    final updatedStatuses = Map<String, PrayerStatus>.from(log.prayerStatuses);
     updatedPrayers[prayerKey] = isDone;
+    if (isDone) {
+      updatedStatuses[prayerKey] =
+          log.getPrayerStatus(prayerKey) ?? PrayerStatus.onTime;
+    } else {
+      updatedStatuses.remove(prayerKey);
+    }
 
     await localDataSource.saveLog(
-      PrayerLogDto(date: date, prayers: updatedPrayers),
+      PrayerLogDto(
+        date: date,
+        prayers: updatedPrayers,
+        prayerStatuses: updatedStatuses,
+      ),
+    );
+  }
+
+  @override
+  Future<void> updatePrayerStatusDetail(
+    DateTime date,
+    String prayerKey,
+    PrayerStatus status,
+  ) async {
+    final log = await getLogByDate(date);
+    await localDataSource.saveLog(
+      PrayerLogDto.fromEntity(log.copyWithStatus(prayerKey, status)),
     );
   }
 
