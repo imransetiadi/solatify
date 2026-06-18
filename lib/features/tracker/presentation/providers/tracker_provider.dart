@@ -23,9 +23,13 @@ class TrackerNotifier extends StateNotifier<AsyncValue<PrayerLogEntity>> {
   final TrackerRepository _repository;
 
   Future<void> loadTodayLog() async {
+    await loadLogForDate(DateTime.now());
+  }
+
+  Future<void> loadLogForDate(DateTime date) async {
     state = const AsyncValue.loading();
     try {
-      final log = await _repository.getLogByDate(DateTime.now());
+      final log = await _repository.getLogByDate(date);
       state = AsyncValue.data(log);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -97,6 +101,11 @@ final trackerProvider =
       final repository = ref.watch(trackerRepositoryProvider);
       return TrackerNotifier(repository);
     });
+
+final trackerSelectedDateProvider = StateProvider<DateTime>((ref) {
+  final now = DateTime.now();
+  return DateTime(now.year, now.month, now.day);
+});
 
 final trackerWeeklyStatsProvider = FutureProvider<WeeklyStatsEntity>((ref) {
   final repository = ref.watch(trackerRepositoryProvider);

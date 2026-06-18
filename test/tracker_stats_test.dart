@@ -1,14 +1,20 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:solatify/features/tracker/data/models/prayer_log_dto.dart';
 import 'package:solatify/features/tracker/domain/entities/prayer_log_entity.dart';
 import 'package:solatify/features/tracker/domain/repositories/tracker_repository.dart';
 import 'package:solatify/features/tracker/domain/usecases/get_weekly_stats.dart';
+import 'package:solatify/features/tracker/presentation/providers/tracker_provider.dart';
 
 class MockTrackerRepository implements TrackerRepository {
   List<PrayerLogEntity> mockLogs = [];
+  DateTime? requestedDate;
 
   @override
-  Future<PrayerLogEntity> getLogByDate(DateTime date) async => mockLogs.first;
+  Future<PrayerLogEntity> getLogByDate(DateTime date) async {
+    requestedDate = date;
+    return mockLogs.first;
+  }
 
   @override
   Future<List<PrayerLogEntity>> getWeeklyLogs(DateTime endDate) async =>
@@ -104,6 +110,26 @@ void main() {
 
       expect(log.getPrayerStatus('subuh'), PrayerStatus.onTime);
       expect(json['prayerStatuses']['subuh'], 'late');
+    });
+  });
+
+  group('TrackerNotifier selected date', () {
+    test('loads tracker log for selected history date', () async {
+      final repository = MockTrackerRepository()
+        ..mockLogs = [
+          PrayerLogEntity(
+            date: DateTime(2026, 6, 17),
+            prayers: {'subuh': true},
+          ),
+        ];
+      final notifier = TrackerNotifier(repository);
+      final selectedDate = DateTime(2026, 6, 17);
+
+      await notifier.loadLogForDate(selectedDate);
+
+      expect(repository.requestedDate, selectedDate);
+      expect(notifier.state, isA<AsyncData<PrayerLogEntity>>());
+      expect(notifier.state.value?.date, selectedDate);
     });
   });
 }

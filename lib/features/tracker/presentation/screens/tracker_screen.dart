@@ -25,6 +25,7 @@ class TrackerScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final trackerAsync = ref.watch(trackerProvider);
     final weeklyStatsAsync = ref.watch(trackerWeeklyStatsProvider);
+    final selectedDate = ref.watch(trackerSelectedDateProvider);
     final colorScheme = Theme.of(context).colorScheme;
     final textColor = colorScheme.onSurface;
     final mutedColor = colorScheme.onSurfaceVariant;
@@ -54,6 +55,7 @@ class TrackerScreen extends ConsumerWidget {
             child: trackerAsync.when(
               data: (log) => _TrackerContent(
                 log: log,
+                selectedDate: selectedDate,
                 weeklyStatsAsync: weeklyStatsAsync,
                 accentColor: accentColor,
                 textColor: textColor,
@@ -69,6 +71,11 @@ class TrackerScreen extends ConsumerWidget {
                       .read(trackerProvider.notifier)
                       .updatePrayerStatusDetail(prayer, status);
                   ref.invalidate(trackerWeeklyStatsProvider);
+                },
+                onSelectDate: (date) {
+                  SolatifyHaptics.selection();
+                  ref.read(trackerSelectedDateProvider.notifier).state = date;
+                  ref.read(trackerProvider.notifier).loadLogForDate(date);
                 },
               ),
               loading: () => const SolatifyStateView.loading(
@@ -92,21 +99,25 @@ class TrackerScreen extends ConsumerWidget {
 class _TrackerContent extends StatelessWidget {
   const _TrackerContent({
     required this.log,
+    required this.selectedDate,
     required this.weeklyStatsAsync,
     required this.accentColor,
     required this.textColor,
     required this.mutedColor,
     required this.onTogglePrayer,
     required this.onUpdateStatus,
+    required this.onSelectDate,
   });
 
   final PrayerLogEntity log;
+  final DateTime selectedDate;
   final AsyncValue<WeeklyStatsEntity> weeklyStatsAsync;
   final Color accentColor;
   final Color textColor;
   final Color mutedColor;
   final ValueChanged<String> onTogglePrayer;
   final void Function(String prayer, PrayerStatus status) onUpdateStatus;
+  final ValueChanged<DateTime> onSelectDate;
 
   @override
   Widget build(BuildContext context) {
@@ -117,6 +128,14 @@ class _TrackerContent extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        _HistorySelector(
+          selectedDate: selectedDate,
+          accentColor: accentColor,
+          textColor: textColor,
+          mutedColor: mutedColor,
+          onSelectDate: onSelectDate,
+        ),
+        const SizedBox(height: 14),
         _ProgressCard(
           completedCount: completedCount,
           totalCount: totalCount,
@@ -260,6 +279,98 @@ String _statusDescription(PrayerStatus status) {
     PrayerStatus.qadha =>
       'Ditunaikan sebagai pengganti setelah waktunya lewat.',
   };
+}
+
+class _HistorySelector extends StatelessWidget {
+  const _HistorySelector({
+    required this.selectedDate,
+    required this.accentColor,
+    required this.textColor,
+    required this.mutedColor,
+    required this.onSelectDate,
+  });
+
+  final DateTime selectedDate;
+  final Color accentColor;
+  final Color textColor;
+  final Color mutedColor;
+  final ValueChanged<DateTime> onSelectDate;
+
+  @override
+  Widget build(BuildContext context) {
+    final today = _dateOnly(DateTime.now());
+    final days = List.generate(
+      7,
+      (index) => today.subtract(Duration(days: index)),
+    );
+
+    return GlassContainer(
+      opacity: 0.05,
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Riwayat Tracker',
+            style: TextStyle(
+              color: textColor,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Pilih tanggal untuk koreksi salat dan status yang sudah lewat.',
+            style: TextStyle(color: mutedColor, fontSize: 13),
+          ),
+          const SizedBox(height: 14),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            child: Row(
+              children: days.map((date) {
+                final isSelected = _isSameDay(selectedDate, date);
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: ChoiceChip(
+                    selected: isSelected,
+                    label: Text(_historyLabel(date, today)),
+                    onSelected: (_) => onSelectDate(date),
+                    selectedColor: accentColor.withValues(alpha: 0.18),
+                    labelStyle: TextStyle(
+                      color: isSelected ? accentColor : textColor,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    side: BorderSide(
+                      color: isSelected
+                          ? accentColor
+                          : mutedColor.withValues(alpha: 0.22),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+DateTime _dateOnly(DateTime date) => DateTime(date.year, date.month, date.day);
+
+bool _isSameDay(DateTime first, DateTime second) {
+  return first.year == second.year &&
+      first.month == second.month &&
+      first.day == second.day;
+}
+
+String _historyLabel(DateTime date, DateTime today) {
+  if (_isSameDay(date, today)) return 'Hari ini';
+  if (_isSameDay(date, today.subtract(const Duration(days: 1)))) {
+    return 'Kemarin';
+  }
+  return '${date.day}/${date.month}';
 }
 
 class _ProgressCard extends StatelessWidget {
