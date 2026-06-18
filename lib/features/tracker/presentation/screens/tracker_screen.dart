@@ -1285,6 +1285,12 @@ class _WeeklyInsightCard extends StatelessWidget {
             totalDone: stats.totalDone,
             average: average,
             statusCounts: stats.statusCounts,
+            streakDays: stats.currentStreakDays,
+            strongestLabel: stats.strongestItemLabel,
+            weakestLabel: stats.weakestItemLabel,
+            bestDayLabel: stats.bestDayLabel,
+            smartMessage: stats.smartInsightMessage,
+            smartAction: stats.smartInsightAction,
             accentColor: accentColor,
             textColor: textColor,
             mutedColor: mutedColor,
@@ -1294,6 +1300,12 @@ class _WeeklyInsightCard extends StatelessWidget {
           totalDone: 0,
           average: '0.0',
           statusCounts: const {},
+          streakDays: 0,
+          strongestLabel: 'Memuat',
+          weakestLabel: 'Memuat',
+          bestDayLabel: 'Memuat',
+          smartMessage: 'Menghitung ringkasan ibadah minggu ini.',
+          smartAction: 'Sebentar ya, insight sedang disiapkan.',
           accentColor: accentColor,
           textColor: textColor,
           mutedColor: mutedColor,
@@ -1303,6 +1315,13 @@ class _WeeklyInsightCard extends StatelessWidget {
           totalDone: 0,
           average: '0.0',
           statusCounts: const {},
+          streakDays: 0,
+          strongestLabel: 'Belum tersedia',
+          weakestLabel: 'Coba lagi',
+          bestDayLabel: 'Belum tersedia',
+          smartMessage:
+              'Insight belum bisa dimuat, tapi checklist hari ini tetap bisa digunakan.',
+          smartAction: 'Coba buka ulang halaman tracker setelah beberapa saat.',
           accentColor: accentColor,
           textColor: textColor,
           mutedColor: mutedColor,
@@ -1318,6 +1337,12 @@ class _InsightContent extends StatelessWidget {
     required this.totalDone,
     required this.average,
     required this.statusCounts,
+    required this.streakDays,
+    required this.strongestLabel,
+    required this.weakestLabel,
+    required this.bestDayLabel,
+    required this.smartMessage,
+    required this.smartAction,
     required this.accentColor,
     required this.textColor,
     required this.mutedColor,
@@ -1328,6 +1353,12 @@ class _InsightContent extends StatelessWidget {
   final int totalDone;
   final String average;
   final Map<PrayerStatus, int> statusCounts;
+  final int streakDays;
+  final String strongestLabel;
+  final String weakestLabel;
+  final String bestDayLabel;
+  final String smartMessage;
+  final String smartAction;
   final Color accentColor;
   final Color textColor;
   final Color mutedColor;
@@ -1336,12 +1367,6 @@ class _InsightContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final description = isLoading
-        ? 'Menghitung ringkasan ibadah minggu ini.'
-        : isError
-        ? 'Insight belum bisa dimuat, tapi checklist hari ini tetap bisa digunakan.'
-        : 'Rata-rata $average salat tertandai per hari dalam 7 hari terakhir.';
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1375,6 +1400,41 @@ class _InsightContent extends StatelessWidget {
         Wrap(
           spacing: 8,
           runSpacing: 8,
+          children: [
+            _InsightPill(
+              label: 'Streak',
+              value: '$streakDays hari',
+              accentColor: accentColor,
+              mutedColor: mutedColor,
+              expanded: false,
+            ),
+            _InsightPill(
+              label: 'Hari terbaik',
+              value: bestDayLabel,
+              accentColor: accentColor,
+              mutedColor: mutedColor,
+              expanded: false,
+            ),
+            _InsightPill(
+              label: 'Terkuat',
+              value: strongestLabel,
+              accentColor: accentColor,
+              mutedColor: mutedColor,
+              expanded: false,
+            ),
+            _InsightPill(
+              label: 'Perlu fokus',
+              value: weakestLabel,
+              accentColor: accentColor,
+              mutedColor: mutedColor,
+              expanded: false,
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
           children: PrayerStatus.values.map((status) {
             return _StatusCountPill(
               label: _statusTitle(status),
@@ -1385,7 +1445,20 @@ class _InsightContent extends StatelessWidget {
           }).toList(),
         ),
         const SizedBox(height: 12),
-        Text(description, style: TextStyle(color: mutedColor, fontSize: 13)),
+        Text(
+          smartMessage,
+          style: TextStyle(
+            color: textColor,
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            height: 1.4,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          smartAction,
+          style: TextStyle(color: mutedColor, fontSize: 13, height: 1.4),
+        ),
       ],
     );
   }
@@ -1431,39 +1504,41 @@ class _InsightPill extends StatelessWidget {
     required this.value,
     required this.accentColor,
     required this.mutedColor,
+    this.expanded = true,
   });
 
   final String label;
   final String value;
   final Color accentColor;
   final Color mutedColor;
+  final bool expanded;
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: accentColor.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: accentColor.withValues(alpha: 0.18)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(label, style: TextStyle(color: mutedColor, fontSize: 12)),
-            const SizedBox(height: 4),
-            Text(
-              value,
-              style: TextStyle(
-                color: accentColor,
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
-              ),
+    final pill = Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: accentColor.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: accentColor.withValues(alpha: 0.18)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: TextStyle(color: mutedColor, fontSize: 12)),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(
+              color: accentColor,
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
+
+    return expanded ? Expanded(child: pill) : pill;
   }
 }

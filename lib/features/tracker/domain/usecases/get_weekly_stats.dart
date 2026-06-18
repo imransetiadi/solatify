@@ -50,12 +50,134 @@ class GetWeeklyStats {
       );
     });
 
+    final currentStreakDays = _calculateCurrentStreak(
+      endDate,
+      logsByDate,
+      prayers,
+      habitKeys,
+    );
+    final bestDayLabel = _bestDayLabel(endDate, logs, prayers, habitKeys);
+    final strongestPrayer = logs.isEmpty
+        ? 'Mulai hari ini'
+        : _strongestPrayerLabel(rates);
+    final weakestPrayer = logs.isEmpty
+        ? 'Pilih satu ibadah'
+        : _weakestPrayerLabel(rates);
+    final smartInsightMessage = logs.isEmpty
+        ? 'Mulai dari satu checklist hari ini untuk membangun ritme ibadah.'
+        : currentStreakDays > 0
+        ? 'MasyaAllah, kamu sedang menjaga streak $currentStreakDays hari.'
+        : 'Belum ada streak aktif. Mulai lagi dari checklist hari ini.';
+    final smartInsightAction = logs.isEmpty
+        ? 'Pilih satu ibadah ringan, lalu tandai setelah selesai.'
+        : 'Fokus kecil berikutnya: kuatkan $weakestPrayer agar pekan ini lebih seimbang.';
+
     return WeeklyStatsEntity(
       completionRates: rates,
       totalDone: totalDone,
       statusCounts: statusCounts,
       heatmap: heatmap,
+      currentStreakDays: currentStreakDays,
+      bestDayLabel: bestDayLabel,
+      strongestItemLabel: strongestPrayer,
+      weakestItemLabel: weakestPrayer,
+      smartInsightMessage: smartInsightMessage,
+      smartInsightAction: smartInsightAction,
     );
+  }
+
+  int _calculateCurrentStreak(
+    DateTime endDate,
+    Map<String, PrayerLogEntity> logsByDate,
+    List<String> prayers,
+    List<String> habitKeys,
+  ) {
+    var streak = 0;
+    for (var index = 0; index < 14; index++) {
+      final date = _dateOnly(endDate.subtract(Duration(days: index)));
+      final log = logsByDate[_dateKey(date)];
+      if (log == null) break;
+
+      final completedCount = _completedCount(log, prayers, habitKeys);
+      if (completedCount < 3) break;
+      streak++;
+    }
+    return streak;
+  }
+
+  String _bestDayLabel(
+    DateTime endDate,
+    List<PrayerLogEntity> logs,
+    List<String> prayers,
+    List<String> habitKeys,
+  ) {
+    if (logs.isEmpty) return 'Belum ada data';
+
+    PrayerLogEntity? bestLog;
+    var bestCount = -1;
+    for (final log in logs) {
+      final completedCount = _completedCount(log, prayers, habitKeys);
+      if (completedCount > bestCount) {
+        bestLog = log;
+        bestCount = completedCount;
+      }
+    }
+    if (bestLog == null) return 'Belum ada data';
+
+    final bestDate = _dateOnly(bestLog.date);
+    final today = _dateOnly(endDate);
+    final yesterday = today.subtract(const Duration(days: 1));
+    if (bestDate == today) return 'Hari ini';
+    if (bestDate == yesterday) return 'Kemarin';
+    return '${bestDate.day}/${bestDate.month}/${bestDate.year}';
+  }
+
+  String _strongestPrayerLabel(Map<String, double> rates) {
+    if (rates.isEmpty) return 'Mulai hari ini';
+
+    var selectedKey = rates.keys.first;
+    var selectedRate = rates[selectedKey] ?? 0;
+    for (final entry in rates.entries) {
+      if (entry.value > selectedRate) {
+        selectedKey = entry.key;
+        selectedRate = entry.value;
+      }
+    }
+    return _prayerLabel(selectedKey);
+  }
+
+  String _weakestPrayerLabel(Map<String, double> rates) {
+    if (rates.isEmpty) return 'Pilih satu ibadah';
+
+    var selectedKey = rates.keys.first;
+    var selectedRate = rates[selectedKey] ?? 0;
+    for (final entry in rates.entries) {
+      if (entry.value <= selectedRate) {
+        selectedKey = entry.key;
+        selectedRate = entry.value;
+      }
+    }
+    return _prayerLabel(selectedKey);
+  }
+
+  int _completedCount(
+    PrayerLogEntity log,
+    List<String> prayers,
+    List<String> habitKeys,
+  ) {
+    return prayers.where(log.isPrayerDone).length +
+        habitKeys.where(log.isHabitDone).length;
+  }
+
+  String _prayerLabel(String key) {
+    return switch (key) {
+      'subuh' => 'Subuh',
+      'dzuhur' => 'Dzuhur',
+      'ashar' => 'Ashar',
+      'magrib' => 'Magrib',
+      'isya' => 'Isya',
+      _ => key,
+    };
   }
 
   DateTime _dateOnly(DateTime date) =>
