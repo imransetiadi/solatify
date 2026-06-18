@@ -31,4 +31,20 @@ class WeeklyStatsEntity {
   final String weakestItemLabel;
   final String smartInsightMessage;
   final String smartInsightAction;
+
+  String get shareSummaryText {
+    return [
+      'Progress Ibadah Mingguan',
+      'Total salat: $totalDone',
+      'Streak: $currentStreakDays hari',
+      'Hari terbaik: $bestDayLabel',
+      'Terkuat: $strongestItemLabel',
+      'Perlu fokus: $weakestItemLabel',
+      '',
+      smartInsightMessage,
+      smartInsightAction,
+      '',
+      'Dibuat dengan Solatify',
+    ].join('\n');
+  }
 }

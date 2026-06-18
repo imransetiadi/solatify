@@ -106,6 +106,7 @@ void main() {
     expect(find.text('Streak'), findsOneWidget);
     expect(find.text('Terkuat'), findsOneWidget);
     expect(find.text('Perlu fokus'), findsOneWidget);
+    expect(find.text('Bagikan Progress'), findsOneWidget);
     expect(find.textContaining('/5 salat'), findsOneWidget);
     expect(find.text('Status otomatis: Tepat Waktu'), findsOneWidget);
     expect(find.text('Riwayat Tracker'), findsOneWidget);

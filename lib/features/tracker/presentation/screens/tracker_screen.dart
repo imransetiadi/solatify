@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:solatify/core/services/solatify_haptics.dart';
 import 'package:solatify/core/theme/theme.dart';
@@ -1435,6 +1436,7 @@ class _WeeklyInsightCard extends StatelessWidget {
             bestDayLabel: stats.bestDayLabel,
             smartMessage: stats.smartInsightMessage,
             smartAction: stats.smartInsightAction,
+            shareSummary: stats.shareSummaryText,
             accentColor: accentColor,
             textColor: textColor,
             mutedColor: mutedColor,
@@ -1450,6 +1452,7 @@ class _WeeklyInsightCard extends StatelessWidget {
           bestDayLabel: 'Memuat',
           smartMessage: 'Menghitung ringkasan ibadah minggu ini.',
           smartAction: 'Sebentar ya, insight sedang disiapkan.',
+          shareSummary: '',
           accentColor: accentColor,
           textColor: textColor,
           mutedColor: mutedColor,
@@ -1466,6 +1469,7 @@ class _WeeklyInsightCard extends StatelessWidget {
           smartMessage:
               'Insight belum bisa dimuat, tapi checklist hari ini tetap bisa digunakan.',
           smartAction: 'Coba buka ulang halaman tracker setelah beberapa saat.',
+          shareSummary: '',
           accentColor: accentColor,
           textColor: textColor,
           mutedColor: mutedColor,
@@ -1487,6 +1491,7 @@ class _InsightContent extends StatelessWidget {
     required this.bestDayLabel,
     required this.smartMessage,
     required this.smartAction,
+    required this.shareSummary,
     required this.accentColor,
     required this.textColor,
     required this.mutedColor,
@@ -1503,6 +1508,7 @@ class _InsightContent extends StatelessWidget {
   final String bestDayLabel;
   final String smartMessage;
   final String smartAction;
+  final String shareSummary;
   final Color accentColor;
   final Color textColor;
   final Color mutedColor;
@@ -1603,7 +1609,29 @@ class _InsightContent extends StatelessWidget {
           smartAction,
           style: TextStyle(color: mutedColor, fontSize: 13, height: 1.4),
         ),
+        const SizedBox(height: 14),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: shareSummary.isEmpty
+                ? null
+                : () => _copyShareSummary(context),
+            icon: const Icon(Icons.ios_share_outlined, size: 18),
+            label: const Text('Bagikan Progress'),
+          ),
+        ),
       ],
+    );
+  }
+
+  Future<void> _copyShareSummary(BuildContext context) async {
+    await Clipboard.setData(ClipboardData(text: shareSummary));
+    if (!context.mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Ringkasan progress disalin. Siap dibagikan.'),
+      ),
     );
   }
 }
