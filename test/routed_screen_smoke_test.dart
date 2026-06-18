@@ -427,6 +427,18 @@ void main() {
     expect(homeSource, contains('iosPrayerWidgetServiceProvider'));
   });
 
+  test('Home syncs prayer widgets only on their matching platform', () {
+    final homeSource = File(
+      'lib/features/home/presentation/screens/home_screen.dart',
+    ).readAsStringSync();
+
+    expect(
+      homeSource,
+      contains('defaultTargetPlatform == TargetPlatform.android'),
+    );
+    expect(homeSource, contains('defaultTargetPlatform == TargetPlatform.iOS'));
+  });
+
   testWidgets('Notification Health Center screen renders shell', (
     tester,
   ) async {

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -31,8 +32,12 @@ class HomeScreen extends ConsumerWidget {
     );
     ref.listen(prayerWidgetPayloadProvider, (previous, next) {
       if (previous == next) return;
-      ref.read(androidPrayerWidgetServiceProvider).sync(next);
-      ref.read(iosPrayerWidgetServiceProvider).sync(next);
+      if (defaultTargetPlatform == TargetPlatform.android) {
+        ref.read(androidPrayerWidgetServiceProvider).sync(next);
+      }
+      if (defaultTargetPlatform == TargetPlatform.iOS) {
+        ref.read(iosPrayerWidgetServiceProvider).sync(next);
+      }
     });
     final prayerList = ref.watch(prayerListProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
