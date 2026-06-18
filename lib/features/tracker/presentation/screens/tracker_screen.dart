@@ -26,6 +26,7 @@ class TrackerScreen extends ConsumerWidget {
     final trackerAsync = ref.watch(trackerProvider);
     final weeklyStatsAsync = ref.watch(trackerWeeklyStatsProvider);
     final selectedDate = ref.watch(trackerSelectedDateProvider);
+    final customHabits = ref.watch(customHabitProvider);
     final colorScheme = Theme.of(context).colorScheme;
     final textColor = colorScheme.onSurface;
     final mutedColor = colorScheme.onSurfaceVariant;
@@ -56,6 +57,7 @@ class TrackerScreen extends ConsumerWidget {
               data: (log) => _TrackerContent(
                 log: log,
                 selectedDate: selectedDate,
+                customHabits: customHabits,
                 weeklyStatsAsync: weeklyStatsAsync,
                 accentColor: accentColor,
                 textColor: textColor,
@@ -81,6 +83,10 @@ class TrackerScreen extends ConsumerWidget {
                   SolatifyHaptics.light();
                   ref.read(trackerProvider.notifier).toggleHabit(habit);
                 },
+                onAddHabit: (habitName) {
+                  SolatifyHaptics.selection();
+                  ref.read(customHabitProvider.notifier).addHabit(habitName);
+                },
               ),
               loading: () => const SolatifyStateView.loading(
                 title: 'Memuat tracker ibadah',
@@ -104,6 +110,7 @@ class _TrackerContent extends StatelessWidget {
   const _TrackerContent({
     required this.log,
     required this.selectedDate,
+    required this.customHabits,
     required this.weeklyStatsAsync,
     required this.accentColor,
     required this.textColor,
@@ -112,10 +119,12 @@ class _TrackerContent extends StatelessWidget {
     required this.onUpdateStatus,
     required this.onSelectDate,
     required this.onToggleHabit,
+    required this.onAddHabit,
   });
 
   final PrayerLogEntity log;
   final DateTime selectedDate;
+  final List<String> customHabits;
   final AsyncValue<WeeklyStatsEntity> weeklyStatsAsync;
   final Color accentColor;
   final Color textColor;
@@ -124,6 +133,7 @@ class _TrackerContent extends StatelessWidget {
   final void Function(String prayer, PrayerStatus status) onUpdateStatus;
   final ValueChanged<DateTime> onSelectDate;
   final ValueChanged<String> onToggleHabit;
+  final ValueChanged<String> onAddHabit;
 
   @override
   Widget build(BuildContext context) {
@@ -215,10 +225,12 @@ class _TrackerContent extends StatelessWidget {
         const SizedBox(height: 14),
         _HabitSection(
           habits: log.habits,
+          customHabits: customHabits,
           accentColor: accentColor,
           textColor: textColor,
           mutedColor: mutedColor,
           onToggleHabit: onToggleHabit,
+          onAddHabit: onAddHabit,
         ),
         const SizedBox(height: 14),
         _WeeklyInsightCard(
@@ -675,10 +687,12 @@ class _PrayerChip extends StatelessWidget {
 class _HabitSection extends StatelessWidget {
   const _HabitSection({
     required this.habits,
+    required this.customHabits,
     required this.accentColor,
     required this.textColor,
     required this.mutedColor,
     required this.onToggleHabit,
+    required this.onAddHabit,
   });
 
   static const habitLabels = {
@@ -691,14 +705,20 @@ class _HabitSection extends StatelessWidget {
   };
 
   final Map<String, bool> habits;
+  final List<String> customHabits;
   final Color accentColor;
   final Color textColor;
   final Color mutedColor;
   final ValueChanged<String> onToggleHabit;
+  final ValueChanged<String> onAddHabit;
 
   @override
   Widget build(BuildContext context) {
-    final completedCount = habitLabels.keys
+    final allHabits = <String, String>{
+      ...habitLabels,
+      for (final habit in customHabits) 'custom:$habit': habit,
+    };
+    final completedCount = allHabits.keys
         .where((key) => habits[key] ?? false)
         .length;
 
@@ -708,24 +728,42 @@ class _HabitSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Habit Sunnah',
-            style: TextStyle(
-              color: textColor,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Habit Sunnah',
+                  style: TextStyle(
+                    color: textColor,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              TextButton.icon(
+                onPressed: () => _showAddHabitSheet(context),
+                icon: const Icon(Icons.add, size: 18),
+                label: const Text('Tambah Habit'),
+              ),
+            ],
           ),
           const SizedBox(height: 6),
           Text(
-            '$completedCount/${habitLabels.length} habit selesai untuk tanggal ini.',
+            '$completedCount/${allHabits.length} habit selesai untuk tanggal ini.',
             style: TextStyle(color: mutedColor, fontSize: 13),
           ),
+          if (customHabits.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              'Habit custom muncul di semua tanggal, statusnya tetap per tanggal.',
+              style: TextStyle(color: mutedColor, fontSize: 12),
+            ),
+          ],
           const SizedBox(height: 16),
           Wrap(
             spacing: 8,
             runSpacing: 10,
-            children: habitLabels.entries.map((entry) {
+            children: allHabits.entries.map((entry) {
               final isDone = habits[entry.key] ?? false;
               return _HabitChip(
                 label: entry.value,
@@ -740,6 +778,67 @@ class _HabitSection extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  void _showAddHabitSheet(BuildContext context) {
+    final controller = TextEditingController();
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(
+              20,
+              4,
+              20,
+              MediaQuery.viewInsetsOf(context).bottom + 20,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Tambah Habit Custom',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: controller,
+                  autofocus: true,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: const InputDecoration(
+                    labelText: 'Nama habit',
+                    hintText: 'Contoh: Baca Al-Kahfi',
+                    border: OutlineInputBorder(),
+                  ),
+                  onSubmitted: (_) => _submitHabit(context, controller),
+                ),
+                const SizedBox(height: 14),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: () => _submitHabit(context, controller),
+                    icon: const Icon(Icons.add),
+                    label: const Text('Simpan Habit'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    ).whenComplete(controller.dispose);
+  }
+
+  void _submitHabit(BuildContext context, TextEditingController controller) {
+    final habitName = controller.text.trim();
+    if (habitName.isEmpty) return;
+    Navigator.of(context).pop();
+    onAddHabit(habitName);
   }
 }
 

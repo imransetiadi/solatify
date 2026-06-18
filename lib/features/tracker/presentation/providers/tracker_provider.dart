@@ -1,4 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hive/hive.dart';
+import 'package:solatify/core/database/hive_constants.dart';
 import '../../data/datasources/tracker_local_data_source.dart';
 import '../../data/repositories/tracker_repository_impl.dart';
 import '../../domain/entities/prayer_log_entity.dart';
@@ -127,3 +131,36 @@ final trackerWeeklyStatsProvider = FutureProvider<WeeklyStatsEntity>((ref) {
   final repository = ref.watch(trackerRepositoryProvider);
   return GetWeeklyStats(repository).execute(DateTime.now());
 });
+
+class CustomHabitNotifier extends StateNotifier<List<String>> {
+  CustomHabitNotifier(super.initialHabits, {this.persistChanges = false});
+
+  static const storageKey = 'tracker_custom_habits';
+
+  final bool persistChanges;
+
+  void addHabit(String habitName) {
+    final normalized = habitName.trim();
+    if (normalized.isEmpty || state.contains(normalized)) return;
+
+    state = [...state, normalized];
+    if (persistChanges) unawaited(_persist());
+  }
+
+  Future<void> _persist() async {
+    final box = await Hive.openBox<dynamic>(HiveConstants.settingsBox);
+    await box.put(storageKey, state);
+  }
+}
+
+final customHabitProvider =
+    StateNotifierProvider<CustomHabitNotifier, List<String>>((ref) {
+      final box = Hive.isBoxOpen(HiveConstants.settingsBox)
+          ? Hive.box<dynamic>(HiveConstants.settingsBox)
+          : null;
+      final stored = box?.get(CustomHabitNotifier.storageKey);
+      final habits = stored is List
+          ? stored.whereType<String>().toList(growable: false)
+          : const <String>[];
+      return CustomHabitNotifier(habits, persistChanges: true);
+    });

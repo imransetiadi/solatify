@@ -209,4 +209,15 @@ void main() {
       expect(notifier.state.value?.date, selectedDate);
     });
   });
+
+  group('Custom habit list', () {
+    test('adds trimmed custom habit names once', () async {
+      final notifier = CustomHabitNotifier(const []);
+
+      notifier.addHabit(' Baca Al-Kahfi ');
+      notifier.addHabit('Baca Al-Kahfi');
+
+      expect(notifier.state, ['Baca Al-Kahfi']);
+    });
+  });
 }
