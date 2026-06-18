@@ -77,6 +77,10 @@ class TrackerScreen extends ConsumerWidget {
                   ref.read(trackerSelectedDateProvider.notifier).state = date;
                   ref.read(trackerProvider.notifier).loadLogForDate(date);
                 },
+                onToggleHabit: (habit) {
+                  SolatifyHaptics.light();
+                  ref.read(trackerProvider.notifier).toggleHabit(habit);
+                },
               ),
               loading: () => const SolatifyStateView.loading(
                 title: 'Memuat tracker ibadah',
@@ -107,6 +111,7 @@ class _TrackerContent extends StatelessWidget {
     required this.onTogglePrayer,
     required this.onUpdateStatus,
     required this.onSelectDate,
+    required this.onToggleHabit,
   });
 
   final PrayerLogEntity log;
@@ -118,6 +123,7 @@ class _TrackerContent extends StatelessWidget {
   final ValueChanged<String> onTogglePrayer;
   final void Function(String prayer, PrayerStatus status) onUpdateStatus;
   final ValueChanged<DateTime> onSelectDate;
+  final ValueChanged<String> onToggleHabit;
 
   @override
   Widget build(BuildContext context) {
@@ -196,6 +202,14 @@ class _TrackerContent extends StatelessWidget {
               ),
             ],
           ),
+        ),
+        const SizedBox(height: 14),
+        _HabitSection(
+          habits: log.habits,
+          accentColor: accentColor,
+          textColor: textColor,
+          mutedColor: mutedColor,
+          onToggleHabit: onToggleHabit,
         ),
         const SizedBox(height: 14),
         _WeeklyInsightCard(
@@ -539,6 +553,135 @@ class _PrayerChip extends StatelessWidget {
                 ),
               ),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HabitSection extends StatelessWidget {
+  const _HabitSection({
+    required this.habits,
+    required this.accentColor,
+    required this.textColor,
+    required this.mutedColor,
+    required this.onToggleHabit,
+  });
+
+  static const habitLabels = {
+    'tahajud': 'Tahajud',
+    'dhuha': 'Dhuha',
+    'shalawat': 'Shalawat',
+    'sedekah': 'Sedekah',
+    'puasa_sunnah': 'Puasa Sunnah',
+    'murojaah': 'Murojaah',
+  };
+
+  final Map<String, bool> habits;
+  final Color accentColor;
+  final Color textColor;
+  final Color mutedColor;
+  final ValueChanged<String> onToggleHabit;
+
+  @override
+  Widget build(BuildContext context) {
+    final completedCount = habitLabels.keys
+        .where((key) => habits[key] ?? false)
+        .length;
+
+    return GlassContainer(
+      opacity: 0.05,
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Habit Sunnah',
+            style: TextStyle(
+              color: textColor,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            '$completedCount/${habitLabels.length} habit selesai untuk tanggal ini.',
+            style: TextStyle(color: mutedColor, fontSize: 13),
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 8,
+            runSpacing: 10,
+            children: habitLabels.entries.map((entry) {
+              final isDone = habits[entry.key] ?? false;
+              return _HabitChip(
+                label: entry.value,
+                isDone: isDone,
+                accentColor: accentColor,
+                textColor: textColor,
+                mutedColor: mutedColor,
+                onTap: () => onToggleHabit(entry.key),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HabitChip extends StatelessWidget {
+  const _HabitChip({
+    required this.label,
+    required this.isDone,
+    required this.accentColor,
+    required this.textColor,
+    required this.mutedColor,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool isDone;
+  final Color accentColor;
+  final Color textColor;
+  final Color mutedColor;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: isDone
+              ? accentColor.withValues(alpha: 0.15)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isDone ? accentColor : mutedColor.withValues(alpha: 0.22),
+            width: 1.5,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isDone ? Icons.check_circle : Icons.add_circle_outline,
+              size: 17,
+              color: isDone ? accentColor : mutedColor,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                color: isDone ? accentColor : textColor,
+                fontWeight: isDone ? FontWeight.bold : FontWeight.w600,
+                fontSize: 13,
+              ),
+            ),
           ],
         ),
       ),

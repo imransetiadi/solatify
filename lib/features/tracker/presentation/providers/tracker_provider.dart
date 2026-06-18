@@ -94,6 +94,22 @@ class TrackerNotifier extends StateNotifier<AsyncValue<PrayerLogEntity>> {
       state = AsyncValue.error(e, st);
     }
   }
+
+  Future<void> toggleHabit(String habitKey) async {
+    final currentLog = state.value;
+    if (currentLog == null) return;
+
+    final isDone = !currentLog.isHabitDone(habitKey);
+    final updatedLog = currentLog.copyWithHabit(habitKey, isDone);
+    state = AsyncValue.data(updatedLog);
+
+    try {
+      await _repository.updateHabitStatus(currentLog.date, habitKey, isDone);
+    } catch (e, st) {
+      state = AsyncValue.data(currentLog);
+      state = AsyncValue.error(e, st);
+    }
+  }
 }
 
 final trackerProvider =

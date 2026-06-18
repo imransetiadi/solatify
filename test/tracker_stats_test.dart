@@ -33,6 +33,13 @@ class MockTrackerRepository implements TrackerRepository {
     String prayerKey,
     PrayerStatus status,
   ) async {}
+
+  @override
+  Future<void> updateHabitStatus(
+    DateTime date,
+    String habitKey,
+    bool isDone,
+  ) async {}
 }
 
 void main() {
@@ -99,6 +106,19 @@ void main() {
       expect(log.getPrayerStatus('dzuhur'), isNull);
     });
 
+    test('custom habits default to empty and can be toggled', () {
+      final log = PrayerLogEntity(date: DateTime.now(), prayers: const {});
+
+      final updated = log.copyWithHabit('dhuha', true);
+
+      expect(log.habits, isEmpty);
+      expect(updated.isHabitDone('dhuha'), isTrue);
+      expect(
+        updated.copyWithHabit('dhuha', false).isHabitDone('dhuha'),
+        isFalse,
+      );
+    });
+
     test('DTO reads legacy boolean and persists status details', () {
       final log = PrayerLogDto.fromJson({
         'date': DateTime(2026, 6, 18).toIso8601String(),
@@ -110,6 +130,21 @@ void main() {
 
       expect(log.getPrayerStatus('subuh'), PrayerStatus.onTime);
       expect(json['prayerStatuses']['subuh'], 'late');
+    });
+
+    test('DTO reads missing habits as empty and persists habit statuses', () {
+      final log = PrayerLogDto.fromJson({
+        'date': DateTime(2026, 6, 18).toIso8601String(),
+        'prayers': {'subuh': true},
+      });
+
+      final updated = PrayerLogDto.fromEntity(
+        log.copyWithHabit('tahajud', true),
+      );
+      final json = updated.toJson();
+
+      expect(log.habits, isEmpty);
+      expect(json['habits']['tahajud'], isTrue);
     });
   });
 
