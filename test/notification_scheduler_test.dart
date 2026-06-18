@@ -1,7 +1,22 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:solatify/features/notifications/presentation/providers/notification_scheduler_provider.dart';
+import 'package:solatify/features/settings/domain/entities/settings_state.dart';
 
 void main() {
+  group('Notification v2 settings defaults', () {
+    test('enable every prayer with adhan sound and no reminder by default', () {
+      expect(SettingsState.defaultEnabledPrayerNotifications, {
+        'subuh': true,
+        'dzuhur': true,
+        'ashar': true,
+        'magrib': true,
+        'isya': true,
+      });
+      expect(SettingsState.defaultPreNotificationMinutes, 0);
+      expect(SettingsState.defaultNotificationSoundMode, 'adhan');
+    });
+  });
+
   group('buildPrayerNotificationKey', () {
     test('keys a prayer notification by prayer and exact target time', () {
       expect(
@@ -9,7 +24,7 @@ void main() {
           prayerKey: 'magrib',
           prayerTime: DateTime(2026, 6, 17, 18),
         ),
-        'magrib_2026-06-17T18:00:00.000',
+        'adhan_magrib_2026-06-17T18:00:00.000_2026-06-17T18:00:00.000',
       );
     });
   });
@@ -133,6 +148,74 @@ void main() {
       expect(requests.map((request) => request.prayerKey), ['ashar', 'isya']);
       expect(requests.map((request) => request.notificationId), [1003, 1005]);
     });
+
+    test('skips prayers disabled by per-prayer notification settings', () {
+      final now = DateTime(2026, 6, 16, 10);
+      final today = <String, DateTime?>{
+        'subuh': DateTime(2026, 6, 16, 4, 30),
+        'dzuhur': DateTime(2026, 6, 16, 12),
+        'ashar': DateTime(2026, 6, 16, 15, 20),
+        'magrib': DateTime(2026, 6, 16, 18),
+        'isya': DateTime(2026, 6, 16, 19, 15),
+      };
+      final tomorrow = <String, DateTime?>{
+        'subuh': DateTime(2026, 6, 17, 4, 31),
+      };
+
+      final requests = buildPrayerNotificationRequests(
+        today: today,
+        tomorrow: tomorrow,
+        now: now,
+        enabledPrayerNotifications: {
+          ...SettingsState.defaultEnabledPrayerNotifications,
+          'dzuhur': false,
+          'magrib': false,
+        },
+      );
+
+      expect(requests.map((request) => request.prayerKey), [
+        'ashar',
+        'isya',
+        'subuh',
+      ]);
+      expect(requests.map((request) => request.notificationId), [
+        1003,
+        1005,
+        2001,
+      ]);
+    });
+
+    test('adds pre-prayer reminder requests with separate IDs', () {
+      final now = DateTime(2026, 6, 16, 11, 40);
+      final today = <String, DateTime?>{
+        'subuh': DateTime(2026, 6, 16, 4, 30),
+        'dzuhur': DateTime(2026, 6, 16, 12),
+        'ashar': DateTime(2026, 6, 16, 15, 20),
+        'magrib': DateTime(2026, 6, 16, 18),
+        'isya': DateTime(2026, 6, 16, 19, 15),
+      };
+      final tomorrow = <String, DateTime?>{
+        'subuh': DateTime(2026, 6, 17, 4, 31),
+      };
+
+      final requests = buildPrayerNotificationRequests(
+        today: today,
+        tomorrow: tomorrow,
+        now: now,
+        preNotificationMinutes: 10,
+      );
+
+      final dzuhurReminder = requests.firstWhere(
+        (request) => request.notificationId == 3002,
+      );
+      final dzuhurAdhan = requests.firstWhere(
+        (request) => request.notificationId == 1002,
+      );
+      expect(dzuhurReminder.prayerKey, 'dzuhur');
+      expect(dzuhurReminder.isReminder, isTrue);
+      expect(dzuhurReminder.notificationTime, DateTime(2026, 6, 16, 11, 50));
+      expect(dzuhurReminder.prayerTime, dzuhurAdhan.prayerTime);
+    });
   });
 
   group('buildPrayerNotificationSyncPlan', () {
@@ -151,6 +234,7 @@ void main() {
             PrayerNotificationRequest(
               prayerKey: 'magrib',
               prayerTime: prayerTime,
+              notificationTime: prayerTime,
               notificationId: 1004,
             ),
           ],
@@ -177,6 +261,7 @@ void main() {
           PrayerNotificationRequest(
             prayerKey: 'magrib',
             prayerTime: newTime,
+            notificationTime: newTime,
             notificationId: 1004,
           ),
         ],
@@ -205,6 +290,7 @@ void main() {
           PrayerNotificationRequest(
             prayerKey: 'subuh',
             prayerTime: tomorrowSubuh,
+            notificationTime: tomorrowSubuh,
             notificationId: 2001,
           ),
         ],

@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:solatify/features/notifications/data/services/notification_service.dart';
+import 'package:solatify/features/notifications/domain/entities/notification_history_entry.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -18,6 +19,37 @@ void main() {
   final service = NotificationService();
   final capturedMethods = <MethodCall>[];
   final capturedNativeAlarmMethods = <MethodCall>[];
+
+  test(
+    'notification history entry serializes schedule and failure metadata',
+    () {
+      final entry = NotificationHistoryEntry(
+        lastScheduledAt: DateTime(2026, 6, 18, 7),
+        lastScheduledCount: 6,
+        lastFailedAt: DateTime(2026, 6, 18, 8),
+        lastFailedReason: 'permission denied',
+        lastPermissionStatus: 'ready',
+      );
+
+      final restored = NotificationHistoryEntry.fromJson(entry.toJson());
+
+      expect(restored.lastScheduledAt, DateTime(2026, 6, 18, 7));
+      expect(restored.lastScheduledCount, 6);
+      expect(restored.lastFailedAt, DateTime(2026, 6, 18, 8));
+      expect(restored.lastFailedReason, 'permission denied');
+      expect(restored.lastPermissionStatus, 'ready');
+    },
+  );
+
+  test('notification service exposes history recording helpers', () {
+    final source = File(
+      'lib/features/notifications/data/services/notification_service.dart',
+    ).readAsStringSync();
+
+    expect(source, contains('recordScheduleSuccess'));
+    expect(source, contains('recordScheduleFailure'));
+    expect(source, contains('notification_history'));
+  });
 
   setUp(() async {
     capturedMethods.clear();
@@ -283,6 +315,52 @@ void main() {
     },
   );
 
+  test('uses lightweight beep channel for beep notification mode', () async {
+    await service.init();
+
+    await service.schedulePrayerNotification(
+      prayerKey: 'dzuhur',
+      location: 'Jakarta, Indonesia',
+      prayerTime: '12:00',
+      notificationTime: DateTime.now().add(const Duration(minutes: 10)),
+      timezoneName: 'Asia/Jakarta',
+      notificationId: 1102,
+      soundMode: 'beep',
+    );
+
+    final zonedSchedule = capturedMethods.lastWhere(
+      (call) => call.method == 'zonedSchedule',
+    );
+    expect(
+      zonedSchedule.arguments['platformSpecifics']['channelId'],
+      'prayer_times_beep_channel',
+    );
+    expect(zonedSchedule.arguments['platformSpecifics']['playSound'], isTrue);
+  });
+
+  test('disables sound for silent notification mode', () async {
+    await service.init();
+
+    await service.schedulePrayerNotification(
+      prayerKey: 'ashar',
+      location: 'Jakarta, Indonesia',
+      prayerTime: '15:20',
+      notificationTime: DateTime.now().add(const Duration(minutes: 10)),
+      timezoneName: 'Asia/Jakarta',
+      notificationId: 1103,
+      soundMode: 'silent',
+    );
+
+    final zonedSchedule = capturedMethods.lastWhere(
+      (call) => call.method == 'zonedSchedule',
+    );
+    expect(
+      zonedSchedule.arguments['platformSpecifics']['channelId'],
+      'prayer_times_silent_channel',
+    );
+    expect(zonedSchedule.arguments['platformSpecifics']['playSound'], isFalse);
+  });
+
   test(
     'retries prayer scheduling inexactly when exact scheduling is rejected',
     () async {
@@ -407,17 +485,22 @@ void main() {
     expect(notificationService, contains('openAndroidExactAlarmSettings'));
   });
 
-  test('iOS notification permission is manual from settings', () {
+  test('iOS notification permission is requested before opening settings', () {
     final notificationService = File(
       'lib/features/notifications/data/services/notification_service.dart',
+    ).readAsStringSync();
+    final settingsScreen = File(
+      'lib/features/settings/presentation/screens/settings_screen.dart',
     ).readAsStringSync();
     final appDelegate = File('ios/Runner/AppDelegate.swift').readAsStringSync();
 
     expect(notificationService, contains('requestAlertPermission: false'));
-    expect(
-      notificationService,
-      isNot(contains('requestPermissions(alert: true')),
-    );
+    expect(notificationService, contains('requestIosPermissions'));
+    expect(notificationService, contains('requestPermissions('));
+    expect(notificationService, contains('alert: true'));
+    expect(notificationService, contains('badge: true'));
+    expect(notificationService, contains('sound: true'));
+    expect(settingsScreen, contains('requestIosPermissions'));
     expect(notificationService, contains('openIosNotificationSettings'));
     expect(appDelegate, contains('registerIosSettingsChannel'));
     expect(

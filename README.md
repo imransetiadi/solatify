@@ -14,7 +14,7 @@
 ## ✨ Fitur Utama
 
 - 🕋 **Jadwal Salat Akurat** — Kalkulasi waktu salat berbasis `adhan` dan `timezone`, mendukung metode Kemenag dan metode internasional lain, termasuk koreksi manual per waktu salat.
-- 🔔 **Alarm Adzan Otomatis** — Notifikasi lokal waktu salat berjalan offline menggunakan `flutter_local_notifications`, channel Android khusus adzan, timezone lokasi salat, dan diff-based scheduling untuk sisa salat hari ini plus Subuh besok.
+- 🔔 **Alarm Adzan Otomatis** — Notifikasi lokal waktu salat berjalan offline dengan toggle per waktu salat, pengingat sebelum salat, pilihan mode suara adzan/beep/silent, riwayat status scheduling, timezone lokasi salat, dan diff-based scheduling untuk sisa salat hari ini plus Subuh besok.
 - 📖 **Al-Qur'an & Konten Islami** — Surah Al-Qur'an, bookmark/terakhir dibaca, Asmaul Husna, doa harian, dzikir pagi-petang, kalender Hijriah, tips islami, dan tuntunan salat lengkap.
 - 🤲 **Tuntunan Salat Offline** — Urutan salat praktis dengan bacaan Arab, latin, arti Indonesia, catatan ringkas, doa qunut Subuh opsional, serta dzikir setelah salat.
 - 🧭 **Arah Kiblat** — Kompas kiblat berbasis sensor perangkat, dengan fallback UI ketika sensor tidak tersedia.
@@ -40,25 +40,33 @@ Solatify menggunakan beberapa tuning agar aplikasi tetap ringan:
 - Efek `GlassContainer` dibatasi agar visual tetap konsisten tanpa blur berlebihan.
 - Transisi antar menu memakai fade, slide mikro, dan scale ringan agar perpindahan fitur terasa seamless tanpa animasi berat.
 - Countdown waktu salat memakai tick 1 detik, bukan sub-second rebuild.
-- Scheduler notifikasi memakai sync plan agar hanya membatalkan/menjadwalkan ulang alarm yang berubah, sementara perubahan lokasi/jadwal tetap memicu reschedule langsung.
+- Scheduler notifikasi memakai sync plan, filter per waktu salat, dan post-permission refresh agar hanya membatalkan/menjadwalkan ulang alarm yang berubah, sementara perubahan lokasi/jadwal/izin tetap memicu reschedule langsung.
 - List panjang memakai builder/lazy rendering pada fitur konten utama.
 - Header, kartu menu, dan spacing layar fitur diringkas agar tidak ada teks berulang dan tetap nyaman di layar compact.
 
-## 🔔 Catatan Notifikasi Android
+## 🔔 Catatan Notifikasi
 
-Untuk Android, notifikasi salat memakai channel `Prayer Times Adhan` (`prayer_times_adhan_channel`) dengan native alarm fallback agar alarm adzan muncul di system tray secara lebih andal:
+Notifikasi salat mendukung kontrol yang lebih granular di Settings:
+
+- Toggle per waktu salat untuk mengaktifkan hanya Subuh, Magrib, atau kombinasi lain.
+- Pengingat sebelum salat, termasuk opsi 10 menit sebelum waktu salat.
+- Mode suara `adhan`, `beep`, atau `silent notification` sesuai preferensi pengguna.
+- Verifikasi izin setelah kembali dari Settings dan reschedule otomatis saat izin berubah.
+- Riwayat notifikasi menyimpan status terakhir terjadwal/gagal untuk debugging dan transparansi.
+
+Untuk Android, notifikasi salat memakai channel `Prayer Times Adhan` (`prayer_times_adhan_channel`), `Prayer Times Beep` (`prayer_times_beep_channel`), dan `Prayer Times Silent` (`prayer_times_silent_channel`) dengan native alarm fallback agar alarm adzan muncul di system tray secara lebih andal:
 
 1. Install build terbaru dan buka aplikasi minimal sekali.
 2. Berikan izin notifikasi (`POST_NOTIFICATIONS`) pada Android 13+.
 3. Aktifkan izin exact alarm jika Android menampilkan pengaturan tersebut.
-4. Pastikan channel `Prayer Times Adhan` aktif di system notification settings.
+4. Pastikan channel notifikasi yang dipilih aktif di system notification settings.
 5. Tunggu waktu salat berikutnya untuk memverifikasi notifikasi real prayer-time.
 
 ## ✅ QA & Kesiapan Build
 
 Status branch terbaru sudah diverifikasi dengan:
 
-- `flutter test` — 100/100 tests passed.
+- `flutter test` — 108/108 tests passed.
 - `flutter analyze` — no issues.
 - `flutter test -d emulator-5554 integration_test/app_test.dart` — 2/2 integration tests passed di Android emulator.
 - `flutter test -d 00008140-000518E42EB8401C integration_test/app_test.dart` — 2/2 integration tests passed di iPhone `Satelit88`.

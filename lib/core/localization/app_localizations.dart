@@ -121,12 +121,22 @@ class AppLocalizations {
   String get automaticAdhanNotificationsDescription => isEnglish
       ? 'Play adhan automatically at prayer time.'
       : 'Putar adzan otomatis saat masuk waktu salat.';
+  String get notificationPerPrayerTitle =>
+      isEnglish ? 'Active prayer times' : 'Waktu salat aktif';
+  String get preNotificationReminder =>
+      isEnglish ? 'Reminder before prayer' : 'Pengingat sebelum salat';
+  String get notificationSoundMode =>
+      isEnglish ? 'Notification sound' : 'Suara notifikasi';
+  String get noReminder => isEnglish ? 'Off' : 'Mati';
+  String get adhanSoundMode => isEnglish ? 'Adhan' : 'Adzan';
+  String get beepSoundMode => isEnglish ? 'Short beep' : 'Beep pendek';
+  String get silentSoundMode => isEnglish ? 'Silent' : 'Senyap';
   String get notificationPermissionError => isEnglish
       ? 'Notification permission could not be opened.'
       : 'Izin notifikasi belum bisa dibuka.';
   String get notificationPermissionSettingsHint => isEnglish
-      ? 'Adjust Solatify notification permission from this Android settings page.'
-      : 'Atur izin notifikasi Solatify dari halaman pengaturan Android ini.';
+      ? 'Adjust Solatify notification permission from the system settings page.'
+      : 'Atur izin notifikasi Solatify dari halaman pengaturan sistem.';
   String get notificationReliability =>
       isEnglish ? 'NOTIFICATION RELIABILITY' : 'KEANDALAN NOTIFIKASI';
   String get forceStopWarningTitle =>

@@ -125,6 +125,20 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  test('Settings source exposes Notification v2 controls', () {
+    final source = File(
+      'lib/features/settings/presentation/screens/settings_screen.dart',
+    ).readAsStringSync();
+
+    expect(source, contains('notificationPerPrayerTitle'));
+    expect(source, contains('preNotificationReminder'));
+    expect(source, contains('notificationSoundMode'));
+    expect(source, contains('updateEnabledPrayerNotification'));
+    expect(source, contains('updatePreNotificationMinutes'));
+    expect(source, contains('updateNotificationSoundMode'));
+    expect(source, contains('refreshSchedules(force: true)'));
+  });
+
   testWidgets('Hijri calendar screen renders', (tester) async {
     await tester.pumpWidget(wrap(const HijriCalendarScreen()));
 

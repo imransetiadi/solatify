@@ -42,4 +42,19 @@ class SettingsRepositoryImpl implements SettingsRepository {
   Future<void> updateAdhanNotificationsEnabled(bool enabled) {
     return localDataSource.updateAdhanNotificationsEnabled(enabled);
   }
+
+  @override
+  Future<void> updateEnabledPrayerNotifications(Map<String, bool> enabled) {
+    return localDataSource.updateEnabledPrayerNotifications(enabled);
+  }
+
+  @override
+  Future<void> updatePreNotificationMinutes(int minutes) {
+    return localDataSource.updatePreNotificationMinutes(minutes);
+  }
+
+  @override
+  Future<void> updateNotificationSoundMode(String mode) {
+    return localDataSource.updateNotificationSoundMode(mode);
+  }
 }

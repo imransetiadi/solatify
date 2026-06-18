@@ -57,6 +57,30 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     state = state.copyWith(adhanNotificationsEnabled: enabled);
   }
 
+  Future<void> updateEnabledPrayerNotification(
+    String prayerKey,
+    bool enabled,
+  ) async {
+    final next = Map<String, bool>.from(state.enabledPrayerNotifications);
+    next[prayerKey] = enabled;
+    await _repository.updateEnabledPrayerNotifications(next);
+    state = state.copyWith(enabledPrayerNotifications: next);
+  }
+
+  Future<void> updatePreNotificationMinutes(int minutes) async {
+    final normalized = const {0, 5, 10, 15}.contains(minutes) ? minutes : 0;
+    await _repository.updatePreNotificationMinutes(normalized);
+    state = state.copyWith(preNotificationMinutes: normalized);
+  }
+
+  Future<void> updateNotificationSoundMode(String mode) async {
+    final normalized = const {'adhan', 'beep', 'silent'}.contains(mode)
+        ? mode
+        : SettingsState.defaultNotificationSoundMode;
+    await _repository.updateNotificationSoundMode(normalized);
+    state = state.copyWith(notificationSoundMode: normalized);
+  }
+
   Future<void> syncAdhanNotificationsWithPermission(
     bool notificationsAllowed,
   ) async {

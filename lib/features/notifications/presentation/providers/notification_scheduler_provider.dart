@@ -17,12 +17,16 @@ class PrayerNotificationRequest {
   const PrayerNotificationRequest({
     required this.prayerKey,
     required this.prayerTime,
+    required this.notificationTime,
     required this.notificationId,
+    this.isReminder = false,
   });
 
   final String prayerKey;
   final DateTime prayerTime;
+  final DateTime notificationTime;
   final int notificationId;
+  final bool isReminder;
 }
 
 class PrayerNotificationSyncPlan {
@@ -40,44 +44,94 @@ class PrayerNotificationSyncPlan {
 String buildPrayerNotificationKey({
   required String prayerKey,
   required DateTime prayerTime,
+  DateTime? notificationTime,
+  bool isReminder = false,
 }) {
-  return '${prayerKey}_${prayerTime.toIso8601String()}';
+  final targetTime = notificationTime ?? prayerTime;
+  final kind = isReminder ? 'reminder' : 'adhan';
+  return '${kind}_${prayerKey}_${prayerTime.toIso8601String()}_${targetTime.toIso8601String()}';
 }
 
 List<PrayerNotificationRequest> buildPrayerNotificationRequests({
   required Map<String, DateTime?> today,
   required Map<String, DateTime?> tomorrow,
   required DateTime now,
+  Map<String, bool> enabledPrayerNotifications =
+      SettingsState.defaultEnabledPrayerNotifications,
+  int preNotificationMinutes = SettingsState.defaultPreNotificationMinutes,
 }) {
   const prayerKeys = ['subuh', 'dzuhur', 'ashar', 'magrib', 'isya'];
   final requests = <PrayerNotificationRequest>[];
 
   for (var index = 0; index < prayerKeys.length; index++) {
     final key = prayerKeys[index];
+    if (enabledPrayerNotifications[key] == false) continue;
     final prayerTime = today[key];
     if (prayerTime != null && prayerTime.isAfter(now)) {
-      requests.add(
-        PrayerNotificationRequest(
-          prayerKey: key,
-          prayerTime: prayerTime,
-          notificationId: 1001 + index,
-        ),
+      _addPrayerNotificationRequests(
+        requests: requests,
+        prayerKey: key,
+        prayerTime: prayerTime,
+        now: now,
+        notificationId: 1001 + index,
+        reminderNotificationId: 3001 + index,
+        preNotificationMinutes: preNotificationMinutes,
       );
     }
   }
 
   final tomorrowSubuh = tomorrow['subuh'];
-  if (tomorrowSubuh != null && tomorrowSubuh.isAfter(now)) {
-    requests.add(
-      PrayerNotificationRequest(
-        prayerKey: 'subuh',
-        prayerTime: tomorrowSubuh,
-        notificationId: 2001,
-      ),
+  if (enabledPrayerNotifications['subuh'] != false &&
+      tomorrowSubuh != null &&
+      tomorrowSubuh.isAfter(now)) {
+    _addPrayerNotificationRequests(
+      requests: requests,
+      prayerKey: 'subuh',
+      prayerTime: tomorrowSubuh,
+      now: now,
+      notificationId: 2001,
+      reminderNotificationId: 4001,
+      preNotificationMinutes: preNotificationMinutes,
     );
   }
 
   return requests;
+}
+
+void _addPrayerNotificationRequests({
+  required List<PrayerNotificationRequest> requests,
+  required String prayerKey,
+  required DateTime prayerTime,
+  required DateTime now,
+  required int notificationId,
+  required int reminderNotificationId,
+  required int preNotificationMinutes,
+}) {
+  if (preNotificationMinutes > 0) {
+    final reminderTime = prayerTime.subtract(
+      Duration(minutes: preNotificationMinutes),
+    );
+    if (reminderTime.isAfter(now)) {
+      requests.add(
+        PrayerNotificationRequest(
+          prayerKey: prayerKey,
+          prayerTime: prayerTime,
+          notificationTime: reminderTime,
+          notificationId: reminderNotificationId,
+          isReminder: true,
+        ),
+      );
+    }
+  }
+
+  requests.add(
+    PrayerNotificationRequest(
+      prayerKey: prayerKey,
+      prayerTime: prayerTime,
+      notificationTime: prayerTime,
+      notificationId: notificationId,
+    ),
+  );
 }
 
 PrayerNotificationSyncPlan buildPrayerNotificationSyncPlan({
@@ -89,6 +143,8 @@ PrayerNotificationSyncPlan buildPrayerNotificationSyncPlan({
       request.notificationId: buildPrayerNotificationKey(
         prayerKey: request.prayerKey,
         prayerTime: request.prayerTime,
+        notificationTime: request.notificationTime,
+        isReminder: request.isReminder,
       ),
   };
 
@@ -228,6 +284,8 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
         today: today,
         tomorrow: tomorrow,
         now: now,
+        enabledPrayerNotifications: settings.enabledPrayerNotifications,
+        preNotificationMinutes: settings.preNotificationMinutes,
       );
 
       final plan = buildPrayerNotificationSyncPlan(
@@ -263,9 +321,12 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
         await _scheduleNotification(
           prayerKey: request.prayerKey,
           prayerTime: request.prayerTime,
+          notificationTime: request.notificationTime,
           location: locationStr,
           timezoneName: timezoneName,
           notificationId: request.notificationId,
+          isReminder: request.isReminder,
+          soundMode: settings.notificationSoundMode,
         );
       }
 
@@ -273,11 +334,17 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
         ..clear()
         ..addAll(plan.desiredKeysById);
 
+      await NotificationService().recordScheduleSuccess(
+        scheduledCount: plan.desiredKeysById.length,
+        permissionStatus: readiness.status.name,
+      );
+
       debugPrint(
         'Synced ${plan.desiredKeysById.length} prayer notifications for today and tomorrow',
       );
     } catch (e) {
       debugPrint('Error scheduling notifications: $e');
+      await NotificationService().recordScheduleFailure(reason: e.toString());
     } finally {
       _schedulingInProgress = false;
       if (_rescheduleRequested && mounted) {
@@ -290,9 +357,12 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
   Future<void> _scheduleNotification({
     required String prayerKey,
     required DateTime prayerTime,
+    required DateTime notificationTime,
     required String location,
     required String timezoneName,
     required int notificationId,
+    required bool isReminder,
+    required String soundMode,
   }) async {
     try {
       final timeFormatter = DateFormat('HH:mm');
@@ -303,9 +373,11 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
         prayerKey: prayerKey,
         location: location,
         prayerTime: prayerTimeStr,
-        notificationTime: prayerTime,
+        notificationTime: notificationTime,
         timezoneName: timezoneName,
         notificationId: notificationId,
+        isReminder: isReminder,
+        soundMode: soundMode,
         refreshExactAlarmCapability: false,
       );
 
