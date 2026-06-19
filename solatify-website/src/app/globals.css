@@ -557,29 +557,29 @@ p { letter-spacing: -0.006em; }
 .trust-card p { margin-bottom: 0; color: var(--muted); line-height: 1.68; }
 .screenshot-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--section-gap);
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: clamp(10px, 1.2vw, 14px);
   align-items: start;
 }
 
 .screenshot-card:nth-child(1),
-.screenshot-card:nth-child(5) { grid-column: span 2; }
+.screenshot-card:nth-child(5) { grid-column: auto; }
 
 .screenshot-card {
   display: grid;
-  gap: 14px;
-  padding: 12px;
-  border: 3px solid var(--neo-line);
-  border-radius: var(--neo-radius);
+  gap: 8px;
+  padding: 8px;
+  border: 2px solid var(--neo-line);
+  border-radius: 20px;
   background: var(--surface);
-  box-shadow: var(--neo-shadow-sm);
+  box-shadow: 4px 4px 0 var(--neo-line);
 }
 
-.screenshot-card:hover { transform: translate(-2px, -2px); border-color: var(--neo-line); box-shadow: var(--neo-shadow); }
-.screenshot-frame { overflow: hidden; border: 3px solid var(--neo-line); border-radius: 24px; background: var(--surface-deep); }
+.screenshot-card:hover { transform: translate(-1px, -1px); border-color: var(--neo-line); box-shadow: var(--neo-shadow-sm); }
+.screenshot-frame { overflow: hidden; border: 2px solid var(--neo-line); border-radius: 16px; background: var(--surface-deep); }
 .screenshot-frame img { display: block; width: 100%; height: auto; }
-.screenshot-card span { display: block; color: var(--accent); font-size: 0.74rem; font-weight: 850; letter-spacing: 0.08em; text-transform: uppercase; }
-.screenshot-card strong { display: block; margin-top: 4px; font-size: 0.96rem; line-height: 1.2; }
+.screenshot-card span { display: block; color: var(--accent); font-size: 0.64rem; font-weight: 850; letter-spacing: 0.08em; text-transform: uppercase; }
+.screenshot-card strong { display: block; margin-top: 2px; font-size: 0.78rem; line-height: 1.15; }
 .screenshot-card p { margin: 6px 0 0; color: var(--muted); font-size: 0.8rem; line-height: 1.45; }
 
 .feature-card,
@@ -725,7 +725,7 @@ details p { margin: 14px 0 0; }
 
 @media (min-width: 1280px) {
   main { width: min(1240px, calc(100% - 72px)); }
-  .screenshot-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .screenshot-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
 }
 
 @media (min-width: 981px) and (max-width: 1120px) {
@@ -760,7 +760,7 @@ details p { margin: 14px 0 0; }
   .use-case-grid,
   .step-grid,
   .trust-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .screenshot-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .screenshot-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .screenshot-card:nth-child(1),
   .screenshot-card:nth-child(5) { grid-column: span 1; }
   .phone-card { min-height: 580px; }
@@ -813,7 +813,7 @@ details p { margin: 14px 0 0; }
   .feature-grid,
   .faq-grid,
   .advantage-grid,
-  .screenshot-grid { grid-template-columns: 1fr; }
+  .screenshot-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .screenshot-card:nth-child(1),
   .screenshot-card:nth-child(5) { grid-column: auto; }
   .notification-section,
