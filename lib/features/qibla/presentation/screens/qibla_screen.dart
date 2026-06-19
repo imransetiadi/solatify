@@ -8,9 +8,8 @@ import 'package:solatify/core/theme/theme.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
-import 'package:solatify/features/qibla/presentation/providers/qibla_heading_provider.dart';
-
 import 'package:solatify/features/prayer_schedule/presentation/location_provider.dart';
+import 'package:solatify/features/qibla/presentation/providers/qibla_heading_provider.dart';
 
 class QiblaScreen extends ConsumerStatefulWidget {
   const QiblaScreen({super.key});
@@ -44,10 +43,6 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
     final appBarColor = Theme.of(
       context,
     ).colorScheme.surface.withValues(alpha: isDark ? 0.96 : 0.94);
-    final headingState = ref.watch(qiblaHeadingProvider);
-    final sensorHeading = headingState.valueOrNull?.degrees;
-    final hasSensor = sensorHeading != null;
-    final heading = sensorHeading ?? _simulatedHeading;
 
     return Scaffold(
       appBar: AppBar(
@@ -58,8 +53,13 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
         shadowColor: Colors.transparent,
       ),
       body: IslamicBackground(
-        child: Builder(
-          builder: (context) {
+        child: Consumer(
+          builder: (context, ref, child) {
+            final headingState = ref.watch(qiblaHeadingProvider);
+            final sensorHeading = headingState.valueOrNull?.degrees;
+            final hasSensor = sensorHeading != null;
+            final heading = sensorHeading ?? _simulatedHeading;
+
             // Qibla direction relative to the top of the phone
             // (Bearing to Mecca - Phone's Heading)
             final qiblaRelativeAngle = (qiblaAngle - heading + 360) % 360;
