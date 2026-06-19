@@ -49,10 +49,7 @@ function StoreButton({
 
 export default function Home() {
   const [locale, setLocale] = useState<Locale>("en");
-  const [activePreviewKey, setActivePreviewKey] = useState("home");
   const content = localizedContent[locale];
-  const activePreview =
-    content.phoneTabs.find((tab) => tab.key === activePreviewKey) ?? content.phoneTabs[0];
 
   useEffect(() => {
     const storedLocale = window.localStorage.getItem("locale");
@@ -126,44 +123,37 @@ export default function Home() {
         </div>
 
         <div className="phone-card screenshot-hero" aria-label={content.preview.label}>
-          <div className="phone-orbit" aria-hidden="true" />
-          <div className="phone-shell real-screen-shell primary-screen">
-            <div className="phone-top" />
-            <Image
-              src={activePreview.src}
-              alt={activePreview.alt}
-              width={getScreenshotWidth(activePreview.src)}
-              height={2560}
-              priority
-            />
-          </div>
-          <div className="phone-shell real-screen-shell secondary-screen" aria-hidden="true">
-            <div className="phone-top" />
-            <Image
-              src="/screenshots/alfatihah.jpg"
-              alt=""
-              width={1182}
-              height={2560}
-              priority
-            />
-          </div>
-          <div className="phone-tabs" role="tablist" aria-label={content.preview.label}>
-            {content.phoneTabs.map((tab) => (
-              <button
-                aria-selected={tab.key === activePreview.key}
-                className={tab.key === activePreview.key ? "active" : ""}
-                key={tab.key}
-                onClick={() => setActivePreviewKey(tab.key)}
-                role="tab"
-                type="button"
-              >
-                {tab.label}
-              </button>
-            ))}
+          <div className="device-pair">
+            <article className="device-card iphone-device">
+              <span>{content.devicePreview.iosLabel}</span>
+              <div className="phone-shell real-screen-shell iphone-shell">
+                <div className="phone-top" />
+                <Image
+                  src="/screenshots/ios1.jpg"
+                  alt={content.devicePreview.iosAlt}
+                  width={1177}
+                  height={2560}
+                  priority
+                />
+              </div>
+            </article>
+            <article className="device-card pixel-device">
+              <span>{content.devicePreview.androidLabel}</span>
+              <div className="phone-shell real-screen-shell pixel-shell">
+                <div className="phone-top" />
+                <Image
+                  src="/screenshots/android-home-dark.jpg"
+                  alt={content.devicePreview.androidAlt}
+                  width={1182}
+                  height={2560}
+                  priority
+                />
+              </div>
+            </article>
           </div>
           <div className="phone-preview-copy">
-            <strong>{activePreview.title}</strong>
-            <p>{activePreview.copy}</p>
+            <strong>{content.devicePreview.title}</strong>
+            <p>{content.devicePreview.copy}</p>
           </div>
         </div>
       </section>
