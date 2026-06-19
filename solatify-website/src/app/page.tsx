@@ -235,6 +235,11 @@ export default function Home() {
           ))}
         </div>
       </section>
+
+      <footer className="footer">
+        <span>© 2026 Solatify</span>
+      </footer>
+
       <div className="mobile-sticky-cta" aria-label={content.store.installLabel}>
         <a href={storeLinks.android}>{content.store.mobileCta}</a>
       </div>
