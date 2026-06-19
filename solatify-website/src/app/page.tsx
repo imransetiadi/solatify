@@ -125,7 +125,6 @@ export default function Home() {
         <div className="phone-card screenshot-hero" aria-label={content.preview.label}>
           <div className="device-pair">
             <article className="device-card iphone-device">
-              <span>{content.devicePreview.iosLabel}</span>
               <div className="phone-shell real-screen-shell iphone-shell">
                 <div className="phone-top" />
                 <Image
@@ -138,7 +137,6 @@ export default function Home() {
               </div>
             </article>
             <article className="device-card pixel-device">
-              <span>{content.devicePreview.androidLabel}</span>
               <div className="phone-shell real-screen-shell pixel-shell">
                 <div className="phone-top" />
                 <Image
