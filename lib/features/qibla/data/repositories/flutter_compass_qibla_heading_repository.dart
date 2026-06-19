@@ -7,8 +7,10 @@ class FlutterCompassQiblaHeadingRepository implements QiblaHeadingRepository {
 
   @override
   Stream<QiblaHeading> watchHeading() {
-    return FlutterCompass.events.map(
-      (event) => QiblaHeading(degrees: event.heading),
-    );
+    final events = FlutterCompass.events;
+    if (events == null) {
+      return Stream.value(const QiblaHeading(degrees: null));
+    }
+    return events.map((event) => QiblaHeading(degrees: event.heading));
   }
 }
