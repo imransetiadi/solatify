@@ -64,6 +64,33 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  test('Qibla heading source is isolated behind adapter', () {
+    final qiblaScreen = File(
+      'lib/features/qibla/presentation/screens/qibla_screen.dart',
+    ).readAsStringSync();
+    final qiblaProvider = File(
+      'lib/features/qibla/presentation/providers/qibla_heading_provider.dart',
+    ).readAsStringSync();
+    final qiblaAdapter = File(
+      'lib/features/qibla/data/repositories/flutter_compass_qibla_heading_repository.dart',
+    ).readAsStringSync();
+
+    expect(
+      qiblaScreen,
+      isNot(
+        contains("import 'package:flutter_compass_v2/flutter_compass_v2.dart';"),
+      ),
+    );
+    expect(qiblaScreen, isNot(contains('FlutterCompass.events')));
+    expect(qiblaScreen, contains('qiblaHeadingProvider'));
+    expect(qiblaProvider, contains('qiblaHeadingRepositoryProvider'));
+    expect(
+      qiblaAdapter,
+      contains("import 'package:flutter_compass_v2/flutter_compass_v2.dart';"),
+    );
+    expect(qiblaAdapter, contains('FlutterCompass.events'));
+  });
+
   testWidgets('Dark mode key routed screens render without contrast errors', (
     tester,
   ) async {
