@@ -1,7 +1,7 @@
 export type Locale = "en" | "id";
 
 export const storeLinks = {
-  android: "https://github.com/imransetiadi/solatify/releases/download/v1.0.0-rc1/app-release.apk"
+  android: "https://github.com/imransetiadi/solatify/releases/download/v1.0.0-rc2/solatify-1.0.0.apk"
 };
 
 export const languages: Record<Locale, string> = {
