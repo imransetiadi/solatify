@@ -61,6 +61,14 @@ export const localizedContent = {
       time: "18:08",
       remaining: "Maghrib in 12m"
     },
+    devicePreview: {
+      title: "Light on iPhone. Dark on Pixel.",
+      copy: "A clean preview for both platforms.",
+      iosLabel: "iPhone 17 Pro • Light",
+      iosAlt: "Solatify light theme preview on iPhone 17 Pro",
+      androidLabel: "Pixel 10 Pro • Dark",
+      androidAlt: "Solatify dark theme preview on Pixel 10 Pro"
+    },
     phoneTabs: [
       {
         key: "home",
@@ -360,6 +368,14 @@ export const localizedContent = {
       prayer: "Magrib",
       time: "18:08",
       remaining: "Magrib dalam 12m"
+    },
+    devicePreview: {
+      title: "Light di iPhone. Dark di Pixel.",
+      copy: "Preview bersih untuk dua platform.",
+      iosLabel: "iPhone 17 Pro • Light",
+      iosAlt: "Preview tema light Solatify di iPhone 17 Pro",
+      androidLabel: "Pixel 10 Pro • Dark",
+      androidAlt: "Preview tema dark Solatify di Pixel 10 Pro"
     },
     phoneTabs: [
       {
