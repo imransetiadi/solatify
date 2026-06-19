@@ -79,8 +79,8 @@ export default function Home() {
         </a>
         <nav className="nav-links" aria-label="Primary navigation">
           <a href="#features">{content.nav.features}</a>
-          <a href="#notifications">{content.nav.notifications}</a>
-          <a href="#why">{content.nav.why}</a>
+          <a href="#screenshots">{content.nav.notifications}</a>
+          <a href="#download">{content.nav.why}</a>
           <a href="#faq">{content.nav.faq}</a>
         </nav>
         <div className="header-actions">
@@ -168,39 +168,16 @@ export default function Home() {
         </div>
       </section>
 
-      <div className="ornament-divider" aria-hidden="true" />
-
-      <section className="section how-section reveal" id="how-it-works">
-        <div className="section-heading">
-          <p className="eyebrow">{content.howItWorks.eyebrow}</p>
-          <h2>{content.howItWorks.title}</h2>
-          <p>{content.howItWorks.copy}</p>
-        </div>
-        <div className="step-grid">
-          {content.howItWorks.steps.map((step) => (
-            <article className="step-card" key={step.number}>
-              <span>{step.number}</span>
-              <h3>{step.title}</h3>
-              <p>{step.description}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <div className="ornament-divider" aria-hidden="true" />
-
       <section className="section feature-showcase reveal" id="features">
         <div className="section-heading">
           <p className="eyebrow">{content.featuresSection.eyebrow}</p>
           <h2>{content.featuresSection.title}</h2>
-          <p>{content.featuresSection.copy}</p>
         </div>
         <div className="feature-grid">
-          {content.features.map((feature) => (
+          {content.features.slice(0, 6).map((feature) => (
             <article className="feature-card" key={feature.title}>
               <span className="feature-icon">{feature.icon}</span>
               <h3>{feature.title}</h3>
-              <p>{feature.description}</p>
             </article>
           ))}
         </div>
@@ -212,10 +189,9 @@ export default function Home() {
         <div className="section-heading">
           <p className="eyebrow">{content.screenshotsSection.eyebrow}</p>
           <h2>{content.screenshotsSection.title}</h2>
-          <p>{content.screenshotsSection.copy}</p>
         </div>
         <div className="screenshot-grid">
-          {content.screenshots.map((screenshot) => (
+          {content.screenshots.slice(0, 6).map((screenshot) => (
             <article className="screenshot-card" key={screenshot.src}>
               <div className="screenshot-frame">
                 <Image
@@ -228,7 +204,6 @@ export default function Home() {
               <div>
                 <span>{screenshot.label}</span>
                 <strong>{screenshot.title}</strong>
-                <p>{screenshot.story}</p>
               </div>
             </article>
           ))}
@@ -237,117 +212,7 @@ export default function Home() {
 
       <div className="ornament-divider" aria-hidden="true" />
 
-      <section className="mosque-section reveal" id="nearby-mosques">
-        <div>
-          <p className="eyebrow">{content.mosqueSpotlight.eyebrow}</p>
-          <h2>{content.mosqueSpotlight.title}</h2>
-          <p>{content.mosqueSpotlight.copy}</p>
-          <ul className="check-list mosque-points">
-            {content.mosqueSpotlight.points.map((point) => (
-              <li key={point}>{point}</li>
-            ))}
-          </ul>
-        </div>
-        <div className="mosque-card" aria-label={content.mosqueSpotlight.title}>
-          <span>{content.mosqueSpotlight.badge}</span>
-          <strong>{content.mosqueSpotlight.mosqueName}</strong>
-          <div className="mosque-meta">
-            <div>
-              <small>Distance</small>
-              <b>{content.mosqueSpotlight.distance}</b>
-            </div>
-            <div>
-              <small>Direction</small>
-              <b>{content.mosqueSpotlight.direction}</b>
-            </div>
-            <div>
-              <small>Walking</small>
-              <b>{content.mosqueSpotlight.walking}</b>
-            </div>
-          </div>
-          <button type="button">{content.mosqueSpotlight.action}</button>
-        </div>
-      </section>
-
-      <div className="ornament-divider" aria-hidden="true" />
-
-      <section className="notification-section glass-section reveal" id="notifications">
-        <div className="ornament-card notification-copy">
-          <p className="eyebrow">{content.notifications.eyebrow}</p>
-          <h2>{content.notifications.title}</h2>
-          <p>{content.notifications.copy}</p>
-        </div>
-        <div className="notification-stack" aria-label={content.notifications.examplesLabel}>
-          <div className="alert-card alert-card-primary">
-            <span>{content.notifications.primaryTime}</span>
-            <strong>{content.notifications.primaryTitle}</strong>
-            <p>{content.notifications.primaryCopy}</p>
-          </div>
-          <div className="alert-card">
-            <span>{content.notifications.adhanLabel}</span>
-            <strong>{content.notifications.adhanTitle}</strong>
-            <p>{content.notifications.adhanCopy}</p>
-          </div>
-        </div>
-      </section>
-
-      <div className="ornament-divider" aria-hidden="true" />
-
-      <section className="section trust-section reveal" id="trust">
-        <div className="section-heading">
-          <p className="eyebrow">{content.trust.eyebrow}</p>
-          <h2>{content.trust.title}</h2>
-          <p>{content.trust.copy}</p>
-        </div>
-        <div className="trust-grid">
-          {content.trust.items.map((item) => (
-            <article className="trust-card" key={item.title}>
-              <span>✓</span>
-              <h3>{item.title}</h3>
-              <p>{item.description}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <div className="ornament-divider" aria-hidden="true" />
-
-      <section className="split-section reveal" id="why">
-        <div>
-          <p className="eyebrow">{content.why.eyebrow}</p>
-          <h2>{content.why.title}</h2>
-          <p>{content.why.copy}</p>
-        </div>
-        <div className="advantage-list">
-          {content.advantages.map((item) => (
-            <div className="advantage-item" key={item.title}>
-              <span>{item.title}</span>
-              <p>{item.description}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="section use-cases-section reveal" id="use-cases">
-        <div className="section-heading">
-          <p className="eyebrow">{content.useCasesSection.eyebrow}</p>
-          <h2>{content.useCasesSection.title}</h2>
-          <p>{content.useCasesSection.copy}</p>
-        </div>
-        <div className="use-case-grid">
-          {content.useCases.map((item) => (
-            <article className="use-case-card" key={item.title}>
-              <span>{item.icon}</span>
-              <h3>{item.title}</h3>
-              <p>{item.description}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <div className="ornament-divider" aria-hidden="true" />
-
-      <section className="section cta-section app-download-panel reveal">
+      <section className="section cta-section app-download-panel reveal" id="download">
         <div>
           <p className="eyebrow">{content.cta.eyebrow}</p>
           <h2>{content.cta.title}</h2>
@@ -374,7 +239,7 @@ export default function Home() {
           <h2>{content.faqSection.title}</h2>
         </div>
         <div className="faq-grid">
-          {content.faqs.map((faq) => (
+          {content.faqs.slice(0, 3).map((faq) => (
             <article className="faq" key={faq.question}>
               <h3>{faq.question}</h3>
               <p>{faq.answer}</p>
