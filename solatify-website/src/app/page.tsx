@@ -6,26 +6,43 @@ import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { localizedContent, storeLinks, type Locale } from "@/lib/content";
 
+function getScreenshotWidth(src: string) {
+  return src.includes("/ios") ? 1177 : 1182;
+}
+
 function StoreButton({
   href,
   label,
   store,
   type
 }: {
-  href: string;
+  href?: string;
   label: string;
   store: string;
   type: "appstore" | "playstore";
 }) {
   const icon = type === "appstore" ? "" : "▶";
-
-  return (
-    <a className="store-button" href={href} aria-label={`${label} ${store}`}>
+  const content = (
+    <>
       <span className="store-icon">{icon}</span>
       <span>
         <small>{label}</small>
         <strong>{store}</strong>
       </span>
+    </>
+  );
+
+  if (!href) {
+    return (
+      <span className="store-button store-button-disabled" aria-label={`${label} ${store}`} aria-disabled="true">
+        {content}
+      </span>
+    );
+  }
+
+  return (
+    <a className="store-button" href={href} aria-label={`${label} ${store}`} rel="noreferrer">
+      {content}
     </a>
   );
 }
@@ -84,13 +101,12 @@ export default function Home() {
           <div className="store-row" aria-label={content.store.installLabel}>
             <StoreButton
               type="appstore"
-              href={storeLinks.appStore}
               label={content.store.appStoreLabel}
               store={content.store.appStore}
             />
             <StoreButton
               type="playstore"
-              href={storeLinks.playStore}
+              href={storeLinks.android}
               label={content.store.playStoreLabel}
               store={content.store.playStore}
             />
@@ -116,7 +132,7 @@ export default function Home() {
             <Image
               src={activePreview.src}
               alt={activePreview.alt}
-              width={1177}
+              width={getScreenshotWidth(activePreview.src)}
               height={2560}
               priority
             />
@@ -124,9 +140,9 @@ export default function Home() {
           <div className="phone-shell real-screen-shell secondary-screen" aria-hidden="true">
             <div className="phone-top" />
             <Image
-              src="/screenshots/android-home-dark.jpg"
+              src="/screenshots/alfatihah.jpg"
               alt=""
-              width={1177}
+              width={1182}
               height={2560}
               priority
             />
@@ -205,7 +221,7 @@ export default function Home() {
                 <Image
                   src={screenshot.src}
                   alt={`${screenshot.title} preview`}
-                  width={1177}
+                  width={getScreenshotWidth(screenshot.src)}
                   height={2560}
                 />
               </div>
@@ -340,13 +356,12 @@ export default function Home() {
         <div className="store-row centered">
           <StoreButton
             type="appstore"
-            href={storeLinks.appStore}
             label={content.store.appStoreLabel}
             store={content.store.appStore}
           />
           <StoreButton
             type="playstore"
-            href={storeLinks.playStore}
+            href={storeLinks.android}
             label={content.store.playStoreLabel}
             store={content.store.playStore}
           />
@@ -368,7 +383,7 @@ export default function Home() {
         </div>
       </section>
       <div className="mobile-sticky-cta" aria-label={content.store.installLabel}>
-        <a href={storeLinks.appStore}>{content.store.mobileCta}</a>
+        <a href={storeLinks.android}>{content.store.mobileCta}</a>
       </div>
     </main>
   );

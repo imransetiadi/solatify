@@ -1,8 +1,7 @@
 export type Locale = "en" | "id";
 
 export const storeLinks = {
-  appStore: "https://apps.apple.com/app/solatify",
-  playStore: "https://play.google.com/store/apps/details?id=com.solatify.app"
+  android: "https://github.com/imransetiadi/solatify/releases/download/v1.0.0-rc1/app-release.apk"
 };
 
 export const languages: Record<Locale, string> = {
@@ -20,10 +19,10 @@ export const localizedContent = {
     },
     store: {
       installLabel: "Install Solatify",
-      appStoreLabel: "Download on the",
-      playStoreLabel: "Get it on",
-      appStore: "App Store",
-      playStore: "Google Play",
+      appStoreLabel: "iOS",
+      playStoreLabel: "Download for",
+      appStore: "Coming Soon",
+      playStore: "Android APK",
       mobileCta: "Download Solatify"
     },
     hero: {
@@ -66,27 +65,27 @@ export const localizedContent = {
     phoneTabs: [
       {
         key: "home",
-        label: "Home",
-        src: "/screenshots/ios-home-light.jpg",
+        label: "Android",
+        src: "/screenshots/android-home-dark.jpg",
         alt: "Solatify home screen with next prayer preview",
-        title: "Personal worship home",
-        copy: "See the next prayer, quick actions, and daily rhythm the moment Solatify opens."
+        title: "Android prayer home",
+        copy: "See the next prayer, quick actions, and daily rhythm in the Android dark experience."
+      },
+      {
+        key: "ios-home",
+        label: "iOS",
+        src: "/screenshots/ios1.jpg",
+        alt: "Solatify iOS home screen with next prayer preview",
+        title: "iOS prayer home",
+        copy: "Preview the clean iOS experience for prayer countdowns and daily schedules."
       },
       {
         key: "quran",
         label: "Qur’an",
-        src: "/screenshots/ios-quran-light.jpg",
-        alt: "Solatify Qur’an reading screen",
-        title: "Continue your Qur’an routine",
-        copy: "Return to focused reading with a clean page, comfortable spacing, and progress-friendly flow."
-      },
-      {
-        key: "schedule",
-        label: "Schedule",
-        src: "/screenshots/ios-schedule-light.jpg",
-        alt: "Solatify prayer schedule screen",
-        title: "Today’s prayer schedule",
-        copy: "Review every prayer time quickly and keep the day organized around worship."
+        src: "/screenshots/ios3.jpg",
+        alt: "Solatify iOS Qur’an screen",
+        title: "Qur’an on iOS",
+        copy: "Browse surahs with soft spacing, clear typography, and a calm reading flow."
       },
       {
         key: "mosque",
@@ -115,16 +114,18 @@ export const localizedContent = {
     },
     screenshotsSection: {
       eyebrow: "App Preview",
-      title: "Real screens from Solatify on iPhone and Android.",
-      copy: "Light previews use iPhone screenshots, while dark previews use Android screenshots, so visitors can instantly feel both platform experiences."
+      title: "Real screens from Solatify on iOS and Android.",
+      copy: "Explore the actual mobile experience across prayer times, Qur’an, mosque discovery, settings, and worship tracking on both platforms."
     },
     screenshots: [
-      { src: "/screenshots/ios-home-light.jpg", title: "iPhone Home", label: "Light mode", story: "See Maghrib coming before the day gets busy." },
-      { src: "/screenshots/ios-schedule-light.jpg", title: "Prayer Schedule", label: "iPhone", story: "Never miss the rhythm of today’s prayer times." },
-      { src: "/screenshots/ios-quran-light.jpg", title: "Qur’an Reader", label: "iPhone", story: "Continue your Qur’an routine with a focused page." },
-      { src: "/screenshots/android-mosque-dark.jpg", title: "Nearby Mosques", label: "Android dark", story: "Find a place to pray when you are away from home." },
-      { src: "/screenshots/android-quran-dark.jpg", title: "Dark Qur’an", label: "Android", story: "Read comfortably in low light without visual noise." },
-      { src: "/screenshots/android-tracker-dark.jpg", title: "Worship Tracker", label: "Android", story: "Build consistency with a simple worship tracker." }
+      { src: "/screenshots/ios1.jpg", title: "iOS Prayer Home", label: "iOS", story: "See the next prayer and daily schedule in the light iOS experience." },
+      { src: "/screenshots/ios2.jpg", title: "iOS Prayer Schedule", label: "iOS", story: "Review today’s prayer times in a clean calendar layout." },
+      { src: "/screenshots/ios3.jpg", title: "iOS Qur’an Library", label: "iOS", story: "Browse surahs with soft spacing and clear navigation." },
+      { src: "/screenshots/ios6.jpg", title: "iOS Nearby Mosques", label: "iOS", story: "Find nearby mosques with distance and route actions." },
+      { src: "/screenshots/android-home-dark.jpg", title: "Android Prayer Home", label: "Android", story: "See the next prayer and today’s schedule at a glance." },
+      { src: "/screenshots/android-quran-dark.jpg", title: "Android Qur’an Library", label: "Android", story: "Browse surahs in a focused dark interface." },
+      { src: "/screenshots/pengaturan.jpg", title: "Android Prayer Settings", label: "Android", story: "Adjust calculation methods, adhan, and reminder timing." },
+      { src: "/screenshots/tracker-2.jpg", title: "Android Worship Tracker", label: "Android", story: "Build consistency with habits, history, and weekly insight." }
     ],
     mosqueSpotlight: {
       eyebrow: "Nearby Mosques",
@@ -320,10 +321,10 @@ export const localizedContent = {
     },
     store: {
       installLabel: "Install Solatify",
-      appStoreLabel: "Unduh di",
-      playStoreLabel: "Dapatkan di",
-      appStore: "App Store",
-      playStore: "Google Play",
+      appStoreLabel: "iOS",
+      playStoreLabel: "Unduh untuk",
+      appStore: "Coming Soon",
+      playStore: "Android APK",
       mobileCta: "Download Solatify"
     },
     hero: {
@@ -366,27 +367,27 @@ export const localizedContent = {
     phoneTabs: [
       {
         key: "home",
-        label: "Home",
-        src: "/screenshots/ios-home-light.jpg",
+        label: "Android",
+        src: "/screenshots/android-home-dark.jpg",
         alt: "Tampilan home Solatify dengan salat berikutnya",
-        title: "Home ibadah yang personal",
-        copy: "Lihat salat berikutnya, quick action, dan ritme harian begitu Solatify dibuka."
+        title: "Home salat Android",
+        copy: "Lihat salat berikutnya, quick action, dan ritme harian dalam pengalaman Android gelap."
+      },
+      {
+        key: "ios-home",
+        label: "iOS",
+        src: "/screenshots/ios1.jpg",
+        alt: "Tampilan home iOS Solatify dengan salat berikutnya",
+        title: "Home salat iOS",
+        copy: "Lihat pengalaman iOS yang bersih untuk countdown salat dan jadwal harian."
       },
       {
         key: "quran",
         label: "Qur’an",
-        src: "/screenshots/ios-quran-light.jpg",
-        alt: "Tampilan baca Qur’an Solatify",
-        title: "Lanjutkan rutinitas Qur’an",
-        copy: "Kembali membaca dengan halaman fokus, spacing nyaman, dan alur yang ramah progress."
-      },
-      {
-        key: "schedule",
-        label: "Jadwal",
-        src: "/screenshots/ios-schedule-light.jpg",
-        alt: "Tampilan jadwal salat Solatify",
-        title: "Jadwal salat hari ini",
-        copy: "Cek semua waktu salat dengan cepat dan atur hari tetap selaras dengan ibadah."
+        src: "/screenshots/ios3.jpg",
+        alt: "Tampilan Qur’an iOS Solatify",
+        title: "Qur’an di iOS",
+        copy: "Jelajahi surah dengan spacing lembut, tipografi jelas, dan alur baca yang tenang."
       },
       {
         key: "mosque",
@@ -415,16 +416,18 @@ export const localizedContent = {
     },
     screenshotsSection: {
       eyebrow: "Preview Aplikasi",
-      title: "Tampilan asli Solatify di iPhone dan Android.",
-      copy: "Preview mode terang memakai screenshot iPhone, sementara preview mode gelap memakai screenshot Android agar pengunjung langsung merasakan kedua pengalaman platform."
+      title: "Tampilan asli Solatify di iOS dan Android.",
+      copy: "Lihat pengalaman mobile asli untuk jadwal salat, Qur’an, masjid terdekat, pengaturan, dan tracker ibadah di kedua platform."
     },
     screenshots: [
-      { src: "/screenshots/ios-home-light.jpg", title: "Home iPhone", label: "Mode terang", story: "Lihat Magrib sebelum harimu makin sibuk." },
-      { src: "/screenshots/ios-schedule-light.jpg", title: "Jadwal Salat", label: "iPhone", story: "Jaga ritme waktu salat hari ini tanpa terlewat." },
-      { src: "/screenshots/ios-quran-light.jpg", title: "Baca Qur’an", label: "iPhone", story: "Lanjutkan rutinitas Qur’an dengan halaman yang fokus." },
-      { src: "/screenshots/android-mosque-dark.jpg", title: "Masjid Terdekat", label: "Android gelap", story: "Temukan tempat salat saat jauh dari rumah." },
-      { src: "/screenshots/android-quran-dark.jpg", title: "Qur’an Gelap", label: "Android", story: "Baca nyaman di cahaya redup tanpa tampilan ramai." },
-      { src: "/screenshots/android-tracker-dark.jpg", title: "Tracker Ibadah", label: "Android", story: "Bangun konsistensi lewat tracker ibadah sederhana." }
+      { src: "/screenshots/ios1.jpg", title: "Home Salat iOS", label: "iOS", story: "Lihat salat berikutnya dan jadwal harian di tampilan iOS terang." },
+      { src: "/screenshots/ios2.jpg", title: "Jadwal Salat iOS", label: "iOS", story: "Cek waktu salat hari ini dalam layout kalender yang bersih." },
+      { src: "/screenshots/ios3.jpg", title: "Daftar Qur’an iOS", label: "iOS", story: "Jelajahi surah dengan spacing lembut dan navigasi jelas." },
+      { src: "/screenshots/ios6.jpg", title: "Masjid Terdekat iOS", label: "iOS", story: "Temukan masjid terdekat lengkap dengan jarak dan aksi rute." },
+      { src: "/screenshots/android-home-dark.jpg", title: "Home Salat Android", label: "Android", story: "Lihat salat berikutnya dan jadwal hari ini sekilas." },
+      { src: "/screenshots/android-quran-dark.jpg", title: "Daftar Qur’an Android", label: "Android", story: "Jelajahi surah dalam tampilan gelap yang fokus." },
+      { src: "/screenshots/pengaturan.jpg", title: "Pengaturan Salat Android", label: "Android", story: "Atur metode perhitungan, adzan, dan waktu pengingat." },
+      { src: "/screenshots/tracker-2.jpg", title: "Tracker Ibadah Android", label: "Android", story: "Bangun konsistensi dengan habit, riwayat, dan insight mingguan." }
     ],
     mosqueSpotlight: {
       eyebrow: "Masjid Terdekat",
