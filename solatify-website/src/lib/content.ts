@@ -33,7 +33,7 @@ export const localizedContent = {
       stats: [
         { value: "5", label: "prayers" },
         { value: "Adhan", label: "alerts" },
-        { value: "iOS/Android", label: "preview" }
+        { value: "Light/Dark", label: "modes" }
       ]
     },
     preview: {
@@ -63,7 +63,7 @@ export const localizedContent = {
     },
     devicePreview: {
       title: "Light on iPhone. Dark on Pixel.",
-      copy: "A clean preview for both platforms.",
+      copy: "Supports light and dark mode across platforms.",
       iosLabel: "iPhone 17 Pro • Light",
       iosAlt: "Solatify light theme preview on iPhone 17 Pro",
       androidLabel: "Pixel 10 Pro • Dark",
@@ -341,7 +341,7 @@ export const localizedContent = {
       stats: [
         { value: "5", label: "salat" },
         { value: "Adzan", label: "pengingat" },
-        { value: "iOS/Android", label: "preview" }
+        { value: "Light/Dark", label: "mode" }
       ]
     },
     preview: {
@@ -371,7 +371,7 @@ export const localizedContent = {
     },
     devicePreview: {
       title: "Light di iPhone. Dark di Pixel.",
-      copy: "Preview bersih untuk dua platform.",
+      copy: "Mendukung mode terang dan gelap di dua platform.",
       iosLabel: "iPhone 17 Pro • Light",
       iosAlt: "Preview tema light Solatify di iPhone 17 Pro",
       androidLabel: "Pixel 10 Pro • Dark",
