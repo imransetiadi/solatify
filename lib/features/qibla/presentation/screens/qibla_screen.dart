@@ -3,12 +3,12 @@ import 'dart:math';
 import 'package:adhan/adhan.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_compass_v2/flutter_compass_v2.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:solatify/core/theme/theme.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
+import 'package:solatify/features/qibla/presentation/providers/qibla_heading_provider.dart';
 
 import 'package:solatify/features/prayer_schedule/presentation/location_provider.dart';
 
@@ -44,6 +44,10 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
     final appBarColor = Theme.of(
       context,
     ).colorScheme.surface.withValues(alpha: isDark ? 0.96 : 0.94);
+    final headingState = ref.watch(qiblaHeadingProvider);
+    final sensorHeading = headingState.valueOrNull?.degrees;
+    final hasSensor = sensorHeading != null;
+    final heading = sensorHeading ?? _simulatedHeading;
 
     return Scaffold(
       appBar: AppBar(
@@ -54,16 +58,8 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
         shadowColor: Colors.transparent,
       ),
       body: IslamicBackground(
-        child: StreamBuilder<CompassEvent>(
-          stream: FlutterCompass.events,
-          builder: (context, snapshot) {
-            // Check if compass is available or we need simulation
-            final hasSensor =
-                snapshot.hasData && snapshot.data?.heading != null;
-            final heading = hasSensor
-                ? snapshot.data!.heading!
-                : _simulatedHeading;
-
+        child: Builder(
+          builder: (context) {
             // Qibla direction relative to the top of the phone
             // (Bearing to Mecca - Phone's Heading)
             final qiblaRelativeAngle = (qiblaAngle - heading + 360) % 360;
