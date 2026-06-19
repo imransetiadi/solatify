@@ -131,4 +131,4 @@ flutter build ios --no-codesign
 
 ## 📜 Lisensi
 
-Proyek ini bersifat tertutup (Proprietary). Hak cipta dilindungi.
+MIT
