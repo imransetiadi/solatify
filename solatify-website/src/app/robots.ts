@@ -6,6 +6,6 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: "*",
       allow: "/"
     },
-    sitemap: "https://solatify.app/sitemap.xml"
+    sitemap: "https://solatify.my.id/sitemap.xml"
   };
 }

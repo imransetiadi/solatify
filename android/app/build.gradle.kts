@@ -34,6 +34,24 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+
+    applicationVariants.all {
+        outputs.all {
+            val output = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
+            output.outputFileName = "solatify-${versionName}.apk"
+        }
+    }
+}
+
+val solatifyApkName = "solatify-${flutter.versionName}.apk"
+
+tasks.register<Copy>("copySolatifyReleaseApk") {
+    from(layout.buildDirectory.file("outputs/apk/release/$solatifyApkName"))
+    into(rootProject.layout.projectDirectory.dir("../build/app/outputs/flutter-apk"))
+}
+
+tasks.matching { it.name == "assembleRelease" }.configureEach {
+    finalizedBy("copySolatifyReleaseApk")
 }
 
 kotlin {
