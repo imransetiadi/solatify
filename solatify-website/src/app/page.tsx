@@ -56,8 +56,61 @@ function StoreButton({
   );
 }
 
+type PrayerInfo = { name: string; time: string; remainingSeconds: number };
+
+function getNextPrayer(locale: Locale): PrayerInfo {
+  const prayerNames = {
+    en: ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"],
+    id: ["Subuh", "Dzuhur", "Ashar", "Magrib", "Isya"]
+  }[locale];
+  
+  const prayerTimes = ["04:32", "11:58", "15:20", "18:08", "19:23"];
+  
+  const now = new Date();
+  const currentHours = now.getHours();
+  const currentMinutes = now.getMinutes();
+  const currentSeconds = now.getSeconds();
+  const totalCurrentSeconds = currentHours * 3600 + currentMinutes * 60 + currentSeconds;
+  
+  for (let i = 0; i < prayerTimes.length; i++) {
+    const [h, m] = prayerTimes[i].split(":").map(Number);
+    const totalPrayerSeconds = h * 3600 + m * 60;
+    
+    if (totalCurrentSeconds < totalPrayerSeconds) {
+      return {
+        name: prayerNames[i],
+        time: prayerTimes[i],
+        remainingSeconds: totalPrayerSeconds - totalCurrentSeconds
+      };
+    }
+  }
+  
+  // If after Isha, next is Fajr next day
+  const [fajrH, fajrM] = prayerTimes[0].split(":").map(Number);
+  const totalFajrSecondsNextDay = (24 * 3600) + fajrH * 3600 + fajrM * 60;
+  return {
+    name: prayerNames[0],
+    time: prayerTimes[0],
+    remainingSeconds: totalFajrSecondsNextDay - totalCurrentSeconds
+  };
+}
+
+function formatRemainingSeconds(seconds: number): string {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  
+  const parts = [];
+  if (h > 0) parts.push(`${h}h`);
+  if (m > 0 || h > 0) parts.push(`${m}m`);
+  parts.push(`${s}s`);
+  
+  return parts.join(" ");
+}
+
 export default function Home() {
   const [locale, setLocale] = useState<Locale>("en");
+  const [nextPrayer, setNextPrayer] = useState<PrayerInfo | null>(null);
   const content = localizedContent[locale];
 
   useEffect(() => {
@@ -66,7 +119,38 @@ export default function Home() {
       setLocale(storedLocale);
       document.documentElement.lang = storedLocale;
     }
+
+    // Scroll reveal observer
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("active");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: "0px 0px -50px 0px" }
+    );
+
+    const elements = document.querySelectorAll(".reveal");
+    elements.forEach((el) => observer.observe(el));
+
+    return () => {
+      elements.forEach((el) => observer.unobserve(el));
+    };
   }, []);
+
+  // Update ticking countdown
+  useEffect(() => {
+    setNextPrayer(getNextPrayer(locale));
+    
+    const interval = setInterval(() => {
+      setNextPrayer(getNextPrayer(locale));
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [locale]);
 
   function changeLocale(nextLocale: Locale) {
     setLocale(nextLocale);
@@ -130,10 +214,14 @@ export default function Home() {
               </span>
             ))}
           </div>
-          <div className="prayer-countdown" aria-label={`${content.liveCountdown.label}: ${content.liveCountdown.prayer}`}>
+          <div className="prayer-countdown" aria-label={nextPrayer ? `${content.liveCountdown.label}: ${nextPrayer.name}` : undefined}>
             <span>{content.liveCountdown.label}</span>
-            <strong>{content.liveCountdown.remaining}</strong>
-            <small>{content.liveCountdown.time}</small>
+            <strong>
+              {nextPrayer 
+                ? `${nextPrayer.name} ${locale === 'en' ? 'in' : 'dalam'} ${formatRemainingSeconds(nextPrayer.remainingSeconds)}`
+                : content.liveCountdown.remaining}
+            </strong>
+            <small>{nextPrayer ? nextPrayer.time : content.liveCountdown.time}</small>
           </div>
         </div>
 

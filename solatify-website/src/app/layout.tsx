@@ -62,7 +62,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" data-theme="light">
+    <html lang="en" data-theme="light" suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -83,6 +83,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             `
           }}
         />
+        <noscript>
+          <style>{`.reveal { opacity: 1 !important; transform: none !important; animation: none !important; }`}</style>
+        </noscript>
       </head>
       <body>{children}</body>
     </html>
