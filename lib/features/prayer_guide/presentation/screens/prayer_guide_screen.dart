@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:solatify/core/localization/app_localizations.dart';
 import 'package:solatify/core/navigation/app_routes.dart';
 import 'package:solatify/core/theme/theme.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
+import 'package:solatify/core/widgets/solatify_design_tokens.dart';
 import 'package:solatify/core/widgets/solatify_screen_scaffold.dart';
 import 'package:solatify/features/prayer_guide/domain/models/prayer_guide_step.dart';
 import 'package:solatify/features/prayer_guide/presentation/providers/prayer_guide_provider.dart';
@@ -17,22 +19,21 @@ class PrayerGuideScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final primaryColor = AppTheme.readableAccent(context);
     final textColor = theme.colorScheme.onSurface;
-    final mutedColor = theme.brightness == Brightness.dark
-        ? AppTheme.darkModeTextSecondary
-        : AppTheme.lightModeTextSecondary;
+    final mutedColor = SolatifyColors.muted(context);
+    final l = AppLocalizations.of(context);
     final summaries = ref.watch(prayerGuideSummariesProvider);
     final steps = ref.watch(prayerGuideStepsProvider);
     final dhikrItems = ref.watch(postPrayerDhikrProvider);
 
     return SolatifyScreenScaffold(
-      title: 'Tuntunan Salat',
+      title: l.isEnglish ? 'Prayer Guide' : 'Tuntunan Salat',
       backRoute: AppRoutes.islamicContent,
       padding: EdgeInsets.zero,
       child: ListView(
         scrollCacheExtent: const ScrollCacheExtent.pixels(10000),
         padding: ResponsiveLayout.pagePadding(
           context,
-        ).copyWith(top: 16, bottom: 96),
+        ).copyWith(top: 16, bottom: ResponsiveLayout.bottomSafeGap),
         children: [
           _OpeningReadingCard(
             primaryColor: primaryColor,
@@ -146,12 +147,17 @@ class _OpeningReadingCard extends StatelessWidget {
             primaryColor: primaryColor,
           ),
           const SizedBox(height: 10),
-          _LabelText(label: 'Latin', value: 'Allahu akbar.', color: mutedColor),
+          _LabelText(
+            label: 'Latin',
+            value: 'Allahu akbar.',
+            color: mutedColor,
+            italic: true,
+          ),
           const SizedBox(height: 6),
           _LabelText(
             label: 'Arti',
             value: 'Allah Maha Besar.',
-            color: mutedColor,
+            color: textColor,
           ),
         ],
       ),
@@ -174,17 +180,20 @@ class _SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, color: color, size: 20),
+        ExcludeSemantics(child: Icon(icon, color: color, size: 20)),
         const SizedBox(width: 8),
         Expanded(
-          child: Text(
-            title,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: color,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+          child: Semantics(
+            header: true,
+            child: Text(
+              title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: color,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ),
@@ -275,7 +284,7 @@ class _PrayerStepCard extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 17,
-                backgroundColor: primaryColor.withValues(alpha: 0.14),
+                backgroundColor: SolatifyColors.accentSoft(context),
                 child: Text(
                   '${step.number}',
                   style: TextStyle(
@@ -289,12 +298,15 @@ class _PrayerStepCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      step.title,
-                      style: TextStyle(
-                        color: textColor,
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
+                    Semantics(
+                      header: true,
+                      child: Text(
+                        step.title,
+                        style: TextStyle(
+                          color: textColor,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -318,9 +330,14 @@ class _PrayerStepCard extends StatelessWidget {
             primaryColor: primaryColor,
           ),
           const SizedBox(height: 12),
-          _LabelText(label: 'Latin', value: step.latinText, color: mutedColor),
+          _LabelText(
+            label: 'Latin',
+            value: step.latinText,
+            color: mutedColor,
+            italic: true,
+          ),
           const SizedBox(height: 8),
-          _LabelText(label: 'Arti', value: step.meaning, color: mutedColor),
+          _LabelText(label: 'Arti', value: step.meaning, color: textColor),
           if (step.note.isNotEmpty) ...[
             const SizedBox(height: 12),
             _NoteBox(
@@ -373,7 +390,7 @@ class _DhikrCard extends StatelessWidget {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: primaryColor.withValues(alpha: 0.12),
+                  color: SolatifyColors.accentSoft(context),
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
@@ -394,9 +411,14 @@ class _DhikrCard extends StatelessWidget {
             primaryColor: primaryColor,
           ),
           const SizedBox(height: 12),
-          _LabelText(label: 'Latin', value: dhikr.latinText, color: mutedColor),
+          _LabelText(
+            label: 'Latin',
+            value: dhikr.latinText,
+            color: mutedColor,
+            italic: true,
+          ),
           const SizedBox(height: 8),
-          _LabelText(label: 'Arti', value: dhikr.meaning, color: mutedColor),
+          _LabelText(label: 'Arti', value: dhikr.meaning, color: textColor),
         ],
       ),
     );
@@ -408,11 +430,13 @@ class _LabelText extends StatelessWidget {
     required this.label,
     required this.value,
     required this.color,
+    this.italic = false,
   });
 
   final String label;
   final String value;
   final Color color;
+  final bool italic;
 
   @override
   Widget build(BuildContext context) {
@@ -421,12 +445,20 @@ class _LabelText extends StatelessWidget {
         children: [
           TextSpan(
             text: '$label: ',
-            style: const TextStyle(fontWeight: FontWeight.w700),
+            style: const TextStyle(
+              fontWeight: FontWeight.w700,
+              fontStyle: FontStyle.normal,
+            ),
           ),
           TextSpan(text: value),
         ],
       ),
-      style: TextStyle(color: color, fontSize: 13, height: 1.45),
+      style: TextStyle(
+        color: color,
+        fontSize: SolatifyType.body,
+        height: 1.5,
+        fontStyle: italic ? FontStyle.italic : FontStyle.normal,
+      ),
     );
   }
 }
@@ -449,16 +481,16 @@ class _ArabicTextBlock extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       decoration: BoxDecoration(
-        color: primaryColor.withValues(alpha: 0.07),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: primaryColor.withValues(alpha: 0.12)),
+        color: SolatifyColors.accentSoft(context),
+        borderRadius: SolatifyRadius.compactCard,
+        border: Border.all(color: SolatifyColors.border(context)),
       ),
       child: Text(
         text,
         textAlign: TextAlign.right,
         textDirection: TextDirection.rtl,
         softWrap: true,
-        style: TextStyle(color: textColor, fontSize: 23, height: 1.9),
+        style: TextStyle(color: textColor, fontSize: 24, height: 2.0),
       ),
     );
   }
@@ -479,14 +511,33 @@ class _NoteBox extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(12),
+      width: double.infinity,
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: color.withValues(alpha: 0.16)),
+        color: SolatifyColors.raisedSurface(context),
+        borderRadius: SolatifyRadius.icon,
       ),
-      child: Text(
-        text,
-        style: TextStyle(color: textColor, fontSize: 12, height: 1.45),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ExcludeSemantics(
+            child: Icon(
+              Icons.info_outline_rounded,
+              size: SolatifyIconSize.inline,
+              color: color,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                color: textColor,
+                fontSize: SolatifyType.caption,
+                height: 1.45,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -7,27 +7,27 @@ class PrayerTimeErrorHandler {
     StackTrace? stackTrace,
   }) {
     if (kDebugMode) {
-      print('🔴 Prayer Time Error: $message');
-      if (error != null) print('   Error: $error');
-      if (stackTrace != null) print('   Stack: $stackTrace');
+      debugPrint('🔴 Prayer Time Error: $message');
+      if (error != null) debugPrint('   Error: $error');
+      if (stackTrace != null) debugPrint('   Stack: $stackTrace');
     }
   }
 
   static void logWarning(String message) {
     if (kDebugMode) {
-      print('⚠️ Prayer Time Warning: $message');
+      debugPrint('⚠️ Prayer Time Warning: $message');
     }
   }
 
   static void logInfo(String message) {
     if (kDebugMode) {
-      print('ℹ️ Prayer Time Info: $message');
+      debugPrint('ℹ️ Prayer Time Info: $message');
     }
   }
 
   static void logSuccess(String message) {
     if (kDebugMode) {
-      print('✅ Prayer Time Success: $message');
+      debugPrint('✅ Prayer Time Success: $message');
     }
   }
 

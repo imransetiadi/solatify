@@ -224,6 +224,12 @@ class MainLayoutScreen extends StatelessWidget {
     ),
     _MainDestination(Icons.map_outlined, Icons.map, 'Masjid', AppRoutes.mosque),
     _MainDestination(
+      Icons.check_circle_outline,
+      Icons.check_circle,
+      'Tracker Ibadah',
+      AppRoutes.tracker,
+    ),
+    _MainDestination(
       Icons.settings_outlined,
       Icons.settings,
       'Pengaturan',
@@ -294,8 +300,8 @@ class MainLayoutScreen extends StatelessWidget {
     if (location.startsWith(AppRoutes.islamicContent)) return 3;
     if (location.startsWith(AppRoutes.qibla)) return 4;
     if (location.startsWith(AppRoutes.mosque)) return 5;
-    if (location.startsWith(AppRoutes.tracker)) return 0;
-    if (location.startsWith(AppRoutes.settings)) return 6;
+    if (location.startsWith(AppRoutes.tracker)) return 6;
+    if (location.startsWith(AppRoutes.settings)) return 7;
     return 0;
   }
 
@@ -305,8 +311,33 @@ class MainLayoutScreen extends StatelessWidget {
     if (location.startsWith(AppRoutes.schedule)) return 1;
     if (location.startsWith(AppRoutes.quran)) return 2;
     if (location.startsWith(AppRoutes.islamicContent)) return 3;
-    if (location.startsWith(AppRoutes.tracker)) return 4;
     return 4;
+  }
+
+  /// Where the system back gesture should lead from [location], or `null`
+  /// when back should leave the app (we are already on Home).
+  static String? _backTargetFor(String location) {
+    if (location.startsWith(AppRoutes.home)) return null;
+    if (location.startsWith('${AppRoutes.islamicContent}/')) {
+      return AppRoutes.islamicContent;
+    }
+    if (location.startsWith(AppRoutes.notificationHealth)) {
+      return AppRoutes.settings;
+    }
+    return AppRoutes.home;
+  }
+
+  Widget _withBackHandling(BuildContext context, Widget child) {
+    final location = GoRouterState.of(context).uri.path;
+    final backTarget = _backTargetFor(location);
+    return PopScope(
+      canPop: backTarget == null,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop || backTarget == null) return;
+        GoRouter.of(context).go(backTarget);
+      },
+      child: child,
+    );
   }
 
   void _onItemTapped(int index, BuildContext context) {
@@ -327,14 +358,10 @@ class MainLayoutScreen extends StatelessWidget {
   void _showMoreMenu(BuildContext context) {
     final l = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final currentLocation = GoRouterState.of(context).uri.path;
     showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
-      backgroundColor: theme.colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
       builder: (context) {
         return SafeArea(
           child: Padding(
@@ -357,14 +384,18 @@ class MainLayoutScreen extends StatelessWidget {
                   ),
                 ),
                 ..._moreDestinations.map((destination) {
+                  final isCurrent = currentLocation.startsWith(
+                    destination.path,
+                  );
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4),
                     child: Material(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.05)
-                          : Colors.black.withValues(alpha: 0.03),
+                      color: isCurrent
+                          ? SolatifyColors.accentSoft(context)
+                          : SolatifyColors.raisedSurface(context),
                       borderRadius: SolatifyRadius.compactCard,
                       child: ListTile(
+                        selected: isCurrent,
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 14,
                           vertical: 2,
@@ -373,7 +404,7 @@ class MainLayoutScreen extends StatelessWidget {
                           borderRadius: SolatifyRadius.compactCard,
                         ),
                         leading: Icon(
-                          destination.icon,
+                          isCurrent ? destination.activeIcon : destination.icon,
                           color: theme.colorScheme.tertiary,
                         ),
                         title: Text(
@@ -381,14 +412,19 @@ class MainLayoutScreen extends StatelessWidget {
                           style: TextStyle(
                             color: theme.colorScheme.onSurface,
                             fontSize: SolatifyType.body,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: isCurrent
+                                ? FontWeight.w800
+                                : FontWeight.w600,
                           ),
+                        ),
+                        subtitle: Text(
+                          _descriptionForDestination(l, destination),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         trailing: Icon(
                           Icons.chevron_right_rounded,
-                          color: theme.colorScheme.onSurface.withValues(
-                            alpha: 0.55,
-                          ),
+                          color: SolatifyColors.muted(context),
                         ),
                         onTap: () {
                           SolatifyHaptics.selection();
@@ -411,44 +447,47 @@ class MainLayoutScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final selectedIndex = _calculateSelectedIndex(context);
     final useNavigationRail = ResponsiveLayout.isMediumOrLarger(context);
     final isDesktopWidth =
         MediaQuery.sizeOf(context).width >= AppBreakpoints.medium;
 
     if (useNavigationRail) {
-      return Scaffold(
-        body: SafeArea(
-          child: Row(
-            children: [
-              NavigationRail(
-                selectedIndex: selectedIndex,
-                onDestinationSelected: (index) => _onItemTapped(index, context),
-                extended: isDesktopWidth,
-                labelType: isDesktopWidth
-                    ? NavigationRailLabelType.none
-                    : NavigationRailLabelType.all,
-                minWidth: 80,
-                minExtendedWidth: 200,
-                // Center the items so they are distributed proportionally
-                // along the rail instead of clustering at the top.
-                groupAlignment: 0.0,
-                destinations: _destinations.map((destination) {
-                  return NavigationRailDestination(
-                    icon: Icon(destination.icon),
-                    selectedIcon: Icon(destination.activeIcon),
-                    label: Text(_labelForDestination(l, destination)),
-                  );
-                }).toList(),
-              ),
-              VerticalDivider(
-                width: 1,
-                thickness: 1,
-                color: theme.dividerColor.withValues(alpha: 0.35),
-              ),
-              Expanded(child: child),
-            ],
+      return _withBackHandling(
+        context,
+        Scaffold(
+          body: SafeArea(
+            child: Row(
+              children: [
+                NavigationRail(
+                  selectedIndex: selectedIndex,
+                  onDestinationSelected: (index) =>
+                      _onItemTapped(index, context),
+                  extended: isDesktopWidth,
+                  labelType: isDesktopWidth
+                      ? NavigationRailLabelType.none
+                      : NavigationRailLabelType.all,
+                  minWidth: 80,
+                  minExtendedWidth: 200,
+                  // Center the items so they are distributed proportionally
+                  // along the rail instead of clustering at the top.
+                  groupAlignment: 0.0,
+                  destinations: _destinations.map((destination) {
+                    return NavigationRailDestination(
+                      icon: Icon(destination.icon),
+                      selectedIcon: Icon(destination.activeIcon),
+                      label: Text(_labelForDestination(l, destination)),
+                    );
+                  }).toList(),
+                ),
+                VerticalDivider(
+                  width: 1,
+                  thickness: 1,
+                  color: theme.dividerColor.withValues(alpha: 0.35),
+                ),
+                Expanded(child: child),
+              ],
+            ),
           ),
         ),
       );
@@ -468,36 +507,62 @@ class MainLayoutScreen extends StatelessWidget {
         ? NavigationDestinationLabelBehavior.onlyShowSelected
         : NavigationDestinationLabelBehavior.alwaysShow;
 
-    return Scaffold(
-      body: child,
-      bottomNavigationBar: Container(
-        decoration: const BoxDecoration(),
-        child: NavigationBar(
-          selectedIndex: _calculateMobileSelectedIndex(context),
-          onDestinationSelected: (index) => _onMobileItemTapped(index, context),
-          height: barHeight,
-          labelBehavior: labelBehavior,
-          backgroundColor: theme.colorScheme.surface,
-          elevation: 0,
-          indicatorColor: theme.colorScheme.tertiary.withValues(alpha: 0.10),
-          destinations: _mobileDestinations.map((destination) {
-            return NavigationDestination(
-              icon: Icon(
-                destination.icon,
-                color: isDark ? const Color(0xFFB8A898) : Colors.black45,
-                size: iconSize,
-              ),
-              selectedIcon: Icon(
-                destination.activeIcon,
-                color: theme.colorScheme.tertiary,
-                size: selectedIconSize,
-              ),
-              label: _labelForDestination(l, destination),
-            );
-          }).toList(),
+    return _withBackHandling(
+      context,
+      Scaffold(
+        body: child,
+        bottomNavigationBar: DecoratedBox(
+          decoration: BoxDecoration(
+            border: Border(
+              top: BorderSide(color: theme.dividerColor.withValues(alpha: 0.6)),
+            ),
+          ),
+          child: NavigationBar(
+            selectedIndex: _calculateMobileSelectedIndex(context),
+            onDestinationSelected: (index) =>
+                _onMobileItemTapped(index, context),
+            height: barHeight,
+            labelBehavior: labelBehavior,
+            backgroundColor: theme.colorScheme.surface,
+            elevation: 0,
+            destinations: _mobileDestinations.map((destination) {
+              return NavigationDestination(
+                tooltip: _labelForDestination(l, destination),
+                icon: Icon(
+                  destination.icon,
+                  color: SolatifyColors.muted(context),
+                  size: iconSize,
+                ),
+                selectedIcon: Icon(
+                  destination.activeIcon,
+                  color: theme.colorScheme.tertiary,
+                  size: selectedIconSize,
+                ),
+                label: _labelForDestination(l, destination),
+              );
+            }).toList(),
+          ),
         ),
       ),
     );
+  }
+
+  String _descriptionForDestination(
+    AppLocalizations l,
+    _MainDestination destination,
+  ) {
+    switch (destination.path) {
+      case AppRoutes.qibla:
+        return l.navQiblaHint;
+      case AppRoutes.mosque:
+        return l.navMosqueHint;
+      case AppRoutes.tracker:
+        return l.navTrackerHint;
+      case AppRoutes.settings:
+        return l.navSettingsHint;
+      default:
+        return '';
+    }
   }
 
   String _labelForDestination(
@@ -518,7 +583,7 @@ class MainLayoutScreen extends StatelessWidget {
       case AppRoutes.mosque:
         return l.navMosque;
       case AppRoutes.tracker:
-        return destination.label;
+        return l.navTracker;
       case AppRoutes.settings:
         return l.navSettings;
       case AppRoutes.more:

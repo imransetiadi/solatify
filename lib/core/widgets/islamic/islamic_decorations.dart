@@ -17,8 +17,8 @@ class IslamicGeometricPattern extends StatelessWidget {
     final themeColor =
         color ??
         (Theme.of(context).brightness == Brightness.dark
-            ? Colors.white
-            : Colors.black);
+            ? AppTheme.darkModeText
+            : AppTheme.textDark);
 
     return Opacity(
       opacity: opacity,
@@ -95,14 +95,14 @@ class IslamicBackground extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF082E1D) : const Color(0xFFF3FBF6),
+        color: isDark ? AppTheme.darkBg : AppTheme.lightBg,
       ),
       child: Stack(
         children: [
           if (showPattern)
             Positioned.fill(
               child: IslamicGeometricPattern(
-                color: isDark ? Colors.white : colorScheme.secondary,
+                color: isDark ? AppTheme.darkModeText : colorScheme.secondary,
                 opacity: isDark ? 0.015 : 0.02,
               ),
             ),
@@ -163,7 +163,7 @@ class IslamicHeaderDecoration extends StatelessWidget {
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : AppTheme.readableAccent(context),
+            color: isDark ? AppTheme.darkModeText : AppTheme.readableAccent(context),
             letterSpacing: 1.2,
           ),
         ),
@@ -173,7 +173,7 @@ class IslamicHeaderDecoration extends StatelessWidget {
             subtitle!,
             style: TextStyle(
               fontSize: 14,
-              color: isDark ? const Color(0xFFC8B8A8) : Colors.black54,
+              color: isDark ? AppTheme.textMutedOnDark : AppTheme.textMutedOnLight,
               fontStyle: FontStyle.italic,
             ),
           ),

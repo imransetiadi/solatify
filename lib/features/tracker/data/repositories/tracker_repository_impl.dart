@@ -50,6 +50,8 @@ class TrackerRepositoryImpl implements TrackerRepository {
         date: date,
         prayers: updatedPrayers,
         prayerStatuses: updatedStatuses,
+        habits: log.habits,
+        habitProgress: log.habitProgress,
       ),
     );
   }

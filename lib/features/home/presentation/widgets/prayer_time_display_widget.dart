@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:solatify/core/localization/app_localizations.dart';
-import 'package:solatify/core/theme/theme.dart';
-import '../providers/improved_countdown_provider.dart';
+import 'package:solatify/core/widgets/glass_container.dart';
+import 'package:solatify/core/widgets/solatify_design_tokens.dart';
+import 'package:solatify/core/widgets/solatify_state_view.dart';
+import 'package:solatify/features/home/presentation/providers/improved_countdown_provider.dart';
 
 class PrayerTimeDisplayWidget extends ConsumerWidget {
   const PrayerTimeDisplayWidget({super.key});
@@ -12,92 +14,84 @@ class PrayerTimeDisplayWidget extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final countdown = ref.watch(improvedCountdownProvider);
     final l = AppLocalizations.of(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primary = AppTheme.readableAccent(context);
 
-    if (!countdown.isAccurate) {
-      return _buildLoadingState(isDark);
-    }
-
-    return Column(
-      children: [
-        _buildCountdownCard(context, countdown, isDark, primary, l),
-        const SizedBox(height: 12),
-        _buildPrayerInfoText(countdown, l),
-      ],
-    );
-  }
-
-  Widget _buildLoadingState(bool isDark) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A1A1A) : const Color(0xFFF5F1E8),
-        borderRadius: BorderRadius.circular(22),
-      ),
-      child: const Center(
-        child: SizedBox(
-          height: 40,
-          width: 40,
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
-      ),
+    return AnimatedSwitcher(
+      duration: SolatifyMotion.of(context, SolatifyMotion.medium),
+      child: !countdown.isAccurate
+          ? SolatifyStateView.loading(
+              key: const ValueKey('prayer-display-loading'),
+              compact: true,
+              title: l.preparingPrayerSchedule,
+              description: l.countdownWaiting,
+            )
+          : Column(
+              key: const ValueKey('prayer-display-ready'),
+              children: [
+                _buildCountdownCard(context, countdown, l),
+                const SizedBox(height: SolatifySpacing.sm),
+                Text(
+                  l.activePrayerInProgress(
+                    l.prayerName(countdown.activePrayerName),
+                  ),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: SolatifyColors.muted(context),
+                    fontSize: SolatifyType.caption,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ),
     );
   }
 
   Widget _buildCountdownCard(
     BuildContext context,
     CountdownState countdown,
-    bool isDark,
-    Color primary,
     AppLocalizations l,
   ) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A1A1A) : const Color(0xFFF5F1E8),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: primary.withValues(alpha: 0.3), width: 1),
-      ),
+    final accent = SolatifyColors.accent(context);
+    final muted = SolatifyColors.muted(context);
+    final prayerName = l.prayerName(countdown.nextPrayerName);
+    final nextTime = DateFormat('HH:mm').format(countdown.nextPrayerTime);
+
+    return GlassContainer(
+      borderRadius: SolatifyRadius.lg,
+      borderColor: SolatifyColors.borderStrong(context),
+      padding: const EdgeInsets.all(SolatifySpacing.xl - 2),
       child: Column(
         children: [
           Text(
-            l.prayerTimeLabel(l.prayerName(countdown.nextPrayerName)),
-            style: TextStyle(
-              fontSize: 14,
-              color: isDark ? const Color(0xFFC8B8A8) : const Color(0xFF5D4E47),
+            l.prayerTimeLabel(prayerName),
+            textAlign: TextAlign.center,
+            style: TextStyle(color: muted, fontSize: SolatifyType.body),
+          ),
+          const SizedBox(height: SolatifySpacing.xs),
+          Semantics(
+            label: l.isEnglish
+                ? 'Time remaining until $prayerName: ${countdown.formattedTime}'
+                : 'Sisa waktu menuju $prayerName: ${countdown.formattedTime}',
+            excludeSemantics: true,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                countdown.formattedTime,
+                style: TextStyle(
+                  fontSize: 48,
+                  fontWeight: FontWeight.bold,
+                  color: accent,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: SolatifySpacing.xs),
           Text(
-            countdown.formattedTime,
-            style: TextStyle(
-              fontSize: 48,
-              fontWeight: FontWeight.bold,
-              color: primary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            _formatNextPrayerTime(countdown.nextPrayerTime),
-            style: TextStyle(
-              fontSize: 12,
-              color: isDark ? const Color(0xFFC8B8A8) : const Color(0xFF5D4E47),
-            ),
+            nextTime,
+            style: TextStyle(color: muted, fontSize: SolatifyType.caption),
           ),
         ],
       ),
     );
-  }
-
-  Widget _buildPrayerInfoText(CountdownState countdown, AppLocalizations l) {
-    return Text(
-      l.activePrayerInProgress(l.prayerName(countdown.activePrayerName)),
-      style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-    );
-  }
-
-  String _formatNextPrayerTime(DateTime time) {
-    return DateFormat('HH:mm', 'id_ID').format(time);
   }
 }

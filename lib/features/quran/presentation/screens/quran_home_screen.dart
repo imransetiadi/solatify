@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:solatify/core/localization/app_localizations.dart';
 import 'package:solatify/core/navigation/app_routes.dart';
 import 'package:solatify/core/services/solatify_haptics.dart';
-import 'package:solatify/core/theme/theme.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
 import 'package:solatify/core/widgets/solatify_design_tokens.dart';
-
-import '../../domain/models/quran_models.dart';
-import '../quran_provider.dart';
+import 'package:solatify/core/widgets/solatify_state_view.dart';
+import 'package:solatify/features/quran/domain/models/quran_models.dart';
+import 'package:solatify/features/quran/presentation/quran_provider.dart';
 
 class QuranHomeScreen extends ConsumerStatefulWidget {
   const QuranHomeScreen({super.key});
@@ -23,38 +23,52 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
 
-  Color get _textColor => Theme.of(context).brightness == Brightness.dark
-      ? Colors.white
-      : const Color(0xFF241A12);
-  Color get _textSecondary => Theme.of(context).brightness == Brightness.dark
-      ? const Color(0xFFB8A898)
-      : const Color(0xFFAFA19A);
-  Color get _textHint => Theme.of(context).brightness == Brightness.dark
-      ? const Color(0xFF8E837D)
-      : const Color(0xFFAFA19A);
-  Color get _cardBorderColor => Theme.of(context).brightness == Brightness.dark
-      ? Colors.white.withValues(alpha: 0.08)
-      : Colors.black.withValues(alpha: 0.08);
-  Color get _accentColor => AppTheme.readableAccent(context);
-  Color get _tileAccentBg => Theme.of(context).brightness == Brightness.dark
-      ? AppTheme.redAccentDark.withValues(alpha: 0.14)
-      : AppTheme.redAccent.withValues(alpha: 0.10);
-  Color get _tileAccentBorder => Theme.of(context).brightness == Brightness.dark
-      ? AppTheme.redAccentDark.withValues(alpha: 0.30)
-      : AppTheme.redAccent.withValues(alpha: 0.22);
+  Color get _textColor => SolatifyColors.text(context);
+  Color get _textSecondary => SolatifyColors.muted(context);
+  Color get _accentColor => SolatifyColors.accent(context);
+  Color get _tileAccentBg => SolatifyColors.accentSoft(context);
+  Color get _tileAccentBorder => _accentColor.withValues(
+    alpha: Theme.of(context).brightness == Brightness.dark ? 0.30 : 0.22,
+  );
+
+  AppLocalizations get _l => AppLocalizations.of(context);
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    // Keep the field in sync with a query that survived navigation.
+    final existingQuery = ref.read(surahSearchQueryProvider);
+    if (existingQuery.isNotEmpty) {
+      _searchController.text = existingQuery;
+    }
   }
 
   @override
   void dispose() {
     _tabController.dispose();
     _searchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
+  }
+
+  void _updateQuery(String value) {
+    ref.read(surahSearchQueryProvider.notifier).state = value;
+    setState(() {});
+  }
+
+  void _clearSearch() {
+    SolatifyHaptics.selection();
+    _searchController.clear();
+    _updateQuery('');
+  }
+
+  void _openSurah(int surahNumber, {int? scrollTo}) {
+    SolatifyHaptics.selection();
+    _searchFocusNode.unfocus();
+    context.push(AppRoutes.quranSurah(surahNumber, scrollTo: scrollTo));
   }
 
   @override
@@ -73,9 +87,12 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         shadowColor: Colors.transparent,
-        title: const Text(
-          'Al-Qur\'an',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Semantics(
+          header: true,
+          child: const Text(
+            'Al-Qur\'an',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
         ),
         centerTitle: true,
       ),
@@ -94,77 +111,20 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          GlassContainer(
-                            borderRadius: SolatifyRadius.md,
-                            padding: EdgeInsets.zero,
-                            borderColor: _accentColor.withValues(alpha: 0.12),
-                            child: TextField(
-                              controller: _searchController,
-                              style: TextStyle(color: _textColor),
-                              decoration: InputDecoration(
-                                hintText:
-                                    'Cari nama Surah, arti, atau nomor...',
-                                hintStyle: TextStyle(
-                                  color: _textHint,
-                                  fontSize: SolatifyType.body,
-                                ),
-                                prefixIcon: Icon(
-                                  Icons.search,
-                                  color: _accentColor,
-                                ),
-                                suffixIcon: _searchController.text.isNotEmpty
-                                    ? IconButton(
-                                        icon: Icon(
-                                          Icons.clear,
-                                          color: _textSecondary,
-                                        ),
-                                        onPressed: () {
-                                          _searchController.clear();
-                                          ref
-                                                  .read(
-                                                    surahSearchQueryProvider
-                                                        .notifier,
-                                                  )
-                                                  .state =
-                                              '';
-                                          setState(() {});
-                                        },
-                                      )
-                                    : null,
-                                filled: true,
-                                fillColor:
-                                    Theme.of(context).brightness ==
-                                        Brightness.dark
-                                    ? const Color(0xFF2A1B12)
-                                    : Colors.white,
-                                enabledBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(
-                                    color: _cardBorderColor,
-                                  ),
-                                  borderRadius: BorderRadius.circular(22),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(
-                                    color: _accentColor,
-                                    width: 1.5,
-                                  ),
-                                  borderRadius: BorderRadius.circular(22),
-                                ),
-                              ),
-                              onChanged: (val) {
-                                ref
-                                        .read(surahSearchQueryProvider.notifier)
-                                        .state =
-                                    val;
-                                setState(() {});
-                              },
-                            ),
-                          ),
-                          const SizedBox(height: 16),
+                          _buildSearchField(),
+                          const SizedBox(height: SolatifySpacing.lg),
 
-                          // Bookmark shortcut last read card
-                          if (bookmarksState.lastReadSurah != null)
-                            _buildLastReadCard(bookmarksState),
+                          // Continue reading shortcut
+                          AnimatedSwitcher(
+                            duration: SolatifyMotion.of(
+                              context,
+                              SolatifyMotion.medium,
+                            ),
+                            switchInCurve: SolatifyMotion.curve,
+                            child: bookmarksState.lastReadSurah != null
+                                ? _buildLastReadCard(bookmarksState)
+                                : const SizedBox.shrink(),
+                          ),
                         ],
                       ),
                     ),
@@ -173,7 +133,7 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                     pinned: true,
                     delegate: _SliverTabHeaderDelegate(
                       child: Container(
-                        color: Theme.of(context).scaffoldBackgroundColor,
+                        color: SolatifyColors.background(context),
                         padding: EdgeInsets.symmetric(
                           horizontal:
                               ResponsiveLayout.pagePadding(context).horizontal /
@@ -182,18 +142,29 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                         ),
                         child: TabBar(
                           controller: _tabController,
-                          indicatorColor: Theme.of(
-                            context,
-                          ).colorScheme.tertiary,
+                          indicatorColor: _accentColor,
                           labelColor: _textColor,
                           unselectedLabelColor: _textSecondary,
                           labelStyle: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: SolatifyType.body,
                           ),
-                          tabs: const [
-                            Tab(text: 'Daftar Surah'),
-                            Tab(text: 'Tandai & Simpan'),
+                          unselectedLabelStyle: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: SolatifyType.body,
+                          ),
+                          onTap: (_) => SolatifyHaptics.selection(),
+                          tabs: [
+                            Tab(
+                              text: _l.isEnglish
+                                  ? 'Surah List'
+                                  : 'Daftar Surah',
+                            ),
+                            Tab(
+                              text: _l.isEnglish
+                                  ? 'Saved Verses'
+                                  : 'Tandai & Simpan',
+                            ),
                           ],
                         ),
                       ),
@@ -218,61 +189,127 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
     );
   }
 
+  Widget _buildSearchField() {
+    final hasQuery = _searchController.text.isNotEmpty;
+    final radius = BorderRadius.circular(SolatifyRadius.md);
+
+    return TextField(
+      controller: _searchController,
+      focusNode: _searchFocusNode,
+      textInputAction: TextInputAction.search,
+      style: TextStyle(color: _textColor, fontSize: SolatifyType.body),
+      onTapOutside: (_) => _searchFocusNode.unfocus(),
+      decoration: InputDecoration(
+        hintText: _l.isEnglish
+            ? 'Search surah name, meaning, or number...'
+            : 'Cari nama Surah, arti, atau nomor...',
+        hintMaxLines: 1,
+        hintStyle: TextStyle(
+          color: SolatifyColors.subtle(context),
+          fontSize: SolatifyType.body,
+        ),
+        prefixIcon: Icon(Icons.search, color: _accentColor),
+        suffixIcon: hasQuery
+            ? IconButton(
+                icon: Icon(Icons.clear, color: _textSecondary),
+                tooltip: _l.isEnglish ? 'Clear search' : 'Hapus pencarian',
+                onPressed: _clearSearch,
+              )
+            : null,
+        filled: true,
+        fillColor: SolatifyColors.softSurface(context),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: SolatifySpacing.lg,
+          vertical: SolatifySpacing.md,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: SolatifyColors.border(context)),
+          borderRadius: radius,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: _accentColor, width: 1.5),
+          borderRadius: radius,
+        ),
+      ),
+      onChanged: _updateQuery,
+      onSubmitted: (_) => _searchFocusNode.unfocus(),
+    );
+  }
+
   Widget _buildLastReadCard(QuranBookmarksState state) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: GestureDetector(
-        onTap: () {
-          SolatifyHaptics.selection();
-          context.push(
-            AppRoutes.quranSurah(
-              state.lastReadSurah!,
-              scrollTo: state.lastReadVerse,
-            ),
-          );
-        },
-        child: GlassContainer(
-          opacity: 0.04,
-          padding: const EdgeInsets.all(16),
+    final surahName = state.lastReadSurahName ?? 'Surah ${state.lastReadSurah}';
+    final verse = state.lastReadVerse;
+    final title = _l.isEnglish ? 'Continue reading' : 'Terakhir Dibaca';
+    final verseLabel = verse == null
+        ? null
+        : (_l.isEnglish ? 'Verse $verse' : 'Ayat $verse');
+
+    return Padding(
+      key: const ValueKey('quran-last-read-card'),
+      padding: const EdgeInsets.only(bottom: SolatifySpacing.sm),
+      child: GlassContainer(
+        borderRadius: SolatifyRadius.md,
+        padding: SolatifySpacing.compactCard,
+        borderColor: _tileAccentBorder,
+        semanticLabel:
+            '$title: Surah $surahName${verseLabel == null ? '' : ', $verseLabel'}',
+        onTap: () => _openSurah(state.lastReadSurah!, scrollTo: verse),
+        child: ExcludeSemantics(
           child: Row(
             children: [
-              Icon(Icons.bookmark_added, color: _textColor, size: 36),
-              const SizedBox(width: 16),
+              Container(
+                width: SolatifyIconSize.heroBox,
+                height: SolatifyIconSize.heroBox,
+                decoration: BoxDecoration(
+                  color: _tileAccentBg,
+                  borderRadius: SolatifyRadius.icon,
+                ),
+                child: Icon(
+                  Icons.auto_stories_rounded,
+                  color: _accentColor,
+                  size: SolatifyIconSize.heroIcon,
+                ),
+              ),
+              const SizedBox(width: SolatifySpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Terakhir Dibaca',
+                      title.toUpperCase(),
                       style: TextStyle(
                         color: _accentColor,
-                        fontSize: SolatifyType.caption,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.0,
+                        fontSize: SolatifyType.eyebrow,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.8,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Surah ${state.lastReadSurahName}',
+                      'Surah $surahName',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: _textColor,
                         fontSize: SolatifyType.cardTitle,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    Text(
-                      'Ayat ${state.lastReadVerse}',
-                      style: TextStyle(
-                        color: _textSecondary,
-                        fontSize: SolatifyType.caption,
+                    if (verseLabel != null)
+                      Text(
+                        verseLabel,
+                        style: TextStyle(
+                          color: _textSecondary,
+                          fontSize: SolatifyType.caption,
+                        ),
                       ),
-                    ),
                   ],
                 ),
               ),
+              const SizedBox(width: SolatifySpacing.sm),
               Icon(
-                Icons.arrow_forward_ios,
-                color: _textSecondary.withValues(alpha: 0.5),
+                Icons.arrow_forward_ios_rounded,
+                color: _textSecondary,
                 size: SolatifyIconSize.inline,
               ),
             ],
@@ -282,72 +319,78 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
     );
   }
 
+  /// Wraps a state view so it stays centered but can scroll on short
+  /// viewports or large text scales instead of overflowing.
+  Widget _scrollableState(Widget child) {
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        padding: ResponsiveLayout.pagePadding(
+          context,
+        ).copyWith(top: SolatifySpacing.lg),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            minHeight: (constraints.maxHeight - SolatifySpacing.bottomNav)
+                .clamp(0, double.infinity)
+                .toDouble(),
+          ),
+          child: Center(child: child),
+        ),
+      ),
+    );
+  }
+
   Widget _buildSurahListTab(AsyncValue<List<Surah>> searchListAsync) {
     return searchListAsync.when(
-      loading: () =>
-          Center(child: CircularProgressIndicator(color: _accentColor)),
-      error: (err, stack) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.wifi_off_outlined, color: _textColor, size: 64),
-              const SizedBox(height: 16),
-              Text(
-                'Gagal Memuat Al-Qur\'an',
-                style: TextStyle(
-                  color: _textColor,
-                  fontSize: SolatifyType.sectionTitle,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                err.toString().replaceAll('Exception:', ''),
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: _textSecondary,
-                  fontSize: SolatifyType.body,
-                ),
-              ),
-              const SizedBox(height: ResponsiveLayout.sectionGap),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _accentColor,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                ),
-                onPressed: () => ref.refresh(surahListProvider),
-                child: const Text(
-                  'Coba Lagi',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
-          ),
+      loading: () => _scrollableState(
+        SolatifyStateView.loading(
+          title: _l.isEnglish ? 'Loading surahs' : 'Memuat daftar Surah',
+          description: _l.isEnglish
+              ? 'Preparing the list of 114 surahs.'
+              : 'Menyiapkan daftar 114 Surah.',
+        ),
+      ),
+      error: (err, stack) => _scrollableState(
+        SolatifyStateView.error(
+          title: _l.isEnglish
+              ? 'Failed to load the Qur\'an'
+              : 'Gagal Memuat Al-Qur\'an',
+          description: err.toString().replaceAll('Exception:', '').trim(),
+          actionLabel: _l.isEnglish ? 'Try again' : 'Coba Lagi',
+          onAction: () {
+            SolatifyHaptics.light();
+            ref.invalidate(surahListProvider);
+          },
         ),
       ),
       data: (list) {
         if (list.isEmpty) {
-          return Center(
-            child: Text(
-              'Surah tidak ditemukan.',
-              style: TextStyle(
-                color: _textSecondary,
-                fontSize: SolatifyType.body,
-              ),
+          final query = _searchController.text.trim();
+          return _scrollableState(
+            SolatifyStateView.empty(
+              icon: Icons.search_off_rounded,
+              title: _l.isEnglish ? 'No surah found' : 'Surah tidak ditemukan.',
+              description: query.isEmpty
+                  ? (_l.isEnglish
+                        ? 'The surah list is empty right now.'
+                        : 'Daftar Surah sedang kosong.')
+                  : (_l.isEnglish
+                        ? 'Nothing matches "$query". Try a surah name, meaning, or number 1–114.'
+                        : 'Tidak ada yang cocok dengan "$query". Coba nama Surah, arti, atau nomor 1–114.'),
+              actionLabel: query.isEmpty
+                  ? null
+                  : (_l.isEnglish ? 'Clear search' : 'Hapus pencarian'),
+              actionIcon: Icons.close_rounded,
+              onAction: query.isEmpty ? null : _clearSearch,
             ),
           );
         }
 
         return ListView.builder(
           physics: const BouncingScrollPhysics(),
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           padding: ResponsiveLayout.pagePadding(
             context,
-          ).copyWith(top: 12, bottom: 80),
+          ).copyWith(top: SolatifySpacing.md, bottom: 80),
           itemCount: list.length,
           itemBuilder: (context, index) {
             final surah = list[index];
@@ -362,59 +405,50 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
     final listAsync = ref.watch(surahListProvider);
 
     return listAsync.when(
-      loading: () =>
-          Center(child: CircularProgressIndicator(color: _accentColor)),
-      error: (err, stack) => Center(
-        child: Text(
-          'Terjadi kesalahan: $err',
-          style: TextStyle(color: _textColor),
+      loading: () => _scrollableState(
+        SolatifyStateView.loading(
+          title: _l.isEnglish ? 'Loading bookmarks' : 'Memuat penanda',
+          description: _l.isEnglish
+              ? 'Preparing your saved verses.'
+              : 'Menyiapkan ayat yang Anda simpan.',
+        ),
+      ),
+      error: (err, stack) => _scrollableState(
+        SolatifyStateView.error(
+          title: _l.isEnglish ? 'Something went wrong' : 'Terjadi kesalahan',
+          description: err.toString().replaceAll('Exception:', '').trim(),
+          actionLabel: _l.isEnglish ? 'Try again' : 'Coba Lagi',
+          onAction: () {
+            SolatifyHaptics.light();
+            ref.invalidate(surahListProvider);
+          },
         ),
       ),
       data: (allSurahs) {
         final bookmarkedKeys = bookmarksState.bookmarkedKeys.toList();
-        if (bookmarkedKeys.isEmpty) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(32),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.bookmark_outline, color: _textHint, size: 64),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Belum Ada Penanda',
-                    style: TextStyle(
-                      color: _textColor,
-                      fontSize: SolatifyType.cardTitle,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Ayat yang Anda tandai atau simpan akan muncul di tab ini.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: _textSecondary,
-                      fontSize: SolatifyType.body,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }
-
         // Parse + filter valid bookmark keys (skip malformed/legacy keys to
         // avoid a crash on int.parse). Centralized + unit-tested helper.
         final parsedBookmarks = QuranBookmarksNotifier.parseSortedBookmarkKeys(
           bookmarkedKeys,
         );
 
+        if (parsedBookmarks.isEmpty) {
+          return _scrollableState(
+            SolatifyStateView.empty(
+              icon: Icons.bookmark_outline_rounded,
+              title: _l.isEnglish ? 'No saved verses yet' : 'Belum Ada Penanda',
+              description: _l.isEnglish
+                  ? 'Tap the star on any verse to save it here.'
+                  : 'Ayat yang Anda tandai atau simpan akan muncul di tab ini.',
+            ),
+          );
+        }
+
         return ListView.builder(
           physics: const BouncingScrollPhysics(),
           padding: ResponsiveLayout.pagePadding(
             context,
-          ).copyWith(top: 12, bottom: 96),
+          ).copyWith(top: SolatifySpacing.md, bottom: 96),
           itemCount: parsedBookmarks.length,
           itemBuilder: (context, index) {
             final surahNum = parsedBookmarks[index][0];
@@ -430,148 +464,148 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                 revelation: '',
               ),
             );
-
-            return Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              child: GlassContainer(
-                opacity: 0.02,
-                padding: const EdgeInsets.all(14),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: _tileAccentBg,
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: _tileAccentBorder, width: 1),
-                      ),
-                      child: Center(
-                        child: Text(
-                          surah.number.toString(),
-                          style: TextStyle(
-                            color: _textColor,
-                            fontWeight: FontWeight.bold,
-                            fontSize: SolatifyType.caption,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            surah.name,
-                            style: TextStyle(
-                              color: _textColor,
-                              fontWeight: FontWeight.bold,
-                              fontSize: SolatifyType.body,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Ayat $verseNum',
-                            style: TextStyle(
-                              color: _accentColor,
-                              fontSize: SolatifyType.caption,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        IconButton(
-                          icon: Icon(
-                            Icons.bookmark_remove,
-                            color: _textColor,
-                            size: SolatifyIconSize.cardIcon,
-                          ),
-                          onPressed: () {
-                            SolatifyHaptics.light();
-                            ref
-                                .read(quranBookmarksProvider.notifier)
-                                .toggleBookmark(surahNum, verseNum);
-                          },
-                        ),
-                        IconButton(
-                          icon: Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: _tileAccentBg,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: _tileAccentBorder,
-                                width: 1,
-                              ),
-                            ),
-                            child: Icon(
-                              Icons.chevron_right,
-                              color: _accentColor,
-                              size: SolatifyIconSize.cardIcon,
-                            ),
-                          ),
-                          onPressed: () {
-                            SolatifyHaptics.selection();
-                            context.push(
-                              AppRoutes.quranSurah(
-                                surahNum,
-                                scrollTo: verseNum,
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            );
+            return _buildBookmarkCard(surah, surahNum, verseNum);
           },
         );
       },
     );
   }
 
-  Widget _buildSurahCard(Surah surah) {
+  Widget _buildBookmarkCard(Surah surah, int surahNum, int verseNum) {
+    final verseLabel = _l.isEnglish ? 'Verse $verseNum' : 'Ayat $verseNum';
+
+    return Padding(
+      key: ValueKey('quran-bookmark-$surahNum:$verseNum'),
+      padding: const EdgeInsets.only(bottom: SolatifySpacing.sm),
+      child: GlassContainer(
+        borderRadius: SolatifyRadius.md,
+        padding: const EdgeInsets.fromLTRB(
+          SolatifySpacing.md,
+          SolatifySpacing.xs,
+          SolatifySpacing.xs,
+          SolatifySpacing.xs,
+        ),
+        semanticLabel: _l.isEnglish
+            ? 'Open Surah ${surah.name}, $verseLabel'
+            : 'Buka Surah ${surah.name}, $verseLabel',
+        onTap: () => _openSurah(surahNum, scrollTo: verseNum),
+        child: Row(
+          children: [
+            ExcludeSemantics(child: _numberBadge(surah.number)),
+            const SizedBox(width: SolatifySpacing.md),
+            Expanded(
+              child: ExcludeSemantics(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      surah.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: _textColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: SolatifyType.cardTitle,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      verseLabel,
+                      style: TextStyle(
+                        color: _accentColor,
+                        fontSize: SolatifyType.caption,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            IconButton(
+              tooltip: _l.isEnglish
+                  ? 'Remove saved verse'
+                  : 'Hapus dari simpanan',
+              constraints: const BoxConstraints(
+                minWidth: SolatifyTapTarget.min,
+                minHeight: SolatifyTapTarget.min,
+              ),
+              icon: Icon(
+                Icons.bookmark_remove_outlined,
+                color: _textSecondary,
+                size: SolatifyIconSize.cardIcon + 2,
+              ),
+              onPressed: () {
+                SolatifyHaptics.light();
+                ref
+                    .read(quranBookmarksProvider.notifier)
+                    .toggleBookmark(surahNum, verseNum);
+              },
+            ),
+            ExcludeSemantics(
+              child: Icon(
+                Icons.chevron_right_rounded,
+                color: _accentColor,
+                size: SolatifyIconSize.heroIcon,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _numberBadge(int number) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      child: GestureDetector(
-        onTap: () {
-          context.push(AppRoutes.quranSurah(surah.number));
-        },
-        child: GlassContainer(
-          opacity: 0.92,
-          borderRadius: SolatifyRadius.md,
-          padding: ResponsiveLayout.listCardPadding,
+      width: SolatifyIconSize.cardBox + 4,
+      height: SolatifyIconSize.cardBox + 4,
+      decoration: BoxDecoration(
+        color: _tileAccentBg,
+        borderRadius: SolatifyRadius.icon,
+        border: Border.all(color: _tileAccentBorder),
+      ),
+      alignment: Alignment.center,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Text(
+            number.toString(),
+            style: TextStyle(
+              color: _accentColor,
+              fontWeight: FontWeight.w800,
+              fontSize: SolatifyType.body,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSurahCard(Surah surah) {
+    final versesLabel = _l.isEnglish
+        ? '${surah.numberOfVerses} verses'
+        : '${surah.numberOfVerses} ayat';
+    final semanticParts = <String>[
+      'Surah ${surah.name}',
+      if (surah.translation.isNotEmpty) surah.translation,
+      versesLabel,
+      if (surah.revelation.isNotEmpty) surah.revelation,
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: SolatifySpacing.sm),
+      child: GlassContainer(
+        opacity: 0.92,
+        borderRadius: SolatifyRadius.md,
+        padding: ResponsiveLayout.listCardPadding,
+        semanticLabel: '${surah.number}. ${semanticParts.join(', ')}',
+        onTap: () => _openSurah(surah.number),
+        child: ExcludeSemantics(
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: _tileAccentBg,
-                  borderRadius: SolatifyRadius.icon,
-                  border: Border.all(color: _tileAccentBorder, width: 1),
-                ),
-                child: Center(
-                  child: Text(
-                    surah.number.toString(),
-                    style: TextStyle(
-                      color: _accentColor,
-                      fontWeight: FontWeight.w700,
-                      fontSize: SolatifyType.body,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-
+              _numberBadge(surah.number),
+              const SizedBox(width: SolatifySpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -587,23 +621,43 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      surah.translation,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: _textSecondary,
-                        fontSize: SolatifyType.caption,
-                        height: 1.25,
+                    if (surah.translation.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        surah.translation,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: _textSecondary,
+                          fontSize: SolatifyType.caption,
+                          height: 1.3,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
+                    ],
+                    const SizedBox(height: SolatifySpacing.xs),
+                    Wrap(
+                      spacing: SolatifySpacing.xs,
+                      runSpacing: 2,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
+                        if (surah.revelation.isNotEmpty) ...[
+                          Text(
+                            surah.revelation.toUpperCase(),
+                            style: TextStyle(
+                              color: _textSecondary,
+                              fontSize: SolatifyType.eyebrow,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.6,
+                            ),
+                          ),
+                          Icon(
+                            Icons.fiber_manual_record,
+                            size: 4,
+                            color: SolatifyColors.subtle(context),
+                          ),
+                        ],
                         Text(
-                          surah.revelation.toUpperCase(),
+                          versesLabel.toUpperCase(),
                           style: TextStyle(
                             color: _textSecondary,
                             fontSize: SolatifyType.eyebrow,
@@ -611,40 +665,16 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                             letterSpacing: 0.6,
                           ),
                         ),
-                        const SizedBox(width: 6),
-                        Icon(
-                          Icons.fiber_manual_record,
-                          size: 5,
-                          color: _textHint.withValues(alpha: 0.5),
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          '${surah.numberOfVerses} AYAT',
-                          style: TextStyle(
-                            color: _textSecondary,
-                            fontSize: SolatifyType.eyebrow,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
                       ],
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 12),
-              Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: _tileAccentBg,
-                  borderRadius: SolatifyRadius.icon,
-                  border: Border.all(color: _tileAccentBorder, width: 1),
-                ),
-                child: Icon(
-                  Icons.chevron_right,
-                  color: _accentColor,
-                  size: SolatifyIconSize.cardIcon,
-                ),
+              const SizedBox(width: SolatifySpacing.sm),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: _accentColor,
+                size: SolatifyIconSize.heroIcon,
               ),
             ],
           ),

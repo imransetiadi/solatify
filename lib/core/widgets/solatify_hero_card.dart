@@ -24,12 +24,9 @@ class SolatifyHeroCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final accent = theme.colorScheme.tertiary;
     final textColor = theme.colorScheme.onSurface;
-    final mutedColor = isDark
-        ? const Color(0xFFC7B3A1)
-        : const Color(0xFF725F52);
+    final mutedColor = SolatifyColors.muted(context);
 
     return GlassContainer(
       borderRadius: SolatifyRadius.lg,
@@ -51,7 +48,7 @@ class SolatifyHeroCard extends StatelessWidget {
                 ),
                 child: Icon(
                   icon,
-                  color: Colors.white,
+                  color: SolatifyColors.onAccent(context),
                   size: SolatifyIconSize.heroIcon,
                 ),
               ),

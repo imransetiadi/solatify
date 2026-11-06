@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:solatify/core/localization/app_localizations.dart';
 import 'package:solatify/core/navigation/app_routes.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
+import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
+import 'package:solatify/core/widgets/responsive_layout.dart';
+import 'package:solatify/core/widgets/solatify_design_tokens.dart';
+import 'package:solatify/features/onboarding/presentation/widgets/onboarding_step_indicator.dart';
 import 'package:solatify/features/settings/presentation/providers/settings_provider.dart';
-
-import '../../../../core/widgets/responsive_layout.dart';
 
 class GetStartedScreen extends ConsumerStatefulWidget {
   const GetStartedScreen({super.key});
@@ -18,47 +21,48 @@ class _GetStartedScreenState extends ConsumerState<GetStartedScreen> {
   int _currentPage = 0;
   final PageController _pageController = PageController();
 
-  final List<GetStartedPage> pages = [
+  List<GetStartedPage> _pages(bool isEnglish) => [
     GetStartedPage(
-      title: 'Selamat Datang di Solatify',
-      description: 'Aplikasi komprehensif untuk ibadah dan pengetahuan Islami',
+      title: isEnglish ? 'Welcome to Solatify' : 'Selamat Datang di Solatify',
+      description: isEnglish
+          ? 'A complete companion for worship and Islamic knowledge'
+          : 'Aplikasi komprehensif untuk ibadah dan pengetahuan Islami',
       icon: Icons.mosque,
-      color: const Color(0xFFC94B3D),
     ),
     GetStartedPage(
-      title: 'Jadwal Sholat Akurat',
-      description:
-          'Dapatkan jadwal sholat real-time dengan 6 metode kalkulasi berbeda sesuai lokasi Anda',
+      title: isEnglish ? 'Accurate Prayer Times' : 'Jadwal Sholat Akurat',
+      description: isEnglish
+          ? 'Real-time prayer times with 6 calculation methods for your location'
+          : 'Dapatkan jadwal sholat real-time dengan 6 metode kalkulasi berbeda sesuai lokasi Anda',
       icon: Icons.schedule,
-      color: const Color(0xFFC78A4C),
     ),
     GetStartedPage(
-      title: 'Al-Qur\'an Digital',
-      description:
-          'Baca Al-Qur\'an 114 surah dengan terjemahan, bookmark, dan akses offline',
+      title: isEnglish ? 'Digital Qur\'an' : 'Al-Qur\'an Digital',
+      description: isEnglish
+          ? 'Read all 114 surahs with translation, bookmarks, and offline access'
+          : 'Baca Al-Qur\'an 114 surah dengan terjemahan, bookmark, dan akses offline',
       icon: Icons.menu_book,
-      color: const Color(0xFFC94B3D),
     ),
     GetStartedPage(
-      title: 'Asmaul Husna & Doa',
-      description:
-          '99 Nama Allah dan 30+ doa harian untuk setiap waktu dan situasi',
+      title: isEnglish ? 'Asmaul Husna & Duas' : 'Asmaul Husna & Doa',
+      description: isEnglish
+          ? 'The 99 Names of Allah and 30+ daily duas for every moment'
+          : '99 Nama Allah dan 30+ doa harian untuk setiap waktu dan situasi',
       icon: Icons.favorite,
-      color: const Color(0xFFC78A4C),
     ),
     GetStartedPage(
-      title: 'Kalender Hijriah',
-      description:
-          'Pantau event Islam penting dan tanggal-tanggal bersejarah dalam Islam',
+      title: isEnglish ? 'Hijri Calendar' : 'Kalender Hijriah',
+      description: isEnglish
+          ? 'Follow important Islamic events and historic dates'
+          : 'Pantau event Islam penting dan tanggal-tanggal bersejarah dalam Islam',
       icon: Icons.calendar_month,
-      color: const Color(0xFFC94B3D),
     ),
     GetStartedPage(
-      title: 'Arah Kiblat & Masjid',
-      description:
-          'Temukan arah kiblat akurat dengan kompas dan cari masjid terdekat',
+      title: isEnglish ? 'Qibla & Mosques' : 'Arah Kiblat & Masjid',
+      description: isEnglish
+          ? 'Find the qibla with a compass and discover nearby mosques'
+          : 'Temukan arah kiblat akurat dengan kompas dan cari masjid terdekat',
       icon: Icons.explore,
-      color: const Color(0xFFC78A4C),
     ),
   ];
 
@@ -68,109 +72,112 @@ class _GetStartedScreenState extends ConsumerState<GetStartedScreen> {
     super.dispose();
   }
 
+  void _goToPage(int page) {
+    if (!_pageController.hasClients) return;
+    final duration = SolatifyMotion.of(context, SolatifyMotion.slow);
+    if (duration == Duration.zero) {
+      _pageController.jumpToPage(page);
+    } else {
+      _pageController.animateToPage(
+        page,
+        duration: duration,
+        curve: SolatifyMotion.curve,
+      );
+    }
+  }
+
+  void _complete() {
+    ref.read(settingsProvider.notifier).completeOnboarding();
+    context.go(AppRoutes.home);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isDark ? const Color(0xFF160F0A) : const Color(0xFFFFF7ED);
+    final l = AppLocalizations.of(context);
+    final pages = _pages(l.isEnglish);
+    final isLast = _currentPage == pages.length - 1;
+    final padding = ResponsiveLayout.pagePadding(context);
 
-    return Scaffold(
-      backgroundColor: bgColor,
-      body: SafeArea(
-        child: ResponsiveCenter(
-          child: Column(
-            children: [
-              Expanded(
-                child: PageView.builder(
-                  controller: _pageController,
-                  onPageChanged: (index) {
-                    setState(() => _currentPage = index);
-                  },
-                  itemCount: pages.length,
-                  itemBuilder: (context, index) {
-                    return GetStartedPageView(page: pages[index]);
-                  },
-                ),
-              ),
-              Padding(
-                padding: ResponsiveLayout.pagePadding(
-                  context,
-                ).copyWith(top: 8, bottom: 16),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(
-                        pages.length,
-                        (index) => Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 4),
-                          width: _currentPage == index ? 24 : 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            color: _currentPage == index
-                                ? pages[index].color
-                                : pages[index].color.withValues(alpha: 0.3),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                        ),
-                      ),
+    return PopScope(
+      canPop: _currentPage == 0,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && _currentPage > 0) _goToPage(_currentPage - 1);
+      },
+      child: Scaffold(
+        body: IslamicBackground(
+          child: SafeArea(
+            child: ResponsiveCenter(
+              maxWidth: 600,
+              child: Column(
+                children: [
+                  Expanded(
+                    child: PageView.builder(
+                      controller: _pageController,
+                      onPageChanged: (index) {
+                        setState(() => _currentPage = index);
+                      },
+                      itemCount: pages.length,
+                      itemBuilder: (context, index) {
+                        return GetStartedPageView(page: pages[index]);
+                      },
                     ),
-                    const SizedBox(height: 20),
-                    Row(
+                  ),
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      padding.left,
+                      SolatifySpacing.xs,
+                      padding.right,
+                      SolatifySpacing.lg,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Expanded(
-                          child: _currentPage > 0
-                              ? ElevatedButton(
-                                  onPressed: () {
-                                    _pageController.previousPage(
-                                      duration: const Duration(
-                                        milliseconds: 300,
-                                      ),
-                                      curve: Curves.easeInOut,
-                                    );
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.grey[300],
-                                  ),
-                                  child: const Text(
-                                    'Kembali',
-                                    style: TextStyle(color: Colors.black87),
-                                  ),
-                                )
-                              : const SizedBox.shrink(),
+                        OnboardingStepIndicator(
+                          currentStep: _currentPage,
+                          stepCount: pages.length,
                         ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () {
-                              if (_currentPage < pages.length - 1) {
-                                _pageController.nextPage(
-                                  duration: const Duration(milliseconds: 300),
-                                  curve: Curves.easeInOut,
-                                );
-                              } else {
-                                ref
-                                    .read(settingsProvider.notifier)
-                                    .completeOnboarding();
-                                context.go(AppRoutes.home);
-                              }
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: pages[_currentPage].color,
+                        const SizedBox(height: SolatifySpacing.md),
+                        Row(
+                          children: [
+                            if (_currentPage > 0)
+                              TextButton.icon(
+                                onPressed: () => _goToPage(_currentPage - 1),
+                                icon: const Icon(Icons.arrow_back, size: 18),
+                                label: Text(l.back),
+                              )
+                            else if (!isLast)
+                              TextButton(
+                                onPressed: _complete,
+                                child: Text(l.isEnglish ? 'Skip' : 'Lewati'),
+                              ),
+                            const SizedBox(width: SolatifySpacing.sm),
+                            Expanded(
+                              child: FilledButton(
+                                onPressed: () {
+                                  if (!isLast) {
+                                    _goToPage(_currentPage + 1);
+                                  } else {
+                                    _complete();
+                                  }
+                                },
+                                child: Text(
+                                  isLast
+                                      ? (l.isEnglish
+                                            ? 'Start Now'
+                                            : 'Mulai Sekarang')
+                                      : (l.isEnglish ? 'Next' : 'Lanjut'),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
                             ),
-                            child: Text(
-                              _currentPage == pages.length - 1
-                                  ? 'Mulai Sekarang'
-                                  : 'Lanjut',
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                          ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -183,12 +190,10 @@ class GetStartedPage {
     required this.title,
     required this.description,
     required this.icon,
-    required this.color,
   });
   final String title;
   final String description;
   final IconData icon;
-  final Color color;
 }
 
 class GetStartedPageView extends StatelessWidget {
@@ -197,41 +202,63 @@ class GetStartedPageView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark
-        ? const Color(0xFFFFF7ED)
-        : const Color(0xFF241A12);
-    final textMuted = isDark
-        ? const Color(0xFFC8B8A8)
-        : const Color(0xFF5D4E47);
+    final isShort = MediaQuery.sizeOf(context).height < 700;
+    final iconBox = isShort ? 72.0 : 96.0;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+    return OnboardingSlideFrame(
+      padding: EdgeInsets.symmetric(
+        horizontal: ResponsiveLayout.pagePadding(context).left,
+        vertical: SolatifySpacing.lg,
+      ),
       child: GlassContainer(
-        padding: const EdgeInsets.all(32),
-        borderRadius: 32,
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(
+          horizontal: SolatifySpacing.xl,
+          vertical: SolatifySpacing.xxl,
+        ),
+        borderRadius: SolatifyRadius.xl,
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(page.icon, size: 80, color: page.color),
-            const SizedBox(height: 30),
-            Text(
-              page.title,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: textColor,
+            ExcludeSemantics(
+              child: Container(
+                width: iconBox,
+                height: iconBox,
+                decoration: BoxDecoration(
+                  color: SolatifyColors.accentSoft(context),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  page.icon,
+                  size: iconBox * 0.5,
+                  color: SolatifyColors.accent(context),
+                ),
               ),
             ),
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 30),
+            SizedBox(
+              height: isShort ? SolatifySpacing.lg : SolatifySpacing.xxl,
+            ),
+            Semantics(
+              header: true,
               child: Text(
-                page.description,
+                page.title,
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, color: textMuted, height: 1.6),
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  height: 1.25,
+                  color: SolatifyColors.text(context),
+                ),
+              ),
+            ),
+            const SizedBox(height: SolatifySpacing.md),
+            Text(
+              page.description,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 16,
+                color: SolatifyColors.muted(context),
+                height: 1.5,
               ),
             ),
           ],

@@ -475,8 +475,8 @@ void main() {
 
     expect(find.text('Pusat Kesehatan Notifikasi'), findsOneWidget);
     expect(find.text('Status Saat Ini'), findsOneWidget);
-    expect(find.text('Riwayat Jadwal'), findsOneWidget);
-    expect(find.text('Aksi Pemulihan'), findsOneWidget);
+    expect(find.text('RIWAYAT JADWAL'), findsOneWidget);
+    expect(find.text('AKSI PEMULIHAN'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
