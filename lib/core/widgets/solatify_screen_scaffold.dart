@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:solatify/core/localization/app_localizations.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
 
@@ -26,11 +27,8 @@ class SolatifyScreenScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final textColor = theme.colorScheme.onSurface;
-    final appBarColor = theme.colorScheme.surface.withValues(
-      alpha: isDark ? 0.96 : 0.94,
-    );
+    final appBarColor = theme.scaffoldBackgroundColor;
 
     return Scaffold(
       appBar: AppBar(
@@ -42,10 +40,19 @@ class SolatifyScreenScaffold extends StatelessWidget {
         leading: backRoute == null
             ? null
             : IconButton(
+                tooltip: AppLocalizations.of(context).back,
                 icon: const Icon(Icons.arrow_back),
                 onPressed: () => context.go(backRoute!),
               ),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        title: Semantics(
+          header: true,
+          child: Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
         centerTitle: centerTitle,
         actions: actions,
         bottom: bottom,

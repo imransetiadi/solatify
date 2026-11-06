@@ -1,12 +1,18 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:solatify/core/localization/app_localizations.dart';
 import 'package:solatify/core/navigation/app_routes.dart';
 import 'package:solatify/core/utils/location_service.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
+import 'package:solatify/core/widgets/solatify_design_tokens.dart';
+import 'package:solatify/features/notifications/data/services/notification_service.dart';
+import 'package:solatify/features/onboarding/presentation/widgets/onboarding_step_indicator.dart';
 import 'package:solatify/features/prayer_schedule/domain/entities/location_entity.dart';
 import 'package:solatify/features/prayer_schedule/presentation/location_provider.dart';
 import 'package:solatify/features/settings/presentation/providers/settings_provider.dart';
@@ -19,39 +25,95 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 }
 
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
+  static const int _stepCount = 4;
+  static const int _welcomeStep = 0;
+  static const int _locationStep = 1;
+  static const int _notificationStep = 2;
+  static const int _summaryStep = 3;
+
   final PageController _pageController = PageController();
   int _currentPage = 0;
+
+  /// Set when GPS detection fails (permission denied, service off, timeout)
+  /// so the location step can explain the manual fallback inline.
+  bool _gpsFailed = false;
+
+  /// True while the OS notification permission prompt is in flight.
+  bool _isRequestingNotifications = false;
+
   @override
   void dispose() {
     _pageController.dispose();
     super.dispose();
   }
 
-  void _nextPage() {
-    if (_currentPage < 3) {
-      _pageController.nextPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
+  bool get _isEnglish => AppLocalizations.of(context).isEnglish;
+
+  String _t(String id, String en) => _isEnglish ? en : id;
+
+  void _goToPage(int page) {
+    if (!_pageController.hasClients) return;
+    final duration = SolatifyMotion.of(context, SolatifyMotion.slow);
+    if (duration == Duration.zero) {
+      _pageController.jumpToPage(page);
+    } else {
+      _pageController.animateToPage(
+        page,
+        duration: duration,
+        curve: SolatifyMotion.curve,
       );
+    }
+  }
+
+  void _nextPage() {
+    if (_currentPage < _stepCount - 1) {
+      _goToPage(_currentPage + 1);
+    }
+  }
+
+  /// Asks the OS for notification permission (user-initiated, never at app
+  /// startup), mirrors the result into settings, then advances. Any platform
+  /// failure is logged and the user still continues onboarding.
+  Future<void> _requestNotificationPermission() async {
+    if (_isRequestingNotifications) return;
+    setState(() => _isRequestingNotifications = true);
+    try {
+      final service = NotificationService();
+      await service.requestAndroidPermissions();
+      await service.requestIosPermissions();
+      final readiness = await service.getReadinessStatus();
+      final allowed =
+          readiness.status !=
+          NotificationReadinessStatus.needsNotificationPermission;
+      await ref
+          .read(settingsProvider.notifier)
+          .syncAdhanNotificationsWithPermission(allowed);
+    } catch (e, stack) {
+      debugPrint(
+        'Onboarding notification permission request failed: $e\n$stack',
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isRequestingNotifications = false);
+        _nextPage();
+      }
     }
   }
 
   void _prevPage() {
     if (_currentPage > 0) {
-      _pageController.previousPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
+      _goToPage(_currentPage - 1);
     }
   }
 
   void _showManualCityDialog() {
+    final messenger = ScaffoldMessenger.of(context);
     showDialog<void>(
       context: context,
-      builder: (context) {
+      builder: (dialogContext) {
         String searchQuery = '';
         return StatefulBuilder(
-          builder: (context, setStateBuilder) {
+          builder: (dialogContext, setStateBuilder) {
             final filteredCities = LocationService.defaultCities.where((city) {
               return city.name.toLowerCase().contains(
                     searchQuery.toLowerCase(),
@@ -61,44 +123,37 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   );
             }).toList();
 
-            final dialogWidth = (MediaQuery.sizeOf(context).width - 48).clamp(
-              320.0,
-              520.0,
-            );
-            final dialogHeight = MediaQuery.sizeOf(context).height * 0.62;
+            final media = MediaQuery.of(dialogContext);
+            // Inset 16 + content padding 16 on each side.
+            final dialogWidth = math.min(480.0, media.size.width - 64);
+            final availableHeight =
+                media.size.height - media.viewInsets.bottom - media.padding.top;
+            final dialogHeight = math.max(220.0, availableHeight * 0.55);
 
             return AlertDialog(
-              backgroundColor: const Color(0xFFFFFFFF),
-              title: const Text(
-                'Pilih Kota Manual',
-                style: TextStyle(color: Color(0xFF241A12)),
+              scrollable: true,
+              insetPadding: const EdgeInsets.symmetric(
+                horizontal: SolatifySpacing.lg,
+                vertical: SolatifySpacing.xl,
               ),
+              contentPadding: const EdgeInsets.fromLTRB(
+                SolatifySpacing.lg,
+                SolatifySpacing.lg,
+                SolatifySpacing.lg,
+                0,
+              ),
+              title: Text(_t('Pilih Kota Manual', 'Choose City Manually')),
               content: SizedBox(
                 width: dialogWidth,
                 height: dialogHeight,
                 child: Column(
                   children: [
                     TextField(
-                      style: const TextStyle(color: Color(0xFF241A12)),
+                      autofocus: false,
+                      textInputAction: TextInputAction.search,
                       decoration: InputDecoration(
-                        hintText: 'Cari Kota...',
-                        hintStyle: const TextStyle(color: Color(0xFF5D4E47)),
-                        prefixIcon: const Icon(
-                          Icons.search,
-                          color: Color(0xFF5D4E47),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: const BorderSide(
-                            color: Color(0xFFCFE7D5),
-                          ),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: const BorderSide(
-                            color: Color(0xFFC94B3D),
-                          ),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
+                        hintText: _t('Cari Kota...', 'Search city...'),
+                        prefixIcon: const Icon(Icons.search),
                       ),
                       onChanged: (val) {
                         setStateBuilder(() {
@@ -106,55 +161,59 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         });
                       },
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: SolatifySpacing.md),
                     Expanded(
-                      child: ListView.builder(
-                        itemCount: filteredCities.length,
-                        itemBuilder: (context, index) {
-                          final city = filteredCities[index];
-                          return ListTile(
-                            title: Text(
-                              city.name,
-                              style: const TextStyle(color: Color(0xFF241A12)),
-                            ),
-                            subtitle: Text(
-                              city.country,
-                              style: const TextStyle(color: Color(0xFF5D4E47)),
-                            ),
-                            trailing: const Icon(
-                              Icons.arrow_forward_ios,
-                              size: 14,
-                              color: Color(0xFFC94B3D),
-                            ),
-                            onTap: () {
-                              ref
-                                  .read(locationProvider.notifier)
-                                  .setManualCity(city);
-                              Navigator.pop(context);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    'Lokasi diatur ke ${city.name}, ${city.country}',
-                                  ),
-                                  backgroundColor: const Color(0xFFC94B3D),
+                      child: filteredCities.isEmpty
+                          ? Center(
+                              child: Text(
+                                _t('Kota tidak ditemukan', 'No matching city'),
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: SolatifyColors.muted(dialogContext),
                                 ),
-                              );
-                              _nextPage();
-                            },
-                          );
-                        },
-                      ),
+                              ),
+                            )
+                          : ListView.builder(
+                              itemCount: filteredCities.length,
+                              itemBuilder: (_, index) {
+                                final city = filteredCities[index];
+                                return ListTile(
+                                  title: Text(city.name),
+                                  subtitle: Text(city.country),
+                                  trailing: Icon(
+                                    Icons.chevron_right,
+                                    color: SolatifyColors.accent(dialogContext),
+                                  ),
+                                  onTap: () {
+                                    ref
+                                        .read(locationProvider.notifier)
+                                        .setManualCity(city);
+                                    Navigator.pop(dialogContext);
+                                    messenger.showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          _t(
+                                            'Lokasi diatur ke ${city.name}, ${city.country}',
+                                            'Location set to ${city.name}, ${city.country}',
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                    if (!mounted) return;
+                                    setState(() => _gpsFailed = false);
+                                    _nextPage();
+                                  },
+                                );
+                              },
+                            ),
                     ),
                   ],
                 ),
               ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text(
-                    'Batal',
-                    style: TextStyle(color: Color(0xFF5D4E47)),
-                  ),
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: Text(AppLocalizations.of(dialogContext).cancel),
                 ),
               ],
             );
@@ -168,27 +227,38 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     final success = await ref
         .read(locationProvider.notifier)
         .updateLocationWithGPS();
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
     if (success) {
       final loc = ref.read(locationProvider);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Lokasi terdeteksi: ${loc.city}, ${loc.country}'),
-            backgroundColor: const Color(0xFFC94B3D),
+      setState(() => _gpsFailed = false);
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            _t(
+              'Lokasi terdeteksi: ${loc.city}, ${loc.country}',
+              'Location detected: ${loc.city}, ${loc.country}',
+            ),
           ),
-        );
-        _nextPage();
-      }
+        ),
+      );
+      _nextPage();
     } else {
       final error = ref.read(locationProvider).errorMessage;
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(error ?? 'Gagal mendeteksi lokasi'),
-            backgroundColor: const Color(0xFF241A12),
+      setState(() => _gpsFailed = true);
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            error ?? _t('Gagal mendeteksi lokasi', 'Could not detect location'),
           ),
-        );
-      }
+          action: SnackBarAction(
+            label: _t('Pilih Manual', 'Choose Manually'),
+            onPressed: () {
+              if (mounted) _showManualCityDialog();
+            },
+          ),
+        ),
+      );
     }
   }
 
@@ -202,456 +272,517 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     final location = ref.watch(locationProvider);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isShort = MediaQuery.sizeOf(context).height < 700;
 
-    return Scaffold(
-      body: IslamicBackground(
-        child: Stack(
-          children: [
-            SafeArea(
-              child: ResponsiveCenter(
-                maxWidth: 680,
+    return PopScope(
+      canPop: _currentPage == _welcomeStep,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _prevPage();
+      },
+      child: Scaffold(
+        body: IslamicBackground(
+          child: SafeArea(
+            child: ResponsiveCenter(
+              maxWidth: 600,
+              child: Column(
+                children: [
+                  _buildHeader(isShort),
+                  Expanded(
+                    child: PageView(
+                      controller: _pageController,
+                      onPageChanged: (page) {
+                        setState(() {
+                          _currentPage = page;
+                        });
+                      },
+                      children: [
+                        _buildWelcomeSlide(isShort),
+                        _buildLocationSlide(location, isShort),
+                        _buildNotificationSlide(isShort),
+                        _buildSummarySlide(location, isShort),
+                      ],
+                    ),
+                  ),
+                  _buildFooter(),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(bool isShort) {
+    return Semantics(
+      header: true,
+      label: 'Solatify',
+      child: ExcludeSemantics(
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            vertical: isShort ? SolatifySpacing.sm : SolatifySpacing.xl,
+            horizontal: SolatifySpacing.lg,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SvgPicture.asset(
+                'assets/images/masjid_nabawi.svg',
+                width: 28,
+                height: 28,
+              ),
+              const SizedBox(width: SolatifySpacing.sm),
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    'SOLATIFY',
+                    style: TextStyle(
+                      color: SolatifyColors.text(context),
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 3.0,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFooter() {
+    final padding = ResponsiveLayout.pagePadding(context);
+    final showBack = _currentPage > _welcomeStep;
+
+    final Widget primary;
+    switch (_currentPage) {
+      case _locationStep:
+      case _notificationStep:
+        // The step's own card holds the primary action; the footer only
+        // offers a way to move on without granting anything.
+        primary = Align(
+          alignment: AlignmentDirectional.centerEnd,
+          child: TextButton(
+            onPressed: _nextPage,
+            child: Text(
+              _currentPage == _notificationStep
+                  ? _t('Lewati dahulu', 'Skip for now')
+                  : _t('Lewati', 'Skip'),
+            ),
+          ),
+        );
+      case _summaryStep:
+        primary = FilledButton(
+          onPressed: _finishOnboarding,
+          child: Text(
+            _t('Masuk ke Beranda', 'Go to Home'),
+            textAlign: TextAlign.center,
+          ),
+        );
+      default:
+        primary = FilledButton(
+          onPressed: _nextPage,
+          child: Text(_t('LANJUT', 'NEXT'), textAlign: TextAlign.center),
+        );
+    }
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        padding.left,
+        SolatifySpacing.xs,
+        padding.right,
+        SolatifySpacing.lg,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          OnboardingStepIndicator(
+            currentStep: _currentPage,
+            stepCount: _stepCount,
+          ),
+          const SizedBox(height: SolatifySpacing.md),
+          Row(
+            children: [
+              if (showBack) ...[
+                TextButton.icon(
+                  onPressed: _prevPage,
+                  icon: const Icon(Icons.arrow_back, size: 18),
+                  label: Text(AppLocalizations.of(context).back),
+                ),
+                const SizedBox(width: SolatifySpacing.sm),
+              ],
+              Expanded(child: primary),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _slideCard({required List<Widget> children}) {
+    return GlassContainer(
+      opacity: 0.92,
+      borderRadius: SolatifyRadius.lg,
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: SolatifySpacing.xl,
+        vertical: SolatifySpacing.xxl - 2,
+      ),
+      child: Column(mainAxisSize: MainAxisSize.min, children: children),
+    );
+  }
+
+  Widget _slideIcon(IconData icon, bool isShort, {Color? color}) {
+    final size = isShort ? 64.0 : 84.0;
+    return ExcludeSemantics(
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: SolatifyColors.accentSoft(context),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(
+          icon,
+          size: size * 0.5,
+          color: color ?? SolatifyColors.accent(context),
+        ),
+      ),
+    );
+  }
+
+  Widget _slideTitle(String text) {
+    return Semantics(
+      header: true,
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: SolatifyColors.text(context),
+          fontSize: 22,
+          fontWeight: FontWeight.bold,
+          height: 1.25,
+        ),
+      ),
+    );
+  }
+
+  Widget _slideBody(String text) {
+    return Text(
+      text,
+      textAlign: TextAlign.center,
+      style: TextStyle(
+        color: SolatifyColors.muted(context),
+        fontSize: 15,
+        height: 1.5,
+      ),
+    );
+  }
+
+  Widget _buildWelcomeSlide(bool isShort) {
+    return OnboardingSlideFrame(
+      padding: _slidePadding(),
+      child: _slideCard(
+        children: [
+          _slideIcon(Icons.mosque_outlined, isShort),
+          SizedBox(height: isShort ? SolatifySpacing.lg : SolatifySpacing.xxl),
+          _slideTitle(_t('Selamat Datang', 'Welcome')),
+          const SizedBox(height: SolatifySpacing.md),
+          _slideBody(
+            _t(
+              "Solatify membantu Anda mengelola jadwal salat, membaca Al-Qur'an, mencari kiblat, dan menemukan masjid terdekat.",
+              "Solatify helps you keep prayer times, read the Qur'an, find the qibla, and discover nearby mosques.",
+            ),
+          ),
+          const SizedBox(height: SolatifySpacing.lg),
+          _slideBody(
+            _t(
+              'Hanya butuh 1 menit untuk menyiapkannya.',
+              'Setup takes about a minute.',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLocationSlide(LocationEntity location, bool isShort) {
+    final hasCity = location.city.trim().isNotEmpty;
+    return OnboardingSlideFrame(
+      padding: _slidePadding(),
+      child: _slideCard(
+        children: [
+          _slideIcon(Icons.location_on_outlined, isShort),
+          SizedBox(height: isShort ? SolatifySpacing.lg : SolatifySpacing.xl),
+          _slideTitle(_t('Atur Lokasi Anda', 'Set Your Location')),
+          const SizedBox(height: SolatifySpacing.sm),
+          _slideBody(
+            _t(
+              'Lokasi dipakai untuk menghitung jadwal salat dan arah kiblat yang akurat di tempat Anda.',
+              'Your location is used to calculate accurate prayer times and qibla direction where you are.',
+            ),
+          ),
+          const SizedBox(height: SolatifySpacing.md),
+          _InfoLine(
+            icon: Icons.wifi_off_outlined,
+            text: _t(
+              'Tidak ingin memakai GPS? Pilih kota secara manual, tetap berfungsi offline.',
+              "Prefer not to use GPS? Pick a city manually, it works offline too.",
+            ),
+          ),
+          if (hasCity) ...[
+            const SizedBox(height: SolatifySpacing.xs),
+            _InfoLine(
+              icon: Icons.place_outlined,
+              text: _t(
+                'Lokasi saat ini: ${location.city}, ${location.country}',
+                'Current location: ${location.city}, ${location.country}',
+              ),
+            ),
+          ],
+          if (_gpsFailed && !location.isLoading) ...[
+            const SizedBox(height: SolatifySpacing.md),
+            _NoticeBox(
+              text: _t(
+                'Lokasi tidak dapat dideteksi. Periksa izin lokasi atau GPS, atau pilih kota manual untuk melanjutkan.',
+                'Location could not be detected. Check location permission or GPS, or choose a city manually to continue.',
+              ),
+            ),
+          ],
+          const SizedBox(height: SolatifySpacing.xl),
+          if (location.isLoading)
+            Semantics(
+              liveRegion: true,
+              label: _t('Mendeteksi lokasi…', 'Detecting location…'),
+              child: ExcludeSemantics(
                 child: Column(
                   children: [
-                    // Header Brand Logo
-                    Padding(
-                      padding: EdgeInsets.symmetric(
-                        vertical: MediaQuery.sizeOf(context).height < 680
-                            ? 14
-                            : 24,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          SvgPicture.asset(
-                            'assets/images/masjid_nabawi.svg',
-                            width: 32,
-                            height: 32,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'SOLATIFY',
-                            style: TextStyle(
-                              color: isDark
-                                  ? Colors.white
-                                  : const Color(0xFF241A12),
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 3.0,
-                            ),
-                          ),
-                        ],
-                      ),
+                    const SizedBox(
+                      width: 28,
+                      height: 28,
+                      child: CircularProgressIndicator(strokeWidth: 2.5),
                     ),
-
-                    // Slide Pages
-                    Expanded(
-                      child: PageView(
-                        controller: _pageController,
-                        physics: const BouncingScrollPhysics(),
-                        onPageChanged: (page) {
-                          setState(() {
-                            _currentPage = page;
-                          });
-                        },
-                        children: [
-                          // Slide 1: Welcome
-                          _buildWelcomeSlide(),
-                          // Slide 2: Location
-                          _buildLocationSlide(location),
-                          // Slide 3: Notifications
-                          _buildNotificationSlide(),
-                          // Slide 4: Final Summary
-                          _buildSummarySlide(location),
-                        ],
-                      ),
-                    ),
-
-                    // Footer Navigation Controls
-                    Padding(
-                      padding: ResponsiveLayout.pagePadding(context),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          // Back Button
-                          Opacity(
-                            opacity: _currentPage > 0 ? 1.0 : 0.0,
-                            child: TextButton(
-                              onPressed: _currentPage > 0 ? _prevPage : null,
-                              child: const Text(
-                                'KEMBALI',
-                                style: TextStyle(
-                                  color: Color(0xFF5D4E47),
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 1.2,
-                                ),
-                              ),
-                            ),
-                          ),
-
-                          // Indicators
-                          Row(
-                            children: List.generate(4, (index) {
-                              return AnimatedContainer(
-                                duration: const Duration(milliseconds: 200),
-                                margin: const EdgeInsets.symmetric(
-                                  horizontal: 4,
-                                ),
-                                width: _currentPage == index ? 24 : 8,
-                                height: 8,
-                                decoration: BoxDecoration(
-                                  color: _currentPage == index
-                                      ? const Color(0xFFC94B3D)
-                                      : const Color(0xFFCFE7D5),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                              );
-                            }),
-                          ),
-
-                          // Next Button (hidden or replaces by custom buttons depending on slide requirements)
-                          _currentPage == 3
-                              ? TextButton(
-                                  onPressed: _finishOnboarding,
-                                  child: Text(
-                                    'MULAI',
-                                    style: TextStyle(
-                                      color: isDark
-                                          ? Colors.white
-                                          : const Color(0xFF241A12), // Black
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 1.2,
-                                    ),
-                                  ),
-                                )
-                              : TextButton(
-                                  onPressed:
-                                      _currentPage == 1 || _currentPage == 2
-                                      ? null
-                                      : _nextPage,
-                                  child: Opacity(
-                                    opacity:
-                                        _currentPage == 1 || _currentPage == 2
-                                        ? 0.0
-                                        : 1.0,
-                                    child: const Text(
-                                      'LANJUT',
-                                      style: TextStyle(
-                                        color: Color(0xFFC94B3D),
-                                        fontWeight: FontWeight.bold,
-                                        letterSpacing: 1.2,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                        ],
-                      ),
+                    const SizedBox(height: SolatifySpacing.sm),
+                    Text(
+                      _t('Mendeteksi lokasi…', 'Detecting location…'),
+                      style: TextStyle(color: SolatifyColors.muted(context)),
                     ),
                   ],
+                ),
+              ),
+            )
+          else ...[
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: _detectLocationAutomatically,
+                icon: const Icon(Icons.my_location),
+                label: Text(
+                  _gpsFailed
+                      ? _t('Coba Deteksi Lagi', 'Try Detecting Again')
+                      : _t(
+                          'Deteksi Lokasi Otomatis (GPS)',
+                          'Detect Location Automatically (GPS)',
+                        ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+            const SizedBox(height: SolatifySpacing.sm),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: _showManualCityDialog,
+                icon: const Icon(Icons.map_outlined),
+                label: Text(
+                  _t(
+                    'Pilih Kota Manual (Offline)',
+                    'Choose City Manually (Offline)',
+                  ),
+                  textAlign: TextAlign.center,
                 ),
               ),
             ),
           ],
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildWelcomeSlide() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return _OnboardingSlideFrame(
-      child: Center(
-        child: GlassContainer(
-          opacity: 0.92,
-          borderRadius: 24,
-          width: double.infinity,
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.spatial_audio_off_outlined,
-                size: 80,
-                color: isDark ? Colors.white : const Color(0xFF241A12),
-              ),
-              const SizedBox(height: 32),
-              Text(
-                'Selamat Datang',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: isDark ? Colors.white : const Color(0xFF241A12),
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                "Solatify membantu Anda mengelola jadwal salat, membaca Al-Qur'an, mencari kiblat, dan menemukan masjid terdekat.",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Color(0xFF5D4E47),
-                  fontSize: 16,
-                  height: 1.5,
-                ),
-              ),
-            ],
+  Widget _buildNotificationSlide(bool isShort) {
+    return OnboardingSlideFrame(
+      padding: _slidePadding(),
+      child: _slideCard(
+        children: [
+          _slideIcon(Icons.notifications_active_outlined, isShort),
+          SizedBox(height: isShort ? SolatifySpacing.lg : SolatifySpacing.xl),
+          _slideTitle(_t('Aktifkan Pengingat', 'Turn On Reminders')),
+          const SizedBox(height: SolatifySpacing.sm),
+          _slideBody(
+            _t(
+              'Dapatkan pengingat saat waktu salat tiba agar ibadah tidak terlewat.',
+              'Get a reminder when each prayer time begins so you never miss it.',
+            ),
           ),
-        ),
+          const SizedBox(height: SolatifySpacing.md),
+          _InfoLine(
+            icon: Icons.tune,
+            text: _t(
+              'Anda dapat mengatur atau mematikan pengingat kapan saja di Pengaturan.',
+              'You can adjust or turn off reminders anytime in Settings.',
+            ),
+          ),
+          const SizedBox(height: SolatifySpacing.xl),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: _isRequestingNotifications
+                  ? null
+                  : _requestNotificationPermission,
+              icon: _isRequestingNotifications
+                  ? const SizedBox.square(
+                      dimension: SolatifyIconSize.inline,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.check_circle_outline),
+              label: Text(
+                _t('Izinkan Notifikasi', 'Allow Notifications'),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildLocationSlide(LocationEntity location) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return _OnboardingSlideFrame(
-      child: Center(
-        child: GlassContainer(
-          opacity: 0.92,
-          borderRadius: 24,
-          width: double.infinity,
-          padding: const EdgeInsets.all(28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                Icons.location_on_outlined,
-                size: 72,
-                color: Color(0xFFC94B3D),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                'Atur Lokasi Anda',
-                style: TextStyle(
-                  color: isDark ? Colors.white : const Color(0xFF241A12),
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+  Widget _buildSummarySlide(LocationEntity location, bool isShort) {
+    return OnboardingSlideFrame(
+      padding: _slidePadding(),
+      child: _slideCard(
+        children: [
+          _slideIcon(
+            Icons.check_circle_outline,
+            isShort,
+            color: SolatifyColors.success(context),
+          ),
+          SizedBox(height: isShort ? SolatifySpacing.lg : SolatifySpacing.xl),
+          _slideTitle(
+            _t('Solatify Siap Digunakan!', 'Solatify Is Ready to Use!'),
+          ),
+          const SizedBox(height: SolatifySpacing.xl),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(SolatifySpacing.lg),
+            decoration: BoxDecoration(
+              color: SolatifyColors.raisedSurface(context),
+              borderRadius: SolatifyRadius.compactCard,
+              border: Border.all(color: SolatifyColors.border(context)),
+            ),
+            child: Column(
+              children: [
+                _buildSummaryRow(
+                  _t('Kota Aktif', 'Active City'),
+                  '${location.city}, ${location.country}',
+                  SolatifyColors.text(context),
                 ),
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'Untuk menghitung jadwal salat dan menentukan arah kiblat yang akurat, izinkan akses lokasi Anda.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Color(0xFF5D4E47),
-                  fontSize: 15,
-                  height: 1.5,
+                const Divider(height: SolatifySpacing.xl),
+                _buildSummaryRow(
+                  _t('Koordinat', 'Coordinates'),
+                  '${location.latitude.toStringAsFixed(4)}, ${location.longitude.toStringAsFixed(4)}',
+                  SolatifyColors.muted(context),
                 ),
-              ),
-              const SizedBox(height: 32),
-
-              if (location.isLoading)
-                const CircularProgressIndicator()
-              else ...[
-                // GPS Button
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFC94B3D),
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(double.infinity, 50),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(22),
-                    ),
-                  ),
-                  onPressed: _detectLocationAutomatically,
-                  icon: const Icon(Icons.my_location),
-                  label: const Text(
-                    'Deteksi Lokasi Otomatis (GPS)',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                // Manual Button
-                OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFFC94B3D),
-                    minimumSize: const Size(double.infinity, 50),
-                    side: const BorderSide(color: Color(0xFFCFE7D5)),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(22),
-                    ),
-                  ),
-                  onPressed: _showManualCityDialog,
-                  icon: const Icon(Icons.map_outlined),
-                  label: const Text(
-                    'Pilih Kota Manual (Offline)',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
+                const Divider(height: SolatifySpacing.xl),
+                _buildSummaryRow(
+                  _t('Metode Kalkulasi', 'Calculation Method'),
+                  'Kemenag RI',
+                  SolatifyColors.accent(context),
                 ),
               ],
-            ],
+            ),
           ),
-        ),
+          const SizedBox(height: SolatifySpacing.lg),
+          _slideBody(
+            _t(
+              'Semua ini dapat diubah kapan saja di Pengaturan.',
+              'You can change all of this anytime in Settings.',
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildNotificationSlide() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return _OnboardingSlideFrame(
-      child: Center(
-        child: GlassContainer(
-          opacity: 0.92,
-          borderRadius: 24,
-          width: double.infinity,
-          padding: const EdgeInsets.all(28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.notifications_active_outlined,
-                size: 72,
-                color: isDark ? Colors.white : const Color(0xFF241A12),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                'Aktifkan Pengingat',
-                style: TextStyle(
-                  color: isDark ? Colors.white : const Color(0xFF241A12),
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'Aktifkan pengaturan preferensi Anda sesuai kebutuhan.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Color(0xFF5D4E47),
-                  fontSize: 15,
-                  height: 1.5,
-                ),
-              ),
-              const SizedBox(height: 32),
-
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF241A12),
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 50),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(22),
-                  ),
-                ),
-                onPressed: _nextPage,
-                icon: const Icon(Icons.check_circle_outline),
-                label: const Text(
-                  'Izinkan Notifikasi',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextButton(
-                onPressed: _nextPage,
-                child: const Text(
-                  'Lewati dahulu',
-                  style: TextStyle(color: Color(0xFF5D4E47)),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSummarySlide(LocationEntity location) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return _OnboardingSlideFrame(
-      child: Center(
-        child: GlassContainer(
-          opacity: 0.92,
-          borderRadius: 24,
-          width: double.infinity,
-          padding: const EdgeInsets.all(28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                Icons.check_circle,
-                size: 80,
-                color: Color(0xFFC94B3D),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                'Solatify Siap Digunakan!',
-                style: TextStyle(
-                  color: isDark ? Colors.white : const Color(0xFF241A12),
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Summary details
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF7EADC),
-                  borderRadius: BorderRadius.circular(22),
-                  border: Border.all(color: const Color(0xFFCFE7D5)),
-                ),
-                child: Column(
-                  children: [
-                    _buildSummaryRow(
-                      'Kota Aktif:',
-                      '${location.city}, ${location.country}',
-                      const Color(0xFF241A12),
-                    ),
-                    const Divider(color: Color(0xFFCFE7D5), height: 24),
-                    _buildSummaryRow(
-                      'Koordinat:',
-                      '${location.latitude.toStringAsFixed(4)}, ${location.longitude.toStringAsFixed(4)}',
-                      const Color(0xFF5D4E47),
-                    ),
-                    const Divider(color: Color(0xFFCFE7D5), height: 24),
-                    _buildSummaryRow(
-                      'Metode Kalkulasi:',
-                      'Kemenag RI',
-                      const Color(0xFFC94B3D),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 32),
-
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFC94B3D),
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 52),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(22),
-                  ),
-                ),
-                onPressed: _finishOnboarding,
-                child: const Text(
-                  'Masuk ke Beranda',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+  EdgeInsets _slidePadding() {
+    final page = ResponsiveLayout.pagePadding(context);
+    return EdgeInsets.symmetric(
+      horizontal: page.left,
+      vertical: SolatifySpacing.xs,
     );
   }
 
   Widget _buildSummaryRow(String label, String value, Color valueColor) {
+    // Stacked label/value so long city names and large text never squeeze.
+    return MergeSemantics(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: SolatifyColors.muted(context),
+              fontSize: SolatifyType.caption,
+            ),
+          ),
+          const SizedBox(height: 2),
+          SizedBox(
+            width: double.infinity,
+            child: Text(
+              value,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: valueColor,
+                fontWeight: FontWeight.bold,
+                fontSize: SolatifyType.body,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoLine extends StatelessWidget {
+  const _InfoLine({required this.icon, required this.text});
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final muted = SolatifyColors.muted(context);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(color: Color(0xFF5D4E47))),
-        const SizedBox(width: 12),
+        Padding(
+          padding: const EdgeInsets.only(top: 2),
+          child: ExcludeSemantics(
+            child: Icon(icon, size: SolatifyIconSize.inline, color: muted),
+          ),
+        ),
+        const SizedBox(width: SolatifySpacing.xs),
         Expanded(
           child: Text(
-            value,
-            textAlign: TextAlign.end,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
+            text,
             style: TextStyle(
-              color: valueColor,
-              fontWeight: FontWeight.bold,
-              fontSize: 13,
+              color: muted,
+              fontSize: SolatifyType.caption + 1,
+              height: 1.4,
             ),
           ),
         ),
@@ -660,23 +791,47 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 }
 
-class _OnboardingSlideFrame extends StatelessWidget {
-  const _OnboardingSlideFrame({required this.child});
+class _NoticeBox extends StatelessWidget {
+  const _NoticeBox({required this.text});
 
-  final Widget child;
+  final String text;
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      padding: ResponsiveLayout.pagePadding(context),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          minHeight: (MediaQuery.sizeOf(context).height - 220)
-              .clamp(360.0, 720.0)
-              .toDouble(),
+    final warning = SolatifyColors.warning(context);
+    return Semantics(
+      liveRegion: true,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(SolatifySpacing.md),
+        decoration: BoxDecoration(
+          color: warning.withValues(alpha: 0.10),
+          borderRadius: SolatifyRadius.icon,
+          border: Border.all(color: warning.withValues(alpha: 0.45)),
         ),
-        child: child,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ExcludeSemantics(
+              child: Icon(
+                Icons.info_outline,
+                size: SolatifyIconSize.cardIcon,
+                color: warning,
+              ),
+            ),
+            const SizedBox(width: SolatifySpacing.sm),
+            Expanded(
+              child: Text(
+                text,
+                style: TextStyle(
+                  color: SolatifyColors.text(context),
+                  fontSize: SolatifyType.caption + 1,
+                  height: 1.4,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

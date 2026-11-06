@@ -2,17 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:solatify/core/localization/app_localizations.dart';
-import 'package:solatify/core/theme/theme.dart';
+import 'package:solatify/core/services/solatify_haptics.dart';
 import 'package:solatify/core/utils/location_service.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
 import 'package:solatify/core/widgets/solatify_design_tokens.dart';
+import 'package:solatify/core/widgets/solatify_state_view.dart';
+import 'package:solatify/features/prayer_schedule/data/prayer_calculation_service.dart';
+import 'package:solatify/features/prayer_schedule/data/prayer_timezone_service.dart';
+import 'package:solatify/features/prayer_schedule/presentation/location_provider.dart';
+import 'package:solatify/features/prayer_schedule/presentation/widgets/manual_location_dialog.dart';
 import 'package:solatify/features/settings/presentation/providers/settings_provider.dart';
-
-import '../../data/prayer_calculation_service.dart';
-import '../../data/prayer_timezone_service.dart';
-import '../location_provider.dart';
 
 class PrayerScheduleScreen extends ConsumerStatefulWidget {
   const PrayerScheduleScreen({super.key});
@@ -25,11 +26,30 @@ class PrayerScheduleScreen extends ConsumerStatefulWidget {
 class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
   DateTime _selectedDate = DateTime.now();
 
+  static const _prayerKeys = ['subuh', 'dzuhur', 'ashar', 'magrib', 'isya'];
+
+  static const _prayerIcons = <String, IconData>{
+    'subuh': Icons.brightness_5_rounded,
+    'dzuhur': Icons.wb_sunny_rounded,
+    'ashar': Icons.wb_twilight_rounded,
+    'magrib': Icons.nights_stay_rounded,
+    'isya': Icons.dark_mode_rounded,
+  };
+
   static String _getFormatDate(DateTime date) {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
 
+  void _selectDate(DateTime date) {
+    if (_getFormatDate(date) == _getFormatDate(_selectedDate)) return;
+    SolatifyHaptics.selection();
+    setState(() {
+      _selectedDate = date;
+    });
+  }
+
   void _showManualCityDialog() {
+    SolatifyHaptics.selection();
     showDialog<void>(
       context: context,
       builder: (context) {
@@ -37,64 +57,32 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
         String searchQuery = '';
         return StatefulBuilder(
           builder: (context, setStateBuilder) {
+            final query = searchQuery.toLowerCase().trim();
             final filteredCities = LocationService.defaultCities.where((city) {
-              return city.name.toLowerCase().contains(
-                    searchQuery.toLowerCase(),
-                  ) ||
-                  city.country.toLowerCase().contains(
-                    searchQuery.toLowerCase(),
-                  );
+              return city.name.toLowerCase().contains(query) ||
+                  city.country.toLowerCase().contains(query);
             }).toList();
 
-            final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
-            final dialogBg = isDarkTheme
-                ? const Color(0xFF2A1B12)
-                : Colors.white;
-            final dTextColor = isDarkTheme
-                ? Colors.white
-                : const Color(0xFF241A12);
-            final dTextSecondary = isDarkTheme
-                ? const Color(0xFFB8A898)
-                : const Color(0xFFAFA19A);
-            final dTextHint = isDarkTheme
-                ? const Color(0xFFAFA19A)
-                : const Color(0xFFAFA19A);
-            final dBorderColor = isDarkTheme
-                ? Colors.white.withValues(alpha: 0.2)
-                : Colors.black12;
-            final dialogAccentColor = AppTheme.readableAccent(context);
-
-            final dialogWidth = (MediaQuery.sizeOf(context).width - 48).clamp(
-              320.0,
-              520.0,
-            );
-            final dialogHeight = MediaQuery.sizeOf(context).height * 0.62;
+            final accent = SolatifyColors.accent(context);
+            final muted = SolatifyColors.muted(context);
+            final bodySize = manualLocationDialogBodySize(context);
 
             return AlertDialog(
-              backgroundColor: dialogBg,
-              title: Text(
-                l.changeLocation,
-                style: TextStyle(color: dTextColor),
+              insetPadding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: SolatifySpacing.xl,
               ),
+              title: Semantics(header: true, child: Text(l.changeLocation)),
               content: SizedBox(
-                width: dialogWidth,
-                height: dialogHeight,
+                width: bodySize.width,
+                height: bodySize.height,
                 child: Column(
                   children: [
                     TextField(
-                      style: TextStyle(color: dTextColor),
+                      textInputAction: TextInputAction.search,
                       decoration: InputDecoration(
                         hintText: l.searchCity,
-                        hintStyle: TextStyle(color: dTextHint),
-                        prefixIcon: Icon(Icons.search, color: dTextSecondary),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: dBorderColor),
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: dialogAccentColor),
-                          borderRadius: BorderRadius.circular(24),
-                        ),
+                        prefixIcon: const Icon(Icons.search),
                       ),
                       onChanged: (val) {
                         setStateBuilder(() {
@@ -102,39 +90,74 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
                         });
                       },
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: SolatifySpacing.sm),
                     Expanded(
-                      child: ListView.builder(
-                        itemCount: filteredCities.length,
-                        itemBuilder: (context, index) {
-                          final city = filteredCities[index];
-                          return ListTile(
-                            title: Text(
-                              city.name,
-                              style: TextStyle(color: dTextColor),
+                      child: filteredCities.isEmpty
+                          ? SingleChildScrollView(
+                              child: SolatifyStateView.empty(
+                                compact: true,
+                                icon: Icons.location_off_outlined,
+                                title: l.isEnglish
+                                    ? 'City not found'
+                                    : 'Kota tidak ditemukan',
+                                description: l.isEnglish
+                                    ? 'Try another city or province name.'
+                                    : 'Coba nama kota atau provinsi lain.',
+                              ),
+                            )
+                          : ListView.builder(
+                              itemCount: filteredCities.length,
+                              itemBuilder: (context, index) {
+                                final city = filteredCities[index];
+                                return ListTile(
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                  ),
+                                  leading: Icon(
+                                    Icons.location_city_rounded,
+                                    color: accent,
+                                  ),
+                                  title: Text(
+                                    city.name,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: SolatifyColors.text(context),
+                                    ),
+                                  ),
+                                  subtitle: Text(
+                                    city.country,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: muted,
+                                      fontSize: SolatifyType.caption,
+                                    ),
+                                  ),
+                                  trailing: Icon(
+                                    Icons.chevron_right_rounded,
+                                    color: muted,
+                                  ),
+                                  onTap: () {
+                                    SolatifyHaptics.selection();
+                                    ref
+                                        .read(locationProvider.notifier)
+                                        .setManualCity(city);
+                                    Navigator.pop(context);
+                                  },
+                                );
+                              },
                             ),
-                            subtitle: Text(
-                              city.country,
-                              style: TextStyle(color: dTextSecondary),
-                            ),
-                            trailing: Icon(
-                              Icons.arrow_forward_ios,
-                              size: SolatifyIconSize.inline,
-                              color: dialogAccentColor,
-                            ),
-                            onTap: () {
-                              ref
-                                  .read(locationProvider.notifier)
-                                  .setManualCity(city);
-                              Navigator.pop(context);
-                            },
-                          );
-                        },
-                      ),
                     ),
                   ],
                 ),
               ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(l.cancel),
+                ),
+              ],
             );
           },
         );
@@ -147,6 +170,7 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
     final l = AppLocalizations.of(context);
     final location = ref.watch(locationProvider);
     final settings = ref.watch(settingsProvider);
+    final localeName = settings.language == 'id' ? 'id_ID' : 'en_US';
 
     // Calculate prayer times for selected date
     final timezoneName = PrayerTimezoneService.inferTimezoneName(
@@ -165,7 +189,7 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
 
     final String displayDate = DateFormat(
       'EEEE, d MMMM yyyy',
-      settings.language == 'id' ? 'id_ID' : 'en_US',
+      localeName,
     ).format(_selectedDate);
 
     // Horizontal date strip: yesterday, today, and next 5 days
@@ -173,23 +197,32 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
     final List<DateTime> dateStrip = List.generate(7, (index) {
       return today.subtract(const Duration(days: 1)).add(Duration(days: index));
     });
+    final isViewingToday =
+        _getFormatDate(_selectedDate) == _getFormatDate(today);
+
+    // Only meaningful when looking at today's schedule.
+    String? nextPrayerKey;
+    if (isViewingToday) {
+      for (final key in _prayerKeys) {
+        final time = computedTimes[key];
+        if (time != null && time.isAfter(today)) {
+          nextPrayerKey = key;
+          break;
+        }
+      }
+    }
 
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : const Color(0xFF241A12);
-    final textSecondary = isDark
-        ? const Color(0xFFC8B8A8)
-        : const Color(0xFFAFA19A);
-    final textMuted = isDark
-        ? const Color(0xFFB8A898)
-        : const Color(0xFFAFA19A);
-    final dividerColor = isDark
-        ? Colors.white.withValues(alpha: 0.1)
-        : Colors.black.withValues(alpha: 0.05);
+    final textColor = SolatifyColors.text(context);
+    final mutedColor = SolatifyColors.muted(context);
     final selectedDateColor = isDark
         ? theme.colorScheme.tertiary
         : theme.colorScheme.secondary;
-    final selectedDateTextColor = theme.colorScheme.onTertiary;
+    final selectedDateTextColor = isDark
+        ? theme.colorScheme.onTertiary
+        : theme.colorScheme.onSecondary;
+    final pagePadding = ResponsiveLayout.pagePadding(context);
 
     return Scaffold(
       body: IslamicBackground(
@@ -200,14 +233,12 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
               slivers: [
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: ResponsiveLayout.pagePadding(context).copyWith(
+                    padding: pagePadding.copyWith(
                       top: ResponsiveLayout.pageTopGap,
                       bottom: ResponsiveLayout.itemGap,
                     ),
                     child: GlassContainer(
                       borderRadius: SolatifyRadius.lg,
-                      borderColor: SolatifyColors.border(context),
-                      fillColor: SolatifyColors.softSurface(context),
                       padding: SolatifySpacing.compactCard,
                       child: Row(
                         children: [
@@ -216,11 +247,11 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
                             height: SolatifyIconSize.cardBox,
                             decoration: BoxDecoration(
                               borderRadius: SolatifyRadius.icon,
-                              color: theme.colorScheme.tertiary,
+                              color: SolatifyColors.accent(context),
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.access_time_filled_rounded,
-                              color: Colors.white,
+                              color: SolatifyColors.onAccent(context),
                               size: SolatifyIconSize.cardIcon,
                             ),
                           ),
@@ -230,44 +261,64 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Text(
-                                  l.prayerSchedule,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    color: textColor,
-                                    fontSize: SolatifyType.sectionTitle,
-                                    height: 1.15,
-                                    fontWeight: FontWeight.w800,
+                                Semantics(
+                                  header: true,
+                                  child: Text(
+                                    l.prayerSchedule,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: textColor,
+                                      fontSize: SolatifyType.sectionTitle,
+                                      height: 1.15,
+                                      fontWeight: FontWeight.w800,
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(height: 4),
-                                Text(
-                                  '$displayDate • ${location.city}, ${location.country}',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    color: textMuted,
-                                    fontSize: SolatifyType.caption,
-                                    height: 1.25,
-                                  ),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.place_rounded,
+                                      size: SolatifyType.caption + 2,
+                                      color: mutedColor,
+                                    ),
+                                    const SizedBox(width: 2),
+                                    Flexible(
+                                      child: Text(
+                                        '${location.city}, ${location.country}',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          color: mutedColor,
+                                          fontSize: SolatifyType.caption,
+                                          height: 1.25,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
                           ),
-                          const SizedBox(width: SolatifySpacing.sm),
-                          TextButton.icon(
-                            style: TextButton.styleFrom(
-                              foregroundColor: theme.colorScheme.tertiary,
-                              visualDensity: VisualDensity.compact,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          const SizedBox(width: SolatifySpacing.xs),
+                          Tooltip(
+                            message: l.changeLocation,
+                            child: TextButton.icon(
+                              style: TextButton.styleFrom(
+                                foregroundColor: SolatifyColors.accent(context),
+                                minimumSize: const Size(
+                                  SolatifyTapTarget.min,
+                                  SolatifyTapTarget.min,
+                                ),
+                              ),
+                              icon: const Icon(
+                                Icons.edit_location_alt_outlined,
+                                size: SolatifyIconSize.inline,
+                              ),
+                              label: Text(l.isEnglish ? 'Change' : 'Ubah'),
+                              onPressed: _showManualCityDialog,
                             ),
-                            icon: const Icon(
-                              Icons.edit_location_alt_outlined,
-                              size: SolatifyIconSize.inline,
-                            ),
-                            label: const Text('Ubah'),
-                            onPressed: _showManualCityDialog,
                           ),
                         ],
                       ),
@@ -284,9 +335,7 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
                     ),
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
-                      padding: ResponsiveLayout.pagePadding(
-                        context,
-                      ).copyWith(top: 0, bottom: 0),
+                      padding: pagePadding.copyWith(top: 0, bottom: 0),
                       itemCount: dateStrip.length,
                       itemBuilder: (context, index) {
                         final date = dateStrip[index];
@@ -296,69 +345,98 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
                         final isToday =
                             _getFormatDate(date) == _getFormatDate(today);
 
-                        final dayName = DateFormat('EEE').format(date);
+                        final dayName = DateFormat(
+                          'EEE',
+                          localeName,
+                        ).format(date);
                         final dayNum = date.day.toString();
+                        final fullDate = DateFormat(
+                          'EEEE, d MMMM',
+                          localeName,
+                        ).format(date);
+                        final todayLabel = l.isEnglish ? 'Today' : 'Hari ini';
+                        final radius = BorderRadius.circular(SolatifyRadius.md);
 
-                        return GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _selectedDate = date;
-                            });
-                          },
+                        return Semantics(
+                          button: true,
+                          selected: isSelected,
+                          label: isToday ? '$fullDate, $todayLabel' : fullDate,
+                          onTap: () => _selectDate(date),
+                          excludeSemantics: true,
                           child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
+                            duration: SolatifyMotion.of(
+                              context,
+                              SolatifyMotion.medium,
+                            ),
+                            curve: SolatifyMotion.curve,
                             width: 60,
-                            margin: const EdgeInsets.symmetric(horizontal: 6),
+                            margin: const EdgeInsets.symmetric(horizontal: 4),
                             decoration: BoxDecoration(
                               color: isSelected
                                   ? selectedDateColor
                                   : isToday
                                   ? selectedDateColor.withValues(alpha: 0.18)
-                                  : (isDark
-                                        ? theme.colorScheme.surface.withValues(
-                                            alpha: 0.72,
-                                          )
-                                        : Colors.black.withValues(alpha: 0.02)),
-                              borderRadius: BorderRadius.circular(22),
+                                  : SolatifyColors.softSurface(
+                                      context,
+                                    ).withValues(alpha: isDark ? 0.72 : 0.9),
+                              borderRadius: radius,
                               border: Border.all(
                                 color: isSelected
                                     ? selectedDateColor
                                     : isToday
                                     ? selectedDateColor.withValues(alpha: 0.45)
-                                    : (isDark
-                                          ? theme.colorScheme.outline
-                                                .withValues(alpha: 0.55)
-                                          : Colors.black.withValues(
-                                              alpha: 0.06,
-                                            )),
+                                    : SolatifyColors.border(context),
                                 width: 1.2,
                               ),
                             ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  dayName,
-                                  style: TextStyle(
-                                    fontSize: SolatifyType.eyebrow,
-                                    fontWeight: FontWeight.bold,
-                                    color: isSelected
-                                        ? selectedDateTextColor
-                                        : textSecondary,
-                                  ),
+                            child: Material(
+                              type: MaterialType.transparency,
+                              child: InkWell(
+                                borderRadius: radius,
+                                onTap: () => _selectDate(date),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      dayName,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontSize: SolatifyType.eyebrow,
+                                        fontWeight: FontWeight.bold,
+                                        color: isSelected
+                                            ? selectedDateTextColor
+                                            : mutedColor,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      dayNum,
+                                      style: TextStyle(
+                                        fontSize: SolatifyType.sectionTitle,
+                                        fontWeight: FontWeight.bold,
+                                        color: isSelected
+                                            ? selectedDateTextColor
+                                            : textColor,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    // Non-color cue for "today".
+                                    Container(
+                                      width: 5,
+                                      height: 5,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: isToday
+                                            ? (isSelected
+                                                  ? selectedDateTextColor
+                                                  : selectedDateColor)
+                                            : Colors.transparent,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  dayNum,
-                                  style: TextStyle(
-                                    fontSize: SolatifyType.sectionTitle,
-                                    fontWeight: FontWeight.bold,
-                                    color: isSelected
-                                        ? selectedDateTextColor
-                                        : textColor,
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
                           ),
                         );
@@ -370,7 +448,7 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
                 // Selected Date Indicator
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: ResponsiveLayout.pagePadding(context).copyWith(
+                    padding: pagePadding.copyWith(
                       top: ResponsiveLayout.itemGap,
                       bottom: ResponsiveLayout.itemGap,
                     ),
@@ -378,21 +456,49 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
                       children: [
                         Icon(
                           Icons.today,
-                          color: textSecondary,
+                          color: mutedColor,
                           size: SolatifyIconSize.inline,
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: SolatifySpacing.xs),
                         Expanded(
-                          child: Text(
-                            displayDate,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: textMuted,
-                              fontWeight: FontWeight.w600,
-                              fontSize: SolatifyType.body,
+                          child: Semantics(
+                            header: true,
+                            child: AnimatedSwitcher(
+                              duration: SolatifyMotion.of(
+                                context,
+                                SolatifyMotion.fast,
+                              ),
+                              layoutBuilder: (current, previous) => Stack(
+                                alignment: Alignment.centerLeft,
+                                children: [...previous, ?current],
+                              ),
+                              child: Text(
+                                displayDate,
+                                key: ValueKey(displayDate),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: textColor,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: SolatifyType.body,
+                                ),
+                              ),
                             ),
                           ),
+                        ),
+                        AnimatedSwitcher(
+                          duration: SolatifyMotion.of(
+                            context,
+                            SolatifyMotion.fast,
+                          ),
+                          child: isViewingToday
+                              ? const SizedBox.shrink()
+                              : TextButton(
+                                  onPressed: () => _selectDate(DateTime.now()),
+                                  child: Text(
+                                    l.isEnglish ? 'Today' : 'Hari ini',
+                                  ),
+                                ),
                         ),
                       ],
                     ),
@@ -402,45 +508,29 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
                 // Prayer times checklist card
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: ResponsiveLayout.pagePadding(context).copyWith(
+                    padding: pagePadding.copyWith(
                       top: ResponsiveLayout.itemGap,
                       bottom: ResponsiveLayout.bottomSafeGap,
                     ),
                     child: GlassContainer(
-                      opacity: isDark ? 0.04 : 0.02,
-                      borderRadius: 24,
+                      borderRadius: SolatifyRadius.lg,
                       padding: ResponsiveLayout.cardPadding,
                       child: Column(
                         children: [
-                          _buildPrayerTimeRow(
-                            l.prayerName('subuh'),
-                            computedTimes['subuh']!,
-                            Icons.brightness_5,
-                          ),
-                          Divider(color: dividerColor, height: 24),
-                          _buildPrayerTimeRow(
-                            l.prayerName('dzuhur'),
-                            computedTimes['dzuhur']!,
-                            Icons.wb_sunny,
-                          ),
-                          Divider(color: dividerColor, height: 24),
-                          _buildPrayerTimeRow(
-                            l.prayerName('ashar'),
-                            computedTimes['ashar']!,
-                            Icons.wb_twilight,
-                          ),
-                          Divider(color: dividerColor, height: 24),
-                          _buildPrayerTimeRow(
-                            l.prayerName('magrib'),
-                            computedTimes['magrib']!,
-                            Icons.nights_stay,
-                          ),
-                          Divider(color: dividerColor, height: 24),
-                          _buildPrayerTimeRow(
-                            l.prayerName('isya'),
-                            computedTimes['isya']!,
-                            Icons.dark_mode,
-                          ),
+                          for (var i = 0; i < _prayerKeys.length; i++) ...[
+                            if (i > 0)
+                              Divider(
+                                color: SolatifyColors.border(context),
+                                height: 20,
+                              ),
+                            _buildPrayerTimeRow(
+                              l.prayerName(_prayerKeys[i]),
+                              computedTimes[_prayerKeys[i]]!,
+                              _prayerIcons[_prayerKeys[i]]!,
+                              isNext: nextPrayerKey == _prayerKeys[i],
+                              nextLabel: l.isEnglish ? 'Next' : 'Berikutnya',
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -454,44 +544,106 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
     );
   }
 
-  Widget _buildPrayerTimeRow(String name, DateTime time, IconData icon) {
+  Widget _buildPrayerTimeRow(
+    String name,
+    DateTime time,
+    IconData icon, {
+    required bool isNext,
+    required String nextLabel,
+  }) {
     final formattedTime = DateFormat('HH:mm').format(time);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : const Color(0xFF241A12);
+    final accent = SolatifyColors.accent(context);
+    final textColor = SolatifyColors.text(context);
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Icon(
+    return Semantics(
+      container: true,
+      label: isNext
+          ? '$name, $formattedTime, $nextLabel'
+          : '$name, $formattedTime',
+      excludeSemantics: true,
+      child: AnimatedContainer(
+        duration: SolatifyMotion.of(context, SolatifyMotion.medium),
+        curve: SolatifyMotion.curve,
+        padding: const EdgeInsets.symmetric(
+          horizontal: SolatifySpacing.sm,
+          vertical: SolatifySpacing.xs,
+        ),
+        decoration: BoxDecoration(
+          color: isNext
+              ? SolatifyColors.accentSoft(context)
+              : Colors.transparent,
+          borderRadius: SolatifyRadius.icon,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: SolatifyIconSize.cardBox,
+              height: SolatifyIconSize.cardBox,
+              decoration: BoxDecoration(
+                color: isNext ? accent : SolatifyColors.raisedSurface(context),
+                borderRadius: SolatifyRadius.icon,
+              ),
+              child: Icon(
                 icon,
-                color: const Color(0xFF9A6A3A),
+                color: isNext
+                    ? SolatifyColors.onAccent(context)
+                    : SolatifyColors.muted(context),
                 size: SolatifyIconSize.cardIcon,
               ),
-              const SizedBox(width: 16),
-              Text(
-                name,
-                style: TextStyle(
-                  fontSize: SolatifyType.cardTitle,
-                  fontWeight: FontWeight.w600,
-                  color: textColor,
-                ),
-              ),
-            ],
-          ),
-          Text(
-            formattedTime,
-            style: TextStyle(
-              fontSize: SolatifyType.sectionTitle,
-              fontWeight: FontWeight.bold,
-              color: textColor,
-              letterSpacing: 0.5,
             ),
-          ),
-        ],
+            const SizedBox(width: SolatifySpacing.md),
+            Expanded(
+              child: Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: SolatifySpacing.sm,
+                runSpacing: 4,
+                children: [
+                  Text(
+                    name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: SolatifyType.cardTitle,
+                      fontWeight: isNext ? FontWeight.w800 : FontWeight.w600,
+                      color: isNext ? accent : textColor,
+                    ),
+                  ),
+                  if (isNext)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: accent,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        nextLabel,
+                        maxLines: 1,
+                        style: TextStyle(
+                          color: SolatifyColors.onAccent(context),
+                          fontSize: SolatifyType.eyebrow,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(width: SolatifySpacing.sm),
+            Text(
+              formattedTime,
+              style: TextStyle(
+                fontSize: SolatifyType.sectionTitle,
+                fontWeight: FontWeight.bold,
+                color: isNext ? accent : textColor,
+                letterSpacing: 0.5,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

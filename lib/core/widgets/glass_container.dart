@@ -2,7 +2,13 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:solatify/core/performance/performance_tuning.dart';
+import 'package:solatify/core/widgets/solatify_design_tokens.dart';
 
+/// Card surface used across Solatify.
+///
+/// Pass [onTap] to make the whole card interactive: it then gets an ink
+/// ripple clipped to the card shape, keyboard focus, and is announced as a
+/// button by screen readers (optionally with [semanticLabel]).
 class GlassContainer extends StatelessWidget {
   const GlassContainer({
     super.key,
@@ -16,6 +22,10 @@ class GlassContainer extends StatelessWidget {
     this.margin,
     this.width,
     this.height,
+    this.onTap,
+    this.onLongPress,
+    this.semanticLabel,
+    this.selected = false,
   });
   final Widget child;
   final double blur;
@@ -27,54 +37,54 @@ class GlassContainer extends StatelessWidget {
   final EdgeInsetsGeometry? margin;
   final double? width;
   final double? height;
+  final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
+  final String? semanticLabel;
+  final bool selected;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    final defaultFill =
-        fillColor ?? (isDark ? const Color(0xFF123724) : Colors.white);
-
-    final defaultBorder =
-        borderColor ??
-        (isDark
-            ? const Color(0xFFE85D4F).withValues(alpha: 0.10)
-            : const Color(0xFFC0392B).withValues(alpha: 0.08));
+    final defaultFill = fillColor ?? SolatifyColors.softSurface(context);
+    final defaultBorder = borderColor ?? SolatifyColors.border(context);
     final effectiveBlur = blur
         .clamp(0, PerformanceTuning.maxGlassBlurSigma)
         .toDouble();
+    final radius = BorderRadius.circular(borderRadius);
 
-    return Container(
-      width: width,
-      height: height,
-      margin: margin,
-      decoration: const BoxDecoration(),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(borderRadius),
-        child: effectiveBlur > 0
-            ? BackdropFilter(
-                filter: ImageFilter.blur(
-                  sigmaX: effectiveBlur,
-                  sigmaY: effectiveBlur,
-                ),
-                child: _GlassBody(
-                  padding: padding,
-                  borderRadius: borderRadius,
-                  fill: defaultFill,
-                  border: defaultBorder,
-                  child: child,
-                ),
-              )
-            : _GlassBody(
-                padding: padding,
-                borderRadius: borderRadius,
-                fill: defaultFill,
-                border: defaultBorder,
-                child: child,
-              ),
-      ),
+    final body = _GlassBody(
+      padding: padding,
+      borderRadius: radius,
+      fill: defaultFill,
+      border: defaultBorder,
+      onTap: onTap,
+      onLongPress: onLongPress,
+      child: child,
     );
+
+    Widget card = ClipRRect(
+      borderRadius: radius,
+      child: effectiveBlur > 0
+          ? BackdropFilter(
+              filter: ImageFilter.blur(
+                sigmaX: effectiveBlur,
+                sigmaY: effectiveBlur,
+              ),
+              child: body,
+            )
+          : body,
+    );
+
+    if (onTap != null || semanticLabel != null) {
+      card = Semantics(
+        button: onTap != null,
+        selected: selected,
+        label: semanticLabel,
+        container: true,
+        child: card,
+      );
+    }
+
+    return Container(width: width, height: height, margin: margin, child: card);
   }
 }
 
@@ -85,24 +95,35 @@ class _GlassBody extends StatelessWidget {
     required this.fill,
     required this.border,
     this.padding,
+    this.onTap,
+    this.onLongPress,
   });
 
   final Widget child;
-  final double borderRadius;
+  final BorderRadius borderRadius;
   final Color fill;
   final Color border;
   final EdgeInsetsGeometry? padding;
+  final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final content = Padding(
       padding: padding ?? const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: fill,
-        borderRadius: BorderRadius.circular(borderRadius),
-        border: Border.all(color: border),
+      child: child,
+    );
+
+    return Material(
+      color: fill,
+      shape: RoundedRectangleBorder(
+        borderRadius: borderRadius,
+        side: BorderSide(color: border),
       ),
-      child: Material(type: MaterialType.transparency, child: child),
+      clipBehavior: Clip.antiAlias,
+      child: onTap == null && onLongPress == null
+          ? content
+          : InkWell(onTap: onTap, onLongPress: onLongPress, child: content),
     );
   }
 }

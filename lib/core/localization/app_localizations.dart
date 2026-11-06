@@ -27,6 +27,15 @@ class AppLocalizations {
   String get navMosque => isEnglish ? 'Mosques' : 'Masjid';
   String get navSettings => isEnglish ? 'Settings' : 'Pengaturan';
   String get navMore => isEnglish ? 'More' : 'Lainnya';
+  String get navTracker => isEnglish ? 'Worship Tracker' : 'Tracker Ibadah';
+  String get navQiblaHint =>
+      isEnglish ? 'Find the Kaaba direction' : 'Temukan arah Ka\'bah';
+  String get navMosqueHint =>
+      isEnglish ? 'Mosques around you' : 'Masjid di sekitar kamu';
+  String get navTrackerHint =>
+      isEnglish ? 'Log daily prayers & streaks' : 'Catat salat harian & streak';
+  String get navSettingsHint =>
+      isEnglish ? 'Method, notifications, theme' : 'Metode, notifikasi, tema';
 
   String get settingsTitle => isEnglish ? 'Settings' : 'Pengaturan';
   String get calculationSchedule =>
