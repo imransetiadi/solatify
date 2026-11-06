@@ -48,3 +48,17 @@ app.*.map.json
 .worktrees/
 .superpowers/
 solatify-website/public/screenshots/photo_*
+
+# Secrets and signing (never commit)
+.env
+.env.*
+!.env.example
+*.env
+android/key.properties
+*.jks
+*.keystore
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+ios/**/GoogleService-Info.plist
+.mcp.json
+.claude/settings.local.json
