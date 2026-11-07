@@ -8,7 +8,6 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
-import android.media.AudioManager
 import android.media.MediaPlayer
 import android.os.Build
 import android.os.IBinder
@@ -18,7 +17,6 @@ import com.solatify.app.solatify.R
 
 class AdhanPlaybackService : Service() {
     private var mediaPlayer: MediaPlayer? = null
-    private var previousAlarmVolume: Int? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_STOP_ADHAN) {
@@ -42,13 +40,19 @@ class AdhanPlaybackService : Service() {
     private fun playAdhan() {
         releasePlayer()
 
-        val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        previousAlarmVolume = audioManager.getStreamVolume(AudioManager.STREAM_ALARM)
-        val maxAlarmVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM)
-        if (previousAlarmVolume == 0 && maxAlarmVolume > 0) {
-            audioManager.setStreamVolume(AudioManager.STREAM_ALARM, maxAlarmVolume / 2, 0)
+        // The alarm volume is the user's choice; it is no longer raised
+        // silently when muted. Any failure stops the service instead of
+        // crashing the app in the background.
+        try {
+            startPlayer()
+        } catch (exception: Exception) {
+            Log.e(TAG, "Unable to play adhan", exception)
+            releasePlayer()
+            stopSelf()
         }
+    }
 
+    private fun startPlayer() {
         val assetFileDescriptor = resources.openRawResourceFd(R.raw.adhan)
         mediaPlayer = MediaPlayer().apply {
             setAudioAttributes(
@@ -87,41 +91,22 @@ class AdhanPlaybackService : Service() {
             release()
         }
         mediaPlayer = null
-
-        val originalVolume = previousAlarmVolume
-        if (originalVolume != null) {
-            val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-            audioManager.setStreamVolume(AudioManager.STREAM_ALARM, originalVolume, 0)
-        }
-        previousAlarmVolume = null
     }
 
     private fun buildPlaybackNotification(): Notification {
         ensurePlaybackChannel()
-        val stopIntent = Intent(this, AdhanPlaybackService::class.java).apply {
-            action = ACTION_STOP_ADHAN
-        }
-        val stopPendingIntent = PendingIntent.getService(
-            this,
-            STOP_REQUEST_CODE,
-            stopIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or immutableFlag(),
-        )
+        val stopPendingIntent = stopIntent(this)
 
         return NotificationCompat.Builder(this, PLAYBACK_CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle("Solatify")
-            .setContentText("Playing adhan")
+            .setContentText("Adzan sedang diputar")
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
             .setOngoing(true)
             .setSilent(true)
             .addAction(R.mipmap.ic_launcher, "Berhenti", stopPendingIntent)
             .build()
-    }
-
-    private fun immutableFlag(): Int {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
     }
 
     private fun ensurePlaybackChannel() {
@@ -140,6 +125,22 @@ class AdhanPlaybackService : Service() {
     }
 
     companion object {
+        /** Stops the adhan; used by the stop action and by dismissing the
+         *  prayer notification. */
+        fun stopIntent(context: Context): PendingIntent {
+            val intent = Intent(context, AdhanPlaybackService::class.java).apply {
+                action = ACTION_STOP_ADHAN
+            }
+            val immutable =
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
+            return PendingIntent.getService(
+                context,
+                STOP_REQUEST_CODE,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or immutable,
+            )
+        }
+
         private const val TAG = "AdhanPlaybackService"
         private const val ACTION_STOP_ADHAN = "com.solatify.app.solatify.STOP_ADHAN"
         private const val PLAYBACK_CHANNEL_ID = "adhan_playback_service_channel"

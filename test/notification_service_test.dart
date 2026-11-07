@@ -272,8 +272,11 @@ void main() {
     );
     expect(
       receiver,
-      contains('if (soundMode == SOUND_MODE_ADHAN && !isReminder)'),
+      contains('soundMode == SOUND_MODE_ADHAN && !isReminder'),
     );
+    // The full adhan comes from the playback service; the notification is
+    // silenced then, so the adhan does not play twice.
+    expect(receiver, contains('.setSilent(true)'));
   });
 
   test(

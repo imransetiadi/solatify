@@ -40,7 +40,15 @@ class PrayerAlarmReceiver : BroadcastReceiver() {
             return
         }
 
-        val notification = NotificationCompat.Builder(context, channelId)
+        // In adhan mode the full adhan is played by AdhanPlaybackService. The
+        // adhan channel also has the adhan as its sound (channels cannot be
+        // changed once created), so when the service is running the
+        // notification itself is posted silently to avoid two overlapping
+        // adhans. If the service cannot start, the channel sound still plays.
+        val playsFullAdhan = soundMode == SOUND_MODE_ADHAN && !isReminder &&
+            startAdhanPlayback(context)
+
+        val builder = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle(title)
             .setContentText(body)
@@ -57,12 +65,17 @@ class PrayerAlarmReceiver : BroadcastReceiver() {
                 putBoolean("isReminder", isReminder)
             })
             .applySoundAndVibration(context, soundMode)
-            .build()
 
-        NotificationManagerCompat.from(context).notify(id, notification)
-        if (soundMode == SOUND_MODE_ADHAN && !isReminder) {
-            startAdhanPlayback(context)
+        if (playsFullAdhan) {
+            val stopAdhan = AdhanPlaybackService.stopIntent(context)
+            builder
+                .setSilent(true)
+                .addAction(R.mipmap.ic_launcher, "Hentikan adzan", stopAdhan)
+                // Swiping the notification away also stops the adhan.
+                .setDeleteIntent(stopAdhan)
         }
+
+        NotificationManagerCompat.from(context).notify(id, builder.build())
         PrayerAlarmScheduler(context).cancel(id)
         Log.d(TAG, "Displayed prayer notification id=$id prayer=$prayerKey soundMode=$soundMode reminder=$isReminder")
     }
@@ -78,16 +91,20 @@ class PrayerAlarmReceiver : BroadcastReceiver() {
         }
     }
 
-    private fun startAdhanPlayback(context: Context) {
+    /** Returns false when the OS refused to start the service (e.g. Android
+     *  12+ background start limits after an inexact alarm). */
+    private fun startAdhanPlayback(context: Context): Boolean {
         val serviceIntent = Intent(context, AdhanPlaybackService::class.java)
-        try {
+        return try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 context.startForegroundService(serviceIntent)
             } else {
                 context.startService(serviceIntent)
             }
+            true
         } catch (exception: Exception) {
             Log.e(TAG, "Unable to start adhan playback service", exception)
+            false
         }
     }
 
