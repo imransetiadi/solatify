@@ -251,6 +251,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           content: Text(
             error ?? _t('Gagal mendeteksi lokasi', 'Could not detect location'),
           ),
+          duration: const Duration(seconds: 6),
+          // A SnackBar with an action persists by default; let it time out.
+          persist: false,
           action: SnackBarAction(
             label: _t('Pilih Manual', 'Choose Manually'),
             onPressed: () {

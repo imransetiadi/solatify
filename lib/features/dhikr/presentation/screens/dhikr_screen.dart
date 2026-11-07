@@ -80,6 +80,9 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen> {
       ..showSnackBar(
         SnackBar(
           content: Text(message),
+          duration: const Duration(seconds: 4),
+          // A SnackBar with an action persists by default; let it time out.
+          persist: false,
           action: SnackBarAction(
             label: l.isEnglish ? 'Undo' : 'Urungkan',
             onPressed: () {

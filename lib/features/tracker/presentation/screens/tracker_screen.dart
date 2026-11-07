@@ -171,6 +171,9 @@ class TrackerScreen extends ConsumerWidget {
         SnackBar(
           content: Text(message),
           duration: const Duration(seconds: 4),
+          // A SnackBar with an action persists by default (Flutter 3.29+);
+          // the undo offer should go away on its own.
+          persist: false,
           action: SnackBarAction(
             label: isEnglish ? 'Undo' : 'Urungkan',
             onPressed: () async {
