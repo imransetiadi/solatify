@@ -1,4 +1,7 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:solatify/core/localization/app_localizations.dart';
+import 'package:solatify/core/localization/islamic_content_localizer.dart';
 import 'package:solatify/features/hijri_calendar/data/datasources/hijri_calendar_local_data_source.dart';
 import 'package:solatify/features/hijri_calendar/presentation/providers/hijri_calendar_provider.dart';
 
@@ -54,6 +57,22 @@ void main() {
     test('ids are unique across years', () {
       final events = buildHijriEvents(DateTime(2026, 11, 7));
       expect(events.map((e) => e.id).toSet().length, events.length);
+    });
+
+    test('every event has an English name and description', () {
+      const english = AppLocalizations(Locale('en'));
+      for (final event in buildHijriEvents(DateTime(2026, 11, 7))) {
+        expect(
+          english.tr(event.nameId),
+          isNot(event.nameId),
+          reason: 'Missing translation: ${event.nameId}',
+        );
+        expect(
+          english.tr(event.description),
+          isNot(event.description),
+          reason: 'Missing translation: ${event.description}',
+        );
+      }
     });
   });
 }
