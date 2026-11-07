@@ -23,18 +23,40 @@ class GetWeeklyStats {
     final statusCounts = {for (final status in PrayerStatus.values) status: 0};
     int totalDone = 0;
 
+    final logsByDate = {for (final log in logs) _dateKey(log.date): log};
+
+    // Weekly figures use the last 7 days. Days without a log count as not
+    // done, so rates are no longer inflated (one logged day used to read as
+    // 100%). The window starts at the first tracked day, so a new user is
+    // not penalised for days before they started.
+    final today = _dateOnly(endDate);
+    final weekLogs = [
+      for (var index = 0; index < 7; index++)
+        logsByDate[_dateKey(today.subtract(Duration(days: index)))],
+    ].whereType<PrayerLogEntity>().toList();
+    final weekDays = weekLogs.isEmpty
+        ? 0
+        : today
+                  .difference(
+                    weekLogs
+                        .map((log) => _dateOnly(log.date))
+                        .reduce((a, b) => a.isBefore(b) ? a : b),
+                  )
+                  .inDays +
+              1;
+
     for (final prayer in prayers) {
-      final doneCount = logs.where((log) => log.isPrayerDone(prayer)).length;
-      rates[prayer] = logs.isEmpty ? 0.0 : (doneCount / logs.length) * 100;
+      final doneCount = weekLogs
+          .where((log) => log.isPrayerDone(prayer))
+          .length;
+      rates[prayer] = weekDays == 0 ? 0.0 : (doneCount / weekDays) * 100;
       totalDone += doneCount;
 
-      for (final log in logs.where((log) => log.isPrayerDone(prayer))) {
+      for (final log in weekLogs.where((log) => log.isPrayerDone(prayer))) {
         final status = log.getPrayerStatus(prayer) ?? PrayerStatus.onTime;
         statusCounts[status] = (statusCounts[status] ?? 0) + 1;
       }
     }
-
-    final logsByDate = {for (final log in logs) _dateKey(log.date): log};
     final dailyTargetCount = prayers.length + habitKeys.length;
     final heatmap = List.generate(14, (index) {
       final date = _dateOnly(endDate.subtract(Duration(days: index)));
@@ -56,19 +78,19 @@ class GetWeeklyStats {
       prayers,
       habitKeys,
     );
-    final bestDayLabel = _bestDayLabel(endDate, logs, prayers, habitKeys);
-    final strongestPrayer = logs.isEmpty
+    final bestDayLabel = _bestDayLabel(endDate, weekLogs, prayers, habitKeys);
+    final strongestPrayer = weekLogs.isEmpty
         ? 'Mulai hari ini'
         : _strongestPrayerLabel(rates);
-    final weakestPrayer = logs.isEmpty
+    final weakestPrayer = weekLogs.isEmpty
         ? 'Pilih satu ibadah'
         : _weakestPrayerLabel(rates);
-    final smartInsightMessage = logs.isEmpty
+    final smartInsightMessage = weekLogs.isEmpty
         ? 'Mulai dari satu checklist hari ini untuk membangun ritme ibadah.'
         : currentStreakDays > 0
         ? 'MasyaAllah, kamu sedang menjaga streak $currentStreakDays hari.'
         : 'Belum ada streak aktif. Mulai lagi dari checklist hari ini.';
-    final smartInsightAction = logs.isEmpty
+    final smartInsightAction = weekLogs.isEmpty
         ? 'Pilih satu ibadah ringan, lalu tandai setelah selesai.'
         : 'Fokus kecil berikutnya: kuatkan $weakestPrayer agar pekan ini lebih seimbang.';
 
@@ -92,14 +114,18 @@ class GetWeeklyStats {
     List<String> prayers,
     List<String> habitKeys,
   ) {
-    var streak = 0;
-    for (var index = 0; index < 14; index++) {
-      final date = _dateOnly(endDate.subtract(Duration(days: index)));
+    bool isComplete(int daysAgo) {
+      final date = _dateOnly(endDate.subtract(Duration(days: daysAgo)));
       final log = logsByDate[_dateKey(date)];
-      if (log == null) break;
+      return log != null && _completedCount(log, prayers, habitKeys) >= 3;
+    }
 
-      final completedCount = _completedCount(log, prayers, habitKeys);
-      if (completedCount < 3) break;
+    // Today still counts as "in progress": until it is complete, the streak
+    // is counted from yesterday instead of dropping to 0 every morning.
+    final start = isComplete(0) ? 0 : 1;
+    var streak = 0;
+    for (var index = start; index < 14; index++) {
+      if (!isComplete(index)) break;
       streak++;
     }
     return streak;

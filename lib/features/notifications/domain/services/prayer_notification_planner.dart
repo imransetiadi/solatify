@@ -2,6 +2,60 @@ import 'package:solatify/features/notifications/domain/entities/prayer_notificat
 import 'package:solatify/features/notifications/domain/entities/prayer_notification_sync_plan.dart';
 import 'package:solatify/features/settings/domain/entities/settings_state.dart';
 
+/// Number of days (today included) scheduled ahead, so prayers keep firing
+/// even if the app is not opened for several days. 6 days × 5 prayers × 2
+/// (adhan + reminder) = 60, under iOS's limit of 64 pending notifications.
+const int prayerNotificationHorizonDays = 6;
+
+const List<String> prayerNotificationKeys = [
+  'subuh',
+  'dzuhur',
+  'ashar',
+  'magrib',
+  'isya',
+];
+
+/// Adhan IDs: today is 1001–1005, tomorrow 1011–1015, and so on.
+int adhanNotificationId(int dayIndex, int prayerIndex) =>
+    1000 + dayIndex * 10 + prayerIndex + 1;
+
+/// Reminder IDs: today is 5001–5005, tomorrow 5011–5015, and so on.
+int reminderNotificationId(int dayIndex, int prayerIndex) =>
+    5000 + dayIndex * 10 + prayerIndex + 1;
+
+/// IDs used by earlier versions (tomorrow's Subuh and the reminders). They
+/// must still be cancelled so alarms scheduled by an old build stop firing.
+const Set<int> _legacyPrayerNotificationIds = {
+  2001,
+  3001,
+  3002,
+  3003,
+  3004,
+  3005,
+  4001,
+};
+
+/// Every notification ID this app may have scheduled for prayers.
+final Set<int> managedPrayerNotificationIds = {
+  for (var day = 0; day < prayerNotificationHorizonDays; day++)
+    for (var prayer = 0; prayer < prayerNotificationKeys.length; prayer++) ...[
+      adhanNotificationId(day, prayer),
+      reminderNotificationId(day, prayer),
+    ],
+  ..._legacyPrayerNotificationIds,
+};
+
+/// Marks the managed IDs that are still pending on the platform as
+/// "scheduled, contents unknown", so the next sync plan cancels whatever is
+/// not wanted any more and reschedules the rest. Used for a full sync (app
+/// start, resume, settings change) because the platform may hold alarms the
+/// in-memory state does not know about. Only pending IDs are included, so
+/// notifications already shown in the tray are not dismissed.
+Map<int, String> unknownActivePrayerNotifications(Iterable<int> pendingIds) => {
+  for (final id in pendingIds)
+    if (managedPrayerNotificationIds.contains(id)) id: '',
+};
+
 String buildPrayerNotificationKey({
   required String prayerKey,
   required DateTime prayerTime,
@@ -13,47 +67,41 @@ String buildPrayerNotificationKey({
   return '${kind}_${prayerKey}_${prayerTime.toIso8601String()}_${targetTime.toIso8601String()}';
 }
 
+/// Requests for every enabled prayer still ahead of [now], for [today],
+/// [tomorrow] and any [laterDays], capped at [prayerNotificationHorizonDays].
 List<PrayerNotificationRequest> buildPrayerNotificationRequests({
   required Map<String, DateTime?> today,
   required Map<String, DateTime?> tomorrow,
   required DateTime now,
+  List<Map<String, DateTime?>> laterDays = const [],
   Map<String, bool> enabledPrayerNotifications =
       SettingsState.defaultEnabledPrayerNotifications,
   int preNotificationMinutes = SettingsState.defaultPreNotificationMinutes,
 }) {
-  const prayerKeys = ['subuh', 'dzuhur', 'ashar', 'magrib', 'isya'];
+  final days = [
+    today,
+    tomorrow,
+    ...laterDays,
+  ].take(prayerNotificationHorizonDays).toList(growable: false);
   final requests = <PrayerNotificationRequest>[];
 
-  for (var index = 0; index < prayerKeys.length; index++) {
-    final key = prayerKeys[index];
-    if (enabledPrayerNotifications[key] == false) continue;
-    final prayerTime = today[key];
-    if (prayerTime != null && prayerTime.isAfter(now)) {
+  for (var day = 0; day < days.length; day++) {
+    for (var prayer = 0; prayer < prayerNotificationKeys.length; prayer++) {
+      final key = prayerNotificationKeys[prayer];
+      if (enabledPrayerNotifications[key] == false) continue;
+      final prayerTime = days[day][key];
+      if (prayerTime == null || !prayerTime.isAfter(now)) continue;
+
       _addPrayerNotificationRequests(
         requests: requests,
         prayerKey: key,
         prayerTime: prayerTime,
         now: now,
-        notificationId: 1001 + index,
-        reminderNotificationId: 3001 + index,
+        notificationId: adhanNotificationId(day, prayer),
+        reminderNotificationId: reminderNotificationId(day, prayer),
         preNotificationMinutes: preNotificationMinutes,
       );
     }
-  }
-
-  final tomorrowSubuh = tomorrow['subuh'];
-  if (enabledPrayerNotifications['subuh'] != false &&
-      tomorrowSubuh != null &&
-      tomorrowSubuh.isAfter(now)) {
-    _addPrayerNotificationRequests(
-      requests: requests,
-      prayerKey: 'subuh',
-      prayerTime: tomorrowSubuh,
-      now: now,
-      notificationId: 2001,
-      reminderNotificationId: 4001,
-      preNotificationMinutes: preNotificationMinutes,
-    );
   }
 
   return requests;

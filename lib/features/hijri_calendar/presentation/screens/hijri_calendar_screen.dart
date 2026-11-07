@@ -99,6 +99,16 @@ class HijriCalendarScreen extends ConsumerWidget {
               ),
             ],
           ),
+          const SizedBox(height: 4),
+          Text(
+            l.isEnglish
+                ? 'Dates follow the Umm al-Qura calendar and may differ by a day from the official announcement.'
+                : 'Tanggal mengikuti kalender Umm al-Qura dan bisa berbeda 1 hari dari penetapan resmi pemerintah.',
+            style: TextStyle(
+              fontSize: 12,
+              color: SolatifyColors.muted(context),
+            ),
+          ),
           const SizedBox(height: SolatifySpacing.md),
           Expanded(
             child: eventsAsync.when(

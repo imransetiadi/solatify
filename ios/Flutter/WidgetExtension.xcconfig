@@ -1,0 +1,6 @@
+// Base configuration for SolatifyPrayerWidgetExtension.
+// Only pulls in Flutter's generated version values (FLUTTER_BUILD_NAME /
+// FLUTTER_BUILD_NUMBER). It deliberately does NOT include the Pods-Runner
+// xcconfig: the widget uses no Flutter plugins, and inheriting Runner's
+// OTHER_LDFLAGS would link every plugin framework into the extension.
+#include "Generated.xcconfig"

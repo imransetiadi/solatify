@@ -257,4 +257,46 @@ void main() {
     expect(searchIcon.color, AppTheme.redAccentDark);
     expect(tester.takeException(), isNull);
   });
+
+  group('Quran audio URL', () {
+    test(
+      'prefers a live secondary URL over the dead alquran.cloud primary',
+      () {
+        final verse = Verse.fromJson({
+          'number': {'inSurah': 1},
+          'text': {'arab': 'x'},
+          'audio': {
+            'primary':
+                'https://cdn.alquran.cloud/media/audio/ayah/ar.alafasy/1',
+            'secondary': [
+              'https://cdn.islamic.network/quran/audio/128/ar.alafasy/1.mp3',
+            ],
+          },
+        });
+
+        expect(
+          verse.audioUrl,
+          'https://cdn.islamic.network/quran/audio/128/ar.alafasy/1.mp3',
+        );
+      },
+    );
+
+    test('repairs dead-host URLs read back from an older cache', () {
+      final verse = Verse.fromJson({
+        'number': 1,
+        'arabic': 'x',
+        'audioUrl': 'https://cdn.alquran.cloud/media/audio/ayah/ar.alafasy/262',
+      });
+
+      expect(
+        verse.audioUrl,
+        'https://cdn.islamic.network/quran/audio/128/ar.alafasy/262.mp3',
+      );
+    });
+
+    test('leaves other hosts untouched', () {
+      const url = 'https://example.com/audio/1.mp3';
+      expect(Verse.normalizeQuranAudioUrl(url), url);
+    });
+  });
 }

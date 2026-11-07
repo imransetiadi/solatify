@@ -67,7 +67,7 @@ void main() {
           prayers: {'subuh': true, 'dzuhur': true},
         ),
         PrayerLogEntity(
-          date: DateTime.now(),
+          date: DateTime.now().subtract(const Duration(days: 1)),
           prayers: {'subuh': true, 'dzuhur': false},
         ),
       ];
@@ -79,6 +79,71 @@ void main() {
       expect(stats.totalDone, 3);
       expect(stats.statusCounts[PrayerStatus.onTime], 3);
       expect(stats.statusCounts[PrayerStatus.late], 0);
+    });
+
+    test('days without a log count as missed in weekly rates', () async {
+      final today = DateTime(2026, 6, 18);
+      repository.mockLogs = [
+        PrayerLogEntity(
+          date: today.subtract(const Duration(days: 3)),
+          prayers: {'subuh': true},
+        ),
+        PrayerLogEntity(date: today, prayers: {'subuh': true}),
+      ];
+
+      final stats = await useCase.execute(today);
+
+      // 4 days since tracking started, Subuh done on 2 of them.
+      expect(stats.completionRates['subuh'], 50.0);
+    });
+
+    test('logs older than 7 days only feed the heatmap and streak', () async {
+      final today = DateTime(2026, 6, 18);
+      repository.mockLogs = [
+        PrayerLogEntity(
+          date: today.subtract(const Duration(days: 10)),
+          prayers: {'subuh': true},
+        ),
+      ];
+
+      final stats = await useCase.execute(today);
+
+      expect(stats.totalDone, 0);
+      expect(stats.completionRates['subuh'], 0.0);
+      expect(stats.heatmap[10].progress, greaterThan(0));
+    });
+
+    test('streak counts from yesterday while today is incomplete', () async {
+      final today = DateTime(2026, 6, 18);
+      PrayerLogEntity fullDay(int daysAgo) => PrayerLogEntity(
+        date: today.subtract(Duration(days: daysAgo)),
+        prayers: {'subuh': true, 'dzuhur': true, 'ashar': true},
+      );
+      repository.mockLogs = [
+        PrayerLogEntity(date: today, prayers: {'subuh': true}),
+        fullDay(1),
+        fullDay(2),
+        fullDay(3),
+      ];
+
+      final stats = await useCase.execute(today);
+
+      expect(stats.currentStreakDays, 3);
+    });
+
+    test('streak can exceed 7 days', () async {
+      final today = DateTime(2026, 6, 18);
+      repository.mockLogs = [
+        for (var i = 0; i < 10; i++)
+          PrayerLogEntity(
+            date: today.subtract(Duration(days: i)),
+            prayers: {'subuh': true, 'dzuhur': true, 'ashar': true},
+          ),
+      ];
+
+      final stats = await useCase.execute(today);
+
+      expect(stats.currentStreakDays, 10);
     });
 
     test('should calculate weekly status counts', () async {

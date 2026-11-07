@@ -11,6 +11,7 @@ object PrayerWidgetStore {
     private const val COUNTDOWN_LABEL = "countdownLabel"
     private const val LOCATION_LABEL = "locationLabel"
     private const val HIJRI_LABEL = "hijriLabel"
+    private const val SCHEDULE = "schedule"
 
     fun save(context: Context, data: Map<String, String>) {
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -20,6 +21,7 @@ object PrayerWidgetStore {
             .putString(COUNTDOWN_LABEL, data[COUNTDOWN_LABEL] ?: "--:--")
             .putString(LOCATION_LABEL, data[LOCATION_LABEL] ?: "Solatify")
             .putString(HIJRI_LABEL, data[HIJRI_LABEL] ?: "Jadwal salat")
+            .putString(SCHEDULE, data[SCHEDULE] ?: "")
             .apply()
     }
 
@@ -31,6 +33,7 @@ object PrayerWidgetStore {
             countdownLabel = prefs.getString(COUNTDOWN_LABEL, "--:--") ?: "--:--",
             locationLabel = prefs.getString(LOCATION_LABEL, "Solatify") ?: "Solatify",
             hijriLabel = prefs.getString(HIJRI_LABEL, "Jadwal salat") ?: "Jadwal salat",
+            slots = PrayerSlot.parse(prefs.getString(SCHEDULE, "")),
         )
     }
 
@@ -48,4 +51,26 @@ data class PrayerWidgetData(
     val countdownLabel: String,
     val locationLabel: String,
     val hijriLabel: String,
-)
+    val slots: List<PrayerSlot>,
+) {
+    /** The first prayer after [nowMillis], or null once the schedule ran out. */
+    fun nextSlot(nowMillis: Long): PrayerSlot? = slots.firstOrNull { it.epochMillis > nowMillis }
+}
+
+/** One prayer synced by the app: `name|epochMillis|HH:mm`, entries joined by `;`. */
+data class PrayerSlot(
+    val name: String,
+    val epochMillis: Long,
+    val timeLabel: String,
+) {
+    companion object {
+        fun parse(raw: String?): List<PrayerSlot> {
+            if (raw.isNullOrEmpty()) return emptyList()
+            return raw.split(";").mapNotNull { entry ->
+                val parts = entry.split("|")
+                val millis = parts.getOrNull(1)?.toLongOrNull()
+                if (parts.size != 3 || millis == null) null else PrayerSlot(parts[0], millis, parts[2])
+            }.sortedBy { it.epochMillis }
+        }
+    }
+}

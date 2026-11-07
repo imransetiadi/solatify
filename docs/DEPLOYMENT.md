@@ -33,6 +33,20 @@ keytool -genkey -v -keystore ~/solatify.jks \
 # Store password dengan aman
 ```
 
+Lalu buat `android/key.properties` (sudah di-ignore oleh git):
+
+```properties
+storeFile=/Users/<nama>/solatify.jks
+storePassword=<password keystore>
+keyAlias=solatify-key
+keyPassword=<password key>
+```
+
+`android/app/build.gradle.kts` otomatis memakai file ini untuk build release.
+Tanpa file ini, build release ditandatangani dengan debug key (hanya untuk
+uji coba lokal; Play Console akan menolaknya) dan Gradle menampilkan
+peringatan.
+
 ### iOS Code Signing
 
 1. Buka Xcode project

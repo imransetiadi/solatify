@@ -608,7 +608,14 @@ class LocationService {
             placemark.subAdministrativeArea ??
             placemark.administrativeArea ??
             'Unknown City';
-        final country = placemark.country ?? 'Unknown Country';
+        final countryName = placemark.country ?? 'Unknown Country';
+        final province = placemark.administrativeArea;
+        // Same "Province, Country" shape as the built-in cities, so the
+        // province can be used to pick the right Indonesian timezone.
+        final country =
+            province != null && province.isNotEmpty && province != city
+            ? '$province, $countryName'
+            : countryName;
         return {'city': city, 'country': country};
       }
     } catch (_) {

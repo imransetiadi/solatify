@@ -67,7 +67,7 @@ void main() {
         1003,
         1004,
         1005,
-        2001,
+        1011,
       ]);
       expect(requests.map((request) => request.prayerTime), [
         today['subuh'],
@@ -128,7 +128,7 @@ void main() {
       expect(requests, hasLength(1));
       expect(requests.single.prayerKey, 'subuh');
       expect(requests.single.prayerTime, DateTime(2026, 6, 17, 4, 31));
-      expect(requests.single.notificationId, 2001);
+      expect(requests.single.notificationId, 1011);
     });
 
     test('skips null or missing prayer entries safely', () {
@@ -184,7 +184,7 @@ void main() {
       expect(requests.map((request) => request.notificationId), [
         1003,
         1005,
-        2001,
+        1011,
       ]);
     });
 
@@ -209,7 +209,7 @@ void main() {
       );
 
       final dzuhurReminder = requests.firstWhere(
-        (request) => request.notificationId == 3002,
+        (request) => request.notificationId == 5002,
       );
       final dzuhurAdhan = requests.firstWhere(
         (request) => request.notificationId == 1002,
@@ -219,9 +219,63 @@ void main() {
       expect(dzuhurReminder.notificationTime, DateTime(2026, 6, 16, 11, 50));
       expect(dzuhurReminder.prayerTime, dzuhurAdhan.prayerTime);
     });
+    test('schedules several days ahead so prayers keep firing', () {
+      final now = DateTime(2026, 6, 16, 3);
+      Map<String, DateTime?> dayOf(int day) => {
+        for (final (i, key) in prayerNotificationKeys.indexed)
+          key: DateTime(2026, 6, day, 5 + i * 3),
+      };
+
+      final requests = buildPrayerNotificationRequests(
+        today: dayOf(16),
+        tomorrow: dayOf(17),
+        laterDays: [dayOf(18), dayOf(19), dayOf(20), dayOf(21), dayOf(22)],
+        now: now,
+        preNotificationMinutes: 10,
+      );
+
+      // Capped at the horizon (6 days), with an adhan and a reminder each.
+      expect(requests, hasLength(prayerNotificationHorizonDays * 5 * 2));
+      expect(requests.length, lessThanOrEqualTo(64)); // iOS pending limit
+      expect(requests.last.prayerTime, DateTime(2026, 6, 21, 17));
+      expect(requests.map((r) => r.notificationId).toSet(), hasLength(60));
+    });
   });
 
   group('buildPrayerNotificationSyncPlan', () {
+    test('a full sync cancels pending alarms for prayers turned off', () {
+      final magrib = DateTime(2026, 6, 16, 18);
+      // Platform still holds Ashar (1003) and Magrib (1004); Ashar was
+      // turned off in Settings, so only Magrib is requested now.
+      final plan = buildPrayerNotificationSyncPlan(
+        activeKeysById: unknownActivePrayerNotifications([1003, 1004]),
+        requests: [
+          PrayerNotificationRequest(
+            prayerKey: 'magrib',
+            prayerTime: magrib,
+            notificationTime: magrib,
+            notificationId: 1004,
+          ),
+        ],
+      );
+
+      expect(plan.notificationIdsToCancel, [1003, 1004]);
+      expect(plan.requestsToSchedule.single.notificationId, 1004);
+    });
+
+    test('a full sync also cancels IDs left by older versions', () {
+      final plan = buildPrayerNotificationSyncPlan(
+        activeKeysById: unknownActivePrayerNotifications([2001, 3002, 4001]),
+        requests: const [],
+      );
+
+      expect(plan.notificationIdsToCancel, [2001, 3002, 4001]);
+    });
+
+    test('a full sync ignores IDs that are not prayer notifications', () {
+      expect(unknownActivePrayerNotifications([42, 99999]), isEmpty);
+    });
+
     test(
       'skips scheduling and cancellation when request keys are unchanged',
       () {

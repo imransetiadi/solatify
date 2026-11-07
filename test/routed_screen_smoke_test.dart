@@ -72,23 +72,23 @@ void main() {
       'lib/features/qibla/presentation/providers/qibla_heading_provider.dart',
     ).readAsStringSync();
     final qiblaAdapter = File(
-      'lib/features/qibla/data/repositories/flutter_compass_qibla_heading_repository.dart',
+      'lib/features/qibla/data/repositories/native_compass_qibla_heading_repository.dart',
     ).readAsStringSync();
 
     expect(
       qiblaScreen,
       isNot(
-        contains("import 'package:flutter_compass_v2/flutter_compass_v2.dart';"),
+        contains(
+          "import 'package:flutter_compass_v2/flutter_compass_v2.dart';",
+        ),
       ),
     );
     expect(qiblaScreen, isNot(contains('FlutterCompass.events')));
     expect(qiblaScreen, contains('qiblaHeadingProvider'));
     expect(qiblaProvider, contains('qiblaHeadingRepositoryProvider'));
-    expect(
-      qiblaAdapter,
-      contains("import 'package:flutter_compass_v2/flutter_compass_v2.dart';"),
-    );
-    expect(qiblaAdapter, contains('FlutterCompass.events'));
+    // The compass comes from the app's own native channel, not a plugin.
+    expect(qiblaAdapter, contains("EventChannel('solatify/compass')"));
+    expect(qiblaProvider, contains('StreamProvider.autoDispose'));
   });
 
   testWidgets('Dark mode key routed screens render without contrast errors', (

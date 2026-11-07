@@ -66,17 +66,24 @@ class PrayerCalculationService {
   }
 
   static CalculationParameters getParameters(String methodName) {
+    // Settings stores the short keys ('MWL', 'ISNA', 'Makkah', 'Singapore');
+    // the long names are kept as aliases for older stored values.
     switch (methodName) {
+      case 'MWL':
       case 'MuslimWorldLeague':
         return CalculationMethod.muslim_world_league.getParameters();
       case 'Egypt':
         return CalculationMethod.egyptian.getParameters();
       case 'Karachi':
         return CalculationMethod.karachi.getParameters();
+      case 'Makkah':
       case 'UmmAlQura':
         return CalculationMethod.umm_al_qura.getParameters();
+      case 'ISNA':
       case 'NorthAmerica':
         return CalculationMethod.north_america.getParameters();
+      case 'Singapore':
+        return CalculationMethod.singapore.getParameters();
       case 'Dubai':
         return CalculationMethod.dubai.getParameters();
       case 'Kemenag':

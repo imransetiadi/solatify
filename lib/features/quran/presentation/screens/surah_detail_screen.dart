@@ -158,6 +158,24 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
     final audioState = ref.watch(quranAudioProvider);
     final readerPreferences = ref.watch(quranReaderPreferencesProvider);
 
+    ref.listen<int>(quranAudioProvider.select((state) => state.failureCount), (
+      previous,
+      next,
+    ) {
+      if (previous == null || next <= previous) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(
+              _l.isEnglish
+                  ? 'Audio could not be played. Check your connection and try again.'
+                  : 'Audio tidak dapat diputar. Periksa koneksi lalu coba lagi.',
+            ),
+          ),
+        );
+    });
+
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: readerPreferences.focusMode ? 48 : null,
@@ -823,6 +841,7 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
                                 .read(quranAudioProvider.notifier)
                                 .playVerse(
                                   surahNumber: surah.number,
+                                  surahName: surah.name,
                                   verseNumber: verse.number,
                                   audioUrl: verse.audioUrl,
                                 );

@@ -96,7 +96,8 @@ const Map<String, String> _translations = {
   'Ya Allah, aku meminta petunjuk.': 'O Allah, I ask You for guidance.',
 
   // Hijri events
-  'Hari Asyura (10 Muharram)': 'Day of Ashura (10 Muharram)',
+  // Keys must match the event data exactly (hijri_calendar_local_data_source).
+  'Asyura (10 Muharram)': 'Ashura (10 Muharram)',
   'Maulid Nabi Muhammad (12 Rabiul Awal)':
       'Birth of Prophet Muhammad (12 Rabi al-Awwal)',
   'Bulan Ramadhan': 'Month of Ramadan',
@@ -105,8 +106,8 @@ const Map<String, String> _translations = {
   'Tahun Baru Hijriah (1 Muharram)': 'Hijri New Year (1 Muharram)',
   'Isra dan Miraj (27 Rajab)': 'Isra and Mi\'raj (27 Rajab)',
   'Lailatul Qadr (27 Ramadhan)': 'Laylat al-Qadr (27 Ramadan)',
-  'Nabi Musa dan pengikutnya diselamatkan dari Firaun pada hari ini.':
-      'Prophet Musa and his followers were saved from Pharaoh on this day.',
+  'Hari ke-10 Muharram adalah hari bersejarah dalam Islam. Musa as. dan pengikutnya diselamatkan dari Firaun pada hari ini.':
+      'The 10th of Muharram is a historic day in Islam: Prophet Musa and his followers were saved from Pharaoh on this day.',
   'Perayaan kelahiran Nabi Muhammad SAW, didahului dengan ceramah-ceramah Islami dan sholawat.':
       'Commemoration of Prophet Muhammad\'s birth, often marked with Islamic talks and salawat.',
   'Bulan suci Ramadhan, bulan puasa dan ibadah yang sangat utama dalam Islam.':

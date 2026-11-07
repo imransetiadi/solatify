@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:solatify/features/prayer_schedule/data/datasources/prayer_times_local_data_source.dart';
 import 'package:solatify/features/prayer_schedule/data/repositories/prayer_times_repository_impl.dart';
@@ -9,6 +10,7 @@ import 'package:solatify/features/prayer_schedule/domain/entities/prayer_times_s
 import 'package:solatify/features/prayer_schedule/domain/repositories/prayer_times_repository.dart';
 import 'package:solatify/features/prayer_schedule/domain/usecases/calculate_prayer_times.dart';
 import 'package:solatify/features/settings/domain/entities/settings_state.dart';
+import 'package:timezone/timezone.dart' as tz;
 
 import '../../settings/presentation/providers/settings_provider.dart';
 import 'location_provider.dart';
@@ -80,18 +82,33 @@ class PrayerTimesNotifier extends StateNotifier<PrayerTimesStateEntity> {
         offsets: settings.prayerOffsets,
       );
 
+      if (!mounted) return;
       state = newState;
       _scheduleDateRefresh();
     } catch (e) {
-      // Keep previous state if recalculation fails
+      // Keep the previous schedule; the next resume or tick retries.
+      debugPrint('Prayer time recalculation failed: $e');
+    }
+  }
+
+  /// Recalculates when the stored schedule no longer describes "today" at the
+  /// prayer location. Called on app resume and when the countdown runs past
+  /// tomorrow's Subuh, because Dart timers can be delayed while the device
+  /// sleeps and the midnight rollover may not have fired.
+  Future<void> refreshIfStale() async {
+    if (isPrayerScheduleStale(state.todayTimes, DateTime.now())) {
+      await _recalculate();
     }
   }
 
   void _scheduleDateRefresh() {
     _dateRefreshTimer?.cancel();
-    final now = DateTime.now();
-    final nextRefresh = DateTime(now.year, now.month, now.day + 1, 0, 1);
-    _dateRefreshTimer = Timer(nextRefresh.difference(now), _recalculate);
+    final nextRefresh = nextScheduleRefresh(state.todayTimes, DateTime.now());
+    final delay = nextRefresh.difference(DateTime.now());
+    _dateRefreshTimer = Timer(
+      delay.isNegative ? Duration.zero : delay,
+      _recalculate,
+    );
   }
 
   @override
@@ -101,6 +118,36 @@ class PrayerTimesNotifier extends StateNotifier<PrayerTimesStateEntity> {
     _settingsSubscription?.close();
     super.dispose();
   }
+}
+
+/// True when [todayTimes] is missing or is for a different calendar day than
+/// [now] at the prayer location (times are `TZDateTime`s in that location).
+bool isPrayerScheduleStale(Map<String, DateTime> todayTimes, DateTime now) {
+  final subuh = todayTimes['subuh'];
+  if (subuh == null) return true;
+  final localNow = subuh is tz.TZDateTime
+      ? tz.TZDateTime.from(now, subuh.location)
+      : now;
+  return localNow.year != subuh.year ||
+      localNow.month != subuh.month ||
+      localNow.day != subuh.day;
+}
+
+/// 00:01 of the next day at the prayer location — not the device's midnight,
+/// which can be hours off when the selected city is in another timezone.
+DateTime nextScheduleRefresh(Map<String, DateTime> todayTimes, DateTime now) {
+  final subuh = todayTimes['subuh'];
+  if (subuh is tz.TZDateTime) {
+    return tz.TZDateTime(
+      subuh.location,
+      subuh.year,
+      subuh.month,
+      subuh.day + 1,
+      0,
+      1,
+    );
+  }
+  return DateTime(now.year, now.month, now.day + 1, 0, 1);
 }
 
 final prayerTimesProvider =

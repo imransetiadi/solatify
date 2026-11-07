@@ -18,6 +18,62 @@ class MosqueItem {
   final double longitude;
   final double distanceInMeters;
   final String sourceType;
+
+  /// Returns a copy with the distance recomputed from a new origin.
+  MosqueItem withDistanceFrom(double originLatitude, double originLongitude) {
+    return MosqueItem(
+      id: id,
+      name: name,
+      address: address,
+      latitude: latitude,
+      longitude: longitude,
+      distanceInMeters: calculateMosqueDistance(
+        originLatitude,
+        originLongitude,
+        latitude,
+        longitude,
+      ),
+      sourceType: sourceType,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'address': address,
+    'latitude': latitude,
+    'longitude': longitude,
+    'sourceType': sourceType,
+  };
+
+  /// Returns null when the stored map is malformed.
+  static MosqueItem? fromJson(
+    Map<dynamic, dynamic> json, {
+    required double originLatitude,
+    required double originLongitude,
+  }) {
+    final id = json['id'];
+    final name = json['name'];
+    final latitude = json['latitude'];
+    final longitude = json['longitude'];
+    if (id is! String || name is! String) return null;
+    if (latitude is! num || longitude is! num) return null;
+
+    return MosqueItem(
+      id: id,
+      name: name,
+      address: json['address']?.toString() ?? 'Alamat tidak diketahui',
+      latitude: latitude.toDouble(),
+      longitude: longitude.toDouble(),
+      distanceInMeters: calculateMosqueDistance(
+        originLatitude,
+        originLongitude,
+        latitude.toDouble(),
+        longitude.toDouble(),
+      ),
+      sourceType: json['sourceType']?.toString() ?? 'NODE',
+    );
+  }
 }
 
 enum MosqueMapPlatform { android, ios }
@@ -27,8 +83,10 @@ String buildMosqueOverpassQuery({
   required double latitude,
   required double longitude,
 }) {
+  // Public Overpass servers are often slow under load; give the server enough
+  // time to answer instead of aborting the query early.
   return '''
-[out:json][timeout:12];
+[out:json][timeout:25];
 (
   node["amenity"="mosque"](around:$radiusMeters,$latitude,$longitude);
   way["amenity"="mosque"](around:$radiusMeters,$latitude,$longitude);

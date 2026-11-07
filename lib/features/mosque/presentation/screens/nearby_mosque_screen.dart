@@ -16,6 +16,7 @@ import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
 import 'package:solatify/core/widgets/solatify_design_tokens.dart';
 import 'package:solatify/core/widgets/solatify_state_view.dart';
+import 'package:solatify/features/mosque/data/mosque_local_data_source.dart';
 import 'package:solatify/features/mosque/data/mosque_search_utils.dart';
 import 'package:solatify/features/prayer_schedule/presentation/location_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -36,13 +37,21 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen>
     with WidgetsBindingObserver {
   static const _searchRadiusMeters = 5000;
   static const _fallbackRadiusMeters = [5000, 2500];
-  static const _requestTimeout = Duration(seconds: 12);
+  // Public Overpass servers can take ~30s under load. Slightly above the
+  // query's server-side [timeout:25] so the server can answer first.
+  static const _requestTimeout = Duration(seconds: 30);
   static const _overpassEndpoints = [
     'https://overpass-api.de/api/interpreter',
-    'https://overpass.kumi.systems/api/interpreter',
-    'https://overpass.openstreetmap.ru/api/interpreter',
+    'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+    'https://overpass.private.coffee/api/interpreter',
   ];
+  static const _serverBusyMessage =
+      'Server peta sedang sibuk atau lambat merespons. Coba lagi beberapa saat lagi.';
+  static const _searchFailedMessage =
+      'Terjadi kendala saat mencari masjid terdekat. Silakan coba lagi.';
   static final Map<String, List<MosqueItem>> _mosqueMemoryCache = {};
+
+  final MosqueLocalDataSource _localDataSource = const MosqueLocalDataSource();
 
   final TextEditingController _searchController = TextEditingController();
   List<MosqueItem> _mosques = const [];
@@ -134,8 +143,14 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen>
           ? _LocationIssue.denied
           : _LocationIssue.none;
 
-      final cachedMosques = _mosqueMemoryCache[cacheKey];
-      if (cachedMosques != null && mounted) {
+      final cachedMosques =
+          _mosqueMemoryCache[cacheKey] ??
+          await _localDataSource.loadLastResultNear(
+            latitude: latitude,
+            longitude: longitude,
+          );
+      if (!mounted) return;
+      if (cachedMosques != null) {
         setState(() {
           _gpsLatitude = latitude;
           _gpsLongitude = longitude;
@@ -146,11 +161,42 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen>
         });
       }
 
-      final mosques = await _fetchMosquesFromOverpass(
-        latitude: latitude,
-        longitude: longitude,
-      );
-      _mosqueMemoryCache[cacheKey] = mosques;
+      final List<MosqueItem> mosques;
+      try {
+        mosques = await _fetchMosquesFromOverpass(
+          latitude: latitude,
+          longitude: longitude,
+        );
+      } catch (error) {
+        debugPrint('Nearby mosque search failed: $error');
+        if (!mounted) return;
+        setState(() {
+          _gpsLatitude = latitude;
+          _gpsLongitude = longitude;
+          _locationStatusMessage = locationStatusMessage;
+          _locationIssue = locationIssue;
+          _isLoading = false;
+          _hasLoaded = true;
+          // Cached results (if any) stay visible; the banner explains why.
+          _errorMessage = _isNetworkError(error)
+              ? _serverBusyMessage
+              : _searchFailedMessage;
+        });
+        return;
+      }
+
+      // An overloaded server can answer "no results" for an area that has
+      // mosques. Keep known results instead of replacing them with nothing.
+      final keepCached =
+          mosques.isEmpty && cachedMosques != null && cachedMosques.isNotEmpty;
+      if (mosques.isNotEmpty) {
+        _mosqueMemoryCache[cacheKey] = mosques;
+        await _localDataSource.saveLastResult(
+          latitude: latitude,
+          longitude: longitude,
+          mosques: mosques,
+        );
+      }
 
       if (!mounted) return;
 
@@ -159,11 +205,12 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen>
         _gpsLongitude = longitude;
         _locationStatusMessage = locationStatusMessage;
         _locationIssue = locationIssue;
-        _mosques = mosques;
+        _mosques = keepCached ? cachedMosques : mosques;
         _isLoading = false;
         _hasLoaded = true;
-        // An empty result is rendered as an empty state, not an error.
-        _errorMessage = null;
+        // A genuinely empty result is rendered as an empty state, not an
+        // error.
+        _errorMessage = keepCached ? _serverBusyMessage : null;
       });
     } catch (error) {
       debugPrint('Nearby mosque search failed: $error');
@@ -172,8 +219,8 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen>
         _isLoading = false;
         _hasLoaded = true;
         _errorMessage = _isNetworkError(error)
-            ? 'Server peta tidak merespons. Periksa koneksi internet lalu coba lagi.'
-            : 'Terjadi kendala saat mencari masjid terdekat. Silakan coba lagi.';
+            ? _serverBusyMessage
+            : _searchFailedMessage;
       });
     }
   }
@@ -261,7 +308,7 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen>
           )
           .toList();
       try {
-        return await _firstSuccess(futures);
+        return await _firstNonEmptyResult(futures);
       } catch (error) {
         lastError = error;
       }
@@ -270,24 +317,40 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen>
     throw lastError ?? 'Semua endpoint Overpass gagal merespons.';
   }
 
-  /// Returns the value of the first future that completes successfully.
-  /// If all futures fail, completes with the last error.
-  Future<T> _firstSuccess<T>(List<Future<T>> futures) {
-    final completer = Completer<T>();
+  /// Completes with the first non-empty result. Overloaded servers sometimes
+  /// answer quickly with an empty list, so an empty answer only wins once
+  /// every other endpoint has finished without data. Fails only when every
+  /// endpoint fails.
+  Future<List<MosqueItem>> _firstNonEmptyResult(
+    List<Future<List<MosqueItem>>> futures,
+  ) {
+    final completer = Completer<List<MosqueItem>>();
     var remaining = futures.length;
+    var anySucceeded = false;
     Object? lastError;
+
+    void settleIfDone() {
+      remaining--;
+      if (remaining > 0 || completer.isCompleted) return;
+      if (anySucceeded) {
+        completer.complete(const []);
+      } else {
+        completer.completeError(lastError ?? 'Semua endpoint gagal.');
+      }
+    }
 
     for (final future in futures) {
       future
-          .then((value) {
-            if (!completer.isCompleted) completer.complete(value);
+          .then((mosques) {
+            anySucceeded = true;
+            if (mosques.isNotEmpty && !completer.isCompleted) {
+              completer.complete(mosques);
+            }
+            settleIfDone();
           })
           .catchError((Object error) {
             lastError = error;
-            remaining--;
-            if (remaining == 0 && !completer.isCompleted) {
-              completer.completeError(lastError ?? 'Semua future gagal.');
-            }
+            settleIfDone();
           });
     }
 
@@ -482,7 +545,7 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen>
                             ? 'Could not refresh'
                             : 'Pembaruan belum berhasil',
                         description: isEnglish
-                            ? 'Showing the last results. Check your connection and try again.'
+                            ? 'The map server is busy. Showing the last results; try again shortly.'
                             : '${_errorMessage!} Menampilkan hasil terakhir.',
                         actionLabel: isEnglish ? 'Try Again' : 'Coba Lagi',
                         onAction: _loadNearbyMosques,
@@ -505,9 +568,9 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen>
                               ? 'Search did not succeed'
                               : 'Pencarian belum berhasil',
                           description: isEnglish
-                              ? 'The map server did not respond. Check your connection and try again.'
+                              ? 'The map server is busy or responding slowly. Please try again shortly.'
                               : _errorMessage!,
-                          icon: Icons.wifi_off_rounded,
+                          icon: Icons.cloud_off_rounded,
                           actionLabel: isEnglish ? 'Try Again' : 'Coba Lagi',
                           onAction: _loadNearbyMosques,
                         ),

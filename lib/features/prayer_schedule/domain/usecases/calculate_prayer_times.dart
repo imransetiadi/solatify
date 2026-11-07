@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '../../data/prayer_calculation_service.dart';
 import '../../data/prayer_timezone_service.dart';
 import '../entities/prayer_times_state_entity.dart';
@@ -42,8 +44,13 @@ class CalculatePrayerTimes {
         offsets: offsets,
       );
 
-      // Save today's calculation to cache asynchronously
-      await repository.cacheSchedule(dateKey, today);
+      // Caching is best-effort: a failed write (box closed, disk full) must
+      // not throw away a schedule that was calculated successfully.
+      try {
+        await repository.cacheSchedule(dateKey, today);
+      } catch (e) {
+        debugPrint('Prayer schedule cache write failed: $e');
+      }
 
       return PrayerTimesStateEntity(
         todayTimes: today,

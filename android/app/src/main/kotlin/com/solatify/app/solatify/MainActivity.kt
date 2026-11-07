@@ -2,6 +2,7 @@ package com.solatify.app.solatify
 
 import com.solatify.app.solatify.notifications.PrayerAlarm
 import com.solatify.app.solatify.notifications.PrayerAlarmScheduler
+import com.solatify.app.solatify.qibla.CompassStreamHandler
 import com.solatify.app.solatify.widget.PrayerWidgetStore
 import android.content.Context
 import android.content.Intent
@@ -9,14 +10,22 @@ import android.net.Uri
 import android.os.Build
 import android.os.PowerManager
 import android.provider.Settings
-import io.flutter.embedding.android.FlutterActivity
+import com.ryanheise.audioservice.AudioServiceActivity
 import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
 
-class MainActivity : FlutterActivity() {
+// AudioServiceActivity (a FlutterActivity) lets just_audio_background keep
+// Quran recitation playing in the background with media controls.
+class MainActivity : AudioServiceActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         val scheduler = PrayerAlarmScheduler(applicationContext)
+
+        EventChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            "solatify/compass",
+        ).setStreamHandler(CompassStreamHandler(applicationContext))
 
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,

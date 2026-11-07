@@ -2,12 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:solatify/core/performance/performance_tuning.dart';
-import 'package:timezone/data/latest_all.dart' as tzdata;
-import 'package:timezone/timezone.dart' as tz;
-
-import '../../../prayer_schedule/data/prayer_timezone_service.dart';
-import '../../../prayer_schedule/presentation/location_provider.dart';
-import '../../../prayer_schedule/presentation/prayer_times_provider.dart';
+import 'package:solatify/features/prayer_schedule/presentation/prayer_times_provider.dart';
 
 class CountdownState {
   factory CountdownState.initial() {
@@ -64,17 +59,17 @@ class CountdownNotifier extends StateNotifier<CountdownState> {
 
     if (!hasAllToday || !hasTomorrowSubuh) return;
 
-    tzdata.initializeTimeZones();
-    final selectedLocation = _ref.read(locationProvider);
-    final timezoneName = PrayerTimezoneService.inferTimezoneName(
-      latitude: selectedLocation.latitude,
-      longitude: selectedLocation.longitude,
-      country: selectedLocation.country,
-    );
-    final prayerLocation = tz.getLocation(timezoneName);
+    // Prayer times are absolute instants (TZDateTime compares by instant), so
+    // the device clock is enough here — no timezone database work per tick.
+    final now = DateTime.now();
 
-    // Get current time in the selected city's timezone, not the device timezone.
-    final now = tz.TZDateTime.now(prayerLocation);
+    // The schedule is out of date (e.g. the app slept past midnight and the
+    // rollover timer was delayed). Ask for a fresh one instead of showing a
+    // negative countdown.
+    if (!now.isBefore(tomorrow['subuh']!)) {
+      _requestFreshSchedule();
+      return;
+    }
 
     // Extract prayer times (already TZDateTime)
     final subuh = today['subuh']!;
@@ -121,7 +116,8 @@ class CountdownNotifier extends StateNotifier<CountdownState> {
       nextTime = esokSubuh; // Tomorrow Fajr
     }
 
-    final diff = nextTime.difference(now);
+    final rawDiff = nextTime.difference(now);
+    final diff = rawDiff.isNegative ? Duration.zero : rawDiff;
 
     // Format duration
     final hours = diff.inHours.toString().padLeft(2, '0');
@@ -137,6 +133,19 @@ class CountdownNotifier extends StateNotifier<CountdownState> {
     );
   }
 
+  DateTime? _lastRefreshRequest;
+
+  void _requestFreshSchedule() {
+    final now = DateTime.now();
+    final last = _lastRefreshRequest;
+    // Throttle: the timer ticks every second while the refresh is running.
+    if (last != null && now.difference(last) < const Duration(seconds: 30)) {
+      return;
+    }
+    _lastRefreshRequest = now;
+    _ref.read(prayerTimesProvider.notifier).refreshIfStale();
+  }
+
   @override
   void dispose() {
     _timer?.cancel();
@@ -144,7 +153,9 @@ class CountdownNotifier extends StateNotifier<CountdownState> {
   }
 }
 
+/// Auto-disposed so the 1-second timer only runs while something on screen
+/// (Home) is listening, instead of ticking app-wide forever.
 final countdownProvider =
-    StateNotifierProvider<CountdownNotifier, CountdownState>((ref) {
+    StateNotifierProvider.autoDispose<CountdownNotifier, CountdownState>((ref) {
       return CountdownNotifier(ref);
     });

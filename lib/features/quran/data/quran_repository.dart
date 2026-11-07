@@ -7,6 +7,10 @@ class QuranRepository {
   QuranRepository({http.Client? client}) : _client = client ?? http.Client();
   final http.Client _client;
 
+  /// Without a timeout a captive portal or weak signal could keep the
+  /// loading spinner up for minutes before the retry button appears.
+  static const Duration _requestTimeout = Duration(seconds: 15);
+
   static const String _baseUrl = 'https://quran-api-id.vercel.app';
 
   /// Fetch the list of 114 Surahs.
@@ -36,7 +40,9 @@ class QuranRepository {
 
     // Otherwise, fetch from API
     try {
-      final response = await _client.get(Uri.parse('$_baseUrl/surah'));
+      final response = await _client
+          .get(Uri.parse('$_baseUrl/surah'))
+          .timeout(_requestTimeout);
       if (response.statusCode == 200) {
         final body = jsonDecode(response.body);
         if (body is! Map<String, dynamic>) {
@@ -88,7 +94,9 @@ class QuranRepository {
   /// Fetch the details (verses) of a specific Surah by number.
   /// Tries loading from local Hive cache first.
   Future<Surah> getSurahDetail(int number) async {
-    final box = HiveService.tryGetBox(HiveService.quranDetailBoxName);
+    final box = await HiveService.openBoxOnDemand(
+      HiveService.quranDetailBoxName,
+    );
     final key = number.toString();
 
     // Check local cache
@@ -106,7 +114,9 @@ class QuranRepository {
 
     // Fetch from API
     try {
-      final response = await _client.get(Uri.parse('$_baseUrl/surah/$number'));
+      final response = await _client
+          .get(Uri.parse('$_baseUrl/surah/$number'))
+          .timeout(_requestTimeout);
       if (response.statusCode == 200) {
         final body = jsonDecode(response.body);
         if (body is! Map<String, dynamic>) {
@@ -128,9 +138,8 @@ class QuranRepository {
         final surah = Surah.fromJson(detailMap);
 
         // Cache detail map locally
-        final cacheBox = HiveService.tryGetBox(HiveService.quranDetailBoxName);
-        if (cacheBox != null) {
-          await cacheBox.put(key, jsonEncode(surah.toJson()));
+        if (box != null) {
+          await box.put(key, jsonEncode(surah.toJson()));
         }
         return surah;
       } else {

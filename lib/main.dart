@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:just_audio_background/just_audio_background.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:solatify/core/database/hive_service.dart';
 import 'package:solatify/core/localization/app_localizations.dart';
@@ -12,6 +13,7 @@ import 'package:solatify/core/navigation/router.dart';
 import 'package:solatify/core/theme/theme.dart';
 import 'package:solatify/features/notifications/data/services/notification_service.dart';
 import 'package:solatify/features/notifications/presentation/providers/notification_scheduler_provider.dart';
+import 'package:solatify/features/prayer_schedule/presentation/prayer_times_provider.dart';
 import 'package:solatify/features/settings/presentation/providers/settings_provider.dart';
 
 void main() {
@@ -55,6 +57,20 @@ void main() {
       } catch (e) {
         debugPrint('Hive init error: $e. Attempting recovery...');
         await HiveService.ensureBoxesOpen();
+      }
+
+      // Background Quran recitation with lock-screen / notification
+      // controls. Must run before the first AudioPlayer is created; if it
+      // fails, recitation still works in the foreground.
+      try {
+        await JustAudioBackground.init(
+          androidNotificationChannelId: 'com.solatify.app.quran_audio',
+          androidNotificationChannelName: 'Murotal Al-Qur\'an',
+          androidNotificationOngoing: true,
+          androidNotificationIcon: 'mipmap/ic_launcher',
+        );
+      } catch (e) {
+        debugPrint('Background audio init error: $e');
       }
 
       runApp(const ProviderScope(child: SolatifyApp()));
@@ -137,13 +153,24 @@ class _SolatifyAppState extends ConsumerState<SolatifyApp>
     if (state == AppLifecycleState.resumed) {
       // Re-ensure Hive boxes are open and stable when app resumes
       _reopenHiveBoxes();
-      _syncAdhanNotificationPermission().then((_) {
-        if (!mounted) return;
-        ref
-            .read(notificationSchedulerProvider.notifier)
-            .refreshSchedules(force: true);
-      });
+      _refreshAfterResume();
     }
+  }
+
+  /// The midnight rollover timer may not have fired while the app was in the
+  /// background, so recalculate a stale schedule before rescheduling
+  /// notifications from it.
+  Future<void> _refreshAfterResume() async {
+    try {
+      await ref.read(prayerTimesProvider.notifier).refreshIfStale();
+    } catch (e) {
+      debugPrint('Error refreshing prayer times on resume: $e');
+    }
+    await _syncAdhanNotificationPermission();
+    if (!mounted) return;
+    await ref
+        .read(notificationSchedulerProvider.notifier)
+        .refreshSchedules(force: true);
   }
 
   Future<void> _reopenHiveBoxes() async {

@@ -165,18 +165,18 @@ class Verse {
     if (audioData is String) {
       aud = audioData;
     } else if (audioData is Map) {
-      aud =
-          audioData['primary'] ??
-          (audioData['secondary'] is List &&
-                  (audioData['secondary'] as List).isNotEmpty
-              ? audioData['secondary'][0]
-              : '') ??
-          audioData.values.firstWhere(
-                (v) => v is String && v.isNotEmpty,
-                orElse: () => '',
-              )
-              as String;
-    } else if (json['audioUrl'] != null) {
+      final secondary = audioData['secondary'];
+      final candidates = <String>[
+        if (audioData['primary'] is String) audioData['primary'] as String,
+        if (secondary is List) ...secondary.whereType<String>(),
+        ...audioData.values.whereType<String>(),
+      ].where((url) => url.isNotEmpty).toList();
+      // Prefer a URL that is not on a known-dead host; fall back to the first.
+      aud = candidates.firstWhere(
+        (url) => !_isDeadAudioHost(url),
+        orElse: () => candidates.isEmpty ? '' : candidates.first,
+      );
+    } else if (json['audioUrl'] is String) {
       aud = json['audioUrl'] as String;
     }
 
@@ -185,9 +185,36 @@ class Verse {
       arabic: ar,
       latin: lat,
       translation: tr,
-      audioUrl: aud,
+      // Also repairs URLs from older caches that point at a dead host.
+      audioUrl: normalizeQuranAudioUrl(aud),
     );
   }
+
+  static const _deadAudioHost = 'cdn.alquran.cloud';
+
+  static bool _isDeadAudioHost(String url) =>
+      Uri.tryParse(url)?.host == _deadAudioHost;
+
+  /// `cdn.alquran.cloud` no longer resolves (no DNS record), so audio from it
+  /// never loads. The same recitations are served by `cdn.islamic.network`
+  /// under the same reciter id and global ayah number:
+  ///   https://cdn.alquran.cloud/media/audio/ayah/ar.alafasy/1
+  ///   -> https://cdn.islamic.network/quran/audio/128/ar.alafasy/1.mp3
+  static String normalizeQuranAudioUrl(String url) {
+    final uri = Uri.tryParse(url);
+    if (uri == null || uri.host != _deadAudioHost) return url;
+
+    final segments = uri.pathSegments;
+    final ayahIndex = segments.indexOf('ayah');
+    if (ayahIndex < 0 || segments.length < ayahIndex + 3) return url;
+
+    final reciter = segments[ayahIndex + 1];
+    final ayahNumber = segments[ayahIndex + 2];
+    if (int.tryParse(ayahNumber) == null) return url;
+
+    return 'https://cdn.islamic.network/quran/audio/128/$reciter/$ayahNumber.mp3';
+  }
+
   final int number;
   final String arabic;
   final String latin;

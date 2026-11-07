@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:solatify/core/database/hive_constants.dart';
 
 class HiveService {
@@ -20,15 +23,28 @@ class HiveService {
 
   static bool get isInitialized => _initialized;
 
+  /// Boxes opened at startup. The Quran surah-detail cache is left out on
+  /// purpose: Hive reads a whole box into memory when it opens, and that
+  /// cache grows with every surah read, so it is opened on first use via
+  /// [openBoxOnDemand] instead of delaying every cold start.
   static final List<String> _allBoxNames = [
     settingsBoxName,
     trackerBoxName,
     locationBoxName,
     scheduleBoxName,
     quranIndexBoxName,
-    quranDetailBoxName,
     quranBookmarksBoxName,
   ];
+
+  /// Opens [name] if needed (with the same recovery as startup boxes) and
+  /// returns it, or null if it cannot be opened.
+  static Future<Box<dynamic>?> openBoxOnDemand(String name) async {
+    if (!_hiveInitialized && !Hive.isBoxOpen(name)) {
+      await ensureBoxesOpen();
+    }
+    await _openBoxSafe(name);
+    return tryGetBox(name);
+  }
 
   static Future<void> ensureBoxesOpen() async {
     try {
@@ -75,23 +91,63 @@ class HiveService {
     await box.put(_manualAdhanNotificationDefaultMigratedKey, true);
   }
 
-  /// Opens a box safely. If the box is corrupted (common after force-close),
-  /// deletes and recreates it.
+  /// Boxes holding data the user created; they are never deleted without a
+  /// backup. The other boxes are caches that can be rebuilt.
+  static const Set<String> _userDataBoxNames = {
+    settingsBoxName,
+    trackerBoxName,
+    locationBoxName,
+    quranBookmarksBoxName,
+  };
+
+  /// Opens a box safely.
+  ///
+  /// Hive already repairs truncated writes on its own, so an error here is
+  /// often transient (e.g. a file lock right after resume). It is retried
+  /// once before recovery. Recovery recreates the box so the app keeps
+  /// working; for user-data boxes the old file is first kept as a
+  /// `.corrupt-<timestamp>` backup instead of being deleted outright.
   static Future<void> _openBoxSafe(String name) async {
     if (Hive.isBoxOpen(name)) return;
 
     try {
       await Hive.openBox<dynamic>(name);
+      return;
     } catch (e) {
-      debugPrint('Error opening box "$name": $e. Attempting recovery...');
-      try {
-        // Delete corrupted box and recreate
-        await Hive.deleteBoxFromDisk(name);
-        await Hive.openBox<dynamic>(name);
-        debugPrint('Box "$name" recovered successfully.');
-      } catch (e2) {
-        debugPrint('Failed to recover box "$name": $e2');
+      debugPrint('Error opening box "$name": $e. Retrying once...');
+    }
+
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    try {
+      await Hive.openBox<dynamic>(name);
+      return;
+    } catch (e) {
+      debugPrint('Box "$name" still cannot be opened: $e. Recovering...');
+    }
+
+    try {
+      if (_userDataBoxNames.contains(name)) {
+        await _backUpBoxFile(name);
       }
+      await Hive.deleteBoxFromDisk(name);
+      await Hive.openBox<dynamic>(name);
+      debugPrint('Box "$name" recreated after recovery.');
+    } catch (e) {
+      debugPrint('Failed to recover box "$name": $e');
+    }
+  }
+
+  static Future<void> _backUpBoxFile(String name) async {
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      final file = File('${directory.path}/$name.hive');
+      if (!await file.exists()) return;
+      final stamp = DateTime.now().millisecondsSinceEpoch;
+      final backup = await file.copy('${file.path}.corrupt-$stamp');
+      debugPrint('Backed up unreadable box "$name" to ${backup.path}');
+    } catch (e) {
+      // A failed backup must not block recovery; the app has to start.
+      debugPrint('Could not back up box "$name": $e');
     }
   }
 

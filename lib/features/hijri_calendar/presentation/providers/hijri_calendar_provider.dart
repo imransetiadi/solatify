@@ -25,22 +25,30 @@ final getHijriEventsUseCaseProvider = Provider<GetHijriEvents>((ref) {
   return GetHijriEvents(repository);
 });
 
-// Presentation State Provider (Asynchronously fetch Events)
-final hijriEventsProvider = FutureProvider<List<HijriEvent>>((ref) async {
+// Presentation State Provider (Asynchronously fetch Events).
+// Auto-disposed so "today" is re-evaluated whenever the screen is reopened,
+// instead of being frozen at the first load.
+final hijriEventsProvider = FutureProvider.autoDispose<List<HijriEvent>>((
+  ref,
+) async {
   final getHijriEvents = ref.watch(getHijriEventsUseCaseProvider);
   return getHijriEvents.execute();
 });
 
-// Derived Provider for upcoming events
-final upcomingHijriEventsProvider = FutureProvider<List<HijriEvent>>((
-  ref,
-) async {
-  final now = DateTime.now();
-  final events = await ref.watch(hijriEventsProvider.future);
+// Derived Provider for upcoming events (today's events included).
+final upcomingHijriEventsProvider =
+    FutureProvider.autoDispose<List<HijriEvent>>((ref) async {
+      final events = await ref.watch(hijriEventsProvider.future);
+      return upcomingHijriEvents(events, DateTime.now());
+    });
 
-  final upcomingEvents =
-      events.where((event) => event.gregorianDate.isAfter(now)).toList()
-        ..sort((a, b) => a.gregorianDate.compareTo(b.gregorianDate));
-
-  return upcomingEvents;
-});
+/// Events on or after [now]'s calendar day, soonest first. Compared by date
+/// only, so an event stays listed for its whole day instead of disappearing
+/// at 00:00.
+List<HijriEvent> upcomingHijriEvents(List<HijriEvent> events, DateTime now) {
+  final today = DateTime(now.year, now.month, now.day);
+  return events.where((event) {
+    final date = event.gregorianDate;
+    return !DateTime(date.year, date.month, date.day).isBefore(today);
+  }).toList()..sort((a, b) => a.gregorianDate.compareTo(b.gregorianDate));
+}

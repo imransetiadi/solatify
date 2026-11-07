@@ -147,4 +147,52 @@ void main() {
     expect(uri.path, '/maps/dir/');
     expect(uri.queryParameters['destination'], '-6.2,106.8');
   });
+
+  test('buildMosqueOverpassQuery allows slow servers enough time', () {
+    final query = buildMosqueOverpassQuery(
+      radiusMeters: 5000,
+      latitude: -6.2,
+      longitude: 106.8,
+    );
+
+    expect(query, contains('[timeout:25]'));
+  });
+
+  test('MosqueItem survives a cache round trip with recomputed distance', () {
+    const original = MosqueItem(
+      id: 'node:1',
+      name: 'Masjid Istiqlal',
+      address: 'Jakarta',
+      latitude: -6.17,
+      longitude: 106.83,
+      distanceInMeters: 0,
+      sourceType: 'NODE',
+    );
+
+    final restored = MosqueItem.fromJson(
+      original.toJson(),
+      originLatitude: -6.2,
+      originLongitude: 106.8,
+    );
+
+    expect(restored, isNotNull);
+    expect(restored!.id, original.id);
+    expect(restored.name, original.name);
+    expect(restored.latitude, original.latitude);
+    expect(
+      restored.distanceInMeters,
+      closeTo(calculateMosqueDistance(-6.2, 106.8, -6.17, 106.83), 0.001),
+    );
+  });
+
+  test('MosqueItem.fromJson rejects malformed cache entries', () {
+    expect(
+      MosqueItem.fromJson(
+        {'id': 'node:1', 'name': 'X', 'latitude': 'bad', 'longitude': 1},
+        originLatitude: 0,
+        originLongitude: 0,
+      ),
+      isNull,
+    );
+  });
 }

@@ -8,6 +8,7 @@ class PrayerWidgetPayload {
     required this.countdownLabel,
     required this.locationLabel,
     required this.hijriLabel,
+    this.schedule = '',
   });
 
   factory PrayerWidgetPayload.empty() {
@@ -26,6 +27,12 @@ class PrayerWidgetPayload {
   final String locationLabel;
   final String hijriLabel;
 
+  /// Upcoming prayers encoded as `name|epochMillis|HH:mm` entries joined by
+  /// `;` (today's five prayers plus tomorrow's Subuh). Native widgets use it
+  /// to pick the next prayer and run their own live countdown, so the app
+  /// does not have to push a new countdown string every second.
+  final String schedule;
+
   Map<String, String> toMap() {
     return {
       'nextPrayerName': nextPrayerName,
@@ -33,6 +40,7 @@ class PrayerWidgetPayload {
       'countdownLabel': countdownLabel,
       'locationLabel': locationLabel,
       'hijriLabel': hijriLabel,
+      'schedule': schedule,
     };
   }
 
@@ -43,7 +51,8 @@ class PrayerWidgetPayload {
         other.nextPrayerTimeLabel == nextPrayerTimeLabel &&
         other.countdownLabel == countdownLabel &&
         other.locationLabel == locationLabel &&
-        other.hijriLabel == hijriLabel;
+        other.hijriLabel == hijriLabel &&
+        other.schedule == schedule;
   }
 
   @override
@@ -53,6 +62,7 @@ class PrayerWidgetPayload {
     countdownLabel,
     locationLabel,
     hijriLabel,
+    schedule,
   );
 }
 
