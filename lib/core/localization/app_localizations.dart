@@ -139,6 +139,11 @@ class AppLocalizations {
   String get adhanSoundMode => isEnglish ? 'Adhan' : 'Adzan';
   String get beepSoundMode => isEnglish ? 'Short beep' : 'Beep pendek';
   String get silentSoundMode => isEnglish ? 'Silent' : 'Senyap';
+  String adhanPlayingTitle(String prayerName) => prayerName.isEmpty
+      ? (isEnglish ? 'Adhan' : 'Adzan')
+      : (isEnglish ? '$prayerName adhan' : 'Adzan $prayerName');
+  String get adhanPlayingStatus => isEnglish ? 'Playing' : 'Sedang diputar';
+  String get stopAdhan => isEnglish ? 'Stop adhan' : 'Hentikan adzan';
   String get notificationPermissionError => isEnglish
       ? 'Notification permission could not be opened.'
       : 'Izin notifikasi belum bisa dibuka.';
