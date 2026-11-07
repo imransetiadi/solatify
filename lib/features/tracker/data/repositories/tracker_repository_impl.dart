@@ -94,8 +94,10 @@ class TrackerRepositoryImpl implements TrackerRepository {
 
   @override
   Future<List<PrayerLogEntity>> getWeeklyLogs(DateTime endDate) async {
+    // 14 days: the heatmap and streak look back two weeks; weekly rates use
+    // the last 7 of them.
     final dateKeys = <String>[];
-    for (int i = 0; i < 7; i++) {
+    for (int i = 0; i < 14; i++) {
       final date = endDate.subtract(Duration(days: i));
       dateKeys.add(_getDateKey(date));
     }
