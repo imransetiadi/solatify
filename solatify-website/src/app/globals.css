@@ -541,7 +541,7 @@ p { letter-spacing: -0.006em; }
 .feature-grid,
 .advantage-grid,
 .faq-grid { display: grid; gap: var(--section-gap); }
-.feature-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.feature-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .step-grid,
 .trust-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--section-gap); }
 .step-card,
@@ -739,6 +739,8 @@ details p { margin: 14px 0 0; }
   .brand { min-width: max-content; }
   .hero { grid-template-columns: minmax(0, 1fr) minmax(280px, 0.74fr); gap: 30px; }
   .feature-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* An odd last card spans the row instead of leaving an empty cell. */
+  .feature-grid > :last-child:nth-child(odd) { grid-column: 1 / -1; }
   .step-grid,
   .trust-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .phone-shell { width: min(318px, 38vw); }
@@ -766,6 +768,7 @@ details p { margin: 14px 0 0; }
   .step-grid,
   .trust-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .screenshot-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .feature-grid > :last-child:nth-child(odd) { grid-column: 1 / -1; }
   .screenshot-card:nth-child(1),
   .screenshot-card:nth-child(5) { grid-column: span 1; }
   .phone-card { min-height: 580px; }
