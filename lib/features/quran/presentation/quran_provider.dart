@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:audio_session/audio_session.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:just_audio_background/just_audio_background.dart';
 import 'package:solatify/core/database/hive_service.dart';
 import 'package:solatify/features/quran/data/quran_repository.dart';
 import 'package:solatify/features/quran/domain/models/quran_models.dart';
@@ -298,6 +299,7 @@ final quranBookmarksProvider =
 class QuranAudioState {
   QuranAudioState({
     this.playingSurah,
+    this.playingSurahName,
     this.playingVerse,
     this.isPlaying = false,
     this.isLoading = false,
@@ -306,6 +308,9 @@ class QuranAudioState {
     this.failureCount = 0,
   });
   final int? playingSurah;
+
+  /// Shown by the mini-player and on the lock screen.
+  final String? playingSurahName;
   final int? playingVerse;
   final bool isPlaying;
   final bool isLoading;
@@ -316,8 +321,12 @@ class QuranAudioState {
   /// failure (e.g. show a snackbar) even when two failures happen in a row.
   final int failureCount;
 
+  /// True while something is loaded (playing or paused).
+  bool get isActive => playingSurah != null;
+
   QuranAudioState copyWith({
     int? playingSurah,
+    String? playingSurahName,
     int? playingVerse,
     bool? isPlaying,
     bool? isLoading,
@@ -327,6 +336,7 @@ class QuranAudioState {
   }) {
     return QuranAudioState(
       playingSurah: playingSurah ?? this.playingSurah,
+      playingSurahName: playingSurahName ?? this.playingSurahName,
       playingVerse: playingVerse ?? this.playingVerse,
       isPlaying: isPlaying ?? this.isPlaying,
       isLoading: isLoading ?? this.isLoading,
@@ -337,50 +347,82 @@ class QuranAudioState {
   }
 }
 
+/// Plays Quran recitation, also in the background.
+///
+/// A whole surah is handed to the native player as one playlist, so verses
+/// keep advancing while the app is in the background and the lock-screen /
+/// notification controls (via just_audio_background) can skip verses. Each
+/// request gets a generation number so an "interrupted" error from a load
+/// that was superseded (e.g. tapping another verse while one is loading) is
+/// ignored instead of stopping the new request.
 class QuranAudioNotifier extends StateNotifier<QuranAudioState> {
   QuranAudioNotifier() : super(QuranAudioState()) {
-    // Listen to player state changes
+    _listenToPlayer();
+  }
+
+  /// For widget tests: holds [initial] without creating a platform player or
+  /// listening to it.
+  @visibleForTesting
+  QuranAudioNotifier.withoutPlayer(super.initial);
+
+  void _listenToPlayer() {
     _playerStateSub = _audioPlayer.playerStateStream.listen((playerState) {
-      if (!mounted) return;
-      final isPlaying = playerState.playing;
+      if (!mounted || !state.isActive) return;
       final processingState = playerState.processingState;
 
       if (processingState == ProcessingState.completed) {
-        _handlePlaybackCompleted();
-      } else {
-        state = state.copyWith(
-          isPlaying: isPlaying,
-          isLoading:
-              processingState == ProcessingState.loading ||
-              processingState == ProcessingState.buffering,
-        );
+        // The whole playlist (or the single verse) has finished.
+        stop();
+        return;
       }
+      state = state.copyWith(
+        isPlaying: playerState.playing,
+        isLoading:
+            processingState == ProcessingState.loading ||
+            processingState == ProcessingState.buffering,
+      );
     });
 
-    // Listen to position stream for progress updates
+    _indexSub = _audioPlayer.currentIndexStream.listen((index) {
+      if (!mounted || !state.isActive) return;
+      if (index == null || index >= _verseNumbers.length) return;
+      state = state.copyWith(
+        playingVerse: _verseNumbers[index],
+        progress: Duration.zero,
+      );
+    });
+
     _positionSub = _audioPlayer.positionStream.listen((position) {
-      if (!mounted) return;
+      if (!mounted || !state.isActive) return;
       state = state.copyWith(progress: position);
     });
 
-    // Listen to duration stream
     _durationSub = _audioPlayer.durationStream.listen((duration) {
-      if (!mounted) return;
-      if (duration != null) {
-        state = state.copyWith(totalDuration: duration);
-      }
+      if (!mounted || duration == null) return;
+      state = state.copyWith(totalDuration: duration);
     });
-  }
-  final AudioPlayer _audioPlayer = AudioPlayer();
-  List<Verse> _playlist = [];
-  int _playlistIndex = 0;
-  int? _surahNumber;
 
-  StreamSubscription<PlayerState>? _playerStateSub;
-  StreamSubscription<Duration>? _positionSub;
-  StreamSubscription<Duration?>? _durationSub;
+    // Errors while a later verse loads (e.g. the network drops mid-surah).
+    _eventSub = _audioPlayer.playbackEventStream.listen(
+      (_) {},
+      onError: (Object error, StackTrace _) {
+        if (mounted && state.isActive) _reportFailure(error);
+      },
+    );
+  }
+
+  AudioPlayer? _player;
+  AudioPlayer get _audioPlayer => _player ??= AudioPlayer();
+  List<int> _verseNumbers = const [];
+  int _generation = 0;
   bool _sessionConfigured = false;
   int _failureCount = 0;
+
+  StreamSubscription<PlayerState>? _playerStateSub;
+  StreamSubscription<int?>? _indexSub;
+  StreamSubscription<Duration>? _positionSub;
+  StreamSubscription<Duration?>? _durationSub;
+  StreamSubscription<PlaybackEvent>? _eventSub;
 
   /// Without an explicit session, iOS uses a category that is muted by the
   /// ring/silent switch, so recitation plays with no sound on silenced
@@ -400,94 +442,97 @@ class QuranAudioNotifier extends StateNotifier<QuranAudioState> {
   void _reportFailure(Object error) {
     debugPrint('Quran audio failed to load: $error');
     _failureCount++;
-    _playlist = [];
-    _playlistIndex = 0;
-    _surahNumber = null;
+    _generation++;
+    _verseNumbers = const [];
+    _audioPlayer.stop().catchError((Object _) {});
     state = QuranAudioState(failureCount: _failureCount);
+  }
+
+  static AudioSource _sourceFor({
+    required int surahNumber,
+    required String surahName,
+    required Verse verse,
+  }) {
+    return AudioSource.uri(
+      Uri.parse(verse.audioUrl),
+      tag: MediaItem(
+        id: '$surahNumber:${verse.number}',
+        title: 'QS. $surahName · Ayat ${verse.number}',
+        album: 'Murotal Al-Qur\'an',
+        artist: 'Mishary Rashid Alafasy',
+      ),
+    );
+  }
+
+  Future<void> _play({
+    required int surahNumber,
+    required String surahName,
+    required List<Verse> verses,
+  }) async {
+    final playable = verses.where((v) => v.audioUrl.isNotEmpty).toList();
+    if (playable.isEmpty || !mounted) return;
+
+    final generation = ++_generation;
+    _verseNumbers = [for (final verse in playable) verse.number];
+    state = QuranAudioState(
+      playingSurah: surahNumber,
+      playingSurahName: surahName,
+      playingVerse: playable.first.number,
+      isLoading: true,
+      failureCount: _failureCount,
+    );
+
+    try {
+      await _ensureAudioSession();
+      await _audioPlayer.setAudioSources([
+        for (final verse in playable)
+          _sourceFor(
+            surahNumber: surahNumber,
+            surahName: surahName,
+            verse: verse,
+          ),
+      ], initialIndex: 0);
+      if (!mounted || generation != _generation) return;
+      // play() completes only when playback pauses or stops, so it is not
+      // awaited; its errors still surface through playbackEventStream.
+      unawaited(_audioPlayer.play().catchError((Object _) {}));
+    } catch (error) {
+      // A newer request superseded this one: its error is expected.
+      if (!mounted || generation != _generation) return;
+      _reportFailure(error);
+    }
   }
 
   Future<void> playVerse({
     required int surahNumber,
     required int verseNumber,
     required String audioUrl,
+    String? surahName,
   }) async {
     if (audioUrl.isEmpty) return;
-
-    // Reset playlist sequential playback variables
-    _playlist = [];
-    _playlistIndex = 0;
-    _surahNumber = surahNumber;
-
-    if (!mounted) return;
-    state = state.copyWith(
-      playingSurah: surahNumber,
-      playingVerse: verseNumber,
-      isLoading: true,
-      isPlaying: false,
-      progress: Duration.zero,
-      totalDuration: Duration.zero,
+    await _play(
+      surahNumber: surahNumber,
+      surahName: surahName ?? 'Surah $surahNumber',
+      verses: [
+        Verse(
+          number: verseNumber,
+          arabic: '',
+          latin: '',
+          translation: '',
+          audioUrl: audioUrl,
+        ),
+      ],
     );
-
-    try {
-      await _ensureAudioSession();
-      await _audioPlayer.setUrl(audioUrl);
-      if (!mounted) return;
-      await _audioPlayer.play();
-    } catch (error) {
-      if (!mounted) return;
-      _reportFailure(error);
-    }
   }
 
   Future<void> playSurahSequentially(Surah surah) async {
     final verses = surah.verses;
     if (verses == null || verses.isEmpty) return;
-
-    _playlist = verses;
-    _playlistIndex = 0;
-    _surahNumber = surah.number;
-
-    await _playCurrentPlaylistItem();
-  }
-
-  Future<void> _playCurrentPlaylistItem() async {
-    if (!mounted) return;
-    if (_playlistIndex >= _playlist.length) {
-      stop();
-      return;
-    }
-
-    final verse = _playlist[_playlistIndex];
-    state = state.copyWith(
-      playingSurah: _surahNumber,
-      playingVerse: verse.number,
-      isLoading: true,
-      isPlaying: false,
-      progress: Duration.zero,
-      totalDuration: Duration.zero,
+    await _play(
+      surahNumber: surah.number,
+      surahName: surah.name,
+      verses: verses,
     );
-
-    try {
-      await _ensureAudioSession();
-      await _audioPlayer.setUrl(verse.audioUrl);
-      if (!mounted) return;
-      await _audioPlayer.play();
-    } catch (error) {
-      if (!mounted) return;
-      // Stop and tell the user instead of silently skipping through every
-      // verse (which is what happens offline or when the audio host is down).
-      _reportFailure(error);
-    }
-  }
-
-  void _handlePlaybackCompleted() {
-    if (!mounted) return;
-    if (_playlist.isNotEmpty && _playlistIndex < _playlist.length - 1) {
-      _playlistIndex++;
-      _playCurrentPlaylistItem();
-    } else {
-      stop();
-    }
   }
 
   Future<void> pause() async {
@@ -497,24 +542,42 @@ class QuranAudioNotifier extends StateNotifier<QuranAudioState> {
 
   Future<void> resume() async {
     if (!mounted) return;
-    await _audioPlayer.play();
+    await _ensureAudioSession();
+    unawaited(_audioPlayer.play().catchError((Object _) {}));
   }
 
+  Future<void> skipNext() async {
+    if (!mounted || !_audioPlayer.hasNext) return;
+    await _audioPlayer.seekToNext();
+  }
+
+  Future<void> skipPrevious() async {
+    if (!mounted || !_audioPlayer.hasPrevious) return;
+    await _audioPlayer.seekToPrevious();
+  }
+
+  bool get hasNext => _player?.hasNext ?? false;
+  bool get hasPrevious => _player?.hasPrevious ?? false;
+
   Future<void> stop() async {
-    await _audioPlayer.stop();
-    if (!mounted) return;
-    _playlist = [];
-    _playlistIndex = 0;
-    _surahNumber = null;
-    state = QuranAudioState();
+    _generation++;
+    _verseNumbers = const [];
+    if (mounted) state = QuranAudioState(failureCount: _failureCount);
+    try {
+      await _audioPlayer.stop();
+    } catch (error) {
+      debugPrint('Stopping Quran audio failed: $error');
+    }
   }
 
   @override
   void dispose() {
     _playerStateSub?.cancel();
+    _indexSub?.cancel();
     _positionSub?.cancel();
     _durationSub?.cancel();
-    _audioPlayer.dispose();
+    _eventSub?.cancel();
+    _player?.dispose();
     super.dispose();
   }
 }

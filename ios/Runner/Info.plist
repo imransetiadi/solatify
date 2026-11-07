@@ -30,6 +30,10 @@
 	<string>Solatify membutuhkan akses lokasi untuk menghitung jadwal salat yang akurat.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Solatify membutuhkan akses lokasi Anda untuk menghitung waktu salat yang akurat berdasarkan wilayah Anda.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

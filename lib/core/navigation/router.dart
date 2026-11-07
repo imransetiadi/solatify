@@ -22,6 +22,7 @@ import 'package:solatify/features/prayer_schedule/presentation/screens/prayer_sc
 import 'package:solatify/features/qibla/presentation/screens/qibla_screen.dart';
 import 'package:solatify/features/quran/presentation/screens/quran_home_screen.dart';
 import 'package:solatify/features/quran/presentation/screens/surah_detail_screen.dart';
+import 'package:solatify/features/quran/presentation/widgets/quran_mini_player.dart';
 import 'package:solatify/features/settings/presentation/screens/notification_health_screen.dart';
 import 'package:solatify/features/settings/presentation/screens/settings_screen.dart';
 import 'package:solatify/features/tracker/presentation/screens/tracker_screen.dart';
@@ -485,7 +486,14 @@ class MainLayoutScreen extends StatelessWidget {
                   thickness: 1,
                   color: theme.dividerColor.withValues(alpha: 0.35),
                 ),
-                Expanded(child: child),
+                Expanded(
+                  child: Column(
+                    children: [
+                      Expanded(child: child),
+                      const QuranMiniPlayer(),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
@@ -511,37 +519,47 @@ class MainLayoutScreen extends StatelessWidget {
       context,
       Scaffold(
         body: child,
-        bottomNavigationBar: DecoratedBox(
-          decoration: BoxDecoration(
-            border: Border(
-              top: BorderSide(color: theme.dividerColor.withValues(alpha: 0.6)),
+        // The Quran mini-player sits directly above the navigation bar and
+        // collapses to nothing when no recitation is loaded.
+        bottomNavigationBar: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const QuranMiniPlayer(),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(
+                    color: theme.dividerColor.withValues(alpha: 0.6),
+                  ),
+                ),
+              ),
+              child: NavigationBar(
+                selectedIndex: _calculateMobileSelectedIndex(context),
+                onDestinationSelected: (index) =>
+                    _onMobileItemTapped(index, context),
+                height: barHeight,
+                labelBehavior: labelBehavior,
+                backgroundColor: theme.colorScheme.surface,
+                elevation: 0,
+                destinations: _mobileDestinations.map((destination) {
+                  return NavigationDestination(
+                    tooltip: _labelForDestination(l, destination),
+                    icon: Icon(
+                      destination.icon,
+                      color: SolatifyColors.muted(context),
+                      size: iconSize,
+                    ),
+                    selectedIcon: Icon(
+                      destination.activeIcon,
+                      color: theme.colorScheme.tertiary,
+                      size: selectedIconSize,
+                    ),
+                    label: _labelForDestination(l, destination),
+                  );
+                }).toList(),
+              ),
             ),
-          ),
-          child: NavigationBar(
-            selectedIndex: _calculateMobileSelectedIndex(context),
-            onDestinationSelected: (index) =>
-                _onMobileItemTapped(index, context),
-            height: barHeight,
-            labelBehavior: labelBehavior,
-            backgroundColor: theme.colorScheme.surface,
-            elevation: 0,
-            destinations: _mobileDestinations.map((destination) {
-              return NavigationDestination(
-                tooltip: _labelForDestination(l, destination),
-                icon: Icon(
-                  destination.icon,
-                  color: SolatifyColors.muted(context),
-                  size: iconSize,
-                ),
-                selectedIcon: Icon(
-                  destination.activeIcon,
-                  color: theme.colorScheme.tertiary,
-                  size: selectedIconSize,
-                ),
-                label: _labelForDestination(l, destination),
-              );
-            }).toList(),
-          ),
+          ],
         ),
       ),
     );

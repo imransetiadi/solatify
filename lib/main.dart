@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:just_audio_background/just_audio_background.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:solatify/core/database/hive_service.dart';
 import 'package:solatify/core/localization/app_localizations.dart';
@@ -56,6 +57,20 @@ void main() {
       } catch (e) {
         debugPrint('Hive init error: $e. Attempting recovery...');
         await HiveService.ensureBoxesOpen();
+      }
+
+      // Background Quran recitation with lock-screen / notification
+      // controls. Must run before the first AudioPlayer is created; if it
+      // fails, recitation still works in the foreground.
+      try {
+        await JustAudioBackground.init(
+          androidNotificationChannelId: 'com.solatify.app.quran_audio',
+          androidNotificationChannelName: 'Murotal Al-Qur\'an',
+          androidNotificationOngoing: true,
+          androidNotificationIcon: 'mipmap/ic_launcher',
+        );
+      } catch (e) {
+        debugPrint('Background audio init error: $e');
       }
 
       runApp(const ProviderScope(child: SolatifyApp()));
