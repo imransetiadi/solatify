@@ -78,7 +78,9 @@ void main() {
     expect(
       qiblaScreen,
       isNot(
-        contains("import 'package:flutter_compass_v2/flutter_compass_v2.dart';"),
+        contains(
+          "import 'package:flutter_compass_v2/flutter_compass_v2.dart';",
+        ),
       ),
     );
     expect(qiblaScreen, isNot(contains('FlutterCompass.events')));

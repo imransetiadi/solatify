@@ -30,6 +30,7 @@ void main() {
           countdownLabel: '00:12:30',
           locationLabel: 'Jakarta',
           hijriLabel: '12 Dzulhijjah 1447 H',
+          schedule: 'Magrib|1700000000000|18:04',
         ),
       );
 
@@ -41,6 +42,7 @@ void main() {
         'countdownLabel': '00:12:30',
         'locationLabel': 'Jakarta',
         'hijriLabel': '12 Dzulhijjah 1447 H',
+        'schedule': 'Magrib|1700000000000|18:04',
       });
     },
   );

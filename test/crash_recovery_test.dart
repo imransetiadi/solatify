@@ -47,7 +47,8 @@ void main() {
 
     // Poll until state is populated or timeout
     int retries = 0;
-    while (container.read(prayerTimesProvider).todayTimes.length < 5 && retries < 20) {
+    while (container.read(prayerTimesProvider).todayTimes.length < 5 &&
+        retries < 20) {
       await Future<void>.delayed(const Duration(milliseconds: 50));
       retries++;
     }
@@ -67,7 +68,8 @@ void main() {
     addTearDown(container.dispose);
 
     int retries = 0;
-    while (container.read(prayerTimesProvider).todayTimes.length < 5 && retries < 20) {
+    while (container.read(prayerTimesProvider).todayTimes.length < 5 &&
+        retries < 20) {
       await Future<void>.delayed(const Duration(milliseconds: 50));
       retries++;
     }

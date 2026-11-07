@@ -51,14 +51,13 @@
         android:textSize="18sp"
         android:textStyle="bold" />
 
-    <TextView
+    <!-- Counts down to the next prayer on its own; see PrayerWidgetProvider. -->
+    <Chronometer
         android:id="@+id/widget_countdown"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:ellipsize="end"
         android:maxLines="1"
-        android:text="00:12:30"
         android:textColor="#FFFFFF"
         android:textSize="14sp" />
 

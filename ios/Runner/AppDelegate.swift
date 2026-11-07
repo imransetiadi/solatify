@@ -84,7 +84,7 @@ import WidgetKit
     defaults.set(payload["countdownLabel"] ?? "--:--", forKey: "countdownLabel")
     defaults.set(payload["locationLabel"] ?? "Solatify", forKey: "locationLabel")
     defaults.set(payload["hijriLabel"] ?? "Jadwal salat", forKey: "hijriLabel")
-    defaults.synchronize()
+    defaults.set(payload["schedule"] ?? "", forKey: "schedule")
 
     if #available(iOS 14.0, *) {
       WidgetCenter.shared.reloadTimelines(ofKind: "SolatifyPrayerWidget")
