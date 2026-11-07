@@ -23,15 +23,28 @@ class HiveService {
 
   static bool get isInitialized => _initialized;
 
+  /// Boxes opened at startup. The Quran surah-detail cache is left out on
+  /// purpose: Hive reads a whole box into memory when it opens, and that
+  /// cache grows with every surah read, so it is opened on first use via
+  /// [openBoxOnDemand] instead of delaying every cold start.
   static final List<String> _allBoxNames = [
     settingsBoxName,
     trackerBoxName,
     locationBoxName,
     scheduleBoxName,
     quranIndexBoxName,
-    quranDetailBoxName,
     quranBookmarksBoxName,
   ];
+
+  /// Opens [name] if needed (with the same recovery as startup boxes) and
+  /// returns it, or null if it cannot be opened.
+  static Future<Box<dynamic>?> openBoxOnDemand(String name) async {
+    if (!_hiveInitialized && !Hive.isBoxOpen(name)) {
+      await ensureBoxesOpen();
+    }
+    await _openBoxSafe(name);
+    return tryGetBox(name);
+  }
 
   static Future<void> ensureBoxesOpen() async {
     try {

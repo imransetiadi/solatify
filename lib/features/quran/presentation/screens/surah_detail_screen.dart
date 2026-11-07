@@ -45,7 +45,11 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_updateReadingProgressFromScroll);
+    // Cached because `ref` cannot be used in dispose().
+    _audioNotifier = ref.read(quranAudioProvider.notifier);
   }
+
+  late final QuranAudioNotifier _audioNotifier;
 
   Color get _textColor => SolatifyColors.text(context);
   Color get _accentColor => AppTheme.readableAccent(context);
@@ -66,6 +70,9 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
 
   @override
   void dispose() {
+    // Recitation is controlled from this screen only, so stop it on leave
+    // instead of letting it play on with no visible controls.
+    _audioNotifier.stop();
     _initialScrollTimer?.cancel();
     _scrollController.removeListener(_updateReadingProgressFromScroll);
     _scrollController.dispose();
