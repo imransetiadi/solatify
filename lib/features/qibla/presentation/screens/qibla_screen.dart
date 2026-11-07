@@ -211,6 +211,8 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen>
 
     final headingState = ref.watch(qiblaHeadingProvider);
     final sensorHeading = headingState.valueOrNull?.degrees;
+    final needsCalibration =
+        headingState.valueOrNull?.needsCalibration ?? false;
     final hasSensor = sensorHeading != null;
     final sensorUnavailable =
         !hasSensor &&
@@ -290,6 +292,22 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen>
                           : 'Kiblat berada ${qiblaAngle.toStringAsFixed(0)}° '
                                 'dari Utara. Gunakan simulasi di bawah untuk '
                                 'melihat arahnya.',
+                    ),
+                    const SizedBox(height: SolatifySpacing.xl),
+                  ],
+                  if (hasSensor && needsCalibration) ...[
+                    SolatifyStateView(
+                      variant: SolatifyStateVariant.empty,
+                      compact: true,
+                      icon: Icons.screen_rotation_alt_outlined,
+                      title: l.isEnglish
+                          ? 'Compass needs calibration'
+                          : 'Kompas perlu dikalibrasi',
+                      description: l.isEnglish
+                          ? 'Move your phone in a figure-eight a few times, '
+                                'away from metal and magnets.'
+                          : 'Gerakkan HP membentuk angka 8 beberapa kali, '
+                                'jauh dari benda logam dan magnet.',
                     ),
                     const SizedBox(height: SolatifySpacing.xl),
                   ],
