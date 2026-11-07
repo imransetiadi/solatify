@@ -594,6 +594,7 @@ class NotificationService {
     bool isReminder = false,
     String soundMode = 'adhan',
     bool refreshExactAlarmCapability = true,
+    bool requestIosPermission = true,
   }) async {
     try {
       await _ensureInitialized();
@@ -601,7 +602,7 @@ class NotificationService {
         await _refreshExactAlarmCapability();
       }
 
-      if (defaultTargetPlatform == TargetPlatform.iOS) {
+      if (requestIosPermission && defaultTargetPlatform == TargetPlatform.iOS) {
         final granted = await requestIosPermissions();
         if (!granted) {
           await recordScheduleFailure(

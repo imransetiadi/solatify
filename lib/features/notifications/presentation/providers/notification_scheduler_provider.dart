@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:solatify/core/performance/performance_tuning.dart';
 import 'package:solatify/features/notifications/data/services/notification_service.dart';
 import 'package:solatify/features/notifications/domain/services/prayer_notification_planner.dart';
+import 'package:solatify/features/prayer_schedule/data/prayer_calculation_service.dart';
 import 'package:solatify/features/prayer_schedule/data/prayer_timezone_service.dart';
 import 'package:solatify/features/prayer_schedule/domain/entities/location_entity.dart';
 import 'package:solatify/features/prayer_schedule/domain/entities/prayer_times_state_entity.dart';
@@ -21,22 +22,54 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
   final Ref _ref;
   Timer? _schedulingTimer;
   final Map<int, String> _scheduledNotificationKeysById = {};
+
+  // The first sync after a cold start is a full sync, so alarms for prayers
+  // that were turned off meanwhile are cancelled.
+  bool _fullSyncRequested = true;
+  bool _pluginInitialized = false;
   ProviderSubscription<PrayerTimesStateEntity>? _prayerTimesSubscription;
   ProviderSubscription<LocationEntity>? _locationSubscription;
   ProviderSubscription<SettingsState>? _settingsSubscription;
   bool _schedulingInProgress = false;
   bool _rescheduleRequested = false;
 
+  /// [force] re-syncs every managed notification: anything not wanted any
+  /// more is cancelled and the rest is rescheduled. (Previously force cleared
+  /// the known-active map, so nothing was ever cancelled and prayers turned
+  /// off in Settings kept firing.)
   Future<void> refreshSchedules({bool force = false}) async {
-    if (force) {
-      _scheduledNotificationKeysById.clear();
+    if (force) _fullSyncRequested = true;
+    if (!_pluginInitialized) {
+      // Startup init failed earlier; retry it (this also registers the
+      // listeners and runs the first sync) instead of giving up for good.
+      await _initializeNotifications();
+      return;
     }
+    _ensureAuditTimer();
     await _scheduleAllNotifications();
+  }
+
+  /// Periodic safety net; restarted here because cancelling all
+  /// notifications stops it.
+  void _ensureAuditTimer() {
+    if (_schedulingTimer?.isActive ?? false) return;
+    _schedulingTimer = Timer.periodic(
+      PerformanceTuning.notificationScheduleAuditInterval,
+      (_) => _scheduleAllNotifications(),
+    );
   }
 
   Future<void> _initializeNotifications() async {
     try {
       await NotificationService().init();
+      _pluginInitialized = true;
+    } catch (e) {
+      // Without the plugin nothing can be scheduled. refreshSchedules (app
+      // resume, settings changes) retries the initialisation later.
+      debugPrint('Error initializing notifications: $e');
+      return;
+    }
+    try {
       _prayerTimesSubscription?.close();
       _locationSubscription?.close();
       _settingsSubscription?.close();
@@ -76,13 +109,9 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
 
       // Re-check periodically as a safety net; provider listeners handle normal
       // location and prayer-time changes immediately.
-      _schedulingTimer?.cancel();
-      _schedulingTimer = Timer.periodic(
-        PerformanceTuning.notificationScheduleAuditInterval,
-        (_) => _scheduleAllNotifications(),
-      );
+      _ensureAuditTimer();
     } catch (e) {
-      debugPrint('Error initializing notifications: $e');
+      debugPrint('Error registering notification listeners: $e');
     }
   }
 
@@ -123,11 +152,26 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
 
       if (!_hasAllRequiredTimes(today, tomorrow)) return;
 
+      if (_fullSyncRequested) {
+        _fullSyncRequested = false;
+        final pendingIds = await NotificationService()
+            .getPendingNotificationIds();
+        _scheduledNotificationKeysById
+          ..clear()
+          ..addAll(unknownActivePrayerNotifications(pendingIds));
+      }
+
       final now = DateTime.now();
 
       final requests = buildPrayerNotificationRequests(
         today: today,
         tomorrow: tomorrow,
+        laterDays: _calculateLaterDays(
+          location: location,
+          settings: settings,
+          timezoneName: timezoneName,
+          now: now,
+        ),
         now: now,
         enabledPrayerNotifications: settings.enabledPrayerNotifications,
         preNotificationMinutes: settings.preNotificationMinutes,
@@ -173,6 +217,10 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
           isReminder: request.isReminder,
           soundMode: settings.notificationSoundMode,
         );
+        // Track progress so a failure part-way through does not forget what
+        // was already scheduled.
+        _scheduledNotificationKeysById[request.notificationId] =
+            plan.desiredKeysById[request.notificationId]!;
       }
 
       _scheduledNotificationKeysById
@@ -185,7 +233,8 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
       );
 
       debugPrint(
-        'Synced ${plan.desiredKeysById.length} prayer notifications for today and tomorrow',
+        'Synced ${plan.desiredKeysById.length} prayer notifications for the '
+        'next $prayerNotificationHorizonDays days',
       );
     } catch (e) {
       debugPrint('Error scheduling notifications: $e');
@@ -197,6 +246,37 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
         await _scheduleAllNotifications();
       }
     }
+  }
+
+  /// Prayer times for day 2 onwards (today and tomorrow come from the prayer
+  /// times provider), so notifications keep firing when the app is not
+  /// opened for a few days.
+  List<Map<String, DateTime?>> _calculateLaterDays({
+    required LocationEntity location,
+    required SettingsState settings,
+    required String timezoneName,
+    required DateTime now,
+  }) {
+    final days = <Map<String, DateTime?>>[];
+    for (var day = 2; day < prayerNotificationHorizonDays; day++) {
+      try {
+        days.add(
+          PrayerCalculationService.calculatePrayerTimes(
+            latitude: location.latitude,
+            longitude: location.longitude,
+            date: now.add(Duration(days: day)),
+            method: settings.calculationMethod,
+            timezoneName: timezoneName,
+            offsets: settings.prayerOffsets,
+          ),
+        );
+      } catch (e) {
+        // Stop at the first failure; earlier days are still scheduled.
+        debugPrint('Could not calculate prayer times for day +$day: $e');
+        break;
+      }
+    }
+    return days;
   }
 
   Future<void> _scheduleNotification({
@@ -224,6 +304,9 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
         isReminder: isReminder,
         soundMode: soundMode,
         refreshExactAlarmCapability: false,
+        // Permission was already checked once for this sync; asking again
+        // for each of up to 60 notifications is redundant.
+        requestIosPermission: false,
       );
 
       debugPrint(
