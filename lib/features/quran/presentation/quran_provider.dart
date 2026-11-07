@@ -1,6 +1,8 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:audio_session/audio_session.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:solatify/core/database/hive_service.dart';
 import 'package:solatify/features/quran/data/quran_repository.dart';
@@ -301,6 +303,7 @@ class QuranAudioState {
     this.isLoading = false,
     this.progress = Duration.zero,
     this.totalDuration = Duration.zero,
+    this.failureCount = 0,
   });
   final int? playingSurah;
   final int? playingVerse;
@@ -309,6 +312,10 @@ class QuranAudioState {
   final Duration progress;
   final Duration totalDuration;
 
+  /// Increments every time audio fails to load, so the UI can react to each
+  /// failure (e.g. show a snackbar) even when two failures happen in a row.
+  final int failureCount;
+
   QuranAudioState copyWith({
     int? playingSurah,
     int? playingVerse,
@@ -316,6 +323,7 @@ class QuranAudioState {
     bool? isLoading,
     Duration? progress,
     Duration? totalDuration,
+    int? failureCount,
   }) {
     return QuranAudioState(
       playingSurah: playingSurah ?? this.playingSurah,
@@ -324,6 +332,7 @@ class QuranAudioState {
       isLoading: isLoading ?? this.isLoading,
       progress: progress ?? this.progress,
       totalDuration: totalDuration ?? this.totalDuration,
+      failureCount: failureCount ?? this.failureCount,
     );
   }
 }
@@ -370,6 +379,32 @@ class QuranAudioNotifier extends StateNotifier<QuranAudioState> {
   StreamSubscription<PlayerState>? _playerStateSub;
   StreamSubscription<Duration>? _positionSub;
   StreamSubscription<Duration?>? _durationSub;
+  bool _sessionConfigured = false;
+  int _failureCount = 0;
+
+  /// Without an explicit session, iOS uses a category that is muted by the
+  /// ring/silent switch, so recitation plays with no sound on silenced
+  /// iPhones. The music preset uses the playback category instead.
+  Future<void> _ensureAudioSession() async {
+    if (_sessionConfigured) return;
+    try {
+      final session = await AudioSession.instance;
+      await session.configure(const AudioSessionConfiguration.music());
+      _sessionConfigured = true;
+    } catch (error) {
+      // Playback can still work with the default session; retry next time.
+      debugPrint('Failed to configure Quran audio session: $error');
+    }
+  }
+
+  void _reportFailure(Object error) {
+    debugPrint('Quran audio failed to load: $error');
+    _failureCount++;
+    _playlist = [];
+    _playlistIndex = 0;
+    _surahNumber = null;
+    state = QuranAudioState(failureCount: _failureCount);
+  }
 
   Future<void> playVerse({
     required int surahNumber,
@@ -394,12 +429,13 @@ class QuranAudioNotifier extends StateNotifier<QuranAudioState> {
     );
 
     try {
+      await _ensureAudioSession();
       await _audioPlayer.setUrl(audioUrl);
       if (!mounted) return;
       await _audioPlayer.play();
-    } catch (_) {
+    } catch (error) {
       if (!mounted) return;
-      state = state.copyWith(isLoading: false, isPlaying: false);
+      _reportFailure(error);
     }
   }
 
@@ -432,13 +468,15 @@ class QuranAudioNotifier extends StateNotifier<QuranAudioState> {
     );
 
     try {
+      await _ensureAudioSession();
       await _audioPlayer.setUrl(verse.audioUrl);
       if (!mounted) return;
       await _audioPlayer.play();
-    } catch (_) {
+    } catch (error) {
       if (!mounted) return;
-      // Skip to next if this fails
-      _handlePlaybackCompleted();
+      // Stop and tell the user instead of silently skipping through every
+      // verse (which is what happens offline or when the audio host is down).
+      _reportFailure(error);
     }
   }
 

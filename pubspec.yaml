@@ -43,6 +43,7 @@ dependencies:
   flutter_compass_v2: ^1.0.3
   adhan: ^2.0.0+1
   just_audio: ^0.10.5
+  audio_session: ^0.2.3
   shared_preferences: ^2.5.5
   intl: ^0.20.2
   path_provider: ^2.1.5
