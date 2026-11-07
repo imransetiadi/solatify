@@ -1,3 +1,4 @@
+import AVFoundation
 import UIKit
 import CoreLocation
 import Flutter
@@ -6,6 +7,13 @@ import WidgetKit
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
+  /// Thread identifier of adhan notifications (adhan sound mode, not
+  /// reminders). Must match `NotificationService.iosAdhanThreadIdentifier`.
+  private static let adhanThreadIdentifier = "solatify.adhan"
+  /// A tapped adhan notification older than this does not start the adhan.
+  private static let adhanTapWindow: TimeInterval = 15 * 60
+
+  private let adhanPlayer = AdhanPlayer()
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
@@ -15,6 +23,7 @@ import WidgetKit
     registerIosSettingsChannel()
     registerIosPrayerWidgetChannel()
     registerCompassChannel()
+    registerAdhanChannel()
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
@@ -23,10 +32,64 @@ import WidgetKit
     willPresent notification: UNNotification,
     withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
   ) {
+    // iOS cuts notification sounds at 30 seconds. In the foreground the app
+    // can play the whole adhan itself, so the short notification sound is
+    // dropped to avoid both playing at once.
+    let content = notification.request.content
+    let playsFullAdhan = content.threadIdentifier == Self.adhanThreadIdentifier
+      && adhanPlayer.play(prayerKey: content.userInfo["payload"] as? String)
     if #available(iOS 14.0, *) {
-      completionHandler([.banner, .list, .sound, .badge])
+      completionHandler(playsFullAdhan ? [.banner, .list, .badge] : [.banner, .list, .sound, .badge])
     } else {
-      completionHandler([.alert, .sound, .badge])
+      completionHandler(playsFullAdhan ? [.alert, .badge] : [.alert, .sound, .badge])
+    }
+  }
+
+  override func userNotificationCenter(
+    _ center: UNUserNotificationCenter,
+    didReceive response: UNNotificationResponse,
+    withCompletionHandler completionHandler: @escaping () -> Void
+  ) {
+    // Tapping an adhan notification (from the background or a cold start)
+    // plays the full adhan, since the notification sound stops at 30 s.
+    let notification = response.notification
+    let content = notification.request.content
+    if response.actionIdentifier == UNNotificationDefaultActionIdentifier,
+       content.threadIdentifier == Self.adhanThreadIdentifier,
+       Date().timeIntervalSince(notification.date) <= Self.adhanTapWindow,
+       !adhanPlayer.isPlaying {
+      _ = adhanPlayer.play(prayerKey: content.userInfo["payload"] as? String)
+    }
+    // Keeps flutter_local_notifications' tap callback working.
+    super.userNotificationCenter(center, didReceive: response, withCompletionHandler: completionHandler)
+  }
+
+  private func registerAdhanChannel() {
+    guard let registrar = registrar(forPlugin: "SolatifyAdhanPlayer") else {
+      return
+    }
+
+    let channel = FlutterMethodChannel(
+      name: "solatify/ios_adhan",
+      binaryMessenger: registrar.messenger()
+    )
+    adhanPlayer.onStateChanged = { [weak channel] state in
+      channel?.invokeMethod("adhanStateChanged", arguments: state)
+    }
+    channel.setMethodCallHandler { [weak self] call, result in
+      guard let self = self else {
+        result(FlutterMethodNotImplemented)
+        return
+      }
+      switch call.method {
+      case "getState":
+        result(self.adhanPlayer.state)
+      case "stop":
+        self.adhanPlayer.stop()
+        result(true)
+      default:
+        result(FlutterMethodNotImplemented)
+      }
     }
   }
 
@@ -224,5 +287,135 @@ final class CompassStreamHandler: NSObject, FlutterStreamHandler, CLLocationMana
   /// Let iOS show its calibration prompt when the compass is inaccurate.
   func locationManagerShouldDisplayHeadingCalibration(_ manager: CLLocationManager) -> Bool {
     true
+  }
+}
+
+/// Plays the bundled full-length adhan (`adhan.mp3`).
+///
+/// iOS limits notification sounds to 30 seconds, so the notification itself
+/// only carries the opening of the adhan. Uses the playback category so the
+/// adhan keeps going when the screen locks (UIBackgroundModes audio), and
+/// restores the previous session category afterwards so Quran recitation
+/// keeps the session it configured.
+final class AdhanPlayer: NSObject, AVAudioPlayerDelegate {
+  var onStateChanged: (([String: Any]) -> Void)?
+
+  private var player: AVAudioPlayer?
+  private var prayerKey: String?
+  private var previousCategory: AVAudioSession.Category?
+  private var previousMode: AVAudioSession.Mode?
+  private var previousOptions: AVAudioSession.CategoryOptions?
+
+  override init() {
+    super.init()
+    NotificationCenter.default.addObserver(
+      self,
+      selector: #selector(handleInterruption(_:)),
+      name: AVAudioSession.interruptionNotification,
+      object: AVAudioSession.sharedInstance()
+    )
+  }
+
+  deinit {
+    NotificationCenter.default.removeObserver(self)
+  }
+
+  var isPlaying: Bool { player?.isPlaying ?? false }
+
+  var state: [String: Any] {
+    var state: [String: Any] = ["playing": isPlaying]
+    if isPlaying, let prayerKey = prayerKey {
+      state["prayerKey"] = prayerKey
+    }
+    return state
+  }
+
+  /// Starts the adhan from the beginning. Returns false if it could not be
+  /// played, so the caller can fall back to the notification sound.
+  @discardableResult
+  func play(prayerKey: String?) -> Bool {
+    guard let url = Bundle.main.url(forResource: "adhan", withExtension: "mp3") else {
+      NSLog("Solatify adhan: adhan.mp3 is missing from the bundle")
+      return false
+    }
+
+    player?.stop()
+    let session = AVAudioSession.sharedInstance()
+    do {
+      if previousCategory == nil {
+        previousCategory = session.category
+        previousMode = session.mode
+        previousOptions = session.categoryOptions
+      }
+      try session.setCategory(.playback, mode: .default, options: [])
+      try session.setActive(true)
+
+      let newPlayer = try AVAudioPlayer(contentsOf: url)
+      newPlayer.delegate = self
+      guard newPlayer.play() else {
+        NSLog("Solatify adhan: playback did not start")
+        finish()
+        return false
+      }
+      player = newPlayer
+      self.prayerKey = prayerKey
+      onStateChanged?(state)
+      return true
+    } catch {
+      NSLog("Solatify adhan: \(error.localizedDescription)")
+      finish()
+      return false
+    }
+  }
+
+  func stop() {
+    guard player != nil else { return }
+    player?.stop()
+    finish()
+  }
+
+  func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+    finish()
+  }
+
+  func audioPlayerDecodeErrorDidOccur(_ player: AVAudioPlayer, error: Error?) {
+    NSLog("Solatify adhan decode error: \(error?.localizedDescription ?? "unknown")")
+    finish()
+  }
+
+  /// A call or alarm interrupts the adhan; it is not resumed afterwards.
+  @objc private func handleInterruption(_ notification: Notification) {
+    guard player != nil,
+          let rawType = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,
+          AVAudioSession.InterruptionType(rawValue: rawType) == .began else {
+      return
+    }
+    stop()
+  }
+
+  private func finish() {
+    player?.delegate = nil
+    player = nil
+    prayerKey = nil
+
+    let session = AVAudioSession.sharedInstance()
+    do {
+      if let category = previousCategory {
+        try session.setCategory(
+          category,
+          mode: previousMode ?? .default,
+          options: previousOptions ?? []
+        )
+      }
+      // Lets music from other apps resume after the adhan.
+      try session.setActive(false, options: .notifyOthersOnDeactivation)
+    } catch {
+      // Expected while other audio in the app is still running.
+      NSLog("Solatify adhan session restore: \(error.localizedDescription)")
+    }
+    previousCategory = nil
+    previousMode = nil
+    previousOptions = nil
+    onStateChanged?(state)
   }
 }

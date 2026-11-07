@@ -6,6 +6,7 @@ import 'package:solatify/core/performance/performance_tuning.dart';
 import 'package:solatify/core/services/solatify_haptics.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
 import 'package:solatify/core/widgets/solatify_design_tokens.dart';
+import 'package:solatify/features/notifications/presentation/widgets/adhan_now_playing_bar.dart';
 import 'package:solatify/features/asmaul_husna/presentation/screens/asmaul_husna_screen.dart';
 import 'package:solatify/features/dhikr/presentation/screens/dhikr_screen.dart';
 import 'package:solatify/features/duas/presentation/screens/duas_screen.dart';
@@ -490,6 +491,7 @@ class MainLayoutScreen extends StatelessWidget {
                   child: Column(
                     children: [
                       Expanded(child: child),
+                      const AdhanNowPlayingBar(),
                       const QuranMiniPlayer(),
                     ],
                   ),
@@ -524,6 +526,7 @@ class MainLayoutScreen extends StatelessWidget {
         bottomNavigationBar: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            const AdhanNowPlayingBar(),
             const QuranMiniPlayer(),
             DecoratedBox(
               decoration: BoxDecoration(

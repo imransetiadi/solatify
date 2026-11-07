@@ -84,6 +84,11 @@ class NotificationService {
   static const String _prayerSilentChannelId = 'prayer_times_silent_channel';
   static const String _diagnosticChannelId = 'solatify_diagnostic_channel_v2';
   static const String _notificationHistoryKey = 'notification_history';
+
+  /// Marks iOS adhan notifications (adhan sound mode, not reminders) so the
+  /// app can play the full adhan when one arrives in the foreground or is
+  /// tapped. Must match `adhanThreadIdentifier` in `AppDelegate.swift`.
+  static const String iosAdhanThreadIdentifier = 'solatify.adhan';
   static const List<String> _legacyPrayerChannelIds = [
     'prayer_times_adhan_channel_v2',
     'prayer_times_adhan_channel_v7',
@@ -564,6 +569,7 @@ class NotificationService {
         presentBadge: true,
         presentSound: true,
         sound: 'adhan_short.caf',
+        threadIdentifier: iosAdhanThreadIdentifier,
       );
 
       const NotificationDetails notificationDetails = NotificationDetails(
@@ -617,7 +623,10 @@ class NotificationService {
 
       final title = getNotificationTitle(prayerKey, location);
       final body = getNotificationMessage(prayerKey, location, prayerTime);
-      final notificationDetails = _prayerNotificationDetails(soundMode);
+      final notificationDetails = _prayerNotificationDetails(
+        soundMode,
+        isReminder: isReminder,
+      );
 
       if (defaultTargetPlatform == TargetPlatform.android) {
         final prayerLocation = tz.getLocation(timezoneName);
@@ -695,7 +704,10 @@ class NotificationService {
     }
   }
 
-  NotificationDetails _prayerNotificationDetails(String soundMode) {
+  NotificationDetails _prayerNotificationDetails(
+    String soundMode, {
+    required bool isReminder,
+  }) {
     switch (soundMode) {
       case 'silent':
         return const NotificationDetails(
@@ -736,8 +748,8 @@ class NotificationService {
           ),
         );
       default:
-        return const NotificationDetails(
-          android: AndroidNotificationDetails(
+        return NotificationDetails(
+          android: const AndroidNotificationDetails(
             _prayerChannelId,
             'Prayer Times Adhan',
             channelDescription: 'Adhan notifications for prayer times',
@@ -749,11 +761,16 @@ class NotificationService {
             enableLights: true,
             icon: '@mipmap/ic_launcher',
           ),
+          // iOS caps notification sounds at 30 seconds, so the bundled
+          // sound is the first 29 seconds of the adhan. The full adhan is
+          // played in-app (see AppDelegate.swift) when the notification
+          // arrives in the foreground or is tapped.
           iOS: DarwinNotificationDetails(
             presentAlert: true,
             presentBadge: true,
             presentSound: true,
             sound: 'adhan_short.caf',
+            threadIdentifier: isReminder ? null : iosAdhanThreadIdentifier,
           ),
         );
     }

@@ -12,6 +12,7 @@ import 'package:solatify/core/localization/app_localizations.dart';
 import 'package:solatify/core/navigation/router.dart';
 import 'package:solatify/core/theme/theme.dart';
 import 'package:solatify/features/notifications/data/services/notification_service.dart';
+import 'package:solatify/features/notifications/presentation/providers/adhan_playback_provider.dart';
 import 'package:solatify/features/notifications/presentation/providers/notification_scheduler_provider.dart';
 import 'package:solatify/features/prayer_schedule/presentation/prayer_times_provider.dart';
 import 'package:solatify/features/settings/presentation/providers/settings_provider.dart';
@@ -140,6 +141,9 @@ class _SolatifyAppState extends ConsumerState<SolatifyApp>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // Start listening for the full adhan (iOS) right away, so an adhan
+    // started by tapping its notification on a cold start is picked up.
+    ref.read(adhanPlaybackProvider);
   }
 
   @override

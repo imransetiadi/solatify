@@ -702,7 +702,29 @@ void main() {
     expect(xcodeProject, contains('adhan_short.caf in Resources'));
     expect(adhanSound.existsSync(), isTrue);
     expect(adhanSound.lengthSync(), greaterThan(0));
-    expect(adhanSound.lengthSync(), lessThan(250 * 1000));
+    // 29 s of 8-bit 22.05 kHz mono: just under iOS's 30 s sound limit.
+    expect(adhanSound.lengthSync(), lessThan(700 * 1000));
+  });
+
+  test('iOS adhan notifications are marked for full in-app playback', () {
+    final notificationService = File(
+      'lib/features/notifications/data/services/notification_service.dart',
+    ).readAsStringSync();
+    final appDelegate = File('ios/Runner/AppDelegate.swift').readAsStringSync();
+
+    expect(NotificationService.iosAdhanThreadIdentifier, 'solatify.adhan');
+    expect(
+      notificationService,
+      contains(
+        'threadIdentifier: isReminder ? null : iosAdhanThreadIdentifier',
+      ),
+    );
+    expect(appDelegate, contains('adhanThreadIdentifier = "solatify.adhan"'));
+    expect(appDelegate, contains('forResource: "adhan", withExtension: "mp3"'));
+    expect(
+      appDelegate,
+      contains('super.userNotificationCenter(center, didReceive: response'),
+    );
   });
 
   test('reports pending notification count from the platform API', () async {
