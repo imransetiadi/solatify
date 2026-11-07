@@ -6,4 +6,5 @@ class HiveConstants {
   static const String quranIndexBox = 'quran_index';
   static const String quranDetailBox = 'quran_surah_details';
   static const String quranBookmarksBox = 'quran_bookmarks';
+  static const String mosqueCacheBox = 'mosque_cache';
 }
