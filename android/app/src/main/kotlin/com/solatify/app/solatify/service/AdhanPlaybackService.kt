@@ -98,14 +98,14 @@ class AdhanPlaybackService : Service() {
         val stopPendingIntent = stopIntent(this)
 
         return NotificationCompat.Builder(this, PLAYBACK_CHANNEL_ID)
-            .setSmallIcon(R.mipmap.ic_launcher)
+            .setSmallIcon(R.drawable.ic_stat_solatify)
             .setContentTitle("Solatify")
             .setContentText("Adzan sedang diputar")
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
             .setOngoing(true)
             .setSilent(true)
-            .addAction(R.mipmap.ic_launcher, "Berhenti", stopPendingIntent)
+            .addAction(R.drawable.ic_stat_solatify, "Berhenti", stopPendingIntent)
             .build()
     }
 

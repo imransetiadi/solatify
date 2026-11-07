@@ -68,7 +68,7 @@ void main() {
           androidNotificationChannelId: 'com.solatify.app.quran_audio',
           androidNotificationChannelName: 'Murotal Al-Qur\'an',
           androidNotificationOngoing: true,
-          androidNotificationIcon: 'mipmap/ic_launcher',
+          androidNotificationIcon: 'drawable/ic_stat_solatify',
         );
       } catch (e) {
         debugPrint('Background audio init error: $e');

@@ -163,7 +163,9 @@ class IslamicHeaderDecoration extends StatelessWidget {
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: isDark ? AppTheme.darkModeText : AppTheme.readableAccent(context),
+            color: isDark
+                ? AppTheme.darkModeText
+                : AppTheme.readableAccent(context),
             letterSpacing: 1.2,
           ),
         ),
@@ -173,7 +175,9 @@ class IslamicHeaderDecoration extends StatelessWidget {
             subtitle!,
             style: TextStyle(
               fontSize: 14,
-              color: isDark ? AppTheme.textMutedOnDark : AppTheme.textMutedOnLight,
+              color: isDark
+                  ? AppTheme.textMutedOnDark
+                  : AppTheme.textMutedOnLight,
               fontStyle: FontStyle.italic,
             ),
           ),

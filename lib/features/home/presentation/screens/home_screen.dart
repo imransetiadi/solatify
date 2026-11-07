@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:solatify/core/widgets/solatify_logo.dart';
 import 'package:solatify/core/localization/app_localizations.dart';
 import 'package:solatify/core/navigation/app_routes.dart';
 import 'package:solatify/core/services/solatify_haptics.dart';
@@ -204,21 +204,7 @@ class _HomeHeader extends StatelessWidget {
       children: [
         Row(
           children: [
-            ExcludeSemantics(
-              child: Container(
-                padding: const EdgeInsets.all(9),
-                decoration: BoxDecoration(
-                  color: SolatifyColors.accentSoft(context),
-                  borderRadius: SolatifyRadius.compactCard,
-                  border: Border.all(color: SolatifyColors.border(context)),
-                ),
-                child: SvgPicture.asset(
-                  'assets/images/masjid_nabawi.svg',
-                  width: 34,
-                  height: 34,
-                ),
-              ),
-            ),
+            const SolatifyLogo(size: 52),
             const SizedBox(width: SolatifySpacing.lg),
             Expanded(
               child: Column(

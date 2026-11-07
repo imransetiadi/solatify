@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Status-bar icon: the Solatify mark as a white silhouette (Android tints it). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="1024"
+    android:viewportHeight="1024">
+    <path android:fillColor="#FFFFFFFF" android:pathData="M37.400000000000006,475.3 a40.8,40.8 0 1,0 81.6,0 a40.8,40.8 0 1,0 -81.6,0 Z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M197.8,234.6 a40.8,40.8 0 1,0 81.6,0 a40.8,40.8 0 1,0 -81.6,0 Z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M454.9,142.1 a57.1,57.1 0 1,0 114.2,0 a57.1,57.1 0 1,0 -114.2,0 Z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M744.6,234.6 a40.8,40.8 0 1,0 81.6,0 a40.8,40.8 0 1,0 -81.6,0 Z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M905.0,475.3 a40.8,40.8 0 1,0 81.6,0 a40.8,40.8 0 1,0 -81.6,0 Z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M278.1,862.9 L278.1,590.9 A335.9,335.9 0 0,1 512.0,270.8 A335.9,335.9 0 0,1 745.9,590.9 L745.9,862.9 L686.1,862.9 L686.1,590.9 A276.1,276.1 0 0,0 512.0,334.3 A276.1,276.1 0 0,0 337.9,590.9 L337.9,862.9 Z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M242.7,857.4 L781.3,857.4 A29.9,29.9 0 0,1 781.3,917.3 L242.7,917.3 A29.9,29.9 0 0,1 242.7,857.4 Z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M496.0,466.9 A111.5,111.5 0 1,0 617.7,613.0 A95.2,95.2 0 0,1 496.0,466.9 Z" />
+</vector>

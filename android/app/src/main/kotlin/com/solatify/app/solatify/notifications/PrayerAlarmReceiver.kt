@@ -49,7 +49,7 @@ class PrayerAlarmReceiver : BroadcastReceiver() {
             startAdhanPlayback(context)
 
         val builder = NotificationCompat.Builder(context, channelId)
-            .setSmallIcon(R.mipmap.ic_launcher)
+            .setSmallIcon(R.drawable.ic_stat_solatify)
             .setContentTitle(title)
             .setContentText(body)
             .setStyle(NotificationCompat.BigTextStyle().bigText(body))
@@ -70,7 +70,7 @@ class PrayerAlarmReceiver : BroadcastReceiver() {
             val stopAdhan = AdhanPlaybackService.stopIntent(context)
             builder
                 .setSilent(true)
-                .addAction(R.mipmap.ic_launcher, "Hentikan adzan", stopAdhan)
+                .addAction(R.drawable.ic_stat_solatify, "Hentikan adzan", stopAdhan)
                 // Swiping the notification away also stops the adhan.
                 .setDeleteIntent(stopAdhan)
         }

@@ -62,7 +62,7 @@ dev_dependencies:
     sdk: flutter
   integration_test:
     sdk: flutter
-  flutter_launcher_icons: ^0.13.1
+  flutter_launcher_icons: ^0.14.4
   build_runner: ^2.4.9
   freezed: ^2.5.2
   json_serializable: ^6.8.0
@@ -74,12 +74,19 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
 
+# Launcher icon sources live in assets/brand (SVG masters + rendered PNGs);
+# they are not bundled into the app. Regenerate with:
+#   dart run flutter_launcher_icons
 flutter_launcher_icons:
   android: "ic_launcher"
   ios: true
-  image_path: "assets/best_logo.png"
-  adaptive_icon_background: "#FFFFFF"
-  adaptive_icon_foreground: "assets/best_logo.png"
+  remove_alpha_ios: true
+  image_path: "assets/brand/solatify_icon.png"
+  adaptive_icon_background: "assets/brand/android_background.png"
+  adaptive_icon_foreground: "assets/brand/android_foreground.png"
+  adaptive_icon_monochrome: "assets/brand/android_monochrome.png"
+  # The foreground SVG already fits the adaptive-icon safe zone.
+  adaptive_icon_foreground_inset: 0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

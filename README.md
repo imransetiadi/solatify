@@ -1,7 +1,7 @@
 # Solatify
 
 <p align="center">
-  <img src="assets/images/masjid_nabawi.svg" width="120" alt="Solatify Logo">
+  <img src="assets/images/solatify_logo.svg" width="120" alt="Solatify Logo">
 </p>
 <p align="center">
   <b>Pendamping Ibadah Harian Muslim yang modern, presisi, ringan, dan responsif.</b>

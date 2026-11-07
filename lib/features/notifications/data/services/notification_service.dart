@@ -289,7 +289,7 @@ class NotificationService {
     tz.initializeTimeZones();
 
     const AndroidInitializationSettings androidInitSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+        AndroidInitializationSettings('@drawable/ic_stat_solatify');
 
     const DarwinInitializationSettings iosInitSettings =
         DarwinInitializationSettings(
@@ -561,7 +561,7 @@ class NotificationService {
             playSound: true,
             sound: RawResourceAndroidNotificationSound('adhan'),
             enableLights: true,
-            icon: '@mipmap/ic_launcher',
+            icon: '@drawable/ic_stat_solatify',
           );
 
       const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
@@ -720,7 +720,7 @@ class NotificationService {
             enableVibration: false,
             playSound: false,
             enableLights: true,
-            icon: '@mipmap/ic_launcher',
+            icon: '@drawable/ic_stat_solatify',
           ),
           iOS: DarwinNotificationDetails(
             presentAlert: true,
@@ -739,7 +739,7 @@ class NotificationService {
             enableVibration: true,
             playSound: true,
             enableLights: true,
-            icon: '@mipmap/ic_launcher',
+            icon: '@drawable/ic_stat_solatify',
           ),
           iOS: DarwinNotificationDetails(
             presentAlert: true,
@@ -759,7 +759,7 @@ class NotificationService {
             playSound: true,
             sound: RawResourceAndroidNotificationSound('adhan'),
             enableLights: true,
-            icon: '@mipmap/ic_launcher',
+            icon: '@drawable/ic_stat_solatify',
           ),
           // iOS caps notification sounds at 30 seconds, so the bundled
           // sound is the first 29 seconds of the adhan. The full adhan is
@@ -861,7 +861,7 @@ class NotificationService {
             enableVibration: true,
             playSound: true,
             enableLights: true,
-            icon: '@mipmap/ic_launcher',
+            icon: '@drawable/ic_stat_solatify',
           );
 
       const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
@@ -908,7 +908,7 @@ class NotificationService {
             enableVibration: true,
             playSound: true,
             enableLights: true,
-            icon: '@mipmap/ic_launcher',
+            icon: '@drawable/ic_stat_solatify',
           );
 
       const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
