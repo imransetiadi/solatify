@@ -6,65 +6,73 @@
 <p align="center">
   <b>Pendamping Ibadah Harian Muslim yang modern, presisi, ringan, dan responsif.</b>
 </p>
+<p align="center">
+  <a href="https://solatify.my.id">solatify.my.id</a> ·
+  <a href="https://github.com/imransetiadi/solatify/releases/tag/v1.0.0-rc3">Unduh APK Android (v1.0.0-rc3)</a>
+</p>
 
 ---
 
-**Solatify** adalah aplikasi Flutter untuk membantu aktivitas ibadah harian: jadwal salat, alarm adzan, Al-Qur'an, tuntunan salat, kiblat, masjid terdekat, konten islami, tracker ibadah, dan pengaturan personal. Aplikasi dibangun dengan pola **Clean Architecture feature-first**, state management Riverpod, penyimpanan lokal Hive, dan fokus pada pengalaman yang stabil di Android maupun iOS.
+**Solatify** adalah aplikasi Flutter untuk membantu aktivitas ibadah harian: jadwal salat, alarm adzan, Al-Qur'an dengan murotal, tuntunan salat, kiblat, masjid terdekat, konten islami, tracker ibadah, widget layar utama, dan pengaturan personal. Aplikasi dibangun dengan pola **Clean Architecture feature-first**, state management Riverpod, penyimpanan lokal Hive, dan fokus pada pengalaman yang stabil di Android maupun iOS.
+
+## 📥 Unduh
+
+| Platform | Status |
+|---|---|
+| Android | APK release candidate tersedia di [GitHub Releases](https://github.com/imransetiadi/solatify/releases/tag/v1.0.0-rc3) |
+| iOS | Segera hadir |
+
+> **Catatan rc3:** APK ini ditandatangani dengan debug key sehingga bisa dipasang langsung (sideload) untuk uji coba, tetapi belum bisa diunggah ke Play Console. Build yang nanti memakai keystore rilis tidak bisa dipasang di atas versi ini tanpa uninstall terlebih dahulu. Lihat [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) untuk menyiapkan signing rilis.
 
 ## ✨ Fitur Utama
 
-- 🕋 **Jadwal Salat Akurat** — Kalkulasi waktu salat berbasis `adhan` dan `timezone`, mendukung metode Kemenag dan metode internasional lain, termasuk koreksi manual per waktu salat.
-- 🔔 **Alarm Adzan Otomatis** — Notifikasi lokal waktu salat berjalan offline dengan toggle per waktu salat, pengingat sebelum salat, pilihan mode suara adzan/beep/silent, riwayat status scheduling, timezone lokasi salat, dan diff-based scheduling untuk sisa salat hari ini plus Subuh besok.
-- 📖 **Al-Qur'an & Konten Islami** — Surah Al-Qur'an, reading mode dengan kontrol ukuran font Arab, toggle transliterasi/terjemahan, progress surah, global search konten islami untuk doa/dzikir/Asmaul Husna/tips/tuntunan salat, bookmark/terakhir dibaca, kalender Hijriah, dan tuntunan salat lengkap.
-- 🤲 **Tuntunan Salat Offline** — Urutan salat praktis dengan bacaan Arab, latin, arti Indonesia, catatan ringkas, doa qunut Subuh opsional, serta dzikir setelah salat.
-- 🧭 **Arah Kiblat** — Kompas kiblat berbasis sensor perangkat, dengan fallback UI ketika sensor tidak tersedia.
-- 🕌 **Masjid Terdekat** — Pencarian masjid sekitar, tombol lihat peta, dan rute melalui aplikasi peta/browser perangkat.
-- 📈 **Tracker Ibadah** — Checklist ibadah harian dan statistik mingguan untuk membantu konsistensi ibadah.
-- 🌙 **Tema Responsif** — Light/dark mode, layout adaptif phone/tablet, serta komponen visual yang dioptimalkan agar tetap ringan saat scroll dan navigasi.
+- 🕋 **Jadwal Salat Akurat**: Kalkulasi waktu salat berbasis `adhan` dan `timezone` dengan zona WIB/WITA/WIT mengikuti provinsi (Surabaya dan seluruh Jawa Timur tetap WIB), zona yang benar untuk kota di luar negeri, enam metode kalkulasi (Kemenag, Muslim World League, ISNA, Mesir, Umm al-Qura, MUIS Singapura), serta koreksi manual per waktu salat. Jadwal dihitung ulang otomatis saat hari berganti di lokasi salat dan saat aplikasi dibuka kembali.
+- 🔔 **Alarm Adzan Otomatis**: Notifikasi lokal waktu salat yang berjalan offline dan dijadwalkan **enam hari ke depan**, sehingga tetap berbunyi walau aplikasi tidak dibuka beberapa hari. Tersedia toggle per waktu salat, pengingat sebelum salat, mode suara adzan/beep/silent, dan riwayat status penjadwalan. Di Android, adzan diputar sekali dengan tombol **Hentikan adzan** di notifikasi.
+- 📖 **Al-Qur'an & Murotal**: Daftar surah, reading mode dengan kontrol ukuran font Arab, toggle transliterasi/terjemahan, progres surah, bookmark, dan terakhir dibaca. Murotal Mishary Rashid Alafasy bisa diputar per ayat atau satu surah penuh, **tetap berjalan di latar belakang** dengan mini-player di atas navigasi bawah serta kontrol di layar kunci dan notifikasi.
+- 🤲 **Dzikir, Doa & Tuntunan Salat**: Dzikir pagi dan petang dengan teks lengkap (Ayat Kursi dan tiga surah Qul diambil dari sumber yang sama dengan pembaca Qur'an), doa harian, Asmaul Husna, tips islami, dan urutan salat dengan bacaan Arab, latin, dan arti.
+- 🧭 **Arah Kiblat**: Kompas berbasis sensor perangkat lewat kanal native Solatify sendiri, mengacu ke utara sejati (deklinasi magnet dikoreksi di Android), dengan petunjuk kalibrasi dan tampilan simulasi saat sensor tidak tersedia. Sensor hanya aktif selama layar kiblat dibuka.
+- 🕌 **Masjid Terdekat**: Pencarian masjid sekitar dari data OpenStreetMap, tombol lihat peta, dan rute lewat aplikasi peta. Hasil pencarian terakhir disimpan sehingga tetap tampil saat server peta sedang sibuk.
+- 🌙 **Kalender Hijriah**: Hari besar Islam dihitung dari kalender Umm al-Qura untuk tahun Hijriah berjalan dan berikutnya (tanggal resmi pemerintah bisa berbeda 1 hari).
+- 📈 **Tracker Ibadah**: Checklist ibadah harian, heatmap 14 hari, streak, dan statistik mingguan.
+- 📱 **Widget Layar Utama**: Widget iOS dan Android yang menampilkan salat berikutnya dengan hitung mundur live dan berpindah sendiri ke salat selanjutnya.
+- 🎨 **Tema Responsif**: Light/dark mode, layout adaptif phone/tablet, dan komponen visual yang ringan saat scroll dan navigasi.
 
 ## 🛠 Arsitektur & Teknologi
 
 - **Flutter + Dart** untuk aplikasi lintas platform Android dan iOS.
 - **Riverpod** untuk state management yang eksplisit dan testable.
-- **Hive** untuk cache lokal jadwal, pengaturan, tracker, dan data Al-Qur'an.
-- **GoRouter** untuk navigasi deklaratif.
-- **Typed route constants** di `AppRoutes` agar path internal seperti jadwal, Qur'an, konten islami, dan Settings tidak tersebar sebagai string literal.
+- **Hive** untuk cache lokal jadwal, pengaturan, tracker, data Al-Qur'an, dan hasil pencarian masjid. Box data pengguna dicadangkan, bukan dihapus, bila gagal dibuka.
+- **GoRouter** untuk navigasi deklaratif, dengan konstanta rute di `AppRoutes`.
 - **Clean Architecture** per fitur: `data`, `domain`, dan `presentation`.
 - **Notification domain planner** memisahkan perencanaan jadwal adzan/reminder dari provider UI agar flow notifikasi lebih testable.
-- **flutter_local_notifications** untuk notifikasi salat lokal dan alarm adzan.
-- **Static local data source** untuk konten islami offline seperti dzikir dan tuntunan salat.
+- **flutter_local_notifications** dan alarm native Android untuk notifikasi salat dan adzan.
+- **just_audio + just_audio_background** untuk murotal di latar belakang dengan kontrol media sistem.
+- **hijri** untuk konversi tanggal Hijriah (Umm al-Qura).
+- **Kanal native** (`solatify/compass`, widget, pengaturan) di `AppDelegate` dan `MainActivity` untuk kompas, widget layar utama, dan izin.
 
 ## ⚡ Performa & Responsiveness
 
-Solatify menggunakan beberapa tuning agar aplikasi tetap ringan:
-
 - Konfigurasi performa terpusat di `lib/core/performance/performance_tuning.dart`.
-- Budget cold start, warm resume, frame build/raster, dan compact smoke target dijaga lewat test agar baseline performa tidak drift diam-diam.
-- Asset runtime dan launcher source dijaga lewat budget test agar gambar/SVG tidak membengkak tanpa audit.
-- Efek `GlassContainer` dibatasi agar visual tetap konsisten tanpa blur berlebihan.
-- Transisi antar menu memakai fade, slide mikro, dan scale ringan agar perpindahan fitur terasa seamless tanpa animasi berat.
-- Empty, loading, error, dan permission states memakai pola visual `SolatifyStateView` agar feedback lintas fitur lebih konsisten.
-- Compact-width widget smoke tests menjaga Home, Jadwal, Qur'an, Settings, dan Konten Islami tetap aman di lebar ponsel kecil.
-- Haptic feedback ringan ditambahkan pada navigasi, toggle tracker/settings, bookmark Qur'an, dan aksi menu agar interaksi terasa lebih native.
-- Countdown waktu salat memakai tick 1 detik, bukan sub-second rebuild.
-- Scheduler notifikasi memakai sync plan, filter per waktu salat, dan post-permission refresh agar hanya membatalkan/menjadwalkan ulang alarm yang berubah, sementara perubahan lokasi/jadwal/izin tetap memicu reschedule langsung.
+- Budget cold start, warm resume, frame build/raster, dan aset dijaga lewat test agar baseline tidak drift diam-diam.
+- Countdown waktu salat memakai tick 1 detik tanpa inisialisasi database zona waktu per detik, dan hanya berjalan saat layar Beranda tampil.
+- Widget layar utama menerima jadwal sekali saat berubah, bukan teks hitung mundur setiap detik; hitung mundurnya dijalankan oleh sistem.
+- Cache detail surah dibuka saat pertama dibutuhkan, bukan saat startup.
+- Scheduler notifikasi memakai sync plan sehingga hanya membatalkan/menjadwalkan ulang alarm yang berubah; sync penuh saat start, resume, dan perubahan pengaturan.
 - List panjang memakai builder/lazy rendering pada fitur konten utama.
-- Header, kartu menu, dan spacing layar fitur diringkas agar tidak ada teks berulang dan tetap nyaman di layar compact.
-- Layar konten/detail prioritas memakai `SolatifyScreenScaffold` untuk pola AppBar, background islami, responsive center, dan padding yang konsisten.
+- Empty, loading, error, dan permission states memakai pola visual `SolatifyStateView`.
+- Layar konten/detail memakai `SolatifyScreenScaffold` untuk AppBar, background islami, responsive center, dan padding yang konsisten.
 
 ## 🔔 Catatan Notifikasi
 
-Notifikasi salat mendukung kontrol yang lebih granular di Settings:
+Notifikasi salat mendukung kontrol granular di Settings:
 
-- Toggle per waktu salat untuk mengaktifkan hanya Subuh, Magrib, atau kombinasi lain.
+- Toggle per waktu salat untuk mengaktifkan hanya Subuh, Magrib, atau kombinasi lain. Waktu salat yang dimatikan langsung dibatalkan dari jadwal sistem.
 - Pengingat sebelum salat, termasuk opsi 10 menit sebelum waktu salat.
-- Mode suara `adhan`, `beep`, atau `silent notification` sesuai preferensi pengguna.
+- Mode suara `adhan`, `beep`, atau `silent notification`.
 - Verifikasi izin setelah kembali dari Settings dan reschedule otomatis saat izin berubah.
-- Settings dan Notification Health Center memverifikasi ulang izin saat app kembali aktif dari system settings, lalu reschedule atau cancel otomatis sesuai status terbaru.
-- Riwayat notifikasi menyimpan status terakhir terjadwal/gagal untuk debugging dan transparansi.
-- Notification Health Center di Settings membantu cek izin, pending schedule, riwayat terakhir, kirim test notifikasi, dan reschedule manual.
+- Notification Health Center di Settings untuk cek izin, pending schedule, riwayat terakhir, kirim test notifikasi, dan reschedule manual.
 
-Untuk Android, notifikasi salat memakai channel `Prayer Times Adhan` (`prayer_times_adhan_channel`), `Prayer Times Beep` (`prayer_times_beep_channel`), dan `Prayer Times Silent` (`prayer_times_silent_channel`) dengan native alarm fallback yang ikut menghormati mode `adhan`, `beep`, `silent`, dan reminder agar alarm muncul di system tray secara lebih andal:
+Untuk Android, notifikasi salat memakai channel `Prayer Times Adhan` (`prayer_times_adhan_channel`), `Prayer Times Beep` (`prayer_times_beep_channel`), dan `Prayer Times Silent` (`prayer_times_silent_channel`) dengan alarm native:
 
 1. Install build terbaru dan buka aplikasi minimal sekali.
 2. Berikan izin notifikasi (`POST_NOTIFICATIONS`) pada Android 13+.
@@ -74,16 +82,15 @@ Untuk Android, notifikasi salat memakai channel `Prayer Times Adhan` (`prayer_ti
 
 ## ✅ QA & Kesiapan Build
 
-Status branch terbaru sudah diverifikasi dengan:
+Status `main` untuk rilis `v1.0.0-rc3`:
 
-- `flutter test` — 138/138 tests passed.
-- `flutter analyze` — no issues.
-- `flutter test -d emulator-5554 integration_test/app_test.dart` — 2/2 integration tests passed di Android emulator.
-- `flutter test -d 00008140-000518E42EB8401C integration_test/app_test.dart` — 2/2 integration tests passed di iPhone `Satelit88`.
-- `flutter build apk --debug` — Android debug APK berhasil dibuat di `build/app/outputs/flutter-apk/app-debug.apk`.
-- `flutter build ios --no-codesign` — iOS app berhasil dibuat di `build/ios/iphoneos/Runner.app`.
+- `flutter analyze`: no issues.
+- `flutter test`: 204 tests passed.
+- `flutter build apk --release` dan `flutter build appbundle --release` berhasil.
+- `flutter build ios --release` berhasil, dipasang dan dijalankan di iPhone 16 Pro (iOS 27.2).
+- Smoke test di emulator Pixel 7 (Android 17): Beranda, Qur'an, Kiblat, dan murotal di latar belakang dengan kontrol notifikasi.
 
-Dokumen QA tambahan tersedia di `docs/qa/`, termasuk runbook, checklist Android/iOS, performance checklist, dan release signoff. Catatan checkpoint pengembangan terbaru tersedia di `docs/DEVELOPMENT_NOTES.md`.
+Belum diverifikasi di perangkat: adzan tepat pada waktu salat dan widget yang berpindah antar salat. Dokumen QA tambahan tersedia di `docs/qa/`, dan catatan pengembangan di `docs/DEVELOPMENT_NOTES.md`.
 
 ## 💻 Memulai
 
@@ -103,31 +110,21 @@ Dokumen QA tambahan tersedia di `docs/qa/`, termasuk runbook, checklist Android/
    flutter run
    ```
 
-## 🧪 Testing
-
-Jalankan test utama:
+## 🧪 Testing & Build
 
 ```bash
-flutter test --no-pub
+flutter test --no-pub          # unit dan widget test
+flutter analyze --no-pub       # static analysis
+flutter build apk --release    # APK Android
+flutter build appbundle --release
+flutter build ios --release    # butuh signing Apple Developer
 ```
 
-Jalankan analyzer:
+Build release Android memakai `android/key.properties` bila tersedia; tanpa file itu Gradle memakai debug key dan menampilkan peringatan. Panduan lengkap ada di [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
-```bash
-flutter analyze --no-pub
-```
+## 🌐 Website
 
-Build Android debug APK:
-
-```bash
-flutter build apk --debug
-```
-
-Build iOS tanpa codesign:
-
-```bash
-flutter build ios --no-codesign
-```
+Landing page ada di folder [`solatify-website/`](solatify-website/) (Next.js) dan tayang di [solatify.my.id](https://solatify.my.id). Setiap push ke `main` otomatis di-deploy oleh Vercel.
 
 ## 📜 Lisensi
 
