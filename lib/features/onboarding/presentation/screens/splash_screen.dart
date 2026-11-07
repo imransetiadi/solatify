@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:solatify/core/widgets/solatify_logo.dart';
 import 'package:solatify/core/localization/app_localizations.dart';
 import 'package:solatify/core/navigation/app_routes.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
@@ -103,27 +103,20 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(
-                                      SolatifySpacing.xl,
-                                    ),
+                                  DecoratedBox(
                                     decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: SolatifyColors.softSurface(
-                                        context,
-                                      ),
-                                      border: Border.all(
-                                        color: SolatifyColors.borderStrong(
-                                          context,
+                                      borderRadius: BorderRadius.circular(28),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(
+                                            alpha: 0.18,
+                                          ),
+                                          blurRadius: 24,
+                                          offset: const Offset(0, 10),
                                         ),
-                                        width: 1.5,
-                                      ),
+                                      ],
                                     ),
-                                    child: SvgPicture.asset(
-                                      'assets/images/masjid_nabawi.svg',
-                                      width: 76,
-                                      height: 76,
-                                    ),
+                                    child: const SolatifyLogo(size: 112),
                                   ),
                                   const SizedBox(height: 24),
                                   FittedBox(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:solatify/core/widgets/solatify_logo.dart';
 import 'package:solatify/core/localization/app_localizations.dart';
 import 'package:solatify/core/navigation/app_routes.dart';
 import 'package:solatify/core/widgets/glass_container.dart';
@@ -27,7 +28,7 @@ class _GetStartedScreenState extends ConsumerState<GetStartedScreen> {
       description: isEnglish
           ? 'A complete companion for worship and Islamic knowledge'
           : 'Aplikasi komprehensif untuk ibadah dan pengetahuan Islami',
-      icon: Icons.mosque,
+      showLogo: true,
     ),
     GetStartedPage(
       title: isEnglish ? 'Accurate Prayer Times' : 'Jadwal Sholat Akurat',
@@ -189,11 +190,15 @@ class GetStartedPage {
   GetStartedPage({
     required this.title,
     required this.description,
-    required this.icon,
-  });
+    this.icon,
+    this.showLogo = false,
+  }) : assert(icon != null || showLogo);
   final String title;
   final String description;
-  final IconData icon;
+  final IconData? icon;
+
+  /// Shows the Solatify logo instead of [icon] (the welcome page).
+  final bool showLogo;
 }
 
 class GetStartedPageView extends StatelessWidget {
@@ -220,21 +225,24 @@ class GetStartedPageView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ExcludeSemantics(
-              child: Container(
-                width: iconBox,
-                height: iconBox,
-                decoration: BoxDecoration(
-                  color: SolatifyColors.accentSoft(context),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  page.icon,
-                  size: iconBox * 0.5,
-                  color: SolatifyColors.accent(context),
+            if (page.showLogo)
+              SolatifyLogo(size: iconBox)
+            else
+              ExcludeSemantics(
+                child: Container(
+                  width: iconBox,
+                  height: iconBox,
+                  decoration: BoxDecoration(
+                    color: SolatifyColors.accentSoft(context),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    page.icon,
+                    size: iconBox * 0.5,
+                    color: SolatifyColors.accent(context),
+                  ),
                 ),
               ),
-            ),
             SizedBox(
               height: isShort ? SolatifySpacing.lg : SolatifySpacing.xxl,
             ),

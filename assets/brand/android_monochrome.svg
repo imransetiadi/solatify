@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#16623F"/>
+      <stop offset="1" stop-color="#082E1D"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="512" cy="217" r="340" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#E2B866" stop-opacity="0.20"/>
+      <stop offset="1" stop-color="#E2B866" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <g id="mark" transform="translate(512 512) scale(0.84) translate(-512 -540)">
+    <!-- sun path: the five daily prayers -->
+    <path d="M193 515 A330 330 0 0 1 831 515" fill="none" stroke="#FFFFFF" stroke-opacity="0.45" stroke-width="8" stroke-linecap="round"/>
+    <circle cx="193" cy="515" r="28" fill="#FFFFFF"/>
+    <circle cx="311" cy="338" r="28" fill="#FFFFFF"/>
+    <circle cx="512" cy="270" r="40" fill="#FFFFFF"/>
+    <circle cx="713" cy="338" r="28" fill="#FFFFFF"/>
+    <circle cx="831" cy="515" r="28" fill="#FFFFFF"/>
+    <!-- mihrab arch -->
+    <path d="M362 800 V600 A225 225 0 0 1 512 388 A225 225 0 0 1 662 600 V800" fill="none" stroke="#FFFFFF" stroke-width="44" stroke-linejoin="round"/>
+    <rect x="292" y="796" width="440" height="44" rx="22" fill="#FFFFFF"/>
+    <!-- crescent -->
+    <path d="M500.2 508.85 A82 82 0 1 0 589.69 616.23 A70 70 0 0 1 500.2 508.85 Z" fill="#FFFFFF"/>
+  </g>
+</svg>

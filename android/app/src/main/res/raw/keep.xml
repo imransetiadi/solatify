@@ -5,4 +5,4 @@
      resource id to build a CustomAction"). Without that notification the
      foreground service never started and Android muted background playback. -->
 <resources xmlns:tools="http://schemas.android.com/tools"
-    tools:keep="@drawable/audio_service_*,@mipmap/ic_launcher" />
+    tools:keep="@drawable/audio_service_*,@mipmap/ic_launcher,@drawable/ic_stat_solatify" />

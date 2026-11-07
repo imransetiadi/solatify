@@ -2,8 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:solatify/core/widgets/solatify_logo.dart';
 import 'package:solatify/core/localization/app_localizations.dart';
 import 'package:solatify/core/navigation/app_routes.dart';
 import 'package:solatify/core/utils/location_service.dart';
@@ -326,11 +326,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              SvgPicture.asset(
-                'assets/images/masjid_nabawi.svg',
-                width: 28,
-                height: 28,
-              ),
+              const SolatifyLogo(size: 32),
               const SizedBox(width: SolatifySpacing.sm),
               Flexible(
                 child: FittedBox(
@@ -487,7 +483,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       padding: _slidePadding(),
       child: _slideCard(
         children: [
-          _slideIcon(Icons.mosque_outlined, isShort),
+          SolatifyLogo(size: isShort ? 72 : 96),
           SizedBox(height: isShort ? SolatifySpacing.lg : SolatifySpacing.xxl),
           _slideTitle(_t('Selamat Datang', 'Welcome')),
           const SizedBox(height: SolatifySpacing.md),
