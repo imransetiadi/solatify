@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 
@@ -18,6 +17,7 @@ import 'package:solatify/core/widgets/responsive_layout.dart';
 import 'package:solatify/core/widgets/solatify_design_tokens.dart';
 import 'package:solatify/core/widgets/solatify_state_view.dart';
 import 'package:solatify/features/mosque/data/mosque_local_data_source.dart';
+import 'package:solatify/features/mosque/data/mosque_remote_data_source.dart';
 import 'package:solatify/features/mosque/data/mosque_search_utils.dart';
 import 'package:solatify/features/prayer_schedule/presentation/location_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -36,16 +36,7 @@ class NearbyMosqueScreen extends ConsumerStatefulWidget {
 
 class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen>
     with WidgetsBindingObserver {
-  static const _searchRadiusMeters = 5000;
-  static const _fallbackRadiusMeters = [5000, 2500];
-  // Public Overpass servers can take ~30s under load. Slightly above the
-  // query's server-side [timeout:25] so the server can answer first.
-  static const _requestTimeout = Duration(seconds: 30);
-  static const _overpassEndpoints = [
-    'https://overpass-api.de/api/interpreter',
-    'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
-    'https://overpass.private.coffee/api/interpreter',
-  ];
+  static const _searchRadiusMeters = MosqueRemoteDataSource.searchRadiusMeters;
 
   /// Copy is built when a message is set, in the current app language.
   String _t(String id, String en) =>
@@ -77,6 +68,7 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen>
   static final Map<String, List<MosqueItem>> _mosqueMemoryCache = {};
 
   final MosqueLocalDataSource _localDataSource = const MosqueLocalDataSource();
+  final MosqueRemoteDataSource _remoteDataSource = MosqueRemoteDataSource();
 
   final TextEditingController _searchController = TextEditingController();
   List<MosqueItem> _mosques = const [];
@@ -185,7 +177,7 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen>
 
       final List<MosqueItem> mosques;
       try {
-        mosques = await _fetchMosquesFromOverpass(
+        mosques = await _remoteDataSource.searchNearby(
           latitude: latitude,
           longitude: longitude,
         );
@@ -312,116 +304,6 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen>
       'GPS belum mendapatkan posisi. Menggunakan lokasi tersimpan.',
       'GPS has no position yet. Using your saved location.',
     );
-  }
-
-  Future<List<MosqueItem>> _fetchMosquesFromOverpass({
-    required double latitude,
-    required double longitude,
-  }) async {
-    Object? lastError;
-
-    // For each radius, query all Overpass endpoints CONCURRENTLY and take the
-    // first one that responds successfully. This avoids waiting through a long
-    // chain of sequential timeouts when public servers are slow/unreachable.
-    for (final radius in _fallbackRadiusMeters) {
-      final futures = _overpassEndpoints
-          .map(
-            (endpoint) => _fetchMosquesFromEndpoint(
-              endpoint: endpoint,
-              radiusMeters: radius,
-              latitude: latitude,
-              longitude: longitude,
-            ),
-          )
-          .toList();
-      try {
-        return await _firstNonEmptyResult(futures);
-      } catch (error) {
-        lastError = error;
-      }
-    }
-
-    throw lastError ?? 'Semua endpoint Overpass gagal merespons.';
-  }
-
-  /// Completes with the first non-empty result. Overloaded servers sometimes
-  /// answer quickly with an empty list, so an empty answer only wins once
-  /// every other endpoint has finished without data. Fails only when every
-  /// endpoint fails.
-  Future<List<MosqueItem>> _firstNonEmptyResult(
-    List<Future<List<MosqueItem>>> futures,
-  ) {
-    final completer = Completer<List<MosqueItem>>();
-    var remaining = futures.length;
-    var anySucceeded = false;
-    Object? lastError;
-
-    void settleIfDone() {
-      remaining--;
-      if (remaining > 0 || completer.isCompleted) return;
-      if (anySucceeded) {
-        completer.complete(const []);
-      } else {
-        completer.completeError(lastError ?? 'Semua endpoint gagal.');
-      }
-    }
-
-    for (final future in futures) {
-      future
-          .then((mosques) {
-            anySucceeded = true;
-            if (mosques.isNotEmpty && !completer.isCompleted) {
-              completer.complete(mosques);
-            }
-            settleIfDone();
-          })
-          .catchError((Object error) {
-            lastError = error;
-            settleIfDone();
-          });
-    }
-
-    return completer.future;
-  }
-
-  Future<List<MosqueItem>> _fetchMosquesFromEndpoint({
-    required String endpoint,
-    required int radiusMeters,
-    required double latitude,
-    required double longitude,
-  }) async {
-    final query = buildMosqueOverpassQuery(
-      radiusMeters: radiusMeters,
-      latitude: latitude,
-      longitude: longitude,
-    );
-    final response = await http
-        .post(
-          Uri.parse(endpoint),
-          headers: const {
-            'Accept': 'application/json',
-            'User-Agent': 'Solatify/1.0 mosque-search',
-          },
-          body: {'data': query},
-        )
-        .timeout(_requestTimeout);
-
-    if (response.statusCode == 200) {
-      final decoded = jsonDecode(response.body);
-      if (decoded is! Map<String, dynamic>) {
-        throw const FormatException('Format respons Overpass tidak valid.');
-      }
-      return parseMosqueOverpassElements(
-        data: decoded,
-        originLatitude: latitude,
-        originLongitude: longitude,
-      );
-    }
-
-    debugPrint(
-      'Overpass mosque search failed at $endpoint with status ${response.statusCode}: ${response.body.substring(0, math.min(response.body.length, 160))}',
-    );
-    throw Exception('Gagal memuat data masjid dari $endpoint');
   }
 
   Future<void> _launchMapUri(Uri uri) async {
