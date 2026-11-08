@@ -8,7 +8,7 @@
 </p>
 <p align="center">
   <a href="https://solatify.my.id">solatify.my.id</a> ·
-  <a href="https://github.com/imransetiadi/solatify/releases/tag/v1.0.0-rc3">Unduh APK Android (v1.0.0-rc3)</a>
+  <a href="https://github.com/imransetiadi/solatify/releases/tag/v1.0.0-rc4">Unduh APK Android (v1.0.0-rc4)</a>
 </p>
 
 ---
@@ -19,10 +19,10 @@
 
 | Platform | Status |
 |---|---|
-| Android | APK release candidate tersedia di [GitHub Releases](https://github.com/imransetiadi/solatify/releases/tag/v1.0.0-rc3) |
+| Android | APK release candidate `v1.0.0-rc4` tersedia di [GitHub Releases](https://github.com/imransetiadi/solatify/releases/tag/v1.0.0-rc4) |
 | iOS | Segera hadir |
 
-> **Catatan rc3:** APK ini ditandatangani dengan debug key sehingga bisa dipasang langsung (sideload) untuk uji coba, tetapi belum bisa diunggah ke Play Console. Build yang nanti memakai keystore rilis tidak bisa dipasang di atas versi ini tanpa uninstall terlebih dahulu. Lihat [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) untuk menyiapkan signing rilis.
+> **Catatan rc4:** APK ini ditandatangani dengan debug key yang sama dengan rc3, jadi bisa dipasang langsung di atas rc3 tanpa uninstall dan data tetap aman. APK ini bisa dipasang langsung (sideload) untuk uji coba, tetapi belum bisa diunggah ke Play Console. Build yang nanti memakai keystore rilis tidak bisa dipasang di atas versi ini tanpa uninstall terlebih dahulu. Lihat [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) untuk menyiapkan signing rilis.
 
 ## ✨ Fitur Utama
 
@@ -31,7 +31,7 @@
 - 📖 **Al-Qur'an & Murotal**: Daftar surah, reading mode dengan kontrol ukuran font Arab, toggle transliterasi/terjemahan, progres surah, bookmark, dan terakhir dibaca. Murotal Mishary Rashid Alafasy bisa diputar per ayat atau satu surah penuh, **tetap berjalan di latar belakang** dengan mini-player di atas navigasi bawah serta kontrol di layar kunci dan notifikasi.
 - 🤲 **Dzikir, Doa & Tuntunan Salat**: Dzikir pagi dan petang dengan teks lengkap (Ayat Kursi dan tiga surah Qul diambil dari sumber yang sama dengan pembaca Qur'an), doa harian, Asmaul Husna, tips islami, dan urutan salat dengan bacaan Arab, latin, dan arti.
 - 🧭 **Arah Kiblat**: Kompas berbasis sensor perangkat lewat kanal native Solatify sendiri, mengacu ke utara sejati (deklinasi magnet dikoreksi di Android), dengan petunjuk kalibrasi dan tampilan simulasi saat sensor tidak tersedia. Sensor hanya aktif selama layar kiblat dibuka.
-- 🕌 **Masjid Terdekat**: Pencarian masjid sekitar dari data OpenStreetMap, tombol lihat peta, dan rute lewat aplikasi peta. Hasil pencarian terakhir disimpan sehingga tetap tampil saat server peta sedang sibuk.
+- 🕌 **Masjid Terdekat**: Masjid dalam radius 5 km dari data OpenStreetMap lewat layanan pencarian [Photon](https://photon.komoot.io), biasanya tampil dalam sekitar 1 detik, lengkap dengan alamat, tombol lihat peta, dan rute lewat aplikasi peta. Server Overpass dipakai sebagai cadangan bila Photon tidak merespons, dan hasil pencarian terakhir disimpan sehingga tetap tampil saat server peta sedang sibuk.
 - 🌙 **Kalender Hijriah**: Hari besar Islam dihitung dari kalender Umm al-Qura untuk tahun Hijriah berjalan dan berikutnya (tanggal resmi pemerintah bisa berbeda 1 hari).
 - 📈 **Tracker Ibadah**: Checklist ibadah harian, heatmap 14 hari, streak, dan statistik mingguan.
 - 📱 **Widget Layar Utama**: Widget iOS dan Android yang menampilkan salat berikutnya dengan hitung mundur live dan berpindah sendiri ke salat selanjutnya.
@@ -41,6 +41,7 @@
 
 - **Flutter + Dart** untuk aplikasi lintas platform Android dan iOS.
 - **Riverpod** untuk state management yang eksplisit dan testable.
+- **Photon** (OpenStreetMap) untuk pencarian masjid terdekat, dengan Overpass sebagai cadangan.
 - **Hive** untuk cache lokal jadwal, pengaturan, tracker, data Al-Qur'an, dan hasil pencarian masjid. Box data pengguna dicadangkan, bukan dihapus, bila gagal dibuka.
 - **GoRouter** untuk navigasi deklaratif, dengan konstanta rute di `AppRoutes`.
 - **Clean Architecture** per fitur: `data`, `domain`, dan `presentation`.
@@ -82,13 +83,14 @@ Untuk Android, notifikasi salat memakai channel `Prayer Times Adhan` (`prayer_ti
 
 ## ✅ QA & Kesiapan Build
 
-Status `main` untuk rilis `v1.0.0-rc3`:
+Status `main` untuk rilis `v1.0.0-rc4`:
 
 - `flutter analyze`: no issues.
-- `flutter test`: 204 tests passed.
+- `flutter test`: 249 tests passed.
 - `flutter build apk --release` dan `flutter build appbundle --release` berhasil.
-- `flutter build ios --release` berhasil, dipasang dan dijalankan di iPhone 16 Pro (iOS 27.2).
-- Smoke test di emulator Pixel 7 (Android 17): Beranda, Qur'an, Kiblat, dan murotal di latar belakang dengan kontrol notifikasi.
+- `flutter build ios --release` berhasil dan dipasang di iPhone 16 Pro (iOS 27.2).
+- Pencarian masjid diuji langsung ke server: Jakarta 90 masjid dalam 0,88 detik, Denpasar 18 dalam 0,96 detik, Kuala Lumpur 31 dalam 1,05 detik.
+- Audit lengkap Android dan iOS (8 November 2026) ada di [`docs/qa/full-app-audit-2026-11-08.md`](docs/qa/full-app-audit-2026-11-08.md).
 
 Belum diverifikasi di perangkat: adzan tepat pada waktu salat dan widget yang berpindah antar salat. Dokumen QA tambahan tersedia di `docs/qa/`, dan catatan pengembangan di `docs/DEVELOPMENT_NOTES.md`.
 

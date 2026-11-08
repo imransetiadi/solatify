@@ -8,8 +8,8 @@
 	<array/>
 	<key>NSPrivacyCollectedDataTypes</key>
 	<array>
-		<!-- The device position is sent to OpenStreetMap (Overpass) servers to
-		     find nearby mosques. It is not linked to the user or used for
+		<!-- The device position is sent to OpenStreetMap search services
+		     (Photon, with Overpass as a fallback) to find nearby mosques. It is not linked to the user or used for
 		     tracking. -->
 		<dict>
 			<key>NSPrivacyCollectedDataType</key>

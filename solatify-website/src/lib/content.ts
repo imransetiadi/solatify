@@ -1,7 +1,7 @@
 export type Locale = "en" | "id";
 
 export const storeLinks = {
-  android: "https://github.com/imransetiadi/solatify/releases/download/v1.0.0-rc3/solatify-1.0.0.apk"
+  android: "https://github.com/imransetiadi/solatify/releases/download/v1.0.0-rc4/solatify-1.0.0.apk"
 };
 
 export const languages: Record<Locale, string> = {
@@ -152,7 +152,7 @@ export const localizedContent = {
       items: [
         { title: "Location with purpose", description: "Location is used to calculate prayer times and nearby mosque context, not to make the app feel noisy." },
         { title: "Local notification control", description: "Prayer reminders and optional adhan behavior stay tied to your device permission and app settings." },
-        { title: "Your data stays on your phone", description: "Prayer logs, bookmarks, and settings are stored on your device. Your location is only sent to OpenStreetMap when you search for nearby mosques." }
+        { title: "Your data stays on your phone", description: "Prayer logs, bookmarks, and settings are stored on your device. Your location is only sent to OpenStreetMap search services (Photon, with Overpass as a backup) when you search for nearby mosques." }
       ]
     },
     notifications: {
@@ -177,7 +177,7 @@ export const localizedContent = {
     cta: {
       eyebrow: "Install Solatify",
       title: "Download Solatify.",
-      copy: "Android APK is available now as release candidate v1.0.0-rc3. iOS coming soon."
+      copy: "Android APK is available now as release candidate v1.0.0-rc4. iOS coming soon."
     },
     faqSection: {
       eyebrow: "FAQ",
@@ -217,7 +217,7 @@ export const localizedContent = {
       {
         icon: "📍",
         title: "Nearby mosques",
-        description: "Find mosques around you with map directions. Your last results stay available when map servers are busy."
+        description: "Find mosques within 5 km, usually in about a second, with addresses and map directions. Your last results stay available when map servers are busy."
       },
       {
         icon: "🤲",
@@ -329,7 +329,7 @@ export const localizedContent = {
       {
         question: "How do I install the Android APK?",
         answer:
-          "Download the APK from the button on this page and allow installs from your browser when Android asks. This is release candidate v1.0.0-rc3, shared for testing ahead of the store release."
+          "Download the APK from the button on this page and allow installs from your browser when Android asks. This is release candidate v1.0.0-rc4, shared for testing ahead of the store release."
       }
     ]
   },
@@ -475,7 +475,7 @@ export const localizedContent = {
       items: [
         { title: "Lokasi sesuai kebutuhan", description: "Lokasi digunakan untuk menghitung jadwal salat dan konteks masjid terdekat, bukan membuat aplikasi terasa berisik." },
         { title: "Kontrol notifikasi lokal", description: "Pengingat salat dan adzan opsional tetap mengikuti izin perangkat serta pengaturan aplikasi." },
-        { title: "Datamu tetap di HP", description: "Catatan ibadah, bookmark, dan pengaturan disimpan di perangkatmu. Lokasi hanya dikirim ke OpenStreetMap saat kamu mencari masjid terdekat." }
+        { title: "Datamu tetap di HP", description: "Catatan ibadah, bookmark, dan pengaturan disimpan di perangkatmu. Lokasi hanya dikirim ke layanan pencarian OpenStreetMap (Photon, dengan Overpass sebagai cadangan) saat kamu mencari masjid terdekat." }
       ]
     },
     notifications: {
@@ -500,7 +500,7 @@ export const localizedContent = {
     cta: {
       eyebrow: "Install Solatify",
       title: "Download Solatify.",
-      copy: "APK Android sudah tersedia sebagai release candidate v1.0.0-rc3. iOS segera hadir."
+      copy: "APK Android sudah tersedia sebagai release candidate v1.0.0-rc4. iOS segera hadir."
     },
     faqSection: {
       eyebrow: "FAQ",
@@ -541,7 +541,7 @@ export const localizedContent = {
         icon: "📍",
         title: "Masjid terdekat",
         description:
-          "Temukan masjid di sekitarmu lengkap dengan rute peta. Hasil terakhir tetap tampil saat server peta sedang sibuk."
+          "Temukan masjid dalam radius 5 km, biasanya dalam sekitar 1 detik, lengkap dengan alamat dan rute peta. Hasil terakhir tetap tampil saat server peta sedang sibuk."
       },
       {
         icon: "🤲",
@@ -653,7 +653,7 @@ export const localizedContent = {
       {
         question: "Bagaimana cara memasang APK Android?",
         answer:
-          "Unduh APK dari tombol di halaman ini, lalu izinkan pemasangan dari browser saat Android memintanya. Ini release candidate v1.0.0-rc3 yang dibagikan untuk uji coba sebelum rilis di store."
+          "Unduh APK dari tombol di halaman ini, lalu izinkan pemasangan dari browser saat Android memintanya. Ini release candidate v1.0.0-rc4 yang dibagikan untuk uji coba sebelum rilis di store."
       }
     ]
   }

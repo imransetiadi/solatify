@@ -6,19 +6,17 @@ Panduan ini dipakai untuk internal testing Solatify tanpa Google Play Store. Tes
 
 Release candidate terbaru:
 
-- GitHub Release: https://github.com/imransetiadi/solatify/releases/tag/v1.0.0-rc1
-- File yang dipakai tester Android: `app-release.apk`
+- GitHub Release: https://github.com/imransetiadi/solatify/releases/tag/v1.0.0-rc4
+- File yang dipakai tester Android: `solatify-1.0.0.apk`
 
-Checksum APK v1.0.0-rc1:
+Checksum SHA-256 APK tercantum di halaman GitHub Release di atas.
 
-```text
-aa23037e82658d4b489cc43e87d90591c96929e0adc54ddc0cca10b572b22c44
-```
+Sudah memasang rc3? APK rc4 bisa langsung dipasang di atasnya tanpa uninstall, dan data aplikasi tetap tersimpan.
 
 ## Cara Install Android
 
 1. Buka link GitHub Release dari HP Android.
-2. Download `app-release.apk`.
+2. Download `solatify-1.0.0.apk`.
 3. Jika Android menampilkan peringatan, izinkan install dari browser/file manager yang dipakai.
 4. Install APK.
 5. Buka Solatify dari launcher.
@@ -64,6 +62,14 @@ Catatan: Karena APK belum dari Play Store, Android bisa menampilkan warning inst
 - Buka Settings dan ubah salah satu setting ringan.
 - Restart app dan pastikan setting masih tersimpan.
 
+### Masjid Terdekat
+
+- Buka menu Masjid Terdekat dengan GPS dan internet aktif.
+- Daftar masjid muncul dalam beberapa detik, urut dari yang terdekat, lengkap dengan alamat.
+- Tidak ada gereja, pura, vihara, atau tempat ibadah lain di daftar.
+- Tombol peta dan rute membuka aplikasi peta.
+- Matikan internet lalu buka lagi: hasil terakhir tetap tampil dengan pesan yang jelas.
+
 ### Android Widget
 
 - Tambahkan widget Solatify ke home screen Android.
@@ -77,7 +83,7 @@ Kirim laporan dengan format berikut:
 ```text
 Device:
 Android version:
-Solatify version: v1.0.0-rc1
+Solatify version: v1.0.0-rc4
 Fitur yang dites:
 Langkah reproduksi:
 Hasil yang terjadi:
@@ -91,7 +97,7 @@ Contoh:
 ```text
 Device: Redmi Note 13
 Android version: Android 14
-Solatify version: v1.0.0-rc1
+Solatify version: v1.0.0-rc4
 Fitur yang dites: Settings > Test notification
 Langkah reproduksi:
 1. Buka Settings
@@ -106,5 +112,5 @@ Catatan tambahan: Izin notifikasi sudah aktif
 
 - Distribusi saat ini menggunakan APK GitHub Release, bukan Google Play Store.
 - Android mungkin menampilkan warning karena install manual dari APK.
-- Build masih menampilkan warning future Kotlin Gradle Plugin dari beberapa plugin upstream, tetapi release APK/AAB berhasil dibuat.
+- APK ditandatangani dengan debug key untuk uji coba. Versi Play Store nanti memakai kunci rilis dan perlu uninstall versi uji coba terlebih dahulu.
 - Jika notifikasi tidak muncul, cek izin notifikasi Android dan pengaturan battery optimization device.
