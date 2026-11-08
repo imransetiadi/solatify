@@ -1,7 +1,7 @@
 export type Locale = "en" | "id";
 
 export const storeLinks = {
-  android: "https://github.com/imransetiadi/solatify/releases/download/v1.0.0-rc4/solatify-1.0.0.apk"
+  android: "https://github.com/imransetiadi/solatify/releases/download/v1.0.0-rc5/solatify-1.0.0.apk"
 };
 
 export const languages: Record<Locale, string> = {
@@ -177,7 +177,7 @@ export const localizedContent = {
     cta: {
       eyebrow: "Install Solatify",
       title: "Download Solatify.",
-      copy: "Android APK is available now as release candidate v1.0.0-rc4. iOS coming soon."
+      copy: "Android APK is available now as release candidate v1.0.0-rc5. iOS coming soon."
     },
     faqSection: {
       eyebrow: "FAQ",
@@ -324,12 +324,12 @@ export const localizedContent = {
       {
         question: "Which prayer time calculation methods are available?",
         answer:
-          "Kemenag RI (the default), Muslim World League, ISNA, Egyptian General Authority, Umm al Qura Makkah, and MUIS Singapore. You can also adjust each prayer by a few minutes to match your local mosque."
+          "Kemenag RI (the default), Muslim World League, ISNA, Egyptian General Authority, Umm al Qura Makkah, and MUIS Singapore. Kemenag times include the official ihtiyat and match Kemenag's published schedule to within a minute. You can also adjust each prayer by a few minutes to match your local mosque; the app shows the resulting time before you save."
       },
       {
         question: "How do I install the Android APK?",
         answer:
-          "Download the APK from the button on this page and allow installs from your browser when Android asks. This is release candidate v1.0.0-rc4, shared for testing ahead of the store release. Already have rc3? Install rc4 over it; your data stays."
+          "Download the APK from the button on this page and allow installs from your browser when Android asks. This is release candidate v1.0.0-rc5, shared for testing ahead of the store release. Already have rc3 or rc4? Install rc5 over it; your data stays."
       }
     ]
   },
@@ -500,7 +500,7 @@ export const localizedContent = {
     cta: {
       eyebrow: "Install Solatify",
       title: "Download Solatify.",
-      copy: "APK Android sudah tersedia sebagai release candidate v1.0.0-rc4. iOS segera hadir."
+      copy: "APK Android sudah tersedia sebagai release candidate v1.0.0-rc5. iOS segera hadir."
     },
     faqSection: {
       eyebrow: "FAQ",
@@ -648,12 +648,12 @@ export const localizedContent = {
       {
         question: "Metode perhitungan jadwal salat apa saja yang tersedia?",
         answer:
-          "Kemenag RI (bawaan), Muslim World League, ISNA, Egyptian General Authority, Umm al Qura Makkah, dan MUIS Singapura. Setiap waktu salat juga bisa digeser beberapa menit agar sama dengan masjid lokal."
+          "Kemenag RI (bawaan), Muslim World League, ISNA, Egyptian General Authority, Umm al Qura Makkah, dan MUIS Singapura. Jadwal Kemenag sudah termasuk ihtiyat resmi dan sama dengan jadwal terbitan Kemenag dengan selisih paling banyak 1 menit. Setiap waktu salat juga bisa digeser beberapa menit agar sama dengan masjid lokal; aplikasi menampilkan jam hasilnya sebelum kamu menyimpan."
       },
       {
         question: "Bagaimana cara memasang APK Android?",
         answer:
-          "Unduh APK dari tombol di halaman ini, lalu izinkan pemasangan dari browser saat Android memintanya. Ini release candidate v1.0.0-rc4 yang dibagikan untuk uji coba sebelum rilis di store. Sudah pasang rc3? Pasang rc4 langsung di atasnya, datamu tetap aman."
+          "Unduh APK dari tombol di halaman ini, lalu izinkan pemasangan dari browser saat Android memintanya. Ini release candidate v1.0.0-rc5 yang dibagikan untuk uji coba sebelum rilis di store. Sudah pasang rc3 atau rc4? Pasang rc5 langsung di atasnya, datamu tetap aman."
       }
     ]
   }
