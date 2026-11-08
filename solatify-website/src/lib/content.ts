@@ -64,16 +64,16 @@ export const localizedContent = {
     devicePreview: {
       title: "Light on iPhone. Dark on Pixel.",
       copy: "Supports light and dark mode across platforms.",
-      iosLabel: "iPhone 17 Pro • Light",
-      iosAlt: "Solatify light theme preview on iPhone 17 Pro",
-      androidLabel: "Pixel 10 Pro • Dark",
-      androidAlt: "Solatify dark theme preview on Pixel 10 Pro"
+      iosLabel: "iPhone 16 Pro • Light",
+      iosAlt: "Solatify light theme preview on iPhone 16 Pro",
+      androidLabel: "Pixel 7 • Dark",
+      androidAlt: "Solatify dark theme preview on Pixel 7"
     },
     phoneTabs: [
       {
         key: "home",
         label: "Android",
-        src: "/screenshots/android-home-dark.jpg",
+        src: "/screenshots/app-android-home.jpg",
         alt: "Solatify home screen with next prayer preview",
         title: "Android preview",
         copy: "Prayer time, countdown, and daily schedule."
@@ -81,7 +81,7 @@ export const localizedContent = {
       {
         key: "ios-home",
         label: "iOS",
-        src: "/screenshots/ios1.jpg",
+        src: "/screenshots/app-ios-home.jpg",
         alt: "Solatify iOS home screen with next prayer preview",
         title: "iOS preview",
         copy: "Clean layout for prayer routines."
@@ -89,7 +89,7 @@ export const localizedContent = {
       {
         key: "quran",
         label: "Qur’an",
-        src: "/screenshots/ios3.jpg",
+        src: "/screenshots/app-ios-quran.jpg",
         alt: "Solatify iOS Qur’an screen",
         title: "Qur’an",
         copy: "Browse and read comfortably."
@@ -97,7 +97,7 @@ export const localizedContent = {
       {
         key: "mosque",
         label: "Mosque",
-        src: "/screenshots/android-mosque-dark.jpg",
+        src: "/screenshots/app-android-mosque.jpg",
         alt: "Solatify nearby mosques screen",
         title: "Nearby mosques",
         copy: "Find a prayer place quickly."
@@ -124,14 +124,14 @@ export const localizedContent = {
       copy: ""
     },
     screenshots: [
-      { src: "/screenshots/ios1.jpg", title: "Prayer Home", label: "iOS", story: "" },
-      { src: "/screenshots/ios2.jpg", title: "Schedule", label: "iOS", story: "" },
-      { src: "/screenshots/ios3.jpg", title: "Qur’an", label: "iOS", story: "" },
-      { src: "/screenshots/ios6.jpg", title: "Mosques", label: "iOS", story: "" },
-      { src: "/screenshots/android-home-dark.jpg", title: "Prayer Home", label: "Android", story: "" },
-      { src: "/screenshots/android-quran-dark.jpg", title: "Qur’an", label: "Android", story: "" },
-      { src: "/screenshots/pengaturan.jpg", title: "Settings", label: "Android", story: "" },
-      { src: "/screenshots/tracker-2.jpg", title: "Tracker", label: "Android", story: "" }
+      { src: "/screenshots/app-ios-home.jpg", title: "Prayer Home", label: "iOS", story: "" },
+      { src: "/screenshots/app-ios-schedule.jpg", title: "Schedule", label: "iOS", story: "" },
+      { src: "/screenshots/app-ios-quran.jpg", title: "Qur’an", label: "iOS", story: "" },
+      { src: "/screenshots/app-ios-mosque.jpg", title: "Mosques", label: "iOS", story: "" },
+      { src: "/screenshots/app-android-home.jpg", title: "Prayer Home", label: "Android", story: "" },
+      { src: "/screenshots/app-android-quran.jpg", title: "Qur’an", label: "Android", story: "" },
+      { src: "/screenshots/app-android-settings.jpg", title: "Settings", label: "Android", story: "" },
+      { src: "/screenshots/app-android-tracker.jpg", title: "Tracker", label: "Android", story: "" }
     ],
     mosqueSpotlight: {
       eyebrow: "Nearby Mosques",
@@ -387,16 +387,16 @@ export const localizedContent = {
     devicePreview: {
       title: "Light di iPhone. Dark di Pixel.",
       copy: "Mendukung mode terang dan gelap di dua platform.",
-      iosLabel: "iPhone 17 Pro • Light",
-      iosAlt: "Preview tema light Solatify di iPhone 17 Pro",
-      androidLabel: "Pixel 10 Pro • Dark",
-      androidAlt: "Preview tema dark Solatify di Pixel 10 Pro"
+      iosLabel: "iPhone 16 Pro • Light",
+      iosAlt: "Preview tema light Solatify di iPhone 16 Pro",
+      androidLabel: "Pixel 7 • Dark",
+      androidAlt: "Preview tema dark Solatify di Pixel 7"
     },
     phoneTabs: [
       {
         key: "home",
         label: "Android",
-        src: "/screenshots/android-home-dark.jpg",
+        src: "/screenshots/app-android-home.jpg",
         alt: "Tampilan home Solatify dengan salat berikutnya",
         title: "Preview Android",
         copy: "Jadwal, countdown, dan salat harian."
@@ -404,7 +404,7 @@ export const localizedContent = {
       {
         key: "ios-home",
         label: "iOS",
-        src: "/screenshots/ios1.jpg",
+        src: "/screenshots/app-ios-home.jpg",
         alt: "Tampilan home iOS Solatify dengan salat berikutnya",
         title: "Preview iOS",
         copy: "Tampilan bersih untuk rutinitas salat."
@@ -412,7 +412,7 @@ export const localizedContent = {
       {
         key: "quran",
         label: "Qur’an",
-        src: "/screenshots/ios3.jpg",
+        src: "/screenshots/app-ios-quran.jpg",
         alt: "Tampilan Qur’an iOS Solatify",
         title: "Qur’an",
         copy: "Baca dan jelajahi dengan nyaman."
@@ -420,7 +420,7 @@ export const localizedContent = {
       {
         key: "mosque",
         label: "Masjid",
-        src: "/screenshots/android-mosque-dark.jpg",
+        src: "/screenshots/app-android-mosque.jpg",
         alt: "Tampilan masjid terdekat Solatify",
         title: "Masjid terdekat",
         copy: "Cari tempat salat dengan cepat."
@@ -447,14 +447,14 @@ export const localizedContent = {
       copy: ""
     },
     screenshots: [
-      { src: "/screenshots/ios1.jpg", title: "Home Salat", label: "iOS", story: "" },
-      { src: "/screenshots/ios2.jpg", title: "Jadwal", label: "iOS", story: "" },
-      { src: "/screenshots/ios3.jpg", title: "Qur’an", label: "iOS", story: "" },
-      { src: "/screenshots/ios6.jpg", title: "Masjid", label: "iOS", story: "" },
-      { src: "/screenshots/android-home-dark.jpg", title: "Home Salat", label: "Android", story: "" },
-      { src: "/screenshots/android-quran-dark.jpg", title: "Qur’an", label: "Android", story: "" },
-      { src: "/screenshots/pengaturan.jpg", title: "Pengaturan", label: "Android", story: "" },
-      { src: "/screenshots/tracker-2.jpg", title: "Tracker", label: "Android", story: "" }
+      { src: "/screenshots/app-ios-home.jpg", title: "Home Salat", label: "iOS", story: "" },
+      { src: "/screenshots/app-ios-schedule.jpg", title: "Jadwal", label: "iOS", story: "" },
+      { src: "/screenshots/app-ios-quran.jpg", title: "Qur’an", label: "iOS", story: "" },
+      { src: "/screenshots/app-ios-mosque.jpg", title: "Masjid", label: "iOS", story: "" },
+      { src: "/screenshots/app-android-home.jpg", title: "Home Salat", label: "Android", story: "" },
+      { src: "/screenshots/app-android-quran.jpg", title: "Qur’an", label: "Android", story: "" },
+      { src: "/screenshots/app-android-settings.jpg", title: "Pengaturan", label: "Android", story: "" },
+      { src: "/screenshots/app-android-tracker.jpg", title: "Tracker", label: "Android", story: "" }
     ],
     mosqueSpotlight: {
       eyebrow: "Masjid Terdekat",
