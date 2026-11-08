@@ -55,7 +55,7 @@ Verification: `flutter analyze` clean, 241 tests pass (new regression tests are 
 - **Kemenag ihtiyat (+2 min)**: official Kemenag tables add a safety margin; the app does not. Confirm against bimasislam.kemenag.go.id before changing prayer times.
 - **Content translations**: many duas, tips, Asmaul Husna meanings, dhikr notes and prayer-guide texts exist only in Indonesian. Needs translated content.
 - **Auto-saving "last read"** on leaving a surah would overwrite the reader's manual marker; product decision.
-- **Public Overpass servers** are slow (29–35 s measured) — mosque search depends on them. Consider a cached proxy.
+- ~~**Public Overpass servers** are slow (29–35 s measured)~~ — resolved in PR #73: mosque search now uses Photon (about 1 s), with Overpass only as a fallback.
 - **Lints**: `analysis_options.yaml` was deliberately deleted; a temporary run found no correctness issues (only style and fire-and-forget settings writes).
 - **AGP 9 opt-out flags** (`android.newDsl=false`, `android.builtInKotlin=false`) and the variant-API APK rename will need migrating before the next AGP major.
 - **Crash reporting / CI**: none yet; release errors only go to `debugPrint`.
