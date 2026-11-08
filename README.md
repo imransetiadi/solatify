@@ -8,7 +8,7 @@
 </p>
 <p align="center">
   <a href="https://solatify.my.id">solatify.my.id</a> ·
-  <a href="https://github.com/imransetiadi/solatify/releases/tag/v1.0.0-rc4">Unduh APK Android (v1.0.0-rc4)</a>
+  <a href="https://github.com/imransetiadi/solatify/releases/tag/v1.0.0-rc5">Unduh APK Android (v1.0.0-rc5)</a>
 </p>
 
 ---
@@ -19,10 +19,10 @@
 
 | Platform | Status |
 |---|---|
-| Android | APK release candidate `v1.0.0-rc4` tersedia di [GitHub Releases](https://github.com/imransetiadi/solatify/releases/tag/v1.0.0-rc4) |
+| Android | APK release candidate `v1.0.0-rc5` tersedia di [GitHub Releases](https://github.com/imransetiadi/solatify/releases/tag/v1.0.0-rc5) |
 | iOS | Segera hadir |
 
-> **Catatan rc4:** APK ini ditandatangani dengan debug key yang sama dengan rc3, jadi bisa dipasang langsung di atas rc3 tanpa uninstall dan data tetap aman. APK ini bisa dipasang langsung (sideload) untuk uji coba, tetapi belum bisa diunggah ke Play Console. Build yang nanti memakai keystore rilis tidak bisa dipasang di atas versi ini tanpa uninstall terlebih dahulu. Lihat [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) untuk menyiapkan signing rilis.
+> **Catatan rc5:** APK ini ditandatangani dengan debug key yang sama dengan rc3 dan rc4, jadi bisa dipasang langsung di atas versi itu tanpa uninstall dan data tetap aman. Mulai rc5, jadwal metode Kemenag sudah termasuk ihtiyat resmi sehingga 2 sampai 4 menit lebih lambat dari rc4; kalau dulu kamu menambah koreksi manual supaya sama dengan Kemenag, kembalikan ke 0 (aplikasi menampilkan pengingatnya). APK ini bisa dipasang langsung (sideload) untuk uji coba, tetapi belum bisa diunggah ke Play Console. Build yang nanti memakai keystore rilis tidak bisa dipasang di atas versi ini tanpa uninstall terlebih dahulu. Lihat [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) untuk menyiapkan signing rilis.
 
 ## ✨ Fitur Utama
 
@@ -83,12 +83,13 @@ Untuk Android, notifikasi salat memakai channel `Prayer Times Adhan` (`prayer_ti
 
 ## ✅ QA & Kesiapan Build
 
-Status `main` untuk rilis `v1.0.0-rc4`:
+Status `main` untuk rilis `v1.0.0-rc5`:
 
 - `flutter analyze`: no issues.
-- `flutter test`: 249 tests passed.
+- `flutter test`: 266 tests passed.
 - `flutter build apk --release` dan `flutter build appbundle --release` berhasil.
 - `flutter build ios --release` berhasil dan dipasang di iPhone 16 Pro (iOS 27.2).
+- Jadwal metode Kemenag dibandingkan dengan jadwal resmi Kemenag di 7 kota pada 4 tanggal: 121 dari 140 waktu sama persis, sisanya selisih 1 menit, dan Magrib tidak pernah lebih awal ([detail](docs/prayer-time-corrections.md)).
 - Pencarian masjid diuji langsung ke server: Jakarta 90 masjid dalam 0,88 detik, Denpasar 18 dalam 0,96 detik, Kuala Lumpur 31 dalam 1,05 detik.
 - Audit lengkap Android dan iOS (8 November 2026) ada di [`docs/qa/full-app-audit-2026-11-08.md`](docs/qa/full-app-audit-2026-11-08.md).
 

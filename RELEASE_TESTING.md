@@ -6,12 +6,12 @@ Panduan ini dipakai untuk internal testing Solatify tanpa Google Play Store. Tes
 
 Release candidate terbaru:
 
-- GitHub Release: https://github.com/imransetiadi/solatify/releases/tag/v1.0.0-rc4
+- GitHub Release: https://github.com/imransetiadi/solatify/releases/tag/v1.0.0-rc5
 - File yang dipakai tester Android: `solatify-1.0.0.apk`
 
 Checksum SHA-256 APK tercantum di halaman GitHub Release di atas.
 
-Sudah memasang rc3? APK rc4 bisa langsung dipasang di atasnya tanpa uninstall, dan data aplikasi tetap tersimpan.
+Sudah memasang rc3 atau rc4? APK rc5 bisa langsung dipasang di atasnya tanpa uninstall, dan data aplikasi tetap tersimpan.
 
 ## Cara Install Android
 
@@ -62,6 +62,14 @@ Catatan: Karena APK belum dari Play Store, Android bisa menampilkan warning inst
 - Buka Settings dan ubah salah satu setting ringan.
 - Restart app dan pastikan setting masih tersimpan.
 
+### Jadwal Salat Kemenag dan Koreksi Waktu
+
+- Dengan metode Kemenag, bandingkan jadwal hari ini dengan jadwal resmi Kemenag untuk kotamu (misalnya di bimasislam.kemenag.go.id). Selisihnya paling banyak 1 menit.
+- Di layar Jadwal ada catatan "Metode Kemenag, sudah termasuk ihtiyat resmi."
+- Buka Pengaturan > Koreksi Waktu Salat, ubah salah satu waktu: dialog menampilkan jam standar dan jam hasil koreksi.
+- Coba memajukan Magrib (nilai minus): muncul peringatan soal waktu berbuka puasa.
+- Kembalikan semua koreksi ke 0 lewat tombol "Kembalikan semua koreksi".
+
 ### Masjid Terdekat
 
 - Buka menu Masjid Terdekat dengan GPS dan internet aktif.
@@ -83,7 +91,7 @@ Kirim laporan dengan format berikut:
 ```text
 Device:
 Android version:
-Solatify version: v1.0.0-rc4
+Solatify version: v1.0.0-rc5
 Fitur yang dites:
 Langkah reproduksi:
 Hasil yang terjadi:
@@ -97,7 +105,7 @@ Contoh:
 ```text
 Device: Redmi Note 13
 Android version: Android 14
-Solatify version: v1.0.0-rc4
+Solatify version: v1.0.0-rc5
 Fitur yang dites: Settings > Test notification
 Langkah reproduksi:
 1. Buka Settings
