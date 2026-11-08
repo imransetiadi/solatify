@@ -93,9 +93,17 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
         previous,
         next,
       ) {
-        if (!mounted ||
-            previous?.adhanNotificationsEnabled ==
-                next.adhanNotificationsEnabled) {
+        if (!mounted) return;
+        // Scheduled notifications carry their text, so a language change
+        // must rewrite them.
+        if (previous != null &&
+            previous.language != next.language &&
+            next.adhanNotificationsEnabled) {
+          refreshSchedules(force: true);
+          return;
+        }
+        if (previous?.adhanNotificationsEnabled ==
+            next.adhanNotificationsEnabled) {
           return;
         }
 
@@ -180,6 +188,7 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
       final plan = buildPrayerNotificationSyncPlan(
         activeKeysById: _scheduledNotificationKeysById,
         requests: requests,
+        now: DateTime.now(),
       );
 
       if (plan.requestsToSchedule.isEmpty &&
@@ -206,7 +215,11 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
         _scheduledNotificationKeysById.remove(notificationId);
       }
 
+      final generation = _cancelGeneration;
       for (final request in plan.requestsToSchedule) {
+        // Adhan turned off (cancelAllNotifications) while this sync was
+        // running: stop instead of scheduling the rest of the plan.
+        if (generation != _cancelGeneration) return;
         await _scheduleNotification(
           prayerKey: request.prayerKey,
           prayerTime: request.prayerTime,
@@ -216,6 +229,7 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
           notificationId: request.notificationId,
           isReminder: request.isReminder,
           soundMode: settings.notificationSoundMode,
+          isEnglish: settings.language == 'en',
         );
         // Track progress so a failure part-way through does not forget what
         // was already scheduled.
@@ -223,6 +237,7 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
             plan.desiredKeysById[request.notificationId]!;
       }
 
+      if (generation != _cancelGeneration) return;
       _scheduledNotificationKeysById
         ..clear()
         ..addAll(plan.desiredKeysById);
@@ -264,7 +279,7 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
           PrayerCalculationService.calculatePrayerTimes(
             latitude: location.latitude,
             longitude: location.longitude,
-            date: now.add(Duration(days: day)),
+            date: PrayerCalculationService.cityNoon(timezoneName, now, day),
             method: settings.calculationMethod,
             timezoneName: timezoneName,
             offsets: settings.prayerOffsets,
@@ -288,6 +303,7 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
     required int notificationId,
     required bool isReminder,
     required String soundMode,
+    required bool isEnglish,
   }) async {
     try {
       final timeFormatter = DateFormat('HH:mm');
@@ -303,6 +319,10 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
         notificationId: notificationId,
         isReminder: isReminder,
         soundMode: soundMode,
+        isEnglish: isEnglish,
+        reminderMinutes: isReminder
+            ? prayerTime.difference(notificationTime).inMinutes
+            : null,
         refreshExactAlarmCapability: false,
         // Permission was already checked once for this sync; asking again
         // for each of up to 60 notifications is redundant.
@@ -330,7 +350,11 @@ class NotificationSchedulerNotifier extends StateNotifier<void> {
         tomorrow.containsKey('subuh');
   }
 
+  /// Bumped by [cancelAllNotifications] so a sync already in progress stops.
+  int _cancelGeneration = 0;
+
   Future<void> cancelAllNotifications() async {
+    _cancelGeneration++;
     try {
       await NotificationService().cancelAllNotifications();
       _scheduledNotificationKeysById.clear();

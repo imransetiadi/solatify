@@ -25,16 +25,40 @@ class CompassStreamHandler(context: Context) : EventChannel.StreamHandler, Senso
     private val rotationMatrix = FloatArray(9)
     private val orientation = FloatArray(3)
 
+    // Fallback for phones without a gyroscope (no rotation-vector sensors):
+    // low-pass filtered accelerometer + magnetometer readings.
+    private var useRawSensors = false
+    private val gravity = FloatArray(3)
+    private val geomagnetic = FloatArray(3)
+    private var hasGravity = false
+    private var hasGeomagnetic = false
+
     override fun onListen(arguments: Any?, events: EventChannel.EventSink) {
-        val sensor = sensorManager?.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
-        if (sensor == null) {
+        val manager = sensorManager
+        // Prefer the fused rotation vector; budget phones without a gyroscope
+        // often still have the geomagnetic one, or at least an accelerometer
+        // and a magnetometer.
+        val rotation = manager?.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
+            ?: manager?.getDefaultSensor(Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR)
+        val accelerometer = manager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+        val magnetometer = manager?.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
+        if (manager == null || (rotation == null && (accelerometer == null || magnetometer == null))) {
             events.error("unavailable", "Compass not available on this device", null)
             return
         }
         declinationDegrees = declinationFor(arguments)
         eventSink = events
         lastSentHeading = null
-        sensorManager?.registerListener(this, sensor, SensorManager.SENSOR_DELAY_UI)
+        hasGravity = false
+        hasGeomagnetic = false
+        if (rotation != null) {
+            useRawSensors = false
+            manager.registerListener(this, rotation, SensorManager.SENSOR_DELAY_UI)
+        } else {
+            useRawSensors = true
+            manager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI)
+            manager.registerListener(this, magnetometer, SensorManager.SENSOR_DELAY_UI)
+        }
     }
 
     override fun onCancel(arguments: Any?) {
@@ -44,7 +68,23 @@ class CompassStreamHandler(context: Context) : EventChannel.StreamHandler, Senso
 
     override fun onSensorChanged(event: SensorEvent) {
         val sink = eventSink ?: return
-        SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values)
+        if (useRawSensors) {
+            when (event.sensor.type) {
+                Sensor.TYPE_ACCELEROMETER -> {
+                    lowPass(event.values, gravity, hasGravity)
+                    hasGravity = true
+                }
+                Sensor.TYPE_MAGNETIC_FIELD -> {
+                    lowPass(event.values, geomagnetic, hasGeomagnetic)
+                    hasGeomagnetic = true
+                }
+                else -> return
+            }
+            if (!hasGravity || !hasGeomagnetic) return
+            if (!SensorManager.getRotationMatrix(rotationMatrix, null, gravity, geomagnetic)) return
+        } else {
+            SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values)
+        }
         SensorManager.getOrientation(rotationMatrix, orientation)
         val magnetic = Math.toDegrees(orientation[0].toDouble())
         val heading = ((magnetic + declinationDegrees) % 360 + 360) % 360
@@ -66,6 +106,16 @@ class CompassStreamHandler(context: Context) : EventChannel.StreamHandler, Senso
         }
     }
 
+    private fun lowPass(input: FloatArray, output: FloatArray, initialized: Boolean) {
+        if (!initialized) {
+            input.copyInto(output, endIndex = 3)
+            return
+        }
+        for (i in 0 until 3) {
+            output[i] = output[i] + LOW_PASS_ALPHA * (input[i] - output[i])
+        }
+    }
+
     private fun declinationFor(arguments: Any?): Float {
         val args = arguments as? Map<*, *> ?: return 0f
         val latitude = (args["latitude"] as? Number)?.toFloat() ?: return 0f
@@ -76,5 +126,10 @@ class CompassStreamHandler(context: Context) : EventChannel.StreamHandler, Senso
     private fun angularDistance(a: Double, b: Double): Double {
         val diff = Math.abs(a - b) % 360
         return if (diff > 180) 360 - diff else diff
+    }
+
+    private companion object {
+        /** Smoothing for the raw-sensor fallback (lower = smoother). */
+        const val LOW_PASS_ALPHA = 0.15f
     }
 }

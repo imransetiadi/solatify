@@ -270,10 +270,7 @@ void main() {
       receiver,
       contains('getStringExtra(PrayerAlarmScheduler.EXTRA_SOUND_MODE)'),
     );
-    expect(
-      receiver,
-      contains('soundMode == SOUND_MODE_ADHAN && !isReminder'),
-    );
+    expect(receiver, contains('soundMode == SOUND_MODE_ADHAN && !isReminder'));
     // The full adhan comes from the playback service; the notification is
     // silenced then, so the adhan does not play twice.
     expect(receiver, contains('.setSilent(true)'));
@@ -503,10 +500,42 @@ void main() {
 
     expect(manifest, contains('android.permission.SCHEDULE_EXACT_ALARM'));
     expect(manifest, isNot(contains('android.permission.USE_EXACT_ALARM')));
+    // Restricted by Google Play and not needed: alarms use setAlarmClock.
     expect(
       manifest,
-      contains('android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS'),
+      isNot(
+        contains('android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS'),
+      ),
     );
+  });
+
+  test('Android back is routed through Flutter (PopScope)', () {
+    // With targetSdk 36, predictive back on Android 16+ otherwise bypasses
+    // the shell's PopScope and closes the app from any tab.
+    final manifest = File(
+      'android/app/src/main/AndroidManifest.xml',
+    ).readAsStringSync();
+    expect(manifest, contains('android:enableOnBackInvokedCallback="false"'));
+  });
+
+  test('flutter_local_notifications receivers are not exported', () {
+    final manifest = File(
+      'android/app/src/main/AndroidManifest.xml',
+    ).readAsStringSync();
+    for (final receiver in [
+      'ScheduledNotificationReceiver',
+      'ScheduledNotificationBootReceiver',
+      'ActionBroadcastReceiver',
+    ]) {
+      final start = manifest.indexOf('flutterlocalnotifications.$receiver"');
+      expect(start, isNonNegative, reason: receiver);
+      final declaration = manifest.substring(start, start + 120);
+      expect(
+        declaration,
+        contains('android:exported="false"'),
+        reason: receiver,
+      );
+    }
   });
 
   test('Android manifest declares native prayer alarm receivers', () {
@@ -706,6 +735,54 @@ void main() {
     expect(adhanSound.lengthSync(), lessThan(700 * 1000));
   });
 
+  group('notification text', () {
+    test('reminders say the prayer is coming, not that it has started', () {
+      final title = NotificationService.getNotificationTitle(
+        'dzuhur',
+        'Bekasi',
+        reminderMinutes: 10,
+      );
+      final body = NotificationService.getNotificationMessage(
+        'dzuhur',
+        'Bekasi',
+        '11:36',
+        reminderMinutes: 10,
+      );
+      expect(title, 'Dzuhur 10 menit lagi - Bekasi');
+      expect(body, isNot(contains('Telah masuk')));
+      expect(body, contains('11:36'));
+    });
+
+    test('English users get English text', () {
+      expect(
+        NotificationService.getNotificationTitle(
+          'subuh',
+          'Bekasi',
+          isEnglish: true,
+        ),
+        'Fajr time - Bekasi',
+      );
+      expect(
+        NotificationService.getNotificationTitle(
+          'isya',
+          'Bekasi',
+          isEnglish: true,
+          reminderMinutes: 15,
+        ),
+        'Isha in 15 min - Bekasi',
+      );
+      expect(
+        NotificationService.getNotificationMessage(
+          'magrib',
+          'Bekasi',
+          '17:50',
+          isEnglish: true,
+        ),
+        startsWith('It is now time for Maghrib in Bekasi (17:50).'),
+      );
+    });
+  });
+
   test('iOS adhan notifications are marked for full in-app playback', () {
     final notificationService = File(
       'lib/features/notifications/data/services/notification_service.dart',
@@ -715,9 +792,8 @@ void main() {
     expect(NotificationService.iosAdhanThreadIdentifier, 'solatify.adhan');
     expect(
       notificationService,
-      contains(
-        'threadIdentifier: isReminder ? null : iosAdhanThreadIdentifier',
-      ),
+      // Reminders never use the adhan (sound or full playback).
+      contains("isReminder && soundMode == 'adhan' ? 'beep' : soundMode"),
     );
     expect(appDelegate, contains('adhanThreadIdentifier = "solatify.adhan"'));
     expect(appDelegate, contains('forResource: "adhan", withExtension: "mp3"'));

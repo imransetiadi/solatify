@@ -453,6 +453,7 @@ class MainLayoutScreen extends StatelessWidget {
     final useNavigationRail = ResponsiveLayout.isMediumOrLarger(context);
     final isDesktopWidth =
         MediaQuery.sizeOf(context).width >= AppBreakpoints.medium;
+    final isShortScreen = MediaQuery.sizeOf(context).height < 560;
 
     if (useNavigationRail) {
       return _withBackHandling(
@@ -461,26 +462,40 @@ class MainLayoutScreen extends StatelessWidget {
           body: SafeArea(
             child: Row(
               children: [
-                NavigationRail(
-                  selectedIndex: selectedIndex,
-                  onDestinationSelected: (index) =>
-                      _onItemTapped(index, context),
-                  extended: isDesktopWidth,
-                  labelType: isDesktopWidth
-                      ? NavigationRailLabelType.none
-                      : NavigationRailLabelType.all,
-                  minWidth: 80,
-                  minExtendedWidth: 200,
-                  // Center the items so they are distributed proportionally
-                  // along the rail instead of clustering at the top.
-                  groupAlignment: 0.0,
-                  destinations: _destinations.map((destination) {
-                    return NavigationRailDestination(
-                      icon: Icon(destination.icon),
-                      selectedIcon: Icon(destination.activeIcon),
-                      label: Text(_labelForDestination(l, destination)),
-                    );
-                  }).toList(),
+                // A phone in landscape is wide enough for the rail but too
+                // short for its eight destinations: let it scroll instead of
+                // overflowing and cutting off the last items.
+                LayoutBuilder(
+                  builder: (context, constraints) => SingleChildScrollView(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight,
+                      ),
+                      child: IntrinsicHeight(
+                        child: NavigationRail(
+                          selectedIndex: selectedIndex,
+                          onDestinationSelected: (index) =>
+                              _onItemTapped(index, context),
+                          extended: isDesktopWidth,
+                          labelType: isDesktopWidth || isShortScreen
+                              ? NavigationRailLabelType.none
+                              : NavigationRailLabelType.all,
+                          minWidth: 80,
+                          minExtendedWidth: 200,
+                          // Center the items so they are distributed proportionally
+                          // along the rail instead of clustering at the top.
+                          groupAlignment: 0.0,
+                          destinations: _destinations.map((destination) {
+                            return NavigationRailDestination(
+                              icon: Icon(destination.icon),
+                              selectedIcon: Icon(destination.activeIcon),
+                              label: Text(_labelForDestination(l, destination)),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
                 VerticalDivider(
                   width: 1,

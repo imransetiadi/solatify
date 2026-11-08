@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:solatify/features/quran/presentation/quran_error_message.dart';
 import 'package:solatify/core/localization/app_localizations.dart';
 import 'package:solatify/core/navigation/app_routes.dart';
 import 'package:solatify/core/services/solatify_haptics.dart';
@@ -354,7 +355,7 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
           title: _l.isEnglish
               ? 'Failed to load the Qur\'an'
               : 'Gagal Memuat Al-Qur\'an',
-          description: err.toString().replaceAll('Exception:', '').trim(),
+          description: quranErrorMessage(err, isEnglish: _l.isEnglish),
           actionLabel: _l.isEnglish ? 'Try again' : 'Coba Lagi',
           onAction: () {
             SolatifyHaptics.light();
@@ -416,7 +417,7 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
       error: (err, stack) => _scrollableState(
         SolatifyStateView.error(
           title: _l.isEnglish ? 'Something went wrong' : 'Terjadi kesalahan',
-          description: err.toString().replaceAll('Exception:', '').trim(),
+          description: quranErrorMessage(err, isEnglish: _l.isEnglish),
           actionLabel: _l.isEnglish ? 'Try again' : 'Coba Lagi',
           onAction: () {
             SolatifyHaptics.light();
@@ -587,7 +588,8 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
         : '${surah.numberOfVerses} ayat';
     final semanticParts = <String>[
       'Surah ${surah.name}',
-      if (surah.translation.isNotEmpty) surah.translation,
+      if (surah.translation.isNotEmpty)
+        surah.localizedTranslation(isEnglish: _l.isEnglish),
       versesLabel,
       if (surah.revelation.isNotEmpty) surah.revelation,
     ];
@@ -624,7 +626,7 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen>
                     if (surah.translation.isNotEmpty) ...[
                       const SizedBox(height: 2),
                       Text(
-                        surah.translation,
+                        surah.localizedTranslation(isEnglish: _l.isEnglish),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(

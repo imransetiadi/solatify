@@ -40,6 +40,7 @@ class MainActivity : AudioServiceActivity() {
                     val scheduledAtMillis = call.argument<Long>("scheduledAtMillis")
                     val isReminder = call.argument<Boolean>("isReminder") ?: false
                     val soundMode = call.argument<String>("soundMode") ?: "adhan"
+                    val language = call.argument<String>("language")
 
                     if (id == null || prayerKey == null || title == null || body == null || scheduledAtMillis == null) {
                         result.error("invalid_arguments", "Missing prayer alarm fields", null)
@@ -56,6 +57,7 @@ class MainActivity : AudioServiceActivity() {
                                 scheduledAtMillis = scheduledAtMillis,
                                 isReminder = isReminder,
                                 soundMode = soundMode,
+                                language = language,
                             ),
                         ),
                     )
@@ -140,14 +142,13 @@ class MainActivity : AudioServiceActivity() {
 
     private fun openBatteryOptimizationSettings(): Boolean {
         return try {
-            val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
-                    data = Uri.parse("package:$packageName")
-                }
-            } else {
-                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                    data = Uri.parse("package:$packageName")
-                }
+            // The app's details page holds "App battery usage → Unrestricted",
+            // which is what the in-app hint asks for. The direct
+            // ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS prompt needs a
+            // permission Google Play restricts, and prayer alarms already use
+            // setAlarmClock, which Doze does not delay.
+            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                data = Uri.parse("package:$packageName")
             }
             startActivity(intent)
             true

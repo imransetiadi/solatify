@@ -2,10 +2,14 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:solatify/features/home/presentation/providers/countdown_provider.dart';
+import 'package:solatify/features/notifications/domain/services/prayer_notification_planner.dart';
+import 'package:solatify/features/prayer_schedule/data/prayer_calculation_service.dart';
+import 'package:solatify/features/prayer_schedule/data/prayer_timezone_service.dart';
 import 'package:solatify/features/prayer_schedule/presentation/location_provider.dart';
 import 'package:solatify/features/prayer_schedule/presentation/prayer_times_provider.dart';
 import 'package:solatify/features/prayer_widget/domain/android_prayer_widget_service.dart';
 import 'package:solatify/features/prayer_widget/domain/ios_prayer_widget_service.dart';
+import 'package:solatify/features/settings/presentation/providers/settings_provider.dart';
 
 final androidPrayerWidgetServiceProvider = Provider<AndroidPrayerWidgetService>(
   (ref) => AndroidPrayerWidgetService(),
@@ -27,10 +31,40 @@ final prayerWidgetPayloadProvider = Provider.autoDispose<PrayerWidgetPayload>((
   ref.watch(countdownProvider.select((state) => state.nextPrayerKey));
   final timesState = ref.watch(prayerTimesProvider);
   final location = ref.watch(locationProvider);
+  final settings = ref.watch(settingsProvider);
+
+  // Several days ahead (as far as notifications are scheduled), so the
+  // widgets keep moving on when the app is not opened for a while instead
+  // of freezing after tomorrow's Subuh.
+  final laterDays = <Map<String, DateTime?>>[];
+  try {
+    final timezoneName = PrayerTimezoneService.inferTimezoneName(
+      latitude: location.latitude,
+      longitude: location.longitude,
+      country: location.country,
+    );
+    final now = DateTime.now();
+    for (var day = 2; day < prayerNotificationHorizonDays; day++) {
+      laterDays.add(
+        PrayerCalculationService.calculatePrayerTimes(
+          latitude: location.latitude,
+          longitude: location.longitude,
+          date: PrayerCalculationService.cityNoon(timezoneName, now, day),
+          method: settings.calculationMethod,
+          timezoneName: timezoneName,
+          offsets: settings.prayerOffsets,
+        ),
+      );
+    }
+  } catch (e) {
+    debugPrint('Widget schedule beyond tomorrow unavailable: $e');
+  }
 
   final slots = buildPrayerWidgetSlots(
     todayTimes: timesState.todayTimes,
     tomorrowTimes: timesState.tomorrowTimes,
+    laterDays: laterDays,
+    isEnglish: settings.language == 'en',
   );
   final next = nextPrayerWidgetSlot(slots, DateTime.now());
   final locationLabel = location.city.trim().isEmpty
@@ -43,7 +77,9 @@ final prayerWidgetPayloadProvider = Provider.autoDispose<PrayerWidgetPayload>((
     // Fallback text for widgets that cannot run a live countdown.
     countdownLabel: next?.timeLabel ?? '--:--',
     locationLabel: locationLabel,
-    hijriLabel: 'Jadwal salat hari ini',
+    hijriLabel: settings.language == 'en'
+        ? "Today's prayer times"
+        : 'Jadwal salat hari ini',
     schedule: encodePrayerWidgetSchedule(slots),
   );
 });
@@ -64,33 +100,34 @@ class PrayerWidgetSlot {
 }
 
 const _slotConfig = [
-  ('Subuh', 'subuh'),
-  ('Dzuhur', 'dzuhur'),
-  ('Ashar', 'ashar'),
-  ('Magrib', 'magrib'),
-  ('Isya', 'isya'),
+  ('Subuh', 'Fajr', 'subuh'),
+  ('Dzuhur', 'Dhuhr', 'dzuhur'),
+  ('Ashar', 'Asr', 'ashar'),
+  ('Magrib', 'Maghrib', 'magrib'),
+  ('Isya', 'Isha', 'isya'),
 ];
 
-/// Today's five prayers plus tomorrow's Subuh, in chronological order.
+/// Today's and tomorrow's prayers, plus [laterDays], in chronological order.
 List<PrayerWidgetSlot> buildPrayerWidgetSlots({
   required Map<String, DateTime> todayTimes,
   required Map<String, DateTime> tomorrowTimes,
+  List<Map<String, DateTime?>> laterDays = const [],
+  bool isEnglish = false,
 }) {
   final timeFormat = DateFormat.Hm();
   final slots = <PrayerWidgetSlot>[
-    for (final (name, key) in _slotConfig)
-      if (todayTimes[key] case final time?)
-        PrayerWidgetSlot(
-          name: name,
-          time: time,
-          timeLabel: timeFormat.format(time),
-        ),
-    if (tomorrowTimes['subuh'] case final time?)
-      PrayerWidgetSlot(
-        name: 'Subuh',
-        time: time,
-        timeLabel: timeFormat.format(time),
-      ),
+    for (final day in <Map<String, DateTime?>>[
+      todayTimes,
+      tomorrowTimes,
+      ...laterDays,
+    ])
+      for (final (idName, enName, key) in _slotConfig)
+        if (day[key] case final time?)
+          PrayerWidgetSlot(
+            name: isEnglish ? enName : idName,
+            time: time,
+            timeLabel: timeFormat.format(time),
+          ),
   ];
   slots.sort((a, b) => a.time.compareTo(b.time));
   return slots;

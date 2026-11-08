@@ -253,6 +253,15 @@ class HiveService {
     if (box == null) return;
 
     await box.put(dateKey, schedules);
+
+    // One entry is written per day and nothing reads old ones; keep the box
+    // (loaded into memory at every start) from growing forever. Keys are
+    // date strings, so lexical order is chronological.
+    const keep = 14;
+    if (box.length > keep) {
+      final keys = box.keys.map((key) => key.toString()).toList()..sort();
+      await box.deleteAll(keys.take(keys.length - keep));
+    }
   }
 
   static Map<String, dynamic>? getCachedPrayerSchedule(String dateKey) {

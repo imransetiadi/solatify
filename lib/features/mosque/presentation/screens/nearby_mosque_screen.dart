@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
@@ -45,10 +46,34 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen>
     'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
     'https://overpass.private.coffee/api/interpreter',
   ];
-  static const _serverBusyMessage =
-      'Server peta sedang sibuk atau lambat merespons. Coba lagi beberapa saat lagi.';
-  static const _searchFailedMessage =
-      'Terjadi kendala saat mencari masjid terdekat. Silakan coba lagi.';
+
+  /// Copy is built when a message is set, in the current app language.
+  String _t(String id, String en) =>
+      mounted && AppLocalizations.of(context).isEnglish ? en : id;
+
+  String get _serverBusyMessage => _t(
+    'Server peta sedang sibuk atau lambat merespons. Coba lagi beberapa saat lagi.',
+    'The map server is busy or slow to respond. Please try again shortly.',
+  );
+  String get _offlineMessage => _t(
+    'Tidak ada koneksi internet. Periksa koneksi lalu coba lagi.',
+    'No internet connection. Check your connection and try again.',
+  );
+  String get _searchFailedMessage => _t(
+    'Terjadi kendala saat mencari masjid terdekat. Silakan coba lagi.',
+    'Something went wrong while searching for nearby mosques. Please try again.',
+  );
+
+  String _messageFor(Object error) {
+    if (_isOffline(error)) return _offlineMessage;
+    return _isNetworkError(error) ? _serverBusyMessage : _searchFailedMessage;
+  }
+
+  /// No connection at all, as opposed to a slow or overloaded server.
+  bool _isOffline(Object error) =>
+      error is SocketException ||
+      (error is http.ClientException &&
+          error.message.toLowerCase().contains('host lookup'));
   static final Map<String, List<MosqueItem>> _mosqueMemoryCache = {};
 
   final MosqueLocalDataSource _localDataSource = const MosqueLocalDataSource();
@@ -58,7 +83,9 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen>
   bool _isLoading = false;
   bool _hasLoaded = false;
   String? _errorMessage;
-  String _locationStatusMessage = 'Menyiapkan lokasi...';
+
+  /// Null until the first lookup starts; shown as "Preparing location".
+  String? _locationStatusMessage;
   _LocationIssue _locationIssue = _LocationIssue.none;
   double? _gpsLatitude;
   double? _gpsLongitude;
@@ -93,7 +120,10 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen>
     setState(() {
       _isLoading = true;
       _errorMessage = null;
-      _locationStatusMessage = 'Mengecek GPS perangkat...';
+      _locationStatusMessage = _t(
+        'Mengecek GPS perangkat...',
+        'Checking device GPS...',
+      );
     });
 
     try {
@@ -113,25 +143,16 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen>
         radiusMeters: _searchRadiusMeters,
       );
 
-      if (position != null) {
-        final details = await LocationService.getCityCountry(
-          latitude,
-          longitude,
-        );
-        await ref
-            .read(locationProvider.notifier)
-            .setManualCity(
-              OfflineCity(
-                name: details['city'] ?? location.city,
-                country: details['country'] ?? location.country,
-                latitude: latitude,
-                longitude: longitude,
-              ),
-            );
-      }
+      // The GPS position is only used for this search. It used to replace
+      // the saved location too, silently changing the prayer-times city,
+      // the Qibla and the notification schedule of users who picked a city
+      // by hand.
 
       final locationStatusMessage = position != null
-          ? 'Menggunakan lokasi GPS saat ini.'
+          ? _t(
+              'Menggunakan lokasi GPS saat ini.',
+              'Using your current GPS location.',
+            )
           : _buildFallbackLocationMessage(serviceEnabled, permission);
       final locationIssue = position != null
           ? _LocationIssue.none
@@ -154,7 +175,8 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen>
         setState(() {
           _gpsLatitude = latitude;
           _gpsLongitude = longitude;
-          _locationStatusMessage = '$locationStatusMessage Memuat pembaruan...';
+          _locationStatusMessage =
+              '$locationStatusMessage ${_t('Memuat pembaruan...', 'Loading updates...')}';
           _locationIssue = locationIssue;
           _mosques = cachedMosques;
           _errorMessage = null;
@@ -178,9 +200,7 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen>
           _isLoading = false;
           _hasLoaded = true;
           // Cached results (if any) stay visible; the banner explains why.
-          _errorMessage = _isNetworkError(error)
-              ? _serverBusyMessage
-              : _searchFailedMessage;
+          _errorMessage = _messageFor(error);
         });
         return;
       }
@@ -218,9 +238,7 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen>
       setState(() {
         _isLoading = false;
         _hasLoaded = true;
-        _errorMessage = _isNetworkError(error)
-            ? _serverBusyMessage
-            : _searchFailedMessage;
+        _errorMessage = _messageFor(error);
       });
     }
   }
@@ -276,15 +294,24 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen>
     LocationPermission permission,
   ) {
     if (!serviceEnabled) {
-      return 'GPS perangkat belum aktif. Menggunakan lokasi tersimpan.';
+      return _t(
+        'GPS perangkat belum aktif. Menggunakan lokasi tersimpan.',
+        'Device GPS is off. Using your saved location.',
+      );
     }
 
     if (permission == LocationPermission.denied ||
         permission == LocationPermission.deniedForever) {
-      return 'Izin lokasi belum aktif. Menggunakan lokasi tersimpan.';
+      return _t(
+        'Izin lokasi belum aktif. Menggunakan lokasi tersimpan.',
+        'Location permission is off. Using your saved location.',
+      );
     }
 
-    return 'GPS belum mendapatkan posisi. Menggunakan lokasi tersimpan.';
+    return _t(
+      'GPS belum mendapatkan posisi. Menggunakan lokasi tersimpan.',
+      'GPS has no position yet. Using your saved location.',
+    );
   }
 
   Future<List<MosqueItem>> _fetchMosquesFromOverpass({
@@ -408,13 +435,27 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen>
       debugPrint('Map launch returned false for $uri');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Tidak dapat membuka aplikasi peta.')),
+        SnackBar(
+          content: Text(
+            _t(
+              'Tidak dapat membuka aplikasi peta.',
+              'Could not open a maps app.',
+            ),
+          ),
+        ),
       );
     } catch (e) {
       debugPrint('Error launching map URL $uri: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Tidak dapat membuka aplikasi peta.')),
+        SnackBar(
+          content: Text(
+            _t(
+              'Tidak dapat membuka aplikasi peta.',
+              'Could not open a maps app.',
+            ),
+          ),
+        ),
       );
     }
   }
@@ -657,7 +698,8 @@ class _NearbyMosqueScreenState extends ConsumerState<NearbyMosqueScreen>
               Semantics(
                 liveRegion: true,
                 child: Text(
-                  _locationStatusMessage,
+                  _locationStatusMessage ??
+                      _t('Menyiapkan lokasi...', 'Preparing location...'),
                   style: TextStyle(
                     color: mutedColor,
                     fontSize: SolatifyType.caption,
@@ -1032,6 +1074,8 @@ class _MosqueCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final distanceLabel = _formatDistance(mosque.distanceInMeters);
+    final name = displayMosqueName(mosque.name, isEnglish: isEnglish);
+    final address = displayMosqueAddress(mosque.address, isEnglish: isEnglish);
     const buttonPadding = EdgeInsets.symmetric(horizontal: SolatifySpacing.sm);
 
     return GlassContainer(
@@ -1040,8 +1084,8 @@ class _MosqueCard extends StatelessWidget {
       padding: SolatifySpacing.compactCard,
       onTap: onOpenRoute,
       semanticLabel: isEnglish
-          ? '${mosque.name}, $distanceLabel away. Double tap for directions.'
-          : '${mosque.name}, berjarak $distanceLabel. Ketuk dua kali untuk rute.',
+          ? '$name, $distanceLabel away. Double tap for directions.'
+          : '$name, berjarak $distanceLabel. Ketuk dua kali untuk rute.',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1070,7 +1114,7 @@ class _MosqueCard extends StatelessWidget {
                   children: [
                     ExcludeSemantics(
                       child: Text(
-                        mosque.name,
+                        name,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
@@ -1083,7 +1127,7 @@ class _MosqueCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      mosque.address,
+                      address,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -1107,8 +1151,8 @@ class _MosqueCard extends StatelessWidget {
               Expanded(
                 child: Tooltip(
                   message: isEnglish
-                      ? 'Show ${mosque.name} in maps'
-                      : 'Lihat ${mosque.name} di peta',
+                      ? 'Show $name in maps'
+                      : 'Lihat $name di peta',
                   child: OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size(0, SolatifyTapTarget.min),
@@ -1127,9 +1171,7 @@ class _MosqueCard extends StatelessWidget {
               const SizedBox(width: SolatifySpacing.sm),
               Expanded(
                 child: Tooltip(
-                  message: isEnglish
-                      ? 'Directions to ${mosque.name}'
-                      : 'Rute ke ${mosque.name}',
+                  message: isEnglish ? 'Directions to $name' : 'Rute ke $name',
                   child: FilledButton.icon(
                     style: FilledButton.styleFrom(
                       minimumSize: const Size(0, SolatifyTapTarget.min),

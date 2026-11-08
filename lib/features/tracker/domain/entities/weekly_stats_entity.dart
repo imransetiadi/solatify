@@ -19,6 +19,7 @@ class WeeklyStatsEntity {
     this.weakestItemLabel = 'Pilih satu ibadah',
     this.smartInsightMessage = 'Mulai dari satu checklist hari ini.',
     this.smartInsightAction = 'Pilih satu ibadah ringan untuk dijaga.',
+    this.isEnglish = false,
   });
 
   final Map<String, double> completionRates;
@@ -32,7 +33,25 @@ class WeeklyStatsEntity {
   final String smartInsightMessage;
   final String smartInsightAction;
 
+  /// Language the labels above were written in.
+  final bool isEnglish;
+
   String get shareSummaryText {
+    if (isEnglish) {
+      return [
+        'Weekly Worship Progress',
+        'Prayers done: $totalDone',
+        'Streak: $currentStreakDays days',
+        'Best day: $bestDayLabel',
+        'Strongest: $strongestItemLabel',
+        'Needs focus: $weakestItemLabel',
+        '',
+        smartInsightMessage,
+        smartInsightAction,
+        '',
+        'Made with Solatify',
+      ].join('\n');
+    }
     return [
       'Progress Ibadah Mingguan',
       'Total salat: $totalDone',

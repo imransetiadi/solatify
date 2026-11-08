@@ -1,5 +1,5 @@
 import 'package:adhan/adhan.dart';
-import 'package:timezone/data/latest_all.dart' as tzdata;
+import 'package:solatify/core/utils/timezone_database.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 /// Simple in-memory cache for prayer calculations to avoid recalculating
@@ -56,13 +56,26 @@ class _PrayerCalcCache {
 }
 
 class PrayerCalculationService {
-  static bool _timezonesInitialized = false;
+  static void _ensureTimezonesInitialized() =>
+      TimezoneDatabase.ensureInitialized();
 
-  static void _ensureTimezonesInitialized() {
-    if (!_timezonesInitialized) {
-      tzdata.initializeTimeZones();
-      _timezonesInitialized = true;
-    }
+  /// Noon, [daysAhead] calendar days after the current day in
+  /// [timezoneName], as an instant to pass to [calculatePrayerTimes].
+  ///
+  /// Stepping by `now.add(Duration(days: n))` lands on the wrong date around
+  /// a DST change (a 23- or 25-hour day), and using the device's calendar
+  /// is off when the selected city is in another timezone.
+  static DateTime cityNoon(String timezoneName, DateTime now, int daysAhead) {
+    _ensureTimezonesInitialized();
+    final location = tz.getLocation(timezoneName);
+    final cityNow = tz.TZDateTime.from(now, location);
+    return tz.TZDateTime(
+      location,
+      cityNow.year,
+      cityNow.month,
+      cityNow.day + daysAhead,
+      12,
+    );
   }
 
   static CalculationParameters getParameters(String methodName) {
@@ -106,11 +119,17 @@ class PrayerCalculationService {
   }) {
     _ensureTimezonesInitialized();
 
-    // Check cache first
+    // The civil date is the city's, not the device's: they differ around
+    // midnight when the phone is in another timezone, and caching by the
+    // device date returned the wrong day's times.
+    final location = tz.getLocation(timezoneName);
+    final targetDate = tz.TZDateTime.from(date, location);
+    final cityDay = DateTime(targetDate.year, targetDate.month, targetDate.day);
+
     final cached = _PrayerCalcCache.get(
       latitude,
       longitude,
-      date,
+      cityDay,
       method,
       timezoneName,
       offsets,
@@ -130,10 +149,6 @@ class PrayerCalculationService {
       params.adjustments.isha = offsets['isya'] ?? 0;
     }
 
-    // Get the timezone location for the selected city and calculate the
-    // civil date in that timezone, not the device timezone.
-    final location = tz.getLocation(timezoneName);
-    final targetDate = tz.TZDateTime.from(date, location);
     final dateComponents = DateComponents(
       targetDate.year,
       targetDate.month,
@@ -155,7 +170,7 @@ class PrayerCalculationService {
     _PrayerCalcCache.set(
       latitude,
       longitude,
-      date,
+      cityDay,
       method,
       timezoneName,
       offsets,

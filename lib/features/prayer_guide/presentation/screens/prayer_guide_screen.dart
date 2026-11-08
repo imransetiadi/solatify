@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:solatify/core/localization/app_localizations.dart';
 import 'package:solatify/core/navigation/app_routes.dart';
@@ -30,7 +29,6 @@ class PrayerGuideScreen extends ConsumerWidget {
       backRoute: AppRoutes.islamicContent,
       padding: EdgeInsets.zero,
       child: ListView(
-        scrollCacheExtent: const ScrollCacheExtent.pixels(10000),
         padding: ResponsiveLayout.pagePadding(
           context,
         ).copyWith(top: 16, bottom: ResponsiveLayout.bottomSafeGap),
@@ -43,7 +41,7 @@ class PrayerGuideScreen extends ConsumerWidget {
           const SizedBox(height: 18),
           _SectionHeader(
             icon: Icons.fact_check_outlined,
-            title: 'Ringkasan Penting',
+            title: l.isEnglish ? 'Key points' : 'Ringkasan Penting',
             color: primaryColor,
           ),
           const SizedBox(height: 12),
@@ -61,7 +59,7 @@ class PrayerGuideScreen extends ConsumerWidget {
           const SizedBox(height: 10),
           _SectionHeader(
             icon: Icons.format_list_numbered,
-            title: 'Urutan Salat',
+            title: l.isEnglish ? 'Steps of the prayer' : 'Urutan Salat',
             color: primaryColor,
           ),
           const SizedBox(height: 12),
@@ -79,7 +77,9 @@ class PrayerGuideScreen extends ConsumerWidget {
           const SizedBox(height: 10),
           _SectionHeader(
             icon: Icons.auto_awesome,
-            title: 'Dzikir Setelah Salat',
+            title: l.isEnglish
+                ? 'Dhikr after the prayer'
+                : 'Dzikir Setelah Salat',
             color: primaryColor,
           ),
           const SizedBox(height: 12),
@@ -113,13 +113,16 @@ class _OpeningReadingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isEnglish = AppLocalizations.of(context).isEnglish;
     return GlassContainer(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Niat dan Takbiratul Ihram',
+            isEnglish
+                ? 'Intention and the opening takbir'
+                : 'Niat dan Takbiratul Ihram',
             style: TextStyle(
               color: textColor,
               fontSize: 17,
@@ -128,7 +131,7 @@ class _OpeningReadingCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Niat',
+            isEnglish ? 'Intention' : 'Niat',
             style: TextStyle(
               color: primaryColor,
               fontSize: 13,
@@ -137,7 +140,9 @@ class _OpeningReadingCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'Awali salat dengan niat di dalam hati, lalu ucapkan takbir pembuka.',
+            isEnglish
+                ? 'Begin the prayer with the intention in your heart, then say the opening takbir.'
+                : 'Awali salat dengan niat di dalam hati, lalu ucapkan takbir pembuka.',
             style: TextStyle(color: mutedColor, fontSize: 13, height: 1.4),
           ),
           const SizedBox(height: 12),
@@ -156,7 +161,7 @@ class _OpeningReadingCard extends StatelessWidget {
           const SizedBox(height: 6),
           _LabelText(
             label: 'Arti',
-            value: 'Allah Maha Besar.',
+            value: isEnglish ? 'Allah is the Greatest.' : 'Allah Maha Besar.',
             color: textColor,
           ),
         ],
@@ -438,13 +443,21 @@ class _LabelText extends StatelessWidget {
   final Color color;
   final bool italic;
 
+  String _localizedLabel(BuildContext context) {
+    if (!AppLocalizations.of(context).isEnglish) return label;
+    return switch (label) {
+      'Arti' => 'Meaning',
+      _ => label,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     return Text.rich(
       TextSpan(
         children: [
           TextSpan(
-            text: '$label: ',
+            text: '${_localizedLabel(context)}: ',
             style: const TextStyle(
               fontWeight: FontWeight.w700,
               fontStyle: FontStyle.normal,

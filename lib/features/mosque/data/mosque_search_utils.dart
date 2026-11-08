@@ -1,5 +1,18 @@
 import 'dart:math' as math;
 
+/// Stored when OpenStreetMap has no name/address (also in cached results);
+/// translated when shown, see [displayMosqueName].
+const unnamedMosqueLabel = 'Masjid Tanpa Nama';
+const unknownMosqueAddressLabel = 'Alamat tidak diketahui';
+
+String displayMosqueName(String name, {required bool isEnglish}) =>
+    isEnglish && name == unnamedMosqueLabel ? 'Unnamed mosque' : name;
+
+String displayMosqueAddress(String address, {required bool isEnglish}) =>
+    isEnglish && address == unknownMosqueAddressLabel
+    ? 'Address unknown'
+    : address;
+
 class MosqueItem {
   const MosqueItem({
     required this.id,
@@ -62,7 +75,7 @@ class MosqueItem {
     return MosqueItem(
       id: id,
       name: name,
-      address: json['address']?.toString() ?? 'Alamat tidak diketahui',
+      address: json['address']?.toString() ?? unknownMosqueAddressLabel,
       latitude: latitude.toDouble(),
       longitude: longitude.toDouble(),
       distanceInMeters: calculateMosqueDistance(
@@ -137,15 +150,15 @@ List<MosqueItem> parseMosqueOverpassElements({
     final longitude = longitudeValue.toDouble();
     final tags = element['tags'];
     final name = tags is Map<String, dynamic>
-        ? tags['name'] ?? tags['name:id'] ?? 'Masjid Tanpa Nama'
-        : 'Masjid Tanpa Nama';
+        ? tags['name'] ?? tags['name:id'] ?? unnamedMosqueLabel
+        : unnamedMosqueLabel;
     final address = tags is Map<String, dynamic>
         ? tags['addr:full'] ??
               tags['addr:street'] ??
               tags['addr:place'] ??
               tags['addr:city'] ??
-              'Alamat tidak diketahui'
-        : 'Alamat tidak diketahui';
+              unknownMosqueAddressLabel
+        : unknownMosqueAddressLabel;
 
     results.add(
       MosqueItem(

@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:adhan/adhan.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:solatify/core/localization/app_localizations.dart';
@@ -63,6 +64,9 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // The compass heading is measured against the phone's portrait top
+    // edge; in landscape the dial would be off by 90°.
+    SystemChrome.setPreferredOrientations(const [DeviceOrientation.portraitUp]);
     _sensorTimer = Timer(_sensorTimeout, () {
       if (!mounted) return;
       setState(() => _sensorTimedOut = true);
@@ -74,6 +78,8 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen>
   void dispose() {
     _sensorTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
+    // Back to the orientations allowed by Info.plist / the manifest.
+    SystemChrome.setPreferredOrientations(const []);
     super.dispose();
   }
 

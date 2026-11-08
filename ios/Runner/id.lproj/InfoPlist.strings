@@ -1,0 +1,3 @@
+/* Teks izin lokasi (Bahasa Indonesia). */
+"NSLocationWhenInUseUsageDescription" = "Solatify membutuhkan akses lokasi Anda untuk menghitung waktu salat dan arah kiblat yang akurat berdasarkan wilayah Anda.";
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "Solatify membutuhkan akses lokasi untuk menghitung jadwal salat yang akurat.";

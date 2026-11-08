@@ -9,6 +9,33 @@ import 'package:timezone/timezone.dart' as tz;
 
 void main() {
   group('Prayer Calculation Tests', () {
+    test('caches by the city date, not the device date', () {
+      tzdata.initializeTimeZones();
+      // Same UTC (old cache-key) date, different dates in Tokyo (UTC+9):
+      // 09:30 on 1 June and 05:00 on 2 June.
+      const zone = 'Asia/Tokyo';
+      final location = tz.getLocation(zone);
+      final early = DateTime.utc(2026, 6, 1, 0, 30);
+      final late = DateTime.utc(2026, 6, 1, 20);
+
+      for (final instant in [early, late, early]) {
+        final times = PrayerCalculationService.calculatePrayerTimes(
+          latitude: 35.68,
+          longitude: 139.69,
+          date: instant,
+          method: 'MWL',
+          timezoneName: zone,
+        );
+        final cityDay = tz.TZDateTime.from(instant, location);
+        final subuh = times['subuh']!;
+        expect(
+          (subuh.year, subuh.month, subuh.day),
+          (cityDay.year, cityDay.month, cityDay.day),
+          reason: 'instant $instant',
+        );
+      }
+    });
+
     test('Calculate Jakarta Prayer Times using Kemenag method', () {
       final jakartaLat = -6.2088;
       final jakartaLng = 106.8456;
@@ -197,6 +224,33 @@ void main() {
       expect(zone(21.4225, 39.8262, 'Arab Saudi'), 'Asia/Riyadh');
       // Unknown country: fixed offset, and no false substring matches.
       expect(zone(44.4268, 26.1025, 'Romania'), 'Etc/GMT-2');
+    });
+
+    test('unrecognised country names use the device zone when it fits', () {
+      tzdata.initializeTimeZones();
+      addTearDown(() => PrayerTimezoneService.deviceTimezone = null);
+
+      // A German-language phone in Berlin reports "Deutschland".
+      PrayerTimezoneService.deviceTimezone = 'Europe/Berlin';
+      expect(
+        PrayerTimezoneService.inferTimezoneName(
+          latitude: 52.52,
+          longitude: 13.40,
+          country: 'Berlin, Deutschland',
+        ),
+        'Europe/Berlin',
+      );
+
+      // A device zone far from the location is not used.
+      PrayerTimezoneService.deviceTimezone = 'America/New_York';
+      expect(
+        PrayerTimezoneService.inferTimezoneName(
+          latitude: 52.52,
+          longitude: 13.40,
+          country: 'Berlin, Deutschland',
+        ),
+        'Etc/GMT-1',
+      );
     });
 
     test('Every built-in city resolves to a valid timezone', () {

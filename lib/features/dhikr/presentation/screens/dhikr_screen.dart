@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:solatify/core/database/hive_service.dart';
 import 'package:solatify/core/localization/app_localizations.dart';
 import 'package:solatify/core/navigation/app_routes.dart';
 import 'package:solatify/core/services/solatify_haptics.dart';
@@ -26,6 +27,65 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen> {
   final Map<int, int> _morningCounts = {};
   final Map<int, int> _eveningCounts = {};
 
+  static const _storagePrefix = 'dhikr_counts_';
+
+  /// Counts are kept per day, so leaving the screen (switching tabs, a call,
+  /// the OS killing the app) no longer loses them, and a new day starts at 0.
+  String get _todayKey {
+    final now = DateTime.now();
+    final month = now.month.toString().padLeft(2, '0');
+    final day = now.day.toString().padLeft(2, '0');
+    return '$_storagePrefix${now.year}-$month-$day';
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _restoreCounts();
+  }
+
+  void _restoreCounts() {
+    final box = HiveService.tryGetBox(HiveService.settingsBoxName);
+    final stored = box?.get(_todayKey);
+    if (stored is! Map) return;
+    Map<int, int> read(Object? raw) => {
+      if (raw is Map)
+        for (final entry in raw.entries)
+          if (int.tryParse('${entry.key}') case final id?)
+            if (entry.value is int) id: entry.value as int,
+    };
+    _morningCounts.addAll(read(stored['morning']));
+    _eveningCounts.addAll(read(stored['evening']));
+  }
+
+  Future<void> _persistCounts() async {
+    final box = HiveService.tryGetBox(HiveService.settingsBoxName);
+    if (box == null) return;
+    try {
+      await box.put(_todayKey, {
+        'morning': {
+          for (final e in _morningCounts.entries) '${e.key}': e.value,
+        },
+        'evening': {
+          for (final e in _eveningCounts.entries) '${e.key}': e.value,
+        },
+      });
+      // Drop earlier days.
+      final stale = box.keys
+          .where((key) => '$key'.startsWith(_storagePrefix) && key != _todayKey)
+          .toList();
+      if (stale.isNotEmpty) await box.deleteAll(stale);
+    } catch (e) {
+      debugPrint('Saving dhikr counts failed: $e');
+    }
+  }
+
+  /// Applies a change to the counts, redraws and saves them.
+  void _update(VoidCallback change) {
+    setState(change);
+    _persistCounts();
+  }
+
   Map<int, int> _countsFor(bool isMorning) =>
       isMorning ? _morningCounts : _eveningCounts;
 
@@ -35,7 +95,7 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen> {
     final current = counts[dhikr.id] ?? 0;
     if (current >= target) return;
     final next = current + 1;
-    setState(() => counts[dhikr.id] = next);
+    _update(() => counts[dhikr.id] = next);
     if (next >= target) {
       SolatifyHaptics.success();
     } else {
@@ -48,12 +108,12 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen> {
     final previous = counts[dhikr.id] ?? 0;
     if (previous == 0) return;
     SolatifyHaptics.light();
-    setState(() => counts.remove(dhikr.id));
+    _update(() => counts.remove(dhikr.id));
     _showUndo(
       message: AppLocalizations.of(context).isEnglish
           ? '${dhikr.title} counter reset'
           : 'Hitungan ${dhikr.title} direset',
-      onUndo: () => setState(() => counts[dhikr.id] = previous),
+      onUndo: () => _update(() => counts[dhikr.id] = previous),
     );
   }
 
@@ -62,12 +122,12 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen> {
     if (counts.isEmpty) return;
     final snapshot = Map<int, int>.of(counts);
     SolatifyHaptics.light();
-    setState(counts.clear);
+    _update(counts.clear);
     _showUndo(
       message: AppLocalizations.of(context).isEnglish
           ? 'All counters reset'
           : 'Semua hitungan direset',
-      onUndo: () => setState(() => counts.addAll(snapshot)),
+      onUndo: () => _update(() => counts.addAll(snapshot)),
     );
   }
 

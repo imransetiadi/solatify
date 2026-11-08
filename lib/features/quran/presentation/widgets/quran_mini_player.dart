@@ -19,6 +19,37 @@ class QuranMiniPlayer extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Reports recitation that failed to load (e.g. the connection dropped
+    // mid-surah) wherever the user is. The surah screen is pushed above the
+    // shell, so this stays mounted there too.
+    ref.listen<int>(quranAudioProvider.select((s) => s.failureCount), (
+      previous,
+      next,
+    ) {
+      if (previous == null || next <= previous) return;
+      final l = AppLocalizations.of(context);
+      final notifier = ref.read(quranAudioProvider.notifier);
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(
+              l.isEnglish
+                  ? 'Recitation could not be loaded. Check your connection.'
+                  : 'Murotal gagal dimuat. Periksa koneksi internet.',
+            ),
+            duration: const Duration(seconds: 6),
+            persist: false,
+            action: notifier.canRetry
+                ? SnackBarAction(
+                    label: l.isEnglish ? 'Retry' : 'Coba lagi',
+                    onPressed: notifier.retryAfterFailure,
+                  )
+                : null,
+          ),
+        );
+    });
+
     final info = ref.watch(
       quranAudioProvider.select(
         (s) => (

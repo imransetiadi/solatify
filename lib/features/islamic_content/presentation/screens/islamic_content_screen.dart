@@ -31,6 +31,10 @@ class _IslamicContentScreenState extends ConsumerState<IslamicContentScreen> {
   @override
   void initState() {
     super.initState();
+    // The query provider outlives this screen; seed the field from it so a
+    // query from an earlier visit is visible (and clearable) instead of
+    // filtering results behind an empty search box.
+    _searchController.text = ref.read(islamicContentSearchQueryProvider);
     _searchController.addListener(_onSearchChanged);
   }
 

@@ -22,13 +22,6 @@ class MockTrackerRepository implements TrackerRepository {
       mockLogs;
 
   @override
-  Future<void> updatePrayerStatus(
-    DateTime date,
-    String prayerKey,
-    bool isDone,
-  ) async {}
-
-  @override
   Future<void> updatePrayerStatusDetail(
     DateTime date,
     String prayerKey,
@@ -46,8 +39,31 @@ class MockTrackerRepository implements TrackerRepository {
   Future<void> updateHabitProgress(
     DateTime date,
     String habitKey,
-    int progress,
-  ) async {}
+    int progress, {
+    int? target,
+  }) async {}
+
+  @override
+  Future<List<PrayerLogEntity>> getLogsBack(DateTime endDate, int days) async =>
+      mockLogs;
+
+  final renamed = <(String, String)>[];
+
+  @override
+  Future<void> renameHabitKey(String oldKey, String newKey) async =>
+      renamed.add((oldKey, newKey));
+
+  /// When set, every save throws (simulates a failed Hive write).
+  bool failWrites = false;
+
+  @override
+  Future<void> updatePrayerStatus(
+    DateTime date,
+    String prayerKey,
+    bool isDone,
+  ) async {
+    if (failWrites) throw Exception('disk full');
+  }
 }
 
 void main() {
@@ -144,6 +160,38 @@ void main() {
       final stats = await useCase.execute(today);
 
       expect(stats.currentStreakDays, 10);
+    });
+
+    test('streak is not capped at two weeks', () async {
+      final today = DateTime(2026, 6, 18);
+      repository.mockLogs = [
+        for (var i = 0; i < 60; i++)
+          PrayerLogEntity(
+            date: DateTime(today.year, today.month, today.day - i),
+            prayers: {'subuh': true, 'dzuhur': true, 'ashar': true},
+          ),
+      ];
+
+      final stats = await useCase.execute(today);
+
+      expect(stats.currentStreakDays, 60);
+    });
+
+    test('insights and share text follow the app language', () async {
+      final today = DateTime(2026, 6, 18);
+      repository.mockLogs = [
+        PrayerLogEntity(
+          date: today,
+          prayers: {'subuh': true, 'dzuhur': true, 'ashar': true},
+        ),
+      ];
+
+      final stats = await useCase.execute(today, isEnglish: true);
+
+      expect(stats.bestDayLabel, 'Today');
+      expect(stats.smartInsightMessage, contains('1-day streak'));
+      expect(stats.shareSummaryText, startsWith('Weekly Worship Progress'));
+      expect(stats.shareSummaryText, isNot(contains('hari')));
     });
 
     test('should calculate weekly status counts', () async {
@@ -356,6 +404,47 @@ void main() {
 
       expect(log.getHabitProgress('custom:100 Shalawat'), 0);
       expect(updated.getHabitProgress('custom:100 Shalawat'), 25);
+    });
+
+    test('a habit with a target is done only when the target is reached', () {
+      final log = PrayerLogEntity(date: DateTime.now(), prayers: const {});
+
+      final partial = log.copyWithHabitProgress(
+        'custom:Tilawah',
+        1,
+        target: 10,
+      );
+      final complete = log.copyWithHabitProgress(
+        'custom:Tilawah',
+        10,
+        target: 10,
+      );
+
+      expect(partial.isHabitDone('custom:Tilawah'), isFalse);
+      expect(complete.isHabitDone('custom:Tilawah'), isTrue);
+    });
+  });
+
+  group('TrackerNotifier saving', () {
+    test('a failed save keeps the checklist and reports the failure', () async {
+      var failures = 0;
+      final repository = MockTrackerRepository()
+        ..mockLogs = [
+          PrayerLogEntity(date: DateTime(2026, 6, 18), prayers: const {}),
+        ]
+        ..failWrites = true;
+      final notifier = TrackerNotifier(
+        repository,
+        onWriteFailed: () => failures++,
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      await notifier.togglePrayer('subuh');
+
+      expect(notifier.state.hasError, isFalse);
+      expect(notifier.state.value!.isPrayerDone('subuh'), isFalse);
+      expect(failures, 1);
+      notifier.dispose();
     });
   });
 

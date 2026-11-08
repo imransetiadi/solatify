@@ -80,12 +80,20 @@ class PrayerLogEntity {
 
   int getHabitProgress(String habitKey) => habitProgress[habitKey] ?? 0;
 
-  PrayerLogEntity copyWithHabitProgress(String habitKey, int progress) {
+  /// Sets [habitKey]'s progress; the habit counts as done once it reaches
+  /// [target] (any progress when there is no target), so 1 of 10 pages is
+  /// not reported as a completed habit.
+  PrayerLogEntity copyWithHabitProgress(
+    String habitKey,
+    int progress, {
+    int? target,
+  }) {
     final updatedProgress = Map<String, int>.from(habitProgress);
     updatedProgress[habitKey] = progress < 0 ? 0 : progress;
 
+    final goal = target == null || target < 1 ? 1 : target;
     final updatedHabits = Map<String, bool>.from(habits);
-    updatedHabits[habitKey] = (updatedProgress[habitKey] ?? 0) > 0;
+    updatedHabits[habitKey] = (updatedProgress[habitKey] ?? 0) >= goal;
 
     return copyWith(habits: updatedHabits, habitProgress: updatedProgress);
   }

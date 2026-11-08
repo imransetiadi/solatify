@@ -38,7 +38,7 @@ class CalculatePrayerTimes {
       final tomorrow = PrayerCalculationService.calculatePrayerTimes(
         latitude: latitude,
         longitude: longitude,
-        date: now.add(const Duration(days: 1)),
+        date: PrayerCalculationService.cityNoon(timezoneName, now, 1),
         method: method,
         timezoneName: timezoneName,
         offsets: offsets,

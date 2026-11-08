@@ -84,26 +84,37 @@ class TrackerRepositoryImpl implements TrackerRepository {
   Future<void> updateHabitProgress(
     DateTime date,
     String habitKey,
-    int progress,
-  ) async {
+    int progress, {
+    int? target,
+  }) async {
     final log = await getLogByDate(date);
     await localDataSource.saveLog(
-      PrayerLogDto.fromEntity(log.copyWithHabitProgress(habitKey, progress)),
+      PrayerLogDto.fromEntity(
+        log.copyWithHabitProgress(habitKey, progress, target: target),
+      ),
     );
   }
 
   @override
-  Future<List<PrayerLogEntity>> getWeeklyLogs(DateTime endDate) async {
-    // 14 days: the heatmap and streak look back two weeks; weekly rates use
-    // the last 7 of them.
-    final dateKeys = <String>[];
-    for (int i = 0; i < 14; i++) {
-      final date = endDate.subtract(Duration(days: i));
-      dateKeys.add(_getDateKey(date));
-    }
+  Future<List<PrayerLogEntity>> getWeeklyLogs(DateTime endDate) {
+    // 14 days: the heatmap looks back two weeks; weekly rates use the last 7.
+    return getLogsBack(endDate, 14);
+  }
 
-    final dtos = await localDataSource.getLogsRange(dateKeys);
-    return dtos;
+  @override
+  Future<List<PrayerLogEntity>> getLogsBack(DateTime endDate, int days) async {
+    final dateKeys = <String>[
+      // Calendar-day steps: subtracting 24 h can skip or repeat a date
+      // around a DST change.
+      for (var i = 0; i < days; i++)
+        _getDateKey(DateTime(endDate.year, endDate.month, endDate.day - i)),
+    ];
+    return localDataSource.getLogsRange(dateKeys);
+  }
+
+  @override
+  Future<void> renameHabitKey(String oldKey, String newKey) {
+    return localDataSource.renameHabitKey(oldKey, newKey);
   }
 
   String _getDateKey(DateTime date) {

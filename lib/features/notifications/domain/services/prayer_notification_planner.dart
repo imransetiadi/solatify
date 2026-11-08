@@ -143,9 +143,22 @@ void _addPrayerNotificationRequests({
   );
 }
 
+/// When the notification for [key] (from [buildPrayerNotificationKey]) is
+/// shown, or null if the key cannot be parsed.
+DateTime? prayerNotificationTargetTime(String key) {
+  final separator = key.lastIndexOf('_');
+  if (separator < 0) return null;
+  return DateTime.tryParse(key.substring(separator + 1));
+}
+
+/// [now], when given, keeps notifications that have already fired out of
+/// [PrayerNotificationSyncPlan.notificationIdsToCancel]: cancelling them
+/// would also remove them from the notification tray (on Android taking the
+/// "stop adhan" action with it while the adhan is still playing).
 PrayerNotificationSyncPlan buildPrayerNotificationSyncPlan({
   required Map<int, String> activeKeysById,
   required List<PrayerNotificationRequest> requests,
+  DateTime? now,
 }) {
   final desiredKeysById = <int, String>{
     for (final request in requests)
@@ -157,9 +170,20 @@ PrayerNotificationSyncPlan buildPrayerNotificationSyncPlan({
       ),
   };
 
+  bool alreadyFired(String key) {
+    if (now == null) return false;
+    final target = prayerNotificationTargetTime(key);
+    return target != null && !target.isAfter(now);
+  }
+
   final notificationIdsToCancel =
       activeKeysById.entries
-          .where((entry) => desiredKeysById[entry.key] != entry.value)
+          .where(
+            (entry) =>
+                desiredKeysById[entry.key] != entry.value &&
+                !(desiredKeysById[entry.key] == null &&
+                    alreadyFired(entry.value)),
+          )
           .map((entry) => entry.key)
           .toList(growable: false)
         ..sort();

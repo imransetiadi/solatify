@@ -263,6 +263,29 @@ void main() {
       expect(plan.requestsToSchedule.single.notificationId, 1004);
     });
 
+    test('does not cancel notifications that have already fired', () {
+      final dzuhur = DateTime(2026, 6, 16, 12);
+      final ashar = DateTime(2026, 6, 16, 15);
+      final firedKey = buildPrayerNotificationKey(
+        prayerKey: 'dzuhur',
+        prayerTime: dzuhur,
+      );
+      final turnedOffKey = buildPrayerNotificationKey(
+        prayerKey: 'ashar',
+        prayerTime: ashar,
+      );
+      // 12:10: Dzuhur (1002) fired ten minutes ago and is still in the
+      // tray; Ashar (1003) is pending but no longer requested.
+      final plan = buildPrayerNotificationSyncPlan(
+        activeKeysById: {1002: firedKey, 1003: turnedOffKey},
+        requests: const [],
+        now: DateTime(2026, 6, 16, 12, 10),
+      );
+
+      expect(plan.notificationIdsToCancel, [1003]);
+      expect(plan.desiredKeysById, isEmpty);
+    });
+
     test('a full sync also cancels IDs left by older versions', () {
       final plan = buildPrayerNotificationSyncPlan(
         activeKeysById: unknownActivePrayerNotifications([2001, 3002, 4001]),

@@ -1,0 +1,3 @@
+/* Location permission prompts (English). */
+"NSLocationWhenInUseUsageDescription" = "Solatify uses your location to calculate accurate prayer times and the Qibla direction for your area.";
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "Solatify uses your location to calculate accurate prayer times.";

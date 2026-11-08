@@ -14,8 +14,10 @@ import 'package:solatify/core/theme/theme.dart';
 import 'package:solatify/features/notifications/data/services/notification_service.dart';
 import 'package:solatify/features/notifications/presentation/providers/adhan_playback_provider.dart';
 import 'package:solatify/features/notifications/presentation/providers/notification_scheduler_provider.dart';
+import 'package:solatify/features/prayer_schedule/data/prayer_timezone_service.dart';
 import 'package:solatify/features/prayer_schedule/presentation/prayer_times_provider.dart';
 import 'package:solatify/features/settings/presentation/providers/settings_provider.dart';
+import 'package:solatify/features/tracker/presentation/providers/tracker_provider.dart';
 
 void main() {
   // Run everything inside a guarded zone so that any uncaught async error
@@ -74,6 +76,10 @@ void main() {
         debugPrint('Background audio init error: $e');
       }
 
+      // Used to pick the right timezone for locations whose country name
+      // (in the device language) is not recognised.
+      await PrayerTimezoneService.loadDeviceTimezone();
+
       runApp(const ProviderScope(child: SolatifyApp()));
     },
     (error, stack) {
@@ -128,6 +134,11 @@ class _AppErrorView extends StatelessWidget {
   }
 }
 
+/// Upper bound for the system text size. Raised from 1.25 so low-vision users
+/// get noticeably larger text; key screens were checked for overflow at 1.5
+/// on a 360 dp wide phone. Beyond that some cards would need reflowing.
+const double _maxTextScale = 1.5;
+
 class SolatifyApp extends ConsumerStatefulWidget {
   const SolatifyApp({super.key});
 
@@ -164,7 +175,35 @@ class _SolatifyAppState extends ConsumerState<SolatifyApp>
   /// The midnight rollover timer may not have fired while the app was in the
   /// background, so recalculate a stale schedule before rescheduling
   /// notifications from it.
+  /// The calendar day the app was last active on.
+  DateTime _activeDay = DateUtils.dateOnly(DateTime.now());
+
+  /// The tracker captures "today" when it is first opened. If the app stayed
+  /// alive overnight, move it to the new day so ticks are not saved to
+  /// yesterday's log — unless the user was looking at another date.
+  void _rollTrackerOverToNewDay() {
+    final today = DateUtils.dateOnly(DateTime.now());
+    final previousDay = _activeDay;
+    _activeDay = today;
+    if (today == previousDay) return;
+
+    if (ref.exists(trackerSelectedDateProvider) &&
+        ref.read(trackerSelectedDateProvider) == previousDay) {
+      ref.read(trackerSelectedDateProvider.notifier).state = today;
+    }
+    if (ref.exists(trackerProvider)) {
+      final shown = ref.read(trackerProvider).valueOrNull?.date;
+      if (shown == null || DateUtils.isSameDay(shown, previousDay)) {
+        ref.read(trackerProvider.notifier).loadLogForDate(today);
+      }
+    }
+    if (ref.exists(trackerWeeklyStatsProvider)) {
+      ref.invalidate(trackerWeeklyStatsProvider);
+    }
+  }
+
   Future<void> _refreshAfterResume() async {
+    _rollTrackerOverToNewDay();
     try {
       await ref.read(prayerTimesProvider.notifier).refreshIfStale();
     } catch (e) {
@@ -232,7 +271,7 @@ class _SolatifyAppState extends ConsumerState<SolatifyApp>
         final mediaQuery = MediaQuery.of(context);
         final clampedScale = mediaQuery.textScaler
             .scale(1)
-            .clamp(0.9, 1.25)
+            .clamp(0.9, _maxTextScale)
             .toDouble();
 
         return MediaQuery(

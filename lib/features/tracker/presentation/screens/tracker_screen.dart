@@ -30,6 +30,21 @@ class TrackerScreen extends ConsumerWidget {
     final customHabitTargets = ref.watch(customHabitTargetProvider);
     final colorScheme = Theme.of(context).colorScheme;
 
+    ref.listen<int>(trackerWriteFailureProvider, (previous, next) {
+      if (previous == null || next <= previous) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(
+              isEnglish
+                  ? 'Could not save the change. Please try again.'
+                  : 'Perubahan gagal disimpan. Silakan coba lagi.',
+            ),
+          ),
+        );
+    });
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: colorScheme.surface.withValues(alpha: 0.94),
@@ -72,9 +87,11 @@ class TrackerScreen extends ConsumerWidget {
                   ref.read(trackerSelectedDateProvider.notifier).state = date;
                   ref.read(trackerProvider.notifier).loadLogForDate(date);
                 },
-                onToggleHabit: (habit) {
+                onToggleHabit: (habit) async {
                   SolatifyHaptics.light();
-                  ref.read(trackerProvider.notifier).toggleHabit(habit);
+                  await ref.read(trackerProvider.notifier).toggleHabit(habit);
+                  // Habits count towards the heatmap and the streak.
+                  ref.invalidate(trackerWeeklyStatsProvider);
                 },
                 onAddHabit: (habitName, target, unit) {
                   SolatifyHaptics.selection();
@@ -93,6 +110,17 @@ class TrackerScreen extends ConsumerWidget {
                   ref
                       .read(customHabitTargetProvider.notifier)
                       .renameHabit(oldName, newName);
+                  // Logs are keyed by name: move the history along with it,
+                  // but only if the rename was accepted (not empty or taken).
+                  final newKey = newName.trim();
+                  final habits = ref.read(customHabitProvider);
+                  if (newKey != oldName &&
+                      habits.contains(newKey) &&
+                      !habits.contains(oldName)) {
+                    ref
+                        .read(trackerProvider.notifier)
+                        .renameHabitKey('custom:$oldName', 'custom:$newKey');
+                  }
                 },
                 onDeleteHabit: (habitName) {
                   SolatifyHaptics.selection();
@@ -101,11 +129,16 @@ class TrackerScreen extends ConsumerWidget {
                       .read(customHabitTargetProvider.notifier)
                       .deleteHabit(habitName);
                 },
-                onUpdateHabitProgress: (habit, progress) {
+                onUpdateHabitProgress: (habit, progress) async {
                   SolatifyHaptics.selection();
-                  ref
+                  final target = habit.startsWith('custom:')
+                      ? customHabitTargets[habit.substring('custom:'.length)]
+                            ?.target
+                      : null;
+                  await ref
                       .read(trackerProvider.notifier)
-                      .updateHabitProgress(habit, progress);
+                      .updateHabitProgress(habit, progress, target: target);
+                  ref.invalidate(trackerWeeklyStatsProvider);
                 },
               ),
               loading: () => SolatifyStateView.loading(

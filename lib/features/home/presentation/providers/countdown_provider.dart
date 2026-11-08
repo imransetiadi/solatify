@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:solatify/core/performance/performance_tuning.dart';
 import 'package:solatify/features/prayer_schedule/presentation/prayer_times_provider.dart';
@@ -30,9 +31,25 @@ class CountdownState {
   final String formattedTime; // HH:mm:ss
 }
 
-class CountdownNotifier extends StateNotifier<CountdownState> {
+class CountdownNotifier extends StateNotifier<CountdownState>
+    with WidgetsBindingObserver {
   CountdownNotifier(this._ref) : super(CountdownState.initial()) {
+    WidgetsBinding.instance.addObserver(this);
     _startTimer();
+  }
+
+  /// Nothing shows the countdown in the background, but the process can stay
+  /// alive there (Quran recitation); stop ticking so it does not wake the
+  /// CPU every second, and catch up as soon as the app is visible again.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState lifecycle) {
+    if (lifecycle == AppLifecycleState.resumed) {
+      _startTimer();
+    } else if (lifecycle == AppLifecycleState.paused ||
+        lifecycle == AppLifecycleState.hidden) {
+      _timer?.cancel();
+      _timer = null;
+    }
   }
 
   final Ref _ref;
@@ -148,6 +165,7 @@ class CountdownNotifier extends StateNotifier<CountdownState> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
     super.dispose();
   }

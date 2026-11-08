@@ -62,9 +62,25 @@ void main() {
       tomorrowTimes: day(jakarta, 2026, 11, 8),
     );
 
-    test('contains today\'s five prayers plus tomorrow\'s Subuh', () {
+    test('contains today\'s and tomorrow\'s five prayers', () {
       final names = slots().map((s) => s.name).toList();
-      expect(names, ['Subuh', 'Dzuhur', 'Ashar', 'Magrib', 'Isya', 'Subuh']);
+      const day = ['Subuh', 'Dzuhur', 'Ashar', 'Magrib', 'Isya'];
+      expect(names, [...day, ...day]);
+    });
+
+    test('later days keep the widget going while the app is closed', () {
+      final withLater = buildPrayerWidgetSlots(
+        todayTimes: day(jakarta, 2026, 11, 7),
+        tomorrowTimes: day(jakarta, 2026, 11, 8),
+        laterDays: [day(jakarta, 2026, 11, 9), day(jakarta, 2026, 11, 10)],
+      );
+      expect(withLater, hasLength(20));
+      // Two days after tomorrow's Subuh there is still a next prayer.
+      final next = nextPrayerWidgetSlot(
+        withLater,
+        tz.TZDateTime(jakarta, 2026, 11, 9, 13),
+      )!;
+      expect((next.name, next.time.day), ('Ashar', 9));
     });
 
     test('after Isya the next prayer is tomorrow\'s Subuh', () {

@@ -10,7 +10,8 @@ void main() {
       expect(assetSize('assets/images/solatify_logo.svg'), lessThan(4 * 1024));
       // Replaced by the Solatify logo everywhere in the app.
       expect(File('assets/images/masjid_nabawi.svg').existsSync(), isFalse);
-      expect(assetSize('assets/icon.jpg'), lessThan(64 * 1024));
+      // Unused bundled image removed; it only grew the app.
+      expect(File('assets/icon.jpg').existsSync(), isFalse);
     });
 
     test('launcher icon sources stay compact and are wired up', () {
