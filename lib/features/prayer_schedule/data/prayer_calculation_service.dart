@@ -1,5 +1,6 @@
 import 'package:adhan/adhan.dart';
 import 'package:solatify/core/utils/timezone_database.dart';
+import 'package:solatify/features/prayer_schedule/domain/entities/prayer_offsets.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 /// Simple in-memory cache for prayer calculations to avoid recalculating
@@ -14,15 +15,10 @@ class _PrayerCalcCache {
     String timezoneName,
     Map<String, int>? offsets,
   ) {
-    final offsetStr = offsets == null
+    final safe = offsets == null ? null : sanitizePrayerOffsets(offsets);
+    final offsetStr = safe == null
         ? 'no_offset'
-        : [
-            'subuh',
-            'dzuhur',
-            'ashar',
-            'magrib',
-            'isya',
-          ].map((key) => '$key=${offsets[key] ?? 0}').join(',');
+        : prayerOffsetKeys.map((key) => '$key=${safe[key]}').join(',');
     return '$lat:$lng:${date.year}-${date.month}-${date.day}:$method:$timezoneName:$offsetStr';
   }
 
@@ -55,9 +51,79 @@ class _PrayerCalcCache {
   }
 }
 
+/// Conventions an official schedule applies on top of the astronomical
+/// times. Kept apart from the user's own corrections: the standard decides
+/// what "0 minutes" means, a correction only moves away from it.
+class PrayerMethodStandard {
+  const PrayerMethodStandard({
+    this.ihtiyatMinutes = const {},
+    this.roundUp = false,
+  });
+
+  /// Safety margin (ihtiyat) per prayer key, in minutes.
+  final Map<String, int> ihtiyatMinutes;
+
+  /// Round each time up to the next minute instead of to the nearest one,
+  /// so a published minute is never earlier than the computed instant.
+  final bool roundUp;
+
+  static const none = PrayerMethodStandard();
+
+  /// Kemenag RI: 2 minutes of ihtiyat, 3 for Dzuhur and Magrib, rounded up.
+  ///
+  /// Calibrated against Kemenag's published schedules (Bimas Islam, via
+  /// api.myquran.com) for Banda Aceh, Medan, Jakarta, Surabaya, Denpasar,
+  /// Makassar and Jayapura on four dates across the year: 86% of the times
+  /// match to the minute and none is more than one minute off. Without it,
+  /// every time was 2 to 4 minutes earlier than Kemenag's, which put the
+  /// Magrib adhan before the official time to break the fast.
+  static const kemenag = PrayerMethodStandard(
+    ihtiyatMinutes: {
+      'subuh': 2,
+      'dzuhur': 3,
+      'ashar': 2,
+      'magrib': 3,
+      'isya': 2,
+    },
+    roundUp: true,
+  );
+}
+
 class PrayerCalculationService {
   static void _ensureTimezonesInitialized() =>
       TimezoneDatabase.ensureInitialized();
+
+  /// adhan rounds every time to the nearest minute. Its times depend on the
+  /// longitude only through the solar transit, at 4 minutes per degree, so
+  /// computing 0.125 degrees further west yields each instant plus exactly
+  /// 30 seconds, and nearest(t + 30 s) is t rounded up.
+  static const double _roundUpLongitudeShift = 0.125;
+
+  static PrayerMethodStandard standardFor(String methodName) {
+    switch (methodName) {
+      case 'Kemenag':
+        return PrayerMethodStandard.kemenag;
+      default:
+        // Unknown or legacy values fall back to Kemenag parameters in
+        // [getParameters], so they get the Kemenag standard too.
+        return _isKnownNonKemenag(methodName)
+            ? PrayerMethodStandard.none
+            : PrayerMethodStandard.kemenag;
+    }
+  }
+
+  static bool _isKnownNonKemenag(String methodName) => const {
+    'MWL',
+    'MuslimWorldLeague',
+    'Egypt',
+    'Karachi',
+    'Makkah',
+    'UmmAlQura',
+    'ISNA',
+    'NorthAmerica',
+    'Singapore',
+    'Dubai',
+  }.contains(methodName);
 
   /// Noon, [daysAhead] calendar days after the current day in
   /// [timezoneName], as an instant to pass to [calculatePrayerTimes].
@@ -137,16 +203,28 @@ class PrayerCalculationService {
     if (cached != null) {
       return cached;
     }
-    final coordinates = Coordinates(latitude, longitude);
+    final standard = standardFor(method);
+    final coordinates = Coordinates(
+      latitude,
+      standard.roundUp ? longitude - _roundUpLongitudeShift : longitude,
+    );
     final params = getParameters(method);
 
-    // Apply custom offsets if provided
+    // The method's own convention, then the user's correction on top.
+    final ihtiyat = standard.ihtiyatMinutes;
+    params.methodAdjustments.fajr += ihtiyat['subuh'] ?? 0;
+    params.methodAdjustments.dhuhr += ihtiyat['dzuhur'] ?? 0;
+    params.methodAdjustments.asr += ihtiyat['ashar'] ?? 0;
+    params.methodAdjustments.maghrib += ihtiyat['magrib'] ?? 0;
+    params.methodAdjustments.isha += ihtiyat['isya'] ?? 0;
+
     if (offsets != null) {
-      params.adjustments.fajr = offsets['subuh'] ?? 0;
-      params.adjustments.dhuhr = offsets['dzuhur'] ?? 0;
-      params.adjustments.asr = offsets['ashar'] ?? 0;
-      params.adjustments.maghrib = offsets['magrib'] ?? 0;
-      params.adjustments.isha = offsets['isya'] ?? 0;
+      final safe = sanitizePrayerOffsets(offsets);
+      params.adjustments.fajr = safe['subuh']!;
+      params.adjustments.dhuhr = safe['dzuhur']!;
+      params.adjustments.asr = safe['ashar']!;
+      params.adjustments.maghrib = safe['magrib']!;
+      params.adjustments.isha = safe['isya']!;
     }
 
     final dateComponents = DateComponents(

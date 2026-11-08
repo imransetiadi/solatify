@@ -3,11 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:solatify/core/localization/app_localizations.dart';
 import 'package:solatify/core/services/solatify_haptics.dart';
+import 'package:solatify/core/widgets/glass_container.dart';
 import 'package:solatify/core/widgets/islamic/islamic_decorations.dart';
 import 'package:solatify/core/widgets/responsive_layout.dart';
 import 'package:solatify/core/widgets/solatify_design_tokens.dart';
 import 'package:solatify/features/notifications/data/services/notification_service.dart';
 import 'package:solatify/features/notifications/presentation/providers/notification_scheduler_provider.dart';
+import 'package:solatify/features/prayer_schedule/data/prayer_calculation_service.dart';
+import 'package:solatify/features/prayer_schedule/data/prayer_timezone_service.dart';
+import 'package:solatify/features/prayer_schedule/domain/entities/prayer_offsets.dart';
+import 'package:solatify/features/prayer_schedule/presentation/location_provider.dart';
 import 'package:solatify/features/settings/domain/entities/settings_state.dart';
 import 'package:solatify/features/settings/presentation/providers/settings_provider.dart';
 import 'package:solatify/features/settings/presentation/widgets/prayer_offset_dialog.dart';
@@ -201,25 +206,107 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     _verifyNotificationPermissionAfterReturn();
   }
 
+  /// Today's times for the saved location and method, without any manual
+  /// correction, so the dialog can preview and validate a new value.
+  /// Null when they cannot be calculated; the dialog then edits blind.
+  Map<String, DateTime>? _standardTimesToday(SettingsState settings) {
+    try {
+      final location = ref.read(locationProvider);
+      return PrayerCalculationService.calculatePrayerTimes(
+        latitude: location.latitude,
+        longitude: location.longitude,
+        date: DateTime.now(),
+        method: settings.calculationMethod,
+        timezoneName: PrayerTimezoneService.inferTimezoneName(
+          latitude: location.latitude,
+          longitude: location.longitude,
+          country: location.country,
+        ),
+        offsets: const {},
+      );
+    } catch (e) {
+      debugPrint('Could not calculate standard prayer times: $e');
+      return null;
+    }
+  }
+
   Future<void> _showPrayerOffsetDialog(
     PrayerOffsetType prayer,
     int currentOffset,
   ) async {
     final l = AppLocalizations.of(context);
+    final settings = ref.read(settingsProvider);
     SolatifyHaptics.selection();
     final offset = await showPrayerOffsetDialog(
       context: context,
       title: l.setPrayerOffset(l.prayerName(prayer.key)),
+      prayerKey: prayer.key,
       initialOffset: currentOffset,
+      standardTimes: _standardTimesToday(settings),
+      offsets: settings.prayerOffsets,
     );
-    if (offset == null || !mounted) return;
+    if (offset == null || offset == currentOffset || !mounted) return;
     try {
       await ref
           .read(settingsProvider.notifier)
           .updatePrayerOffsets(prayer.key, offset);
     } catch (e) {
       debugPrint('Error saving prayer offset: $e');
+      _showOffsetSaveError();
     }
+  }
+
+  Future<void> _resetPrayerOffsets() async {
+    final l = AppLocalizations.of(context);
+    SolatifyHaptics.selection();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(
+          l.isEnglish ? 'Reset all corrections?' : 'Kembalikan semua koreksi?',
+        ),
+        content: Text(
+          l.isEnglish
+              ? 'Every prayer goes back to the standard time of the selected '
+                    'calculation method.'
+              : 'Semua waktu salat kembali ke waktu standar metode '
+                    'perhitungan yang dipilih.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(l.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(l.isEnglish ? 'Reset' : 'Kembalikan'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    try {
+      await ref.read(settingsProvider.notifier).resetPrayerOffsets();
+    } catch (e) {
+      debugPrint('Error resetting prayer offsets: $e');
+      _showOffsetSaveError();
+    }
+  }
+
+  void _showOffsetSaveError() {
+    if (!mounted) return;
+    final l = AppLocalizations.of(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          l.isEnglish
+              ? 'The correction could not be saved. Your schedule is '
+                    'unchanged; please try again.'
+              : 'Koreksi gagal disimpan. Jadwalmu tidak berubah; silakan coba '
+                    'lagi.',
+        ),
+      ),
+    );
   }
 
   Future<void> _showCalculationMethodSheet(String currentMethod) async {
@@ -484,6 +571,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                     description: l.adjustOffsetHint,
                   ),
                   const SizedBox(height: ResponsiveLayout.itemGap),
+                  if (_showIhtiyatNotice(settings)) ...[
+                    _buildIhtiyatNotice(),
+                    const SizedBox(height: ResponsiveLayout.itemGap),
+                  ],
                   SettingsGroup(
                     children: [
                       for (final prayer in PrayerOffsetType.values)
@@ -493,6 +584,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                         ),
                     ],
                   ),
+                  // The notice card has its own reset button.
+                  if (hasActivePrayerOffsets(settings.prayerOffsets) &&
+                      !_showIhtiyatNotice(settings)) ...[
+                    const SizedBox(height: ResponsiveLayout.itemGap),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton.icon(
+                        onPressed: _resetPrayerOffsets,
+                        icon: const Icon(
+                          Icons.restart_alt_rounded,
+                          size: SolatifyIconSize.inline,
+                        ),
+                        label: Text(
+                          l.isEnglish
+                              ? 'Reset all corrections'
+                              : 'Kembalikan semua koreksi',
+                        ),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: ResponsiveLayout.bottomSafeGap),
                 ],
               ),
@@ -534,13 +645,93 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     );
   }
 
+  /// Kemenag times now include ihtiyat. Users who added minutes by hand to
+  /// match Kemenag would now be that much later, so tell them once.
+  bool _showIhtiyatNotice(SettingsState settings) =>
+      !settings.ihtiyatNoticeDismissed &&
+      hasActivePrayerOffsets(settings.prayerOffsets) &&
+      PrayerCalculationService.standardFor(settings.calculationMethod) ==
+          PrayerMethodStandard.kemenag;
+
+  Widget _buildIhtiyatNotice() {
+    final l = AppLocalizations.of(context);
+    return GlassContainer(
+      borderRadius: SolatifyRadius.lg,
+      borderColor: SolatifyColors.warning(context).withValues(alpha: 0.45),
+      padding: ResponsiveLayout.cardPadding,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                Icons.info_outline_rounded,
+                size: SolatifyIconSize.cardIcon,
+                color: SolatifyColors.warning(context),
+              ),
+              const SizedBox(width: SolatifySpacing.sm),
+              Expanded(
+                child: Text(
+                  l.isEnglish
+                      ? 'Kemenag times now include the official ihtiyat '
+                            '(2 to 3 minutes). If you added minutes yourself '
+                            'to match Kemenag, set those corrections back to '
+                            '0 so prayers are not later than the official '
+                            'schedule.'
+                      : 'Jadwal Kemenag kini sudah termasuk ihtiyat resmi '
+                            '(2 sampai 3 menit). Kalau dulu kamu menambah '
+                            'menit sendiri supaya sama dengan Kemenag, '
+                            'kembalikan koreksinya ke 0 agar waktu salat tidak '
+                            'lebih lambat dari jadwal resmi.',
+                  style: TextStyle(
+                    color: SolatifyColors.text(context),
+                    fontSize: SolatifyType.body,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: SolatifySpacing.sm),
+          Wrap(
+            spacing: SolatifySpacing.sm,
+            children: [
+              TextButton(
+                onPressed: _resetPrayerOffsets,
+                child: Text(
+                  l.isEnglish
+                      ? 'Reset all corrections'
+                      : 'Kembalikan semua koreksi',
+                ),
+              ),
+              TextButton(
+                onPressed: _dismissIhtiyatNotice,
+                child: Text(l.isEnglish ? 'Keep my corrections' : 'Biarkan'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _dismissIhtiyatNotice() async {
+    SolatifyHaptics.selection();
+    try {
+      await ref.read(settingsProvider.notifier).dismissIhtiyatNotice();
+    } catch (e) {
+      debugPrint('Error saving ihtiyat notice state: $e');
+    }
+  }
+
   Widget _buildOffsetTile(PrayerOffsetType prayer, int offset) {
     final l = AppLocalizations.of(context);
     final prayerName = l.prayerName(prayer.key);
 
     return SettingsTile(
       icon: prayer.icon,
-      title: l.isEnglish ? '$prayerName Offset' : '$prayerName Ofset',
+      title: l.prayerCorrectionTitle(prayerName),
       value: formatPrayerOffset(l, offset),
       highlightValue: offset != 0,
       semanticHint: l.setPrayerOffset(prayerName),

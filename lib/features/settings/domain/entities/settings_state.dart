@@ -11,6 +11,7 @@ class SettingsState {
     this.enabledPrayerNotifications = defaultEnabledPrayerNotifications,
     this.preNotificationMinutes = defaultPreNotificationMinutes,
     this.notificationSoundMode = defaultNotificationSoundMode,
+    this.ihtiyatNoticeDismissed = false,
   });
 
   static const Map<String, bool> defaultEnabledPrayerNotifications = {
@@ -33,6 +34,10 @@ class SettingsState {
   final int preNotificationMinutes;
   final String notificationSoundMode;
 
+  /// The user has read that Kemenag times now include ihtiyat, which a
+  /// manual correction may have been compensating for.
+  final bool ihtiyatNoticeDismissed;
+
   SettingsState copyWith({
     ThemeMode? themeMode,
     String? language,
@@ -43,6 +48,7 @@ class SettingsState {
     Map<String, bool>? enabledPrayerNotifications,
     int? preNotificationMinutes,
     String? notificationSoundMode,
+    bool? ihtiyatNoticeDismissed,
   }) {
     return SettingsState(
       themeMode: themeMode ?? this.themeMode,
@@ -58,6 +64,8 @@ class SettingsState {
           preNotificationMinutes ?? this.preNotificationMinutes,
       notificationSoundMode:
           notificationSoundMode ?? this.notificationSoundMode,
+      ihtiyatNoticeDismissed:
+          ihtiyatNoticeDismissed ?? this.ihtiyatNoticeDismissed,
     );
   }
 }

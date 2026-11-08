@@ -118,4 +118,9 @@ class _FakeSettingsRepository implements SettingsRepository {
   Future<void> updateNotificationSoundMode(String mode) async {
     _settings = _settings.copyWith(notificationSoundMode: mode);
   }
+
+  @override
+  Future<void> dismissIhtiyatNotice() async {
+    _settings = _settings.copyWith(ihtiyatNoticeDismissed: true);
+  }
 }

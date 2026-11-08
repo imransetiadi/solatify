@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:solatify/core/database/hive_service.dart';
+import 'package:solatify/features/prayer_schedule/domain/entities/prayer_offsets.dart';
 import 'package:solatify/features/settings/domain/entities/settings_state.dart';
 
 abstract class SettingsLocalDataSource {
@@ -9,6 +10,7 @@ abstract class SettingsLocalDataSource {
   Future<void> updateCalculationMethod(String method);
   Future<void> completeOnboarding();
   Future<void> updatePrayerOffsets(Map<String, int> offsets);
+  Future<void> dismissIhtiyatNotice();
   Future<void> updateAdhanNotificationsEnabled(bool enabled);
   Future<void> updateEnabledPrayerNotifications(Map<String, bool> enabled);
   Future<void> updatePreNotificationMinutes(int minutes);
@@ -42,7 +44,8 @@ class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
       );
       final onboarding = rawOnboarding is bool ? rawOnboarding : false;
 
-      final offsets = HiveService.getPrayerOffsets();
+      // Stored values may predate the limits or come from a backup.
+      final offsets = sanitizePrayerOffsets(HiveService.getPrayerOffsets());
       final rawAdhanNotificationsEnabled = HiveService.getSetting(
         'adhan_notifications_enabled',
         defaultValue: false,
@@ -53,6 +56,9 @@ class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
       final enabledPrayerNotifications = _readEnabledPrayerNotifications();
       final preNotificationMinutes = _readPreNotificationMinutes();
       final notificationSoundMode = _readNotificationSoundMode();
+      final ihtiyatNoticeDismissed =
+          HiveService.getSetting(_ihtiyatNoticeKey, defaultValue: false) ==
+          true;
 
       ThemeMode themeMode;
       switch (themeStr) {
@@ -76,20 +82,15 @@ class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
         enabledPrayerNotifications: enabledPrayerNotifications,
         preNotificationMinutes: preNotificationMinutes,
         notificationSoundMode: notificationSoundMode,
+        ihtiyatNoticeDismissed: ihtiyatNoticeDismissed,
       );
     } catch (e) {
-      return const SettingsState(
+      return SettingsState(
         themeMode: ThemeMode.system,
         language: 'id',
         calculationMethod: 'Kemenag',
         onboardingCompleted: false,
-        prayerOffsets: {
-          'subuh': 0,
-          'dzuhur': 0,
-          'ashar': 0,
-          'magrib': 0,
-          'isya': 0,
-        },
+        prayerOffsets: {for (final key in prayerOffsetKeys) key: 0},
         adhanNotificationsEnabled: false,
       );
     }
@@ -161,9 +162,16 @@ class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
     await HiveService.saveSetting('onboarding_completed', true);
   }
 
+  static const _ihtiyatNoticeKey = 'ihtiyat_notice_dismissed';
+
+  @override
+  Future<void> dismissIhtiyatNotice() async {
+    await HiveService.saveSetting(_ihtiyatNoticeKey, true);
+  }
+
   @override
   Future<void> updatePrayerOffsets(Map<String, int> offsets) async {
-    await HiveService.savePrayerOffsets(offsets);
+    await HiveService.savePrayerOffsets(sanitizePrayerOffsets(offsets));
   }
 
   @override
