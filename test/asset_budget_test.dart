@@ -37,9 +37,9 @@ void main() {
       expect(File('assets/best_logo.png').existsSync(), isFalse);
     });
 
-    test('large unused asset remains under temporary review cap', () {
-      expect(File('assets/icon_white.png').existsSync(), isTrue);
-      expect(assetSize('assets/icon_white.png'), lessThan(192 * 1024));
+    test('old brand artwork stays removed', () {
+      // Superseded by the logo in assets/brand (#71).
+      expect(File('assets/icon_white.png').existsSync(), isFalse);
     });
   });
 }

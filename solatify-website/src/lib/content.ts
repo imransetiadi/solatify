@@ -130,7 +130,7 @@ export const localizedContent = {
       { src: "/screenshots/app-ios-mosque.jpg", title: "Mosques", label: "iOS", story: "" },
       { src: "/screenshots/app-android-home.jpg", title: "Prayer Home", label: "Android", story: "" },
       { src: "/screenshots/app-android-quran.jpg", title: "Qur’an", label: "Android", story: "" },
-      { src: "/screenshots/app-android-settings.jpg", title: "Settings", label: "Android", story: "" },
+      { src: "/screenshots/app-android-settings-adhan.jpg", title: "Settings", label: "Android", story: "" },
       { src: "/screenshots/app-android-tracker.jpg", title: "Tracker", label: "Android", story: "" }
     ],
     mosqueSpotlight: {
@@ -453,7 +453,7 @@ export const localizedContent = {
       { src: "/screenshots/app-ios-mosque.jpg", title: "Masjid", label: "iOS", story: "" },
       { src: "/screenshots/app-android-home.jpg", title: "Home Salat", label: "Android", story: "" },
       { src: "/screenshots/app-android-quran.jpg", title: "Qur’an", label: "Android", story: "" },
-      { src: "/screenshots/app-android-settings.jpg", title: "Pengaturan", label: "Android", story: "" },
+      { src: "/screenshots/app-android-settings-adhan.jpg", title: "Pengaturan", label: "Android", story: "" },
       { src: "/screenshots/app-android-tracker.jpg", title: "Tracker", label: "Android", story: "" }
     ],
     mosqueSpotlight: {

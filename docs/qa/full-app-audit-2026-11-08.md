@@ -59,4 +59,4 @@ Verification: `flutter analyze` clean, 241 tests pass (new regression tests are 
 - **Lints**: `analysis_options.yaml` was deliberately deleted; a temporary run found no correctness issues (only style and fire-and-forget settings writes).
 - **AGP 9 opt-out flags** (`android.newDsl=false`, `android.builtInKotlin=false`) and the variant-API APK rename will need migrating before the next AGP major.
 - **Crash reporting / CI**: none yet; release errors only go to `debugPrint`.
-- `assets/icon_white.png` remains an unreferenced review candidate.
+- ~~`assets/icon_white.png` remains an unreferenced review candidate.~~ Removed: it was the old Masjid Nabawi artwork, superseded by the logo in `assets/brand`.
