@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:solatify/core/localization/app_localizations.dart';
 import 'package:solatify/core/services/solatify_haptics.dart';
 import 'package:solatify/core/widgets/solatify_design_tokens.dart';
+import 'package:solatify/features/prayer_schedule/domain/entities/prayer_offsets.dart';
 
-/// Smallest / largest allowed prayer time correction in minutes.
-const int kPrayerOffsetMin = -60;
-const int kPrayerOffsetMax = 60;
+export 'package:solatify/features/prayer_schedule/domain/entities/prayer_offsets.dart'
+    show kPrayerOffsetMax, kPrayerOffsetMin;
 
 int normalizePrayerOffsetInput(String value) {
   final parsed = int.tryParse(value.trim());
@@ -27,34 +28,52 @@ final prayerOffsetInputFormatter = TextInputFormatter.withFunction((
   return oldValue;
 });
 
-/// Formats an offset as `+5 menit`, `-3 menit` or `0 menit`.
+/// Formats a correction as `+5 menit`, `-3 menit` or `0 menit`.
 String formatPrayerOffset(AppLocalizations l, int offset) =>
     '${offset > 0 ? '+' : ''}$offset ${l.minutes}';
 
-/// Shows the offset editor and resolves with the new offset, or `null`
+/// Shows the correction editor and resolves with the new value, or `null`
 /// when cancelled.
+///
+/// [standardTimes] are today's times without any correction; when given,
+/// the dialog previews the resulting time and refuses values that would
+/// move the prayer past its neighbours ([offsets] holds their corrections).
 Future<int?> showPrayerOffsetDialog({
   required BuildContext context,
   required String title,
+  required String prayerKey,
   required int initialOffset,
+  Map<String, DateTime>? standardTimes,
+  Map<String, int> offsets = const {},
 }) {
   return showDialog<int>(
     context: context,
-    builder: (_) =>
-        PrayerOffsetDialog(title: title, initialOffset: initialOffset),
+    builder: (_) => PrayerOffsetDialog(
+      title: title,
+      prayerKey: prayerKey,
+      initialOffset: initialOffset,
+      standardTimes: standardTimes,
+      offsets: offsets,
+    ),
   );
 }
 
-/// Dialog with +/- steppers and a numeric field for a prayer offset.
+/// Dialog with +/- steppers and a numeric field for a prayer correction.
 class PrayerOffsetDialog extends StatefulWidget {
   const PrayerOffsetDialog({
     super.key,
     required this.title,
     required this.initialOffset,
+    this.prayerKey = 'subuh',
+    this.standardTimes,
+    this.offsets = const {},
   });
 
   final String title;
+  final String prayerKey;
   final int initialOffset;
+  final Map<String, DateTime>? standardTimes;
+  final Map<String, int> offsets;
 
   @override
   State<PrayerOffsetDialog> createState() => _PrayerOffsetDialogState();
@@ -65,7 +84,7 @@ class _PrayerOffsetDialogState extends State<PrayerOffsetDialog> {
 
   /// Parsed, in-range value; `null` when the field is invalid.
   int? _value;
-  String? _error;
+  String? _inputError;
 
   @override
   void initState() {
@@ -83,21 +102,35 @@ class _PrayerOffsetDialogState extends State<PrayerOffsetDialog> {
     super.dispose();
   }
 
+  bool get _hasStandardTimes {
+    final times = widget.standardTimes;
+    return times != null && times.containsKey(widget.prayerKey);
+  }
+
+  PrayerOffsetCheck? _check(int value) {
+    if (!_hasStandardTimes) return null;
+    return checkPrayerOffset(
+      prayerKey: widget.prayerKey,
+      minutes: value,
+      standardTimes: widget.standardTimes!,
+      offsets: widget.offsets,
+    );
+  }
+
   void _validate(String text, AppLocalizations l) {
-    final trimmed = text.trim();
-    final parsed = int.tryParse(trimmed);
+    final parsed = int.tryParse(text.trim());
     setState(() {
       if (parsed == null) {
         _value = null;
-        _error = l.isEnglish
+        _inputError = l.isEnglish
             ? 'Enter a number of minutes.'
             : 'Masukkan jumlah menit.';
       } else if (parsed < kPrayerOffsetMin || parsed > kPrayerOffsetMax) {
         _value = null;
-        _error = l.prayerOffsetLimitHint;
+        _inputError = l.prayerOffsetLimitHint;
       } else {
         _value = parsed;
-        _error = null;
+        _inputError = null;
       }
     });
   }
@@ -107,7 +140,7 @@ class _PrayerOffsetDialogState extends State<PrayerOffsetDialog> {
     SolatifyHaptics.selection();
     setState(() {
       _value = clamped;
-      _error = null;
+      _inputError = null;
       _controller.value = TextEditingValue(
         text: clamped.toString(),
         selection: TextSelection.collapsed(offset: clamped.toString().length),
@@ -122,14 +155,30 @@ class _PrayerOffsetDialogState extends State<PrayerOffsetDialog> {
 
   void _save() {
     final value = _value;
-    if (value == null) return;
+    if (value == null || !(_check(value)?.keepsPrayerOrder ?? true)) return;
     Navigator.of(context).pop(value);
+  }
+
+  String? _orderError(AppLocalizations l, PrayerOffsetCheck? check) {
+    if (check == null || check.keepsPrayerOrder) return null;
+    final name = l.prayerName(widget.prayerKey);
+    final after = check.mustStayAfter;
+    if (after != null) {
+      final other = l.prayerName(after);
+      return l.isEnglish
+          ? '$name would no longer come after $other.'
+          : '$name akan jatuh sebelum atau bersamaan dengan $other.';
+    }
+    final other = l.prayerName(check.mustStayBefore!);
+    return l.isEnglish
+        ? '$name would no longer come before $other.'
+        : '$name akan jatuh setelah atau bersamaan dengan $other.';
   }
 
   String _effectLabel(AppLocalizations l, int value) {
     if (value == 0) {
       return l.isEnglish
-          ? 'Matches the standard time. ${l.offsetNegativeHint}'
+          ? 'Same as the standard time. ${l.offsetNegativeHint}'
           : 'Sama dengan waktu standar. ${l.offsetNegativeHint}';
     }
     final minutes = value.abs();
@@ -143,14 +192,39 @@ class _PrayerOffsetDialogState extends State<PrayerOffsetDialog> {
         : '$minutes ${l.minutes} lebih awal dari standar.';
   }
 
+  String _cautionText(AppLocalizations l) {
+    final name = l.prayerName(widget.prayerKey);
+    final isMagrib = widget.prayerKey == 'magrib';
+    if (l.isEnglish) {
+      return isMagrib
+          ? 'The adhan will sound before the standard $name time, which is '
+                'also when the fast ends. Only do this to match your local '
+                'mosque.'
+          : 'The adhan will sound before the standard $name time, which also '
+                'marks the start of the fast. Only do this to match your '
+                'local mosque.';
+    }
+    return isMagrib
+        ? 'Adzan akan berbunyi sebelum waktu $name standar, yang juga waktu '
+              'berbuka puasa. Lakukan hanya untuk menyamakan dengan masjid '
+              'setempat.'
+        : 'Adzan akan berbunyi sebelum waktu $name standar, yang juga batas '
+              'mulai puasa. Lakukan hanya untuk menyamakan dengan masjid '
+              'setempat.';
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final accent = SolatifyColors.accent(context);
     final muted = SolatifyColors.muted(context);
     final value = _value;
+    final check = value == null ? null : _check(value);
+    final orderError = _orderError(l, check);
+    final canSave = value != null && orderError == null;
     final canDecrease = (value ?? 0) > kPrayerOffsetMin;
     final canIncrease = (value ?? 0) < kPrayerOffsetMax;
+    final timeFormat = DateFormat('HH:mm');
 
     return AlertDialog(
       scrollable: true,
@@ -167,34 +241,46 @@ class _PrayerOffsetDialogState extends State<PrayerOffsetDialog> {
             l.adjustOffsetHint,
             style: TextStyle(color: muted, height: 1.35),
           ),
-          const SizedBox(height: SolatifySpacing.sm),
-          Container(
-            padding: SolatifySpacing.pill,
-            decoration: BoxDecoration(
-              color: SolatifyColors.accentSoft(context),
-              borderRadius: SolatifyRadius.icon,
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.straighten_rounded,
-                  size: SolatifyIconSize.inline,
-                  color: accent,
+          if (_hasStandardTimes) ...[
+            const SizedBox(height: SolatifySpacing.sm),
+            Semantics(
+              liveRegion: true,
+              child: Container(
+                padding: SolatifySpacing.pill,
+                decoration: BoxDecoration(
+                  color: SolatifyColors.accentSoft(context),
+                  borderRadius: SolatifyRadius.icon,
                 ),
-                const SizedBox(width: SolatifySpacing.xs),
-                Expanded(
-                  child: Text(
-                    l.prayerOffsetLimitHint,
-                    style: TextStyle(
-                      color: SolatifyColors.text(context),
-                      fontSize: SolatifyType.caption,
-                      fontWeight: FontWeight.w700,
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.schedule_rounded,
+                      size: SolatifyIconSize.inline,
+                      color: accent,
                     ),
-                  ),
+                    const SizedBox(width: SolatifySpacing.xs),
+                    Expanded(
+                      child: Text(
+                        l.isEnglish
+                            ? 'Today: standard '
+                                  '${timeFormat.format(widget.standardTimes![widget.prayerKey]!)}'
+                                  '${check == null ? '' : ', becomes ${timeFormat.format(check.correctedTime)}'}'
+                            : 'Hari ini: standar '
+                                  '${timeFormat.format(widget.standardTimes![widget.prayerKey]!)}'
+                                  '${check == null ? '' : ', menjadi ${timeFormat.format(check.correctedTime)}'}',
+                        style: TextStyle(
+                          color: SolatifyColors.text(context),
+                          fontSize: SolatifyType.caption,
+                          fontWeight: FontWeight.w700,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
+          ],
           const SizedBox(height: SolatifySpacing.lg),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -228,7 +314,9 @@ class _PrayerOffsetDialogState extends State<PrayerOffsetDialog> {
                     isDense: true,
                     labelText: l.minutes,
                     floatingLabelAlignment: FloatingLabelAlignment.center,
-                    errorText: _error,
+                    helperText: l.prayerOffsetLimitHint,
+                    helperMaxLines: 2,
+                    errorText: _inputError ?? orderError,
                     errorMaxLines: 3,
                   ),
                   onChanged: (text) => _validate(text, l),
@@ -265,6 +353,41 @@ class _PrayerOffsetDialogState extends State<PrayerOffsetDialog> {
               ),
             ),
           ),
+          if (value != null &&
+              value < 0 &&
+              prayersSensitiveToEarlierCorrection.contains(
+                widget.prayerKey,
+              )) ...[
+            const SizedBox(height: SolatifySpacing.sm),
+            Container(
+              padding: SolatifySpacing.pill,
+              decoration: BoxDecoration(
+                color: SolatifyColors.warning(context).withValues(alpha: 0.12),
+                borderRadius: SolatifyRadius.icon,
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    size: SolatifyIconSize.inline,
+                    color: SolatifyColors.warning(context),
+                  ),
+                  const SizedBox(width: SolatifySpacing.xs),
+                  Expanded(
+                    child: Text(
+                      _cautionText(l),
+                      style: TextStyle(
+                        color: SolatifyColors.text(context),
+                        fontSize: SolatifyType.caption,
+                        height: 1.35,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           if (value != 0) ...[
             const SizedBox(height: SolatifySpacing.xs),
             Center(
@@ -285,10 +408,7 @@ class _PrayerOffsetDialogState extends State<PrayerOffsetDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: Text(l.cancel),
         ),
-        FilledButton(
-          onPressed: value == null ? null : _save,
-          child: Text(l.save),
-        ),
+        FilledButton(onPressed: canSave ? _save : null, child: Text(l.save)),
       ],
     );
   }

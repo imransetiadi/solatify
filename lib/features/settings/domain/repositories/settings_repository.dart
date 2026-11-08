@@ -12,4 +12,5 @@ abstract class SettingsRepository {
   Future<void> updateEnabledPrayerNotifications(Map<String, bool> enabled);
   Future<void> updatePreNotificationMinutes(int minutes);
   Future<void> updateNotificationSoundMode(String mode);
+  Future<void> dismissIhtiyatNotice();
 }

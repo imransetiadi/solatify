@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:solatify/features/settings/domain/entities/settings_state.dart';
+import 'package:solatify/features/prayer_schedule/domain/entities/prayer_offsets.dart';
 import 'package:solatify/core/localization/app_localizations.dart';
 import 'package:solatify/core/services/solatify_haptics.dart';
 import 'package:solatify/core/utils/location_service.dart';
@@ -531,6 +533,7 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
                               nextLabel: l.isEnglish ? 'Next' : 'Berikutnya',
                             ),
                           ],
+                          ..._buildScheduleFootnote(settings),
                         ],
                       ),
                     ),
@@ -542,6 +545,65 @@ class _PrayerScheduleScreenState extends ConsumerState<PrayerScheduleScreen> {
         ),
       ),
     );
+  }
+
+  /// Says what the times include, so a user who set a correction months
+  /// ago is not puzzled that they differ from a printed schedule.
+  List<Widget> _buildScheduleFootnote(SettingsState settings) {
+    final l = AppLocalizations.of(context);
+    final lines = <String>[];
+    if (PrayerCalculationService.standardFor(settings.calculationMethod) ==
+        PrayerMethodStandard.kemenag) {
+      lines.add(
+        l.isEnglish
+            ? 'Kemenag method, including the official ihtiyat.'
+            : 'Metode Kemenag, sudah termasuk ihtiyat resmi.',
+      );
+    }
+    final active = [
+      for (final key in prayerOffsetKeys)
+        if ((settings.prayerOffsets[key] ?? 0) != 0)
+          '${l.prayerName(key)} '
+              '${settings.prayerOffsets[key]! > 0 ? '+' : ''}'
+              '${settings.prayerOffsets[key]} ${l.minutes}',
+    ];
+    if (active.isNotEmpty) {
+      lines.add(
+        l.isEnglish
+            ? 'Your corrections: ${active.join(', ')}.'
+            : 'Koreksi manualmu: ${active.join(', ')}.',
+      );
+    }
+    if (lines.isEmpty) return const [];
+    return [
+      Divider(color: SolatifyColors.border(context), height: 20),
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: SolatifySpacing.sm),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              active.isEmpty
+                  ? Icons.verified_outlined
+                  : Icons.more_time_rounded,
+              size: SolatifyIconSize.inline,
+              color: SolatifyColors.muted(context),
+            ),
+            const SizedBox(width: SolatifySpacing.xs),
+            Expanded(
+              child: Text(
+                lines.join(' '),
+                style: TextStyle(
+                  color: SolatifyColors.muted(context),
+                  fontSize: SolatifyType.caption,
+                  height: 1.35,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ];
   }
 
   Widget _buildPrayerTimeRow(

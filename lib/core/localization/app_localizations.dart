@@ -43,7 +43,9 @@ class AppLocalizations {
   String get calculationMethod =>
       isEnglish ? 'Calculation Method' : 'Metode Perhitungan';
   String get prayerTimeOffsets =>
-      isEnglish ? 'Prayer Time Offsets' : 'Ofset Waktu Salat';
+      isEnglish ? 'Prayer Time Corrections' : 'Koreksi Waktu Salat';
+  String prayerCorrectionTitle(String prayerName) =>
+      isEnglish ? '$prayerName correction' : 'Koreksi $prayerName';
   String get displayAndLanguage =>
       isEnglish ? 'Display & Language' : 'Tampilan & Bahasa';
   String get language => isEnglish ? 'Language' : 'Bahasa';
@@ -59,8 +61,12 @@ class AppLocalizations {
   String get save => isEnglish ? 'Save' : 'Simpan';
   String get minutes => isEnglish ? 'minutes' : 'menit';
   String get adjustOffsetHint => isEnglish
-      ? 'Add or subtract minutes from the standard time.'
-      : 'Tambahkan atau kurangi menit dari waktu standar.';
+      ? 'The standard time already includes the safety margin (ihtiyat) of '
+            'the calculation method. Only adjust it to match your local '
+            'mosque.'
+      : 'Waktu standar sudah termasuk ihtiyat (waktu kehati-hatian) dari '
+            'metode perhitungan. Ubah hanya untuk menyamakan dengan masjid '
+            'setempat.';
   String get offsetNegativeHint => isEnglish
       ? 'Use negative values to make it earlier.'
       : 'Gunakan nilai minus untuk memajukan waktu.';
@@ -225,9 +231,8 @@ class AppLocalizations {
   String get notificationHealthActionFailed => isEnglish
       ? 'Action could not be completed.'
       : 'Aksi belum bisa diselesaikan.';
-  String setPrayerOffset(String prayerName) => isEnglish
-      ? 'Set $prayerName Time Offset'
-      : 'Atur Ofset Waktu $prayerName';
+  String setPrayerOffset(String prayerName) =>
+      isEnglish ? 'Adjust $prayerName time' : 'Atur koreksi waktu $prayerName';
 
   String prayerName(String keyOrName) {
     switch (keyOrName.toLowerCase()) {

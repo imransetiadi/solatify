@@ -57,4 +57,9 @@ class SettingsRepositoryImpl implements SettingsRepository {
   Future<void> updateNotificationSoundMode(String mode) {
     return localDataSource.updateNotificationSoundMode(mode);
   }
+
+  @override
+  Future<void> dismissIhtiyatNotice() {
+    return localDataSource.dismissIhtiyatNotice();
+  }
 }

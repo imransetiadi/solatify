@@ -52,7 +52,7 @@ Verification: `flutter analyze` clean, 241 tests pass (new regression tests are 
 - iOS: bilingual location permission text (`en.lproj` / `id.lproj` `InfoPlist.strings`), `CFBundleLocalizations`, `ITSAppUsesNonExemptEncryption = false`.
 
 ## Not changed (needs a decision or more work)
-- **Kemenag ihtiyat (+2 min)**: official Kemenag tables add a safety margin; the app does not. Confirm against bimasislam.kemenag.go.id before changing prayer times.
+- ~~**Kemenag ihtiyat (+2 min)**: official Kemenag tables add a safety margin; the app does not.~~ Done: calibrated against published Kemenag schedules (2/3/2/3/2 minutes, rounded up); see `docs/prayer-time-corrections.md`.
 - **Content translations**: many duas, tips, Asmaul Husna meanings, dhikr notes and prayer-guide texts exist only in Indonesian. Needs translated content.
 - **Auto-saving "last read"** on leaving a surah would overwrite the reader's manual marker; product decision.
 - ~~**Public Overpass servers** are slow (29–35 s measured)~~ — resolved in PR #73: mosque search now uses Photon (about 1 s), with Overpass only as a fallback.

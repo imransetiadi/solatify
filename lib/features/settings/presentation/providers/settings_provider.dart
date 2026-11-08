@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:solatify/features/prayer_schedule/domain/entities/prayer_offsets.dart';
 import 'package:solatify/features/settings/data/datasources/settings_local_data_source.dart';
 import 'package:solatify/features/settings/data/repositories/settings_repository_impl.dart';
 import 'package:solatify/features/settings/domain/entities/settings_state.dart';
@@ -45,11 +46,30 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     state = state.copyWith(onboardingCompleted: true);
   }
 
+  /// Saves one prayer's correction. Throws when it cannot be stored, so the
+  /// caller can tell the user; the state only changes once it is saved.
   Future<void> updatePrayerOffsets(String prayerKey, int minutes) async {
-    final newOffsets = Map<String, int>.from(state.prayerOffsets);
-    newOffsets[prayerKey] = minutes;
+    if (!prayerOffsetKeys.contains(prayerKey)) {
+      throw ArgumentError.value(prayerKey, 'prayerKey', 'Unknown prayer');
+    }
+    final newOffsets = sanitizePrayerOffsets({
+      ...state.prayerOffsets,
+      prayerKey: minutes,
+    });
     await _repository.updatePrayerOffsets(newOffsets);
     state = state.copyWith(prayerOffsets: newOffsets);
+  }
+
+  Future<void> dismissIhtiyatNotice() async {
+    await _repository.dismissIhtiyatNotice();
+    state = state.copyWith(ihtiyatNoticeDismissed: true);
+  }
+
+  /// Sets every correction back to 0 (the method's standard time).
+  Future<void> resetPrayerOffsets() async {
+    final cleared = sanitizePrayerOffsets(const {});
+    await _repository.updatePrayerOffsets(cleared);
+    state = state.copyWith(prayerOffsets: cleared);
   }
 
   Future<void> updateAdhanNotificationsEnabled(bool enabled) async {
