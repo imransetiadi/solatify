@@ -231,7 +231,7 @@ export default function Home() {
               <div className="phone-shell real-screen-shell iphone-shell">
                 <div className="phone-top" />
                 <Image
-                  src="/screenshots/ios1.jpg"
+                  src="/screenshots/app-ios-home.jpg"
                   alt={content.devicePreview.iosAlt}
                   width={1177}
                   height={2560}
@@ -243,7 +243,7 @@ export default function Home() {
               <div className="phone-shell real-screen-shell pixel-shell">
                 <div className="phone-top" />
                 <Image
-                  src="/screenshots/android-home-dark.jpg"
+                  src="/screenshots/app-android-home.jpg"
                   alt={content.devicePreview.androidAlt}
                   width={1182}
                   height={2560}
