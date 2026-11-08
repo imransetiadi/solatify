@@ -159,8 +159,8 @@ export default function Home() {
   }
 
   const activeLabels = {
-    en: { distance: "Distance", direction: "Direction", walking: "Walking time" },
-    id: { distance: "Jarak", direction: "Arah", walking: "Waktu jalan kaki" }
+    en: { distance: "Distance", address: "Address", source: "Data" },
+    id: { distance: "Jarak", address: "Alamat", source: "Data" }
   }[locale];
 
   return (
@@ -348,12 +348,12 @@ export default function Home() {
               <b>{content.mosqueSpotlight.distance}</b>
             </div>
             <div>
-              <small>{activeLabels.direction}</small>
-              <b>{content.mosqueSpotlight.direction}</b>
+              <small>{activeLabels.address}</small>
+              <b>{content.mosqueSpotlight.address}</b>
             </div>
             <div>
-              <small>{activeLabels.walking}</small>
-              <b>{content.mosqueSpotlight.walking}</b>
+              <small>{activeLabels.source}</small>
+              <b>{content.mosqueSpotlight.source}</b>
             </div>
           </div>
           <button type="button">{content.mosqueSpotlight.action}</button>
