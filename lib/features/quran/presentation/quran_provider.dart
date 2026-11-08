@@ -24,23 +24,28 @@ final surahListProvider = FutureProvider<List<Surah>>((ref) async {
   return await repo.getSurahList();
 });
 
+/// Lower-cases and drops hyphens, apostrophes and spaces, so "al baqarah",
+/// "albaqarah" and "ali imran" match "Al-Baqarah" and "Ali 'Imran".
+String normalizeSurahSearchText(String text) =>
+    text.toLowerCase().replaceAll(RegExp(r"[-'’`\s]"), '');
+
 /// Holds the current search query text.
 final surahSearchQueryProvider = StateProvider<String>((ref) => '');
 
 /// Filters the Surah list dynamically based on user search input.
 final filteredSurahListProvider = Provider<AsyncValue<List<Surah>>>((ref) {
   final listAsync = ref.watch(surahListProvider);
-  final query = ref.watch(surahSearchQueryProvider).trim().toLowerCase();
+  final rawQuery = ref.watch(surahSearchQueryProvider).trim();
+  final query = normalizeSurahSearchText(rawQuery);
 
   return listAsync.whenData((list) {
     if (query.isEmpty) return list;
     return list.where((surah) {
-      final nameMatches = surah.name.toLowerCase().contains(query);
-      final translationMatches = surah.translation.toLowerCase().contains(
-        query,
-      );
-      final numberMatches = surah.number.toString() == query;
-      return nameMatches || translationMatches || numberMatches;
+      final numberMatches = surah.number.toString() == rawQuery;
+      return numberMatches ||
+          normalizeSurahSearchText(surah.name).contains(query) ||
+          normalizeSurahSearchText(surah.translation).contains(query) ||
+          normalizeSurahSearchText(surah.translationEn).contains(query);
     }).toList();
   });
 });
@@ -263,8 +268,16 @@ class QuranBookmarksNotifier extends StateNotifier<QuranBookmarksState> {
       updatedKeys.add(key);
     }
 
-    await box.put('list', updatedKeys.toList());
+    // Update first: a second tap while the write is pending then works from
+    // the new state instead of the old one (which left the star wrong).
+    final previous = state;
     state = state.copyWith(bookmarkedKeys: updatedKeys);
+    try {
+      await box.put('list', updatedKeys.toList());
+    } catch (e) {
+      debugPrint('Saving bookmarks failed: $e');
+      if (mounted) state = previous;
+    }
   }
 
   bool isBookmarked(int surahNumber, int verseNumber) {
@@ -439,8 +452,32 @@ class QuranAudioNotifier extends StateNotifier<QuranAudioState> {
     }
   }
 
+  /// The last playback request and where it failed, so [retryAfterFailure]
+  /// can continue from the verse that could not be loaded.
+  ({int surahNumber, String surahName, List<Verse> verses})? _lastRequest;
+  int? _failedVerse;
+
+  /// Whether [retryAfterFailure] has something to retry.
+  bool get canRetry => _lastRequest != null && _failedVerse != null;
+
+  /// Restarts the playback that last failed (e.g. after the connection
+  /// dropped mid-surah) from the verse that failed to load.
+  Future<void> retryAfterFailure() async {
+    final request = _lastRequest;
+    final failedVerse = _failedVerse;
+    if (request == null || failedVerse == null) return;
+    _failedVerse = null;
+    await _play(
+      surahNumber: request.surahNumber,
+      surahName: request.surahName,
+      verses: request.verses,
+      startAtVerse: failedVerse,
+    );
+  }
+
   void _reportFailure(Object error) {
     debugPrint('Quran audio failed to load: $error');
+    _failedVerse = state.playingVerse;
     _failureCount++;
     _generation++;
     _verseNumbers = const [];
@@ -468,16 +505,26 @@ class QuranAudioNotifier extends StateNotifier<QuranAudioState> {
     required int surahNumber,
     required String surahName,
     required List<Verse> verses,
+    int? startAtVerse,
   }) async {
     final playable = verses.where((v) => v.audioUrl.isNotEmpty).toList();
     if (playable.isEmpty || !mounted) return;
 
     final generation = ++_generation;
+    _lastRequest = (
+      surahNumber: surahNumber,
+      surahName: surahName,
+      verses: verses,
+    );
+    _failedVerse = null;
     _verseNumbers = [for (final verse in playable) verse.number];
+    final startIndex = startAtVerse == null
+        ? 0
+        : _verseNumbers.indexOf(startAtVerse).clamp(0, playable.length - 1);
     state = QuranAudioState(
       playingSurah: surahNumber,
       playingSurahName: surahName,
-      playingVerse: playable.first.number,
+      playingVerse: playable[startIndex].number,
       isLoading: true,
       failureCount: _failureCount,
     );
@@ -491,7 +538,7 @@ class QuranAudioNotifier extends StateNotifier<QuranAudioState> {
             surahName: surahName,
             verse: verse,
           ),
-      ], initialIndex: 0);
+      ], initialIndex: startIndex);
       if (!mounted || generation != _generation) return;
       // play() completes only when playback pauses or stops, so it is not
       // awaited; its errors still surface through playbackEventStream.
@@ -533,6 +580,28 @@ class QuranAudioNotifier extends StateNotifier<QuranAudioState> {
       surahName: surah.name,
       verses: verses,
     );
+  }
+
+  /// Jumps to [verseNumber] inside the surah playlist that is already
+  /// loaded (e.g. from "Play all"), so playback continues with the following
+  /// verses. Returns false when that surah's playlist is not loaded; callers
+  /// then start a new playback.
+  Future<bool> seekToVerse(int surahNumber, int verseNumber) async {
+    if (!mounted || state.playingSurah != surahNumber) return false;
+    if (_verseNumbers.length < 2) return false;
+    final index = _verseNumbers.indexOf(verseNumber);
+    if (index < 0) return false;
+    try {
+      await _audioPlayer.seek(Duration.zero, index: index);
+      if (!_audioPlayer.playing) {
+        await _ensureAudioSession();
+        unawaited(_audioPlayer.play().catchError((Object _) {}));
+      }
+      return true;
+    } catch (error) {
+      debugPrint('Seeking to verse $verseNumber failed: $error');
+      return false;
+    }
   }
 
   Future<void> pause() async {

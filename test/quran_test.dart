@@ -1,12 +1,17 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:solatify/core/theme/theme.dart';
+import 'package:solatify/features/quran/data/quran_repository.dart';
 import 'package:solatify/features/quran/domain/models/quran_models.dart';
+import 'package:solatify/features/quran/presentation/quran_error_message.dart';
 import 'package:solatify/features/quran/presentation/quran_provider.dart';
 import 'package:solatify/features/quran/presentation/screens/quran_home_screen.dart';
 
@@ -297,6 +302,141 @@ void main() {
     test('leaves other hosts untouched', () {
       const url = 'https://example.com/audio/1.mp3';
       expect(Verse.normalizeQuranAudioUrl(url), url);
+    });
+  });
+
+  group('Quran languages, search and cache', () {
+    Map<String, dynamic> apiVerse(int n) => {
+      'number': {'inSurah': n},
+      'text': {
+        'arab': 'ARAB $n',
+        'transliteration': {'en': 'latin $n'},
+      },
+      'translation': {'id': 'Terjemahan $n', 'en': 'Translation $n'},
+      'audio': {'primary': 'https://cdn.islamic.network/a/$n.mp3'},
+    };
+
+    Map<String, dynamic> apiSurah(int number, {int verses = 2}) => {
+      'number': number,
+      'numberOfVerses': verses,
+      'name': {
+        'transliteration': {'id': 'Surah $number', 'en': 'Surah $number'},
+        'translation': {'id': 'Arti $number', 'en': 'Meaning $number'},
+      },
+      'revelation': {'id': 'Makkiyah', 'en': 'Meccan'},
+      'verses': [for (var v = 1; v <= verses; v++) apiVerse(v)],
+    };
+
+    test('keeps both translation languages, also through the cache', () {
+      final surah = Surah.fromJson(apiSurah(112));
+      final cached = Surah.fromJson(surah.toJson());
+
+      for (final s in [surah, cached]) {
+        expect(s.localizedTranslation(isEnglish: false), 'Arti 112');
+        expect(s.localizedTranslation(isEnglish: true), 'Meaning 112');
+        final verse = s.verses!.first;
+        expect(verse.localizedTranslation(isEnglish: false), 'Terjemahan 1');
+        expect(verse.localizedTranslation(isEnglish: true), 'Translation 1');
+      }
+    });
+
+    test('surah search ignores hyphens, apostrophes and spaces', () {
+      expect(
+        normalizeSurahSearchText('Al-Baqarah'),
+        normalizeSurahSearchText('al baqarah'),
+      );
+      expect(
+        normalizeSurahSearchText(
+          "Ali 'Imran",
+        ).contains(normalizeSurahSearchText('ali imran')),
+        isTrue,
+      );
+    });
+
+    test('a partial surah index is refreshed, not trusted forever', () async {
+      final index = Hive.box<dynamic>('quran_index');
+      // An interrupted first fetch left only 3 of 114 surahs.
+      for (var n = 1; n <= 3; n++) {
+        await index.put('$n', jsonEncode(Surah.fromJson(apiSurah(n)).toJson()));
+      }
+      var requests = 0;
+      final repository = QuranRepository(
+        client: MockClient((request) async {
+          requests++;
+          return http.Response(
+            jsonEncode({
+              'data': [for (var n = 1; n <= 114; n++) apiSurah(n, verses: 0)],
+            }),
+            200,
+          );
+        }),
+      );
+
+      final list = await repository.getSurahList();
+
+      expect(requests, 1);
+      expect(list, hasLength(114));
+      expect(index.length, 114);
+      // Now complete and current: served from the cache.
+      await repository.getSurahList();
+      expect(requests, 1);
+    });
+
+    test('offline: falls back to an older cache instead of failing', () async {
+      final details = Hive.box<dynamic>('quran_surah_details');
+      final legacy = Surah.fromJson(apiSurah(112)).toJson();
+      // A cache written before English was stored.
+      for (final verse in legacy['verses'] as List) {
+        (verse as Map).remove('translationEn');
+      }
+      await details.put('112', jsonEncode(legacy));
+      final repository = QuranRepository(
+        client: MockClient(
+          (_) async => throw const SocketException('Failed host lookup'),
+        ),
+      );
+
+      final surah = await repository.getSurahDetail(112);
+
+      expect(surah.verses, hasLength(2));
+    });
+
+    test('errors are typed and shown in the app language', () async {
+      final repository = QuranRepository(
+        client: MockClient(
+          (_) async => throw const SocketException('Failed host lookup'),
+        ),
+      );
+
+      final error = await repository
+          .getSurahDetail(1)
+          .then<Object?>((_) => null, onError: (Object e) => e);
+
+      expect(error, isA<QuranLoadException>());
+      expect((error! as QuranLoadException).failure, QuranLoadFailure.offline);
+      final english = quranErrorMessage(error, isEnglish: true);
+      expect(english, startsWith('No internet connection'));
+      expect(english, isNot(contains('SocketException')));
+      expect(
+        quranErrorMessage(error, isEnglish: false),
+        startsWith('Tidak ada koneksi internet'),
+      );
+    });
+
+    test('a surah without verses is not cached', () async {
+      final details = Hive.box<dynamic>('quran_surah_details');
+      final repository = QuranRepository(
+        client: MockClient(
+          (_) async =>
+              http.Response(jsonEncode({'data': apiSurah(5, verses: 0)}), 200),
+        ),
+      );
+
+      await expectLater(
+        repository.getSurahDetail(5),
+        throwsA(isA<QuranLoadException>()),
+      );
+      expect(details.containsKey('5'), isFalse);
     });
   });
 }

@@ -4,8 +4,8 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:solatify/core/database/hive_service.dart';
 import 'package:solatify/core/navigation/app_routes.dart';
 import 'package:solatify/core/navigation/router.dart';
+import 'package:solatify/core/utils/timezone_database.dart';
 import 'package:solatify/features/notifications/domain/entities/notification_history_entry.dart';
-import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
 enum NotificationReadinessStatus {
@@ -114,20 +114,26 @@ class NotificationService {
     required int notificationId,
     required bool isReminder,
     required String soundMode,
+    String? language,
   }) async {
     if (defaultTargetPlatform != TargetPlatform.android) return false;
 
     try {
-      final scheduled = await _androidPrayerAlarmChannel
-          .invokeMethod<bool>('schedulePrayerAlarm', <String, Object?>{
-            'id': notificationId,
-            'prayerKey': prayerKey,
-            'title': title,
-            'body': body,
-            'scheduledAtMillis': scheduledAt.millisecondsSinceEpoch,
-            'isReminder': isReminder,
-            'soundMode': soundMode,
-          });
+      final scheduled = await _androidPrayerAlarmChannel.invokeMethod<bool>(
+        'schedulePrayerAlarm',
+        <String, Object?>{
+          'id': notificationId,
+          'prayerKey': prayerKey,
+          'title': title,
+          'body': body,
+          'scheduledAtMillis': scheduledAt.millisecondsSinceEpoch,
+          'isReminder': isReminder,
+          'soundMode': soundMode,
+          // With a language, title and body are final (localised, reminder
+          // copy included) and the native side uses them as they are.
+          'language': ?language,
+        },
+      );
       return scheduled ?? false;
     } catch (e, stack) {
       debugPrint('Error scheduling native Android prayer alarm: $e\n$stack');
@@ -286,7 +292,7 @@ class NotificationService {
   Future<void> init() async {
     if (_initialized) return;
 
-    tz.initializeTimeZones();
+    TimezoneDatabase.ensureInitialized();
 
     const AndroidInitializationSettings androidInitSettings =
         AndroidInitializationSettings('@drawable/ic_stat_solatify');
@@ -424,6 +430,31 @@ class NotificationService {
     );
   }
 
+  /// True when notifications may be shown, asking for permission first if
+  /// it has not been granted. Does not open the system settings; callers do
+  /// that only when this returns false (permission denied).
+  Future<bool> ensureNotificationPermission() async {
+    try {
+      await _ensureInitialized();
+      if (await _areNotificationsEnabled()) return true;
+      if (defaultTargetPlatform == TargetPlatform.iOS) {
+        return await requestIosPermissions();
+      }
+      if (defaultTargetPlatform == TargetPlatform.android) {
+        final granted = await _flutterLocalNotificationsPlugin
+            .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin
+            >()
+            ?.requestNotificationsPermission();
+        return granted ?? await _areNotificationsEnabled();
+      }
+      return true;
+    } catch (e) {
+      debugPrint('Error ensuring notification permission: $e');
+      return false;
+    }
+  }
+
   Future<bool> _areNotificationsEnabled() async {
     if (defaultTargetPlatform == TargetPlatform.android) {
       final androidImplementation = _flutterLocalNotificationsPlugin
@@ -511,17 +542,73 @@ class NotificationService {
     }
   }
 
-  static String getNotificationTitle(String prayerKey, String location) {
-    final prayerName = getPrayerNameInIndonesian(prayerKey);
-    return 'Waktu $prayerName - $location';
+  static String _prayerDisplayName(String prayerKey, bool isEnglish) {
+    if (!isEnglish) return getPrayerNameInIndonesian(prayerKey);
+    switch (prayerKey) {
+      case 'subuh':
+        return 'Fajr';
+      case 'dzuhur':
+        return 'Dhuhr';
+      case 'ashar':
+        return 'Asr';
+      case 'magrib':
+        return 'Maghrib';
+      case 'isya':
+        return 'Isha';
+      default:
+        return prayerKey;
+    }
+  }
+
+  /// Title of a prayer notification. [reminderMinutes] marks the reminder
+  /// sent that many minutes before the prayer time.
+  static String getNotificationTitle(
+    String prayerKey,
+    String location, {
+    bool isEnglish = false,
+    int? reminderMinutes,
+  }) {
+    final prayerName = _prayerDisplayName(prayerKey, isEnglish);
+    if (reminderMinutes != null) {
+      return isEnglish
+          ? '$prayerName in $reminderMinutes min - $location'
+          : '$prayerName $reminderMinutes menit lagi - $location';
+    }
+    return isEnglish
+        ? '$prayerName time - $location'
+        : 'Waktu $prayerName - $location';
   }
 
   static String getNotificationMessage(
     String prayerKey,
     String location,
-    String prayerTime,
-  ) {
-    final prayerName = getPrayerNameInIndonesian(prayerKey);
+    String prayerTime, {
+    bool isEnglish = false,
+    int? reminderMinutes,
+  }) {
+    final prayerName = _prayerDisplayName(prayerKey, isEnglish);
+    if (reminderMinutes != null) {
+      // Before the prayer time: must not say the time has started.
+      return isEnglish
+          ? '$prayerName in $location begins at $prayerTime. Get ready to pray.'
+          : 'Waktu salat $prayerName di wilayah $location masuk pukul $prayerTime. Bersiaplah untuk salat.';
+    }
+    if (isEnglish) {
+      switch (prayerKey) {
+        case 'subuh':
+          return 'It is now time for Fajr in $location ($prayerTime). Get ready for the Fajr prayer.';
+        case 'dzuhur':
+          return 'It is now time for Dhuhr in $location ($prayerTime). Take a moment to pray Dhuhr.';
+        case 'ashar':
+          return 'It is now time for Asr in $location ($prayerTime). Don\'t miss the Asr prayer.';
+        case 'magrib':
+          return 'It is now time for Maghrib in $location ($prayerTime). Break your fast (if fasting) and pray Maghrib.';
+        case 'isya':
+          return 'It is now time for Isha in $location ($prayerTime). Complete the Isha prayer before you sleep.';
+        default:
+          return 'It is now time for $prayerName in $location ($prayerTime).';
+      }
+    }
     switch (prayerKey) {
       case 'subuh':
         return 'Telah masuk waktu salat Subuh di wilayah $location pada pukul $prayerTime. Mulailah persiapan untuk menunaikan ibadah Subuh.';
@@ -532,7 +619,7 @@ class NotificationService {
       case 'magrib':
         return 'Telah masuk waktu salat Magrib di wilayah $location pada pukul $prayerTime. Bukalah puasa (jika sedang berpuasa) dan segera salat Magrib.';
       case 'isya':
-        return 'Telah masuk waktu salat Isya di wilayah $location pada pukul $prayerTime. Sempurnakannya ibadah Isya Anda sebelum tidur.';
+        return 'Telah masuk waktu salat Isya di wilayah $location pada pukul $prayerTime. Sempurnakan ibadah Isya Anda sebelum tidur.';
       default:
         return 'Telah masuk waktu salat $prayerName di wilayah $location pada pukul $prayerTime.';
     }
@@ -599,6 +686,8 @@ class NotificationService {
     required int notificationId,
     bool isReminder = false,
     String soundMode = 'adhan',
+    bool isEnglish = false,
+    int? reminderMinutes,
     bool refreshExactAlarmCapability = true,
     bool requestIosPermission = true,
   }) async {
@@ -621,8 +710,23 @@ class NotificationService {
         }
       }
 
-      final title = getNotificationTitle(prayerKey, location);
-      final body = getNotificationMessage(prayerKey, location, prayerTime);
+      final minutesBefore = isReminder
+          ? reminderMinutes ??
+                _minutesBeforePrayer(prayerTime, notificationTime)
+          : null;
+      final title = getNotificationTitle(
+        prayerKey,
+        location,
+        isEnglish: isEnglish,
+        reminderMinutes: minutesBefore,
+      );
+      final body = getNotificationMessage(
+        prayerKey,
+        location,
+        prayerTime,
+        isEnglish: isEnglish,
+        reminderMinutes: minutesBefore,
+      );
       final notificationDetails = _prayerNotificationDetails(
         soundMode,
         isReminder: isReminder,
@@ -642,6 +746,7 @@ class NotificationService {
           notificationId: notificationId,
           isReminder: isReminder,
           soundMode: soundMode,
+          language: isEnglish ? 'en' : 'id',
         );
         if (scheduledNatively) {
           await _flutterLocalNotificationsPlugin.cancel(id: notificationId);
@@ -704,11 +809,31 @@ class NotificationService {
     }
   }
 
+  /// Minutes from [notificationTime] to the prayer at [prayerTime] ("HH:mm").
+  static int _minutesBeforePrayer(
+    String prayerTime,
+    DateTime notificationTime,
+  ) {
+    final parts = prayerTime.split(':');
+    final hour = int.tryParse(parts.first) ?? notificationTime.hour;
+    final minute = parts.length > 1
+        ? int.tryParse(parts[1]) ?? notificationTime.minute
+        : notificationTime.minute;
+    var diff =
+        (hour * 60 + minute) -
+        (notificationTime.hour * 60 + notificationTime.minute);
+    if (diff <= 0) diff += 24 * 60; // Reminder before midnight, prayer after.
+    return diff;
+  }
+
   NotificationDetails _prayerNotificationDetails(
     String soundMode, {
     required bool isReminder,
   }) {
-    switch (soundMode) {
+    // A reminder comes before the prayer time, so it must not sound like the
+    // adhan: in adhan mode it uses the short notification sound instead.
+    final mode = isReminder && soundMode == 'adhan' ? 'beep' : soundMode;
+    switch (mode) {
       case 'silent':
         return const NotificationDetails(
           android: AndroidNotificationDetails(
@@ -770,7 +895,7 @@ class NotificationService {
             presentBadge: true,
             presentSound: true,
             sound: 'adhan_short.caf',
-            threadIdentifier: isReminder ? null : iosAdhanThreadIdentifier,
+            threadIdentifier: iosAdhanThreadIdentifier,
           ),
         );
     }

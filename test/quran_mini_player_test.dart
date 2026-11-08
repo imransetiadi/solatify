@@ -22,6 +22,15 @@ class _FakeAudioNotifier extends QuranAudioNotifier {
     calls.add('stop');
     state = QuranAudioState();
   }
+
+  @override
+  bool get canRetry => true;
+
+  @override
+  Future<void> retryAfterFailure() async => calls.add('retry');
+
+  /// Simulates a recitation that failed to load.
+  void fail() => state = QuranAudioState(failureCount: state.failureCount + 1);
 }
 
 void main() {
@@ -91,5 +100,29 @@ void main() {
 
     expect(notifier.calls, ['resume', 'stop']);
     expect(find.text('QS. Al-Fatihah'), findsNothing);
+  });
+
+  testWidgets('reports a failed recitation with a retry action', (
+    tester,
+  ) async {
+    final notifier = await pumpPlayer(
+      tester,
+      QuranAudioState(
+        playingSurah: 18,
+        playingSurahName: 'Al-Kahf',
+        playingVerse: 40,
+        isPlaying: true,
+      ),
+    );
+
+    notifier.fail();
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Murotal gagal dimuat. Periksa koneksi internet.'),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('Coba lagi'));
+    expect(notifier.calls, ['retry']);
   });
 }

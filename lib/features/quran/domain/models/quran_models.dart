@@ -3,6 +3,7 @@ class Surah {
     required this.number,
     required this.name,
     required this.translation,
+    this.translationEn = '',
     required this.numberOfVerses,
     required this.revelation,
     this.verses,
@@ -38,8 +39,12 @@ class Surah {
           '';
     }
 
-    // translation parsing:
+    // translation parsing (both languages; the cache stores them as
+    // `translation` + `translationEn`):
     String trans = '';
+    String transEn = json['translationEn'] is String
+        ? json['translationEn'] as String
+        : '';
     final transData =
         json['translation'] ??
         (nameData is Map ? nameData['translation'] : null);
@@ -47,6 +52,7 @@ class Surah {
       trans = transData;
     } else if (transData is Map) {
       trans = transData['id'] ?? transData['en'] ?? '';
+      transEn = transData['en'] ?? transEn;
     }
 
     // revelation parsing:
@@ -63,6 +69,7 @@ class Surah {
       number: num,
       name: nm,
       translation: trans,
+      translationEn: transEn,
       numberOfVerses:
           json['numberOfVerses'] ??
           json['jumlahAyat'] ??
@@ -75,6 +82,13 @@ class Surah {
   final int number;
   final String name;
   final String translation;
+
+  /// English meaning of the surah name; empty for caches made before it
+  /// was stored.
+  final String translationEn;
+
+  String localizedTranslation({required bool isEnglish}) =>
+      isEnglish && translationEn.isNotEmpty ? translationEn : translation;
   final int numberOfVerses;
   final String revelation; // Makkiyah / Madaniyah
   final List<Verse>? verses;
@@ -91,6 +105,7 @@ class Surah {
       number: number ?? this.number,
       name: name ?? this.name,
       translation: translation ?? this.translation,
+      translationEn: translationEn,
       numberOfVerses: numberOfVerses ?? this.numberOfVerses,
       revelation: revelation ?? this.revelation,
       verses: verses ?? this.verses,
@@ -102,6 +117,7 @@ class Surah {
       'number': number,
       'name': name,
       'translation': translation,
+      'translationEn': translationEn,
       'numberOfVerses': numberOfVerses,
       'revelation': revelation,
       'verses': verses?.map((v) => v.toJson()).toList(),
@@ -115,6 +131,7 @@ class Verse {
     required this.arabic,
     required this.latin,
     required this.translation,
+    this.translationEn = '',
     required this.audioUrl,
   });
 
@@ -152,12 +169,16 @@ class Verse {
     }
 
     String tr = '';
+    String trEn = json['translationEn'] is String
+        ? json['translationEn'] as String
+        : '';
     final transData =
         json['translation'] ?? json['teksIndonesia'] ?? json['teks_indonesia'];
     if (transData is String) {
       tr = transData;
     } else if (transData is Map) {
       tr = transData['id'] ?? transData['en'] ?? '';
+      trEn = transData['en'] ?? trEn;
     }
 
     String aud = '';
@@ -185,6 +206,7 @@ class Verse {
       arabic: ar,
       latin: lat,
       translation: tr,
+      translationEn: trEn,
       // Also repairs URLs from older caches that point at a dead host.
       audioUrl: normalizeQuranAudioUrl(aud),
     );
@@ -219,7 +241,13 @@ class Verse {
   final String arabic;
   final String latin;
   final String translation;
+
+  /// English translation; empty for caches made before it was stored.
+  final String translationEn;
   final String audioUrl;
+
+  String localizedTranslation({required bool isEnglish}) =>
+      isEnglish && translationEn.isNotEmpty ? translationEn : translation;
 
   Map<String, dynamic> toJson() {
     return {
@@ -227,6 +255,7 @@ class Verse {
       'arabic': arabic,
       'latin': latin,
       'translation': translation,
+      'translationEn': translationEn,
       'audioUrl': audioUrl,
     };
   }

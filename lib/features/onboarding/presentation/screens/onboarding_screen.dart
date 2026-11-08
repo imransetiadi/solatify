@@ -244,13 +244,20 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       );
       _nextPage();
     } else {
-      final error = ref.read(locationProvider).errorMessage;
       setState(() => _gpsFailed = true);
       messenger.showSnackBar(
         SnackBar(
+          // The provider's errorMessage is a raw, Indonesian-only exception
+          // string; show a localised message instead.
           content: Text(
-            error ?? _t('Gagal mendeteksi lokasi', 'Could not detect location'),
+            _t(
+              'Lokasi tidak dapat dideteksi. Pastikan GPS aktif, atau pilih kota secara manual.',
+              'Your location could not be detected. Turn on GPS or choose a city manually.',
+            ),
           ),
+          duration: const Duration(seconds: 6),
+          // A SnackBar with an action persists by default; let it time out.
+          persist: false,
           action: SnackBarAction(
             label: _t('Pilih Manual', 'Choose Manually'),
             onPressed: () {
@@ -263,7 +270,26 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   Future<void> _finishOnboarding() async {
-    await ref.read(settingsProvider.notifier).completeOnboarding();
+    try {
+      await ref.read(settingsProvider.notifier).completeOnboarding();
+    } catch (e) {
+      // Without this the button silently did nothing when saving failed.
+      debugPrint('Completing onboarding failed: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(
+              _t(
+                'Pengaturan belum tersimpan. Silakan coba lagi.',
+                'Your settings could not be saved. Please try again.',
+              ),
+            ),
+          ),
+        );
+      return;
+    }
     if (mounted) {
       context.go(AppRoutes.home);
     }

@@ -15,6 +15,8 @@ import 'package:solatify/features/qibla/presentation/screens/qibla_screen.dart';
 import 'package:solatify/features/settings/presentation/screens/notification_health_screen.dart';
 import 'package:solatify/features/settings/presentation/screens/settings_screen.dart';
 import 'package:solatify/features/tracker/presentation/screens/tracker_screen.dart';
+import 'package:solatify/features/tracker/presentation/providers/tracker_provider.dart';
+import 'package:solatify/features/tracker/presentation/widgets/tracker_prayer_checklist.dart';
 
 void main() {
   late Directory tempDir;
@@ -119,6 +121,45 @@ void main() {
     expect(source, contains('_PrayerCountdownCard'));
     expect(source, contains('remainingTime'));
     expect(source, contains('headingToPrayer'));
+  });
+
+  testWidgets('Tracker undo SnackBar dismisses itself after its timeout', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          trackerProvider.overrideWith(
+            (ref) =>
+                _InMemoryTrackerNotifier(ref.watch(trackerRepositoryProvider)),
+          ),
+        ],
+        child: const MaterialApp(home: TrackerScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final subuhRow = find.descendant(
+      of: find.byType(TrackerPrayerChecklist),
+      matching: find.text('Subuh'),
+    );
+    await tester.ensureVisible(subuhRow);
+    await tester.pumpAndSettle();
+    await tester.tap(subuhRow);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(find.text('Subuh ditandai selesai'), findsOneWidget);
+    expect(find.text('Urungkan'), findsOneWidget);
+
+    // Duration is 4 s; an action SnackBar used to persist until tapped.
+    await tester.pump(const Duration(seconds: 4));
+    // Exit animation.
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pump(const Duration(seconds: 1));
+
+    expect(find.text('Subuh ditandai selesai'), findsNothing);
+    expect(find.text('Urungkan'), findsNothing);
   });
 
   testWidgets('Tracker screen renders worship checklist', (tester) async {
@@ -497,4 +538,21 @@ void main() {
     expect(find.textContaining('Takbiratul Ihram'), findsWidgets);
     expect(tester.takeException(), isNull);
   });
+}
+
+/// Toggles in memory only: a Hive write started inside the widget test's
+/// fake clock never completes, which would hang tearDown's Hive.close().
+class _InMemoryTrackerNotifier extends TrackerNotifier {
+  _InMemoryTrackerNotifier(super.repository);
+
+  @override
+  Future<void> togglePrayer(String prayerKey) async {
+    final log = state.value;
+    if (log == null) return;
+    state = AsyncValue.data(
+      log.copyWith(
+        prayers: {...log.prayers, prayerKey: !log.isPrayerDone(prayerKey)},
+      ),
+    );
+  }
 }

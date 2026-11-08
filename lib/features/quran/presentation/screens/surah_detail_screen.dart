@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:solatify/features/quran/presentation/quran_error_message.dart';
 import 'package:solatify/core/localization/app_localizations.dart';
 import 'package:solatify/core/services/solatify_haptics.dart';
 import 'package:solatify/core/theme/theme.dart';
@@ -155,26 +156,34 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final surahAsync = ref.watch(surahDetailProvider(widget.surahId));
-    final audioState = ref.watch(quranAudioProvider);
+    // Position ticks up to 60 times a second while playing; only rebuild
+    // the screen when what it shows changes. The panel's progress bar
+    // watches the position on its own (_AudioProgressBar).
+    final audioView = ref.watch(
+      quranAudioProvider.select(
+        (s) => (
+          surah: s.playingSurah,
+          name: s.playingSurahName,
+          verse: s.playingVerse,
+          isPlaying: s.isPlaying,
+          isLoading: s.isLoading,
+          failures: s.failureCount,
+        ),
+      ),
+    );
+    final audioState = QuranAudioState(
+      playingSurah: audioView.surah,
+      playingSurahName: audioView.name,
+      playingVerse: audioView.verse,
+      isPlaying: audioView.isPlaying,
+      isLoading: audioView.isLoading,
+      failureCount: audioView.failures,
+    );
     final readerPreferences = ref.watch(quranReaderPreferencesProvider);
+    final bookmarksState = ref.watch(quranBookmarksProvider);
 
-    ref.listen<int>(quranAudioProvider.select((state) => state.failureCount), (
-      previous,
-      next,
-    ) {
-      if (previous == null || next <= previous) return;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: Text(
-              _l.isEnglish
-                  ? 'Audio could not be played. Check your connection and try again.'
-                  : 'Audio tidak dapat diputar. Periksa koneksi lalu coba lagi.',
-            ),
-          ),
-        );
-    });
+    // Audio failures are reported by QuranMiniPlayer, which stays mounted
+    // under this route, so the message also shows on other tabs.
 
     return Scaffold(
       appBar: AppBar(
@@ -267,10 +276,10 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
                     title: _l.isEnglish
                         ? 'Failed to load surah'
                         : 'Gagal memuat Surah',
-                    description: err
-                        .toString()
-                        .replaceAll('Exception:', '')
-                        .trim(),
+                    description: quranErrorMessage(
+                      err,
+                      isEnglish: _l.isEnglish,
+                    ),
                     actionLabel: _l.isEnglish ? 'Try again' : 'Coba Lagi',
                     onAction: () {
                       SolatifyHaptics.light();
@@ -362,6 +371,7 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
                             return _buildVerseItem(
                               surah: surah,
                               verse: verse,
+                              bookmarksState: bookmarksState,
                               isBookmarked: isBookmarked,
                               isCurrentlyPlaying: isCurrentlyPlaying,
                               audioState: audioState,
@@ -483,7 +493,7 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
             if (surah.translation.isNotEmpty) ...[
               const SizedBox(height: 4),
               Text(
-                surah.translation,
+                surah.localizedTranslation(isEnglish: _l.isEnglish),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: _textSecondary,
@@ -672,12 +682,12 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
   Widget _buildVerseItem({
     required Surah surah,
     required Verse verse,
+    required QuranBookmarksState bookmarksState,
     required bool isBookmarked,
     required bool isCurrentlyPlaying,
     required QuranAudioState audioState,
     required QuranReaderPreferences preferences,
   }) {
-    final bookmarksState = ref.watch(quranBookmarksProvider);
     final isLastRead =
         bookmarksState.lastReadSurah == surah.number &&
         bookmarksState.lastReadVerse == verse.number;
@@ -830,21 +840,27 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
                         ),
                   onPressed: verse.audioUrl.isEmpty
                       ? null
-                      : () {
+                      : () async {
                           SolatifyHaptics.selection();
+                          final notifier = ref.read(
+                            quranAudioProvider.notifier,
+                          );
                           if (isVersePlaying) {
-                            ref.read(quranAudioProvider.notifier).pause();
+                            await notifier.pause();
                           } else if (isCurrentlyPlaying) {
-                            ref.read(quranAudioProvider.notifier).resume();
-                          } else {
-                            ref
-                                .read(quranAudioProvider.notifier)
-                                .playVerse(
-                                  surahNumber: surah.number,
-                                  surahName: surah.name,
-                                  verseNumber: verse.number,
-                                  audioUrl: verse.audioUrl,
-                                );
+                            await notifier.resume();
+                          } else if (!await notifier.seekToVerse(
+                            surah.number,
+                            verse.number,
+                          )) {
+                            // Nothing of this surah is loaded: play just
+                            // this verse.
+                            await notifier.playVerse(
+                              surahNumber: surah.number,
+                              surahName: surah.name,
+                              verseNumber: verse.number,
+                              audioUrl: verse.audioUrl,
+                            );
                           }
                         },
                 ),
@@ -944,7 +960,7 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Text(
-                verse.translation,
+                verse.localizedTranslation(isEnglish: _l.isEnglish),
                 textAlign: TextAlign.left,
                 style: TextStyle(
                   color: _textColor.withValues(alpha: 0.88),
@@ -1127,11 +1143,6 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
       status = _l.isEnglish ? 'Paused' : 'Dijeda';
     }
 
-    final progressPercent = state.totalDuration.inMilliseconds > 0
-        ? (state.progress.inMilliseconds / state.totalDuration.inMilliseconds)
-              .clamp(0.0, 1.0)
-        : 0.0;
-
     return GlassContainer(
       fillColor: SolatifyColors.softSurface(context),
       borderColor: SolatifyColors.borderStrong(context),
@@ -1239,16 +1250,40 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
             padding: const EdgeInsets.only(right: 8),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(2),
-              child: LinearProgressIndicator(
-                value: isLoading ? null : progressPercent,
-                minHeight: 3,
-                backgroundColor: SolatifyColors.raisedSurface(context),
-                valueColor: AlwaysStoppedAnimation<Color>(_accentColor),
+              child: _AudioProgressBar(
+                isLoading: isLoading,
+                color: _accentColor,
               ),
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Progress through the playing verse. Kept separate so position updates
+/// rebuild only this bar, not the whole reader.
+class _AudioProgressBar extends ConsumerWidget {
+  const _AudioProgressBar({required this.isLoading, required this.color});
+
+  final bool isLoading;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final fraction = ref.watch(
+      quranAudioProvider.select((s) {
+        final total = s.totalDuration.inMilliseconds;
+        if (total <= 0) return 0.0;
+        return (s.progress.inMilliseconds / total).clamp(0.0, 1.0);
+      }),
+    );
+    return LinearProgressIndicator(
+      value: isLoading ? null : fraction,
+      minHeight: 3,
+      backgroundColor: SolatifyColors.raisedSurface(context),
+      valueColor: AlwaysStoppedAnimation<Color>(color),
     );
   }
 }

@@ -1,9 +1,30 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:solatify/core/utils/timezone_database.dart';
+import 'package:timezone/timezone.dart' as tz;
+
 /// Resolves the IANA timezone used to display prayer times for a location.
 ///
 /// `country` is the location label stored with the city, e.g.
 /// `"Jawa Timur, Indonesia"` for built-in cities or `"East Java, Indonesia"`
 /// from the device geocoder (whose names follow the device language).
 class PrayerTimezoneService {
+  /// The device's IANA timezone, loaded once at startup by
+  /// [loadDeviceTimezone]. Null when unavailable (tests, desktop).
+  @visibleForTesting
+  static String? deviceTimezone;
+
+  static Future<void> loadDeviceTimezone() async {
+    try {
+      // Bounded so a slow platform answer can never delay app start.
+      deviceTimezone = (await FlutterTimezone.getLocalTimezone().timeout(
+        const Duration(milliseconds: 300),
+      )).identifier;
+    } catch (e) {
+      debugPrint('Device timezone unavailable: $e');
+    }
+  }
+
   static String inferTimezoneName({
     required double latitude,
     required double longitude,
@@ -16,8 +37,28 @@ class PrayerTimezoneService {
           _indonesiaByCoordinates(latitude, longitude);
     }
 
+    // Country names follow the device language ("Deutschland", "Allemagne"),
+    // so unknown ones are common. The device's own zone is right when the
+    // phone is where the location is (GPS); a fixed offset has no DST.
     return _byCountry(normalized, latitude, longitude) ??
+        _deviceZoneNear(longitude) ??
         _fixedOffsetByLongitude(longitude);
+  }
+
+  /// The device timezone when its current UTC offset is within 90 minutes
+  /// of the offset expected at [longitude], i.e. the phone is plausibly at
+  /// the location.
+  static String? _deviceZoneNear(double longitude) {
+    final zone = deviceTimezone;
+    if (zone == null || zone.isEmpty) return null;
+    try {
+      TimezoneDatabase.ensureInitialized();
+      final offset = tz.TZDateTime.now(tz.getLocation(zone)).timeZoneOffset;
+      final expectedMinutes = longitude / 15 * 60;
+      return (offset.inMinutes - expectedMinutes).abs() <= 90 ? zone : null;
+    } catch (_) {
+      return null;
+    }
   }
 
   // ---------------------------------------------------------------------------

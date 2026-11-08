@@ -1,8 +1,11 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
 import 'package:solatify/core/database/hive_constants.dart';
+import 'package:solatify/features/settings/presentation/providers/settings_provider.dart';
 import '../../data/datasources/tracker_local_data_source.dart';
 import '../../data/repositories/tracker_repository_impl.dart';
 import '../../domain/entities/prayer_log_entity.dart';
@@ -20,11 +23,36 @@ final trackerRepositoryProvider = Provider<TrackerRepository>((ref) {
 });
 
 class TrackerNotifier extends StateNotifier<AsyncValue<PrayerLogEntity>> {
-  TrackerNotifier(this._repository) : super(const AsyncValue.loading()) {
+  TrackerNotifier(this._repository, {void Function()? onWriteFailed})
+    : _onWriteFailed = onWriteFailed,
+      super(const AsyncValue.loading()) {
     loadTodayLog();
   }
 
   final TrackerRepository _repository;
+  final void Function()? _onWriteFailed;
+
+  /// A save failed: show the log as it was before the change and report the
+  /// failure, instead of replacing the whole checklist with an error view.
+  void _rollBack(PrayerLogEntity previous, Object error) {
+    debugPrint('Tracker save failed: $error');
+    if (!mounted) return;
+    state = AsyncValue.data(previous);
+    _onWriteFailed?.call();
+  }
+
+  /// Moves a renamed custom habit's history to its new name and reloads the
+  /// day on screen so its ticks and progress stay visible.
+  Future<void> renameHabitKey(String oldKey, String newKey) async {
+    try {
+      await _repository.renameHabitKey(oldKey, newKey);
+      final current = state.value;
+      if (current != null && mounted) await loadLogForDate(current.date);
+    } catch (e) {
+      debugPrint('Renaming habit history failed: $e');
+      _onWriteFailed?.call();
+    }
+  }
 
   Future<void> loadTodayLog() async {
     await loadLogForDate(DateTime.now());
@@ -70,10 +98,8 @@ class TrackerNotifier extends StateNotifier<AsyncValue<PrayerLogEntity>> {
         prayerKey,
         newStatus,
       );
-    } catch (e, st) {
-      // Rollback on error
-      state = AsyncValue.data(currentLog);
-      state = AsyncValue.error(e, st);
+    } catch (e) {
+      _rollBack(currentLog, e);
     }
   }
 
@@ -93,9 +119,8 @@ class TrackerNotifier extends StateNotifier<AsyncValue<PrayerLogEntity>> {
         prayerKey,
         status,
       );
-    } catch (e, st) {
-      state = AsyncValue.data(currentLog);
-      state = AsyncValue.error(e, st);
+    } catch (e) {
+      _rollBack(currentLog, e);
     }
   }
 
@@ -109,17 +134,24 @@ class TrackerNotifier extends StateNotifier<AsyncValue<PrayerLogEntity>> {
 
     try {
       await _repository.updateHabitStatus(currentLog.date, habitKey, isDone);
-    } catch (e, st) {
-      state = AsyncValue.data(currentLog);
-      state = AsyncValue.error(e, st);
+    } catch (e) {
+      _rollBack(currentLog, e);
     }
   }
 
-  Future<void> updateHabitProgress(String habitKey, int progress) async {
+  Future<void> updateHabitProgress(
+    String habitKey,
+    int progress, {
+    int? target,
+  }) async {
     final currentLog = state.value;
     if (currentLog == null) return;
 
-    final updatedLog = currentLog.copyWithHabitProgress(habitKey, progress);
+    final updatedLog = currentLog.copyWithHabitProgress(
+      habitKey,
+      progress,
+      target: target,
+    );
     state = AsyncValue.data(updatedLog);
 
     try {
@@ -127,18 +159,26 @@ class TrackerNotifier extends StateNotifier<AsyncValue<PrayerLogEntity>> {
         currentLog.date,
         habitKey,
         updatedLog.getHabitProgress(habitKey),
+        target: target,
       );
-    } catch (e, st) {
-      state = AsyncValue.data(currentLog);
-      state = AsyncValue.error(e, st);
+    } catch (e) {
+      _rollBack(currentLog, e);
     }
   }
 }
 
+/// Incremented whenever a tracker change could not be saved, so the screen
+/// can tell the user (the change itself is rolled back).
+final trackerWriteFailureProvider = StateProvider<int>((ref) => 0);
+
 final trackerProvider =
     StateNotifierProvider<TrackerNotifier, AsyncValue<PrayerLogEntity>>((ref) {
       final repository = ref.watch(trackerRepositoryProvider);
-      return TrackerNotifier(repository);
+      return TrackerNotifier(
+        repository,
+        onWriteFailed: () =>
+            ref.read(trackerWriteFailureProvider.notifier).state++,
+      );
     });
 
 final trackerSelectedDateProvider = StateProvider<DateTime>((ref) {
@@ -148,7 +188,12 @@ final trackerSelectedDateProvider = StateProvider<DateTime>((ref) {
 
 final trackerWeeklyStatsProvider = FutureProvider<WeeklyStatsEntity>((ref) {
   final repository = ref.watch(trackerRepositoryProvider);
-  return GetWeeklyStats(repository).execute(DateTime.now());
+  final isEnglish = ref.watch(
+    settingsProvider.select((settings) => settings.language == 'en'),
+  );
+  return GetWeeklyStats(
+    repository,
+  ).execute(DateTime.now(), isEnglish: isEnglish);
 });
 
 class CustomHabitNotifier extends StateNotifier<List<String>> {

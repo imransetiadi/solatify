@@ -92,6 +92,7 @@ class PrayerAlarmScheduler(private val context: Context) {
             putExtra(EXTRA_SCHEDULED_AT, alarm.scheduledAtMillis)
             putExtra(EXTRA_IS_REMINDER, alarm.isReminder)
             putExtra(EXTRA_SOUND_MODE, alarm.soundMode)
+            putExtra(EXTRA_LANGUAGE, alarm.language)
         }
         return PendingIntent.getBroadcast(context, alarm.id, intent, flags or immutableFlag())
     }
@@ -170,6 +171,7 @@ class PrayerAlarmScheduler(private val context: Context) {
         const val EXTRA_SCHEDULED_AT = "scheduledAtMillis"
         const val EXTRA_IS_REMINDER = "isReminder"
         const val EXTRA_SOUND_MODE = "soundMode"
+        const val EXTRA_LANGUAGE = "language"
     }
 }
 
@@ -181,6 +183,10 @@ data class PrayerAlarm(
     val scheduledAtMillis: Long,
     val isReminder: Boolean = false,
     val soundMode: String = "adhan",
+    /** "id"/"en" when [title]/[body] are final text from Dart; null for
+     *  alarms stored by older versions (the receiver then adds its own
+     *  reminder wording). */
+    val language: String? = null,
 ) {
     fun toJson(): JSONObject {
         return JSONObject()
@@ -191,6 +197,7 @@ data class PrayerAlarm(
             .put("scheduledAtMillis", scheduledAtMillis)
             .put("isReminder", isReminder)
             .put("soundMode", soundMode)
+            .put("language", language ?: JSONObject.NULL)
     }
 
     companion object {
@@ -203,6 +210,7 @@ data class PrayerAlarm(
                 scheduledAtMillis = json.getLong("scheduledAtMillis"),
                 isReminder = json.optBoolean("isReminder", false),
                 soundMode = json.optString("soundMode", "adhan"),
+                language = if (json.isNull("language")) null else json.optString("language"),
             )
         }
     }

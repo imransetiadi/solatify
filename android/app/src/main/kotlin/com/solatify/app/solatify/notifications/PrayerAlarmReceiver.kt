@@ -28,10 +28,20 @@ class PrayerAlarmReceiver : BroadcastReceiver() {
         val baseBody = intent.getStringExtra(PrayerAlarmScheduler.EXTRA_BODY) ?: "Telah masuk waktu salat."
         val prayerKey = intent.getStringExtra(PrayerAlarmScheduler.EXTRA_PRAYER_KEY) ?: "prayer"
         val isReminder = intent.getBooleanExtra(PrayerAlarmScheduler.EXTRA_IS_REMINDER, false)
-        val soundMode = intent.getStringExtra(PrayerAlarmScheduler.EXTRA_SOUND_MODE) ?: SOUND_MODE_ADHAN
+        val requestedSoundMode =
+            intent.getStringExtra(PrayerAlarmScheduler.EXTRA_SOUND_MODE) ?: SOUND_MODE_ADHAN
+        // A reminder comes before the prayer time: it must never sound like
+        // the adhan, so in adhan mode it uses the short notification sound.
+        val soundMode =
+            if (isReminder && requestedSoundMode == SOUND_MODE_ADHAN) SOUND_MODE_BEEP else requestedSoundMode
         val channelId = channelIdFor(soundMode)
-        val title = if (isReminder) "Pengingat $baseTitle" else baseTitle
-        val body = if (isReminder) "Sebentar lagi: $baseBody" else baseBody
+        val language = intent.getStringExtra(PrayerAlarmScheduler.EXTRA_LANGUAGE)
+        val isEnglish = language == "en"
+        // New alarms carry final, localised text from Dart. Alarms stored by
+        // older versions (e.g. restored after a reboot before the app is
+        // opened) still get the old reminder wording.
+        val title = if (isReminder && language == null) "Pengingat $baseTitle" else baseTitle
+        val body = if (isReminder && language == null) "Sebentar lagi: $baseBody" else baseBody
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
@@ -46,7 +56,7 @@ class PrayerAlarmReceiver : BroadcastReceiver() {
         // notification itself is posted silently to avoid two overlapping
         // adhans. If the service cannot start, the channel sound still plays.
         val playsFullAdhan = soundMode == SOUND_MODE_ADHAN && !isReminder &&
-            startAdhanPlayback(context)
+            startAdhanPlayback(context, isEnglish)
 
         val builder = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.drawable.ic_stat_solatify)
@@ -70,7 +80,11 @@ class PrayerAlarmReceiver : BroadcastReceiver() {
             val stopAdhan = AdhanPlaybackService.stopIntent(context)
             builder
                 .setSilent(true)
-                .addAction(R.drawable.ic_stat_solatify, "Hentikan adzan", stopAdhan)
+                .addAction(
+                    R.drawable.ic_stat_solatify,
+                    if (isEnglish) "Stop adhan" else "Hentikan adzan",
+                    stopAdhan,
+                )
                 // Swiping the notification away also stops the adhan.
                 .setDeleteIntent(stopAdhan)
         }
@@ -93,8 +107,9 @@ class PrayerAlarmReceiver : BroadcastReceiver() {
 
     /** Returns false when the OS refused to start the service (e.g. Android
      *  12+ background start limits after an inexact alarm). */
-    private fun startAdhanPlayback(context: Context): Boolean {
+    private fun startAdhanPlayback(context: Context, isEnglish: Boolean): Boolean {
         val serviceIntent = Intent(context, AdhanPlaybackService::class.java)
+            .putExtra(AdhanPlaybackService.EXTRA_IS_ENGLISH, isEnglish)
         return try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 context.startForegroundService(serviceIntent)

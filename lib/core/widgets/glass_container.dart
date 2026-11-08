@@ -61,18 +61,21 @@ class GlassContainer extends StatelessWidget {
       child: child,
     );
 
-    Widget card = ClipRRect(
-      borderRadius: radius,
-      child: effectiveBlur > 0
-          ? BackdropFilter(
+    // The body's Material already clips to the radius; the extra clip is
+    // only needed to bound the blur. Cards are used in every list, so a
+    // redundant clip per card adds up.
+    Widget card = effectiveBlur > 0
+        ? ClipRRect(
+            borderRadius: radius,
+            child: BackdropFilter(
               filter: ImageFilter.blur(
                 sigmaX: effectiveBlur,
                 sigmaY: effectiveBlur,
               ),
               child: body,
-            )
-          : body,
-    );
+            ),
+          )
+        : body;
 
     if (onTap != null || semanticLabel != null) {
       card = Semantics(

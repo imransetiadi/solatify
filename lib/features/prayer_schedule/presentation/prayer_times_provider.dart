@@ -101,12 +101,17 @@ class PrayerTimesNotifier extends StateNotifier<PrayerTimesStateEntity> {
     }
   }
 
+  static const Duration _minRefreshDelay = Duration(seconds: 30);
+
   void _scheduleDateRefresh() {
     _dateRefreshTimer?.cancel();
     final nextRefresh = nextScheduleRefresh(state.todayTimes, DateTime.now());
     final delay = nextRefresh.difference(DateTime.now());
+    // Never re-arm with no delay: if a recalculation still produced a stale
+    // schedule, retrying immediately would spin in a tight loop (each pass
+    // writes Hive and resyncs every notification).
     _dateRefreshTimer = Timer(
-      delay.isNegative ? Duration.zero : delay,
+      delay < _minRefreshDelay ? _minRefreshDelay : delay,
       _recalculate,
     );
   }

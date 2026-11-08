@@ -32,8 +32,12 @@ final tipsProvider = FutureProvider<List<IslamicTip>>((ref) async {
 });
 
 // Provider for daily random tip
-final randomTipProvider = FutureProvider<IslamicTip>((ref) async {
+// Auto-disposed so it is picked again (for the new date) when shown after
+// midnight, and seeded by the full date: seeding by the day of the month
+// alone repeated the same tip every month.
+final randomTipProvider = FutureProvider.autoDispose<IslamicTip>((ref) async {
   final tips = await ref.watch(tipsProvider.future);
-  final random = Random(DateTime.now().day);
+  final now = DateTime.now();
+  final random = Random(now.year * 10000 + now.month * 100 + now.day);
   return tips[random.nextInt(tips.length)];
 });

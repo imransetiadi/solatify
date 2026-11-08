@@ -8,6 +8,8 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
+import android.media.AudioFocusRequest
+import android.media.AudioManager
 import android.media.MediaPlayer
 import android.os.Build
 import android.os.IBinder
@@ -17,6 +19,16 @@ import com.solatify.app.solatify.R
 
 class AdhanPlaybackService : Service() {
     private var mediaPlayer: MediaPlayer? = null
+    private var isEnglish = false
+    private var focusRequest: AudioFocusRequest? = null
+
+    private val audioManager: AudioManager?
+        get() = getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+
+    private val alarmAttributes: AudioAttributes = AudioAttributes.Builder()
+        .setUsage(AudioAttributes.USAGE_ALARM)
+        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+        .build()
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_STOP_ADHAN) {
@@ -25,6 +37,7 @@ class AdhanPlaybackService : Service() {
             return START_NOT_STICKY
         }
 
+        isEnglish = intent?.getBooleanExtra(EXTRA_IS_ENGLISH, false) ?: false
         startForeground(PLAYBACK_NOTIFICATION_ID, buildPlaybackNotification())
         playAdhan()
         return START_NOT_STICKY
@@ -52,15 +65,38 @@ class AdhanPlaybackService : Service() {
         }
     }
 
+    /** Pauses other audio (Quran recitation, music) for the adhan; they may
+     *  resume when focus is abandoned after it ends. */
+    private fun requestAudioFocus() {
+        val manager = audioManager ?: return
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val request = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
+                .setAudioAttributes(alarmAttributes)
+                .build()
+            focusRequest = request
+            manager.requestAudioFocus(request)
+        } else {
+            @Suppress("DEPRECATION")
+            manager.requestAudioFocus(null, AudioManager.STREAM_ALARM, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
+        }
+    }
+
+    private fun abandonAudioFocus() {
+        val manager = audioManager ?: return
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            focusRequest?.let { manager.abandonAudioFocusRequest(it) }
+            focusRequest = null
+        } else {
+            @Suppress("DEPRECATION")
+            manager.abandonAudioFocus(null)
+        }
+    }
+
     private fun startPlayer() {
         val assetFileDescriptor = resources.openRawResourceFd(R.raw.adhan)
+        requestAudioFocus()
         mediaPlayer = MediaPlayer().apply {
-            setAudioAttributes(
-                AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_ALARM)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                    .build(),
-            )
+            setAudioAttributes(alarmAttributes)
             setDataSource(
                 assetFileDescriptor.fileDescriptor,
                 assetFileDescriptor.startOffset,
@@ -91,6 +127,7 @@ class AdhanPlaybackService : Service() {
             release()
         }
         mediaPlayer = null
+        abandonAudioFocus()
     }
 
     private fun buildPlaybackNotification(): Notification {
@@ -100,12 +137,16 @@ class AdhanPlaybackService : Service() {
         return NotificationCompat.Builder(this, PLAYBACK_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_solatify)
             .setContentTitle("Solatify")
-            .setContentText("Adzan sedang diputar")
+            .setContentText(if (isEnglish) "Adhan is playing" else "Adzan sedang diputar")
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
             .setOngoing(true)
             .setSilent(true)
-            .addAction(R.drawable.ic_stat_solatify, "Berhenti", stopPendingIntent)
+            .addAction(
+                R.drawable.ic_stat_solatify,
+                if (isEnglish) "Stop" else "Berhenti",
+                stopPendingIntent,
+            )
             .build()
     }
 
@@ -141,6 +182,7 @@ class AdhanPlaybackService : Service() {
             )
         }
 
+        const val EXTRA_IS_ENGLISH = "isEnglish"
         private const val TAG = "AdhanPlaybackService"
         private const val ACTION_STOP_ADHAN = "com.solatify.app.solatify.STOP_ADHAN"
         private const val PLAYBACK_CHANNEL_ID = "adhan_playback_service_channel"

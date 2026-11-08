@@ -7,8 +7,15 @@ class GetWeeklyStats {
 
   final TrackerRepository repository;
 
-  Future<WeeklyStatsEntity> execute(DateTime endDate) async {
+  /// Insight and label text is built in the user's language ([isEnglish]).
+  Future<WeeklyStatsEntity> execute(
+    DateTime endDate, {
+    bool isEnglish = false,
+  }) async {
     final logs = await repository.getWeeklyLogs(endDate);
+    // The streak can be longer than the two weeks above.
+    final streakLogs = await repository.getLogsBack(endDate, _maxStreakDays);
+    String t(String id, String en) => isEnglish ? en : id;
 
     final prayers = ['subuh', 'dzuhur', 'ashar', 'magrib', 'isya'];
     final habitKeys = [
@@ -32,7 +39,7 @@ class GetWeeklyStats {
     final today = _dateOnly(endDate);
     final weekLogs = [
       for (var index = 0; index < 7; index++)
-        logsByDate[_dateKey(today.subtract(Duration(days: index)))],
+        logsByDate[_dateKey(_daysBefore(today, index))],
     ].whereType<PrayerLogEntity>().toList();
     final weekDays = weekLogs.isEmpty
         ? 0
@@ -59,7 +66,7 @@ class GetWeeklyStats {
     }
     final dailyTargetCount = prayers.length + habitKeys.length;
     final heatmap = List.generate(14, (index) {
-      final date = _dateOnly(endDate.subtract(Duration(days: index)));
+      final date = _daysBefore(endDate, index);
       final log = logsByDate[_dateKey(date)];
       final completedCount = log == null
           ? 0
@@ -74,25 +81,46 @@ class GetWeeklyStats {
 
     final currentStreakDays = _calculateCurrentStreak(
       endDate,
-      logsByDate,
+      {for (final log in streakLogs) _dateKey(log.date): log},
       prayers,
       habitKeys,
     );
-    final bestDayLabel = _bestDayLabel(endDate, weekLogs, prayers, habitKeys);
+    final bestDayLabel = _bestDayLabel(
+      endDate,
+      weekLogs,
+      prayers,
+      habitKeys,
+      isEnglish,
+    );
     final strongestPrayer = weekLogs.isEmpty
-        ? 'Mulai hari ini'
-        : _strongestPrayerLabel(rates);
+        ? t('Mulai hari ini', 'Start today')
+        : _strongestPrayerLabel(rates, isEnglish);
     final weakestPrayer = weekLogs.isEmpty
-        ? 'Pilih satu ibadah'
-        : _weakestPrayerLabel(rates);
+        ? t('Pilih satu ibadah', 'Pick one practice')
+        : _weakestPrayerLabel(rates, isEnglish);
     final smartInsightMessage = weekLogs.isEmpty
-        ? 'Mulai dari satu checklist hari ini untuk membangun ritme ibadah.'
+        ? t(
+            'Mulai dari satu checklist hari ini untuk membangun ritme ibadah.',
+            'Start with one checklist item today to build a rhythm of worship.',
+          )
         : currentStreakDays > 0
-        ? 'MasyaAllah, kamu sedang menjaga streak $currentStreakDays hari.'
-        : 'Belum ada streak aktif. Mulai lagi dari checklist hari ini.';
+        ? t(
+            'MasyaAllah, kamu sedang menjaga streak $currentStreakDays hari.',
+            'MashaAllah, you are keeping a $currentStreakDays-day streak.',
+          )
+        : t(
+            'Belum ada streak aktif. Mulai lagi dari checklist hari ini.',
+            'No active streak yet. Start again with today\'s checklist.',
+          );
     final smartInsightAction = weekLogs.isEmpty
-        ? 'Pilih satu ibadah ringan, lalu tandai setelah selesai.'
-        : 'Fokus kecil berikutnya: kuatkan $weakestPrayer agar pekan ini lebih seimbang.';
+        ? t(
+            'Pilih satu ibadah ringan, lalu tandai setelah selesai.',
+            'Pick one light practice and tick it once it is done.',
+          )
+        : t(
+            'Fokus kecil berikutnya: kuatkan $weakestPrayer agar pekan ini lebih seimbang.',
+            'Next small focus: strengthen $weakestPrayer for a more balanced week.',
+          );
 
     return WeeklyStatsEntity(
       completionRates: rates,
@@ -105,8 +133,12 @@ class GetWeeklyStats {
       weakestItemLabel: weakestPrayer,
       smartInsightMessage: smartInsightMessage,
       smartInsightAction: smartInsightAction,
+      isEnglish: isEnglish,
     );
   }
+
+  /// How far back the streak is counted.
+  static const _maxStreakDays = 366;
 
   int _calculateCurrentStreak(
     DateTime endDate,
@@ -115,7 +147,7 @@ class GetWeeklyStats {
     List<String> habitKeys,
   ) {
     bool isComplete(int daysAgo) {
-      final date = _dateOnly(endDate.subtract(Duration(days: daysAgo)));
+      final date = _daysBefore(endDate, daysAgo);
       final log = logsByDate[_dateKey(date)];
       return log != null && _completedCount(log, prayers, habitKeys) >= 3;
     }
@@ -124,7 +156,7 @@ class GetWeeklyStats {
     // is counted from yesterday instead of dropping to 0 every morning.
     final start = isComplete(0) ? 0 : 1;
     var streak = 0;
-    for (var index = start; index < 14; index++) {
+    for (var index = start; index < _maxStreakDays; index++) {
       if (!isComplete(index)) break;
       streak++;
     }
@@ -136,8 +168,10 @@ class GetWeeklyStats {
     List<PrayerLogEntity> logs,
     List<String> prayers,
     List<String> habitKeys,
+    bool isEnglish,
   ) {
-    if (logs.isEmpty) return 'Belum ada data';
+    final noData = isEnglish ? 'No data yet' : 'Belum ada data';
+    if (logs.isEmpty) return noData;
 
     PrayerLogEntity? bestLog;
     var bestCount = -1;
@@ -148,18 +182,18 @@ class GetWeeklyStats {
         bestCount = completedCount;
       }
     }
-    if (bestLog == null) return 'Belum ada data';
+    if (bestLog == null) return noData;
 
     final bestDate = _dateOnly(bestLog.date);
     final today = _dateOnly(endDate);
-    final yesterday = today.subtract(const Duration(days: 1));
-    if (bestDate == today) return 'Hari ini';
-    if (bestDate == yesterday) return 'Kemarin';
+    final yesterday = _daysBefore(today, 1);
+    if (bestDate == today) return isEnglish ? 'Today' : 'Hari ini';
+    if (bestDate == yesterday) return isEnglish ? 'Yesterday' : 'Kemarin';
     return '${bestDate.day}/${bestDate.month}/${bestDate.year}';
   }
 
-  String _strongestPrayerLabel(Map<String, double> rates) {
-    if (rates.isEmpty) return 'Mulai hari ini';
+  String _strongestPrayerLabel(Map<String, double> rates, bool isEnglish) {
+    if (rates.isEmpty) return isEnglish ? 'Start today' : 'Mulai hari ini';
 
     var selectedKey = rates.keys.first;
     var selectedRate = rates[selectedKey] ?? 0;
@@ -169,11 +203,12 @@ class GetWeeklyStats {
         selectedRate = entry.value;
       }
     }
-    return _prayerLabel(selectedKey);
+    return _prayerLabel(selectedKey, isEnglish);
   }
 
-  String _weakestPrayerLabel(Map<String, double> rates) {
-    if (rates.isEmpty) return 'Pilih satu ibadah';
+  String _weakestPrayerLabel(Map<String, double> rates, bool isEnglish) {
+    if (rates.isEmpty)
+      return isEnglish ? 'Pick one practice' : 'Pilih satu ibadah';
 
     var selectedKey = rates.keys.first;
     var selectedRate = rates[selectedKey] ?? 0;
@@ -183,7 +218,7 @@ class GetWeeklyStats {
         selectedRate = entry.value;
       }
     }
-    return _prayerLabel(selectedKey);
+    return _prayerLabel(selectedKey, isEnglish);
   }
 
   int _completedCount(
@@ -195,16 +230,20 @@ class GetWeeklyStats {
         habitKeys.where(log.isHabitDone).length;
   }
 
-  String _prayerLabel(String key) {
+  String _prayerLabel(String key, bool isEnglish) {
     return switch (key) {
-      'subuh' => 'Subuh',
-      'dzuhur' => 'Dzuhur',
-      'ashar' => 'Ashar',
-      'magrib' => 'Magrib',
-      'isya' => 'Isya',
+      'subuh' => isEnglish ? 'Fajr' : 'Subuh',
+      'dzuhur' => isEnglish ? 'Dhuhr' : 'Dzuhur',
+      'ashar' => isEnglish ? 'Asr' : 'Ashar',
+      'magrib' => isEnglish ? 'Maghrib' : 'Magrib',
+      'isya' => isEnglish ? 'Isha' : 'Isya',
       _ => key,
     };
   }
+
+  /// [days] calendar days before [date] (DST-safe, unlike subtracting 24 h).
+  DateTime _daysBefore(DateTime date, int days) =>
+      DateTime(date.year, date.month, date.day - days);
 
   DateTime _dateOnly(DateTime date) =>
       DateTime(date.year, date.month, date.day);

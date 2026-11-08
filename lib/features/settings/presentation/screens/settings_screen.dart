@@ -557,61 +557,44 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     final l = AppLocalizations.of(context);
 
     try {
-      if (enabled) {
-        if (defaultTargetPlatform == TargetPlatform.iOS) {
-          final granted = await NotificationService().requestIosPermissions();
-          if (!granted) {
-            await NotificationService().openPlatformNotificationSettings();
-            messenger.showSnackBar(
-              SnackBar(content: Text(l.notificationPermissionSettingsHint)),
-            );
-            return;
-          }
-        } else {
-          final opened = await NotificationService()
-              .openPlatformNotificationSettings();
-          if (!opened) {
-            messenger.showSnackBar(
-              SnackBar(content: Text(l.notificationPermissionError)),
-            );
-            return;
-          }
-        }
-      } else {
+      if (!enabled) {
+        // Turning the adhan off only cancels this app's prayer alarms; it
+        // must not send users to the system settings, where they might turn
+        // off all of the app's notifications.
         await ref
             .read(notificationSchedulerProvider.notifier)
             .cancelAllNotifications();
+        await ref
+            .read(settingsProvider.notifier)
+            .updateAdhanNotificationsEnabled(false);
+        return;
+      }
+
+      // Ask for permission only when it is missing; open the system
+      // settings only when it was refused.
+      final granted = await NotificationService()
+          .ensureNotificationPermission();
+      if (!granted) {
+        final opened = await NotificationService()
+            .openPlatformNotificationSettings();
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(
+              opened
+                  ? l.notificationPermissionSettingsHint
+                  : l.notificationPermissionError,
+            ),
+          ),
+        );
+        return;
       }
 
       await ref
           .read(settingsProvider.notifier)
-          .updateAdhanNotificationsEnabled(enabled);
-
-      if (enabled) {
-        await ref
-            .read(notificationSchedulerProvider.notifier)
-            .refreshSchedules(force: true);
-      }
-
-      if (enabled) {
-        if (defaultTargetPlatform == TargetPlatform.android) {
-          messenger.showSnackBar(
-            SnackBar(content: Text(l.notificationPermissionSettingsHint)),
-          );
-        }
-      } else {
-        final opened = await NotificationService()
-            .openPlatformNotificationSettings();
-        if (!opened) {
-          messenger.showSnackBar(
-            SnackBar(content: Text(l.notificationPermissionError)),
-          );
-          return;
-        }
-        messenger.showSnackBar(
-          SnackBar(content: Text(l.notificationPermissionSettingsHint)),
-        );
-      }
+          .updateAdhanNotificationsEnabled(true);
+      await ref
+          .read(notificationSchedulerProvider.notifier)
+          .refreshSchedules(force: true);
     } catch (e) {
       debugPrint('Error toggling automatic adhan notifications: $e');
       if (!mounted) return;

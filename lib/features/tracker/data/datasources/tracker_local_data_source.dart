@@ -6,6 +6,10 @@ abstract class TrackerLocalDataSource {
   Future<PrayerLogDto?> getLog(String dateKey);
   Future<void> saveLog(PrayerLogDto log);
   Future<List<PrayerLogDto>> getLogsRange(List<String> dateKeys);
+
+  /// Moves a habit's ticks and progress from [oldKey] to [newKey] in every
+  /// stored day (used when a custom habit is renamed).
+  Future<void> renameHabitKey(String oldKey, String newKey);
 }
 
 class TrackerLocalDataSourceImpl implements TrackerLocalDataSource {
@@ -37,6 +41,30 @@ class TrackerLocalDataSourceImpl implements TrackerLocalDataSource {
       }
     }
     return logs;
+  }
+
+  @override
+  Future<void> renameHabitKey(String oldKey, String newKey) async {
+    if (oldKey == newKey) return;
+    final box = await Hive.openBox<dynamic>(HiveConstants.trackerBox);
+    final updates = <dynamic, Map<String, dynamic>>{};
+    for (final key in box.keys) {
+      final data = box.get(key);
+      if (data is! Map) continue;
+      final json = Map<String, dynamic>.from(data);
+      var changed = false;
+      for (final field in const ['habits', 'habitProgress']) {
+        final values = json[field];
+        if (values is Map && values.containsKey(oldKey)) {
+          final moved = Map<String, dynamic>.from(values);
+          moved[newKey] = moved.remove(oldKey);
+          json[field] = moved;
+          changed = true;
+        }
+      }
+      if (changed) updates[key] = json;
+    }
+    if (updates.isNotEmpty) await box.putAll(updates);
   }
 
   String _getDateKey(DateTime date) {

@@ -12,7 +12,14 @@ abstract class TrackerRepository {
   Future<void> updateHabitProgress(
     DateTime date,
     String habitKey,
-    int progress,
-  );
+    int progress, {
+    int? target,
+  });
   Future<List<PrayerLogEntity>> getWeeklyLogs(DateTime endDate);
+
+  /// Logs for [days] calendar days ending at [endDate] (missing days are
+  /// skipped). Used for the streak, which can be longer than two weeks.
+  Future<List<PrayerLogEntity>> getLogsBack(DateTime endDate, int days);
+
+  Future<void> renameHabitKey(String oldKey, String newKey);
 }

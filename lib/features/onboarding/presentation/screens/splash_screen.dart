@@ -23,7 +23,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   static const Duration _fadeDuration = Duration(milliseconds: 600);
 
   late final AnimationController _controller;
-  late final Animation<double> _fadeAnimation;
+  late final CurvedAnimation _fadeAnimation;
   bool _started = false;
 
   @override
@@ -66,6 +66,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   @override
   void dispose() {
+    _fadeAnimation.dispose();
     _controller.dispose();
     super.dispose();
   }
